@@ -1,8 +1,12 @@
+import sys
+from inspect import getmembers, isclass
+
+
 nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 
 
 def getEClassifier(name, searchspace=None):
-    searchspace = searchspace if searchspace else globals()
+    searchspace = searchspace if searchspace else __eClassifiers
     try:
         return searchspace[name]
     except KeyError:
@@ -103,6 +107,12 @@ class Ecore(object):
                 if not v.name:
                     v.name = k
                 cls.eClass.eReferences.append(v)
+
+    def compute_eclass(module_name):
+        module = sys.modules[module_name]
+        def is_valid_eclass(module):
+            return isclass(module) and module.__module__ is module_name
+        return {k: v for k, v in getmembers(module, is_valid_eclass)}
 
 
 class EObject(object):
@@ -404,6 +414,7 @@ class EClass(EClassifier):
         [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
         return tuple(feats)
 
+
 EClass.eClass = EClass
 
 
@@ -436,6 +447,7 @@ class MetaEClass(type):
 def abstract(cls):
     cls.eClass.abstract = True
     return cls
+
 
 # meta-meta level
 EString = EDatatype('EString', str)
@@ -508,3 +520,6 @@ Ecore._promote(EClass)
 Ecore._promote(EStructuralFeature)
 Ecore._promote(EAttribute)
 Ecore._promote(EReference)
+
+# We compute all the Metaclasses from the current module (EPackage-alike)
+__eClassifiers = Ecore.compute_eclass(__name__)
