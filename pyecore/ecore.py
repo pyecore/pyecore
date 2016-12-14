@@ -151,21 +151,26 @@ class EList(list):
         if self._efeature.containment:
             value._container = self._owner
 
-    def _update_opposite(self, owner, new_value):
+    def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
             return
         eOpposite = self._efeature.eOpposite
         if eOpposite:
-            if eOpposite.many:
+            if eOpposite.many and not remove:
                 object.__getattribute__(owner, eOpposite.name) \
-                      .append(new_value)
+                      .append(new_value, False)
+            elif eOpposite.many and remove:
+                object.__getattribute__(owner, eOpposite.name) \
+                      .remove(new_value, False)
             else:
-                object.__setattr__(owner, eOpposite.name, new_value)
+                object.__setattr__(owner, eOpposite.name,
+                                   None if remove else new_value)
 
-    def append(self, value):
+    def append(self, value, update_opposite=True):
         self.check(value)
-        self._update_container(value)
-        self._update_opposite(value, self._owner)
+        if update_opposite:
+            self._update_container(value)
+            self._update_opposite(value, self._owner)
         list.append(self, value)
 
     def extend(self, sublist):
@@ -175,9 +180,10 @@ class EList(list):
             self._update_opposite(x, self._owner)
         list.extend(self, sublist)
 
-    def remove(self, value):
-        self._update_container(None)
-        self._update_opposite(value, None)
+    def remove(self, value, update_opposite=True):
+        if update_opposite:
+            self._update_container(None)
+            self._update_opposite(value, self._owner, remove=True)
         list.remove(self, value)
 
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
