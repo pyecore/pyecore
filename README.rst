@@ -5,13 +5,13 @@ PyEcore
 A Pythonic Implementation of the Eclipse Modeling Framework
 -----------------------------------------------------------
 
-PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore. It's
-purpose is to handle model/metamodels in Python almost the same way the Java
-version does.
+PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
+Python3. It's purpose is to handle model/metamodels in Python almost the same
+way the Java version does.
 
 However, PyEcore enables you to use a simple ``instance.attribute`` notation
 instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
-version.
+version. To achieve this, PyEcore relies on reflection (a lot).
 
 Let see by yourself how it works on a very simple metamodel created on
 the fly (dynamic metamodel)::
@@ -201,3 +201,21 @@ The things that are in the roadmap:
 * object deletion,
 * notification/Event system,
 * command system (?).
+
+
+Existing Projects
+=================
+
+There is not so much projects proposing to handle model and metamodel in Python.
+The only projects I found are:
+
+* PyEMOF (http://www.lifl.fr/~marvie/software/pyemof.html)
+* EMF4CPP (https://github.com/catedrasaes-umu/emf4cpp)
+
+PyEMOF proposes an implementation of the OMG's EMOF in Python. The project
+targets Python2 and supports XMI import/export. The project didn't move since
+2005, but seems quite complete.
+
+EMF4CPP proposes a C++ implementation of EMF. This implementation also
+introduces Python scripts to call the generated C++ code from a Python
+environment.
