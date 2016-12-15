@@ -28,7 +28,8 @@ the fly (dynamic metamodel)::
     >>> isinstance(a1, EObject)
     True
 
-PyEcore also support introspection::
+PyEcore also support introspection and the EMF reflexive API using basic Python
+reflexive features::
 
     >>> a1.eClass # some introspection
     <EClass name="A">
@@ -42,6 +43,11 @@ PyEcore also support introspection::
     'myname'
     >>> a1.eClass.eAttributes[0].eClass
     <EClass name="EAttribute">
+    >>> a1.__getattr__('name')
+    'a_instance'
+    >>> a1.__setattr__('myname', 'reflexive')
+    >>> a1.__getattr__('myname')
+    'reflexive'
 
 Runtime type checking is also performed (regarding what you expressed in your)
 metamodel::
@@ -181,6 +187,7 @@ State
 In the current state, the project implements:
 
 * the dynamic/static metamodel definitions,
+* reflexive API,
 * inheritance,
 * enumerations,
 * abstract metaclasses,
