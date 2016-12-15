@@ -11,7 +11,6 @@ from pyecore.ecore import EObject, EAttribute, EString, EEnum, EReference, \
 nsPrefix = 'lib'
 nsURI = 'http://emf.wikipedia.org/2011/Library'
 
-
 BookCategory = EEnum('BookCategory', literals=['ScienceFiction',
                                                'Biography',
                                                'Mistery'])
@@ -58,5 +57,5 @@ class Library(EObject, metaclass=MetaEClass):
     def __init__(self):
         pass
 
-__eClassifiers = Ecore.Ecore.compute_eclass(__name__)
+__eClassifiers = Ecore.Core.compute_eclass(__name__)
 getEClassifier = partial(Ecore.getEClassifier, searchspace=__eClassifiers)

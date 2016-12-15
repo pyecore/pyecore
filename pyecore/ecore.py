@@ -20,7 +20,7 @@ class BadValueError(TypeError):
         super().__init__(msg)
 
 
-class Ecore(object):
+class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
@@ -35,6 +35,8 @@ class Ecore(object):
             return False
         return isinstance(obj, _type)
 
+
+class Core(object):
     def getattr(self, name):
         ex = None
         try:
@@ -59,29 +61,29 @@ class Ecore(object):
             return default_value
 
     def setattr(self, name, value):
-        estruct = self.eClass.findEStructuralFeature(name)
-        if not estruct:
+        feat = self.eClass.findEStructuralFeature(name)
+        if not feat:
             object.__setattr__(self, name, value)
             return
 
-        if estruct.many and not isinstance(value, EList):
-            raise BadValueError(got=value, expected=estruct.eType)
-        elif not estruct.many and not Ecore.isinstance(value, estruct.eType):
-            raise BadValueError(got=value, expected=estruct.eType)
+        if feat.many and not isinstance(value, EList):
+            raise BadValueError(got=value, expected=feat.eType)
+        elif not feat.many and not EcoreUtils.isinstance(value, feat.eType):
+            raise BadValueError(got=value, expected=feat.eType)
         if self._isready:
             self._isset.append(name)
-        if self._isready and isinstance(estruct, EReference):
-            if estruct.containment and isinstance(value, EObject):
+        if self._isready and isinstance(feat, EReference):
+            if feat.containment and isinstance(value, EObject):
                 value._container = self
-            if estruct.eOpposite and isinstance(value, EObject):
-                eOpposite = estruct.eOpposite
+            if feat.eOpposite and isinstance(value, EObject):
+                eOpposite = feat.eOpposite
                 if eOpposite.many:
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
-            elif estruct.eOpposite and value is None:
-                eOpposite = estruct.eOpposite
-                current_object = object.__getattribute__(self, estruct.name)
+            elif feat.eOpposite and value is None:
+                eOpposite = feat.eOpposite
+                current_object = object.__getattribute__(self, feat.name)
                 if current_object and eOpposite.many:
                     object.__getattribute__(current_object, eOpposite.name) \
                           .remove(self)
@@ -110,8 +112,9 @@ class Ecore(object):
 
     def compute_eclass(module_name):
         module = sys.modules[module_name]
-        def is_valid_eclass(module):
-            return isclass(module) and module.__module__ is module_name
+
+        def is_valid_eclass(_class):
+            return isclass(_class) and _class.__module__ is module_name
         return {k: v for k, v in getmembers(module, is_valid_eclass)}
 
 
@@ -152,7 +155,7 @@ class EList(list):
         self._efeature = efeature
 
     def check(self, value):
-        if not Ecore.isinstance(value, self._efeature.eType):
+        if not EcoreUtils.isinstance(value, self._efeature.eType):
             raise BadValueError(value, self._efeature.eType)
 
     def _update_container(self, value):
@@ -372,8 +375,8 @@ class EClass(EClassifier):
             self.eSuperTypes.append(superclass)
         self.__metainstance = type(self.name, (EObject,), {
                                     'eClass': self,
-                                    '__getattr__': Ecore.getattr,
-                                    '__setattr__': Ecore.setattr
+                                    '__getattr__': Core.getattr,
+                                    '__setattr__': Core.setattr
                                 })
 
     def __call__(self, *args, **kwargs):
@@ -422,9 +425,9 @@ EClass.eClass = EClass
 class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
-        cls.__getattr__ = Ecore.getattr
-        cls.__setattr__ = Ecore.setattr
-        Ecore._promote(cls)
+        cls.__getattr__ = Core.getattr
+        cls.__setattr__ = Core.setattr
+        Core._promote(cls)
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -506,20 +509,20 @@ EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 
 EParameter.eOperation = EReference('eOperation', EOperation)
 
-Ecore._promote(EModelElement)
-Ecore._promote(ENamedElement)
-Ecore._promote(EAnnotation)
-Ecore._promote(EPackage)
-Ecore._promote(EDatatype)
-Ecore._promote(EClassifier)
-Ecore._promote(EEnum)
-Ecore._promote(EEnumLiteral)
-Ecore._promote(EParameter)
-Ecore._promote(EOperation)
-Ecore._promote(EClass)
-Ecore._promote(EStructuralFeature)
-Ecore._promote(EAttribute)
-Ecore._promote(EReference)
+Core._promote(EModelElement)
+Core._promote(ENamedElement)
+Core._promote(EAnnotation)
+Core._promote(EPackage)
+Core._promote(EDatatype)
+Core._promote(EClassifier)
+Core._promote(EEnum)
+Core._promote(EEnumLiteral)
+Core._promote(EParameter)
+Core._promote(EOperation)
+Core._promote(EClass)
+Core._promote(EStructuralFeature)
+Core._promote(EAttribute)
+Core._promote(EReference)
 
 # We compute all the Metaclasses from the current module (EPackage-alike)
-__eClassifiers = Ecore.compute_eclass(__name__)
+__eClassifiers = Core.compute_eclass(__name__)
