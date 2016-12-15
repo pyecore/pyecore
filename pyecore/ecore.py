@@ -70,6 +70,12 @@ class Core(object):
             raise BadValueError(got=value, expected=feat.eType)
         elif not feat.many and not EcoreUtils.isinstance(value, feat.eType):
             raise BadValueError(got=value, expected=feat.eType)
+
+        try:
+            previous_value = object.__getattribute__(self, feat.name)
+        except AttributeError:
+            previous_value = None
+
         object.__setattr__(self, name, value)
         if self._isready:
             self._isset.append(name)
@@ -79,18 +85,17 @@ class Core(object):
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 if eOpposite.many:
-                    value.__getattr__(eOpposite.name) # force resolve
+                    value.__getattr__(eOpposite.name)  # force resolve
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
             elif feat.eOpposite and value is None:
                 eOpposite = feat.eOpposite
-                current_object = object.__getattribute__(self, feat.name)
-                if current_object and eOpposite.many:
-                    object.__getattribute__(current_object, eOpposite.name) \
+                if previous_value and eOpposite.many:
+                    object.__getattribute__(previous_value, eOpposite.name) \
                           .remove(self)
-                elif current_object:
-                    object.__setattr__(current_object, eOpposite.name, None)
+                elif previous_value:
+                    object.__setattr__(previous_value, eOpposite.name, None)
 
     def _promote(cls, abstract=False):
         cls.eClass = EClass(cls.__name__)
@@ -171,7 +176,7 @@ class EList(list):
         eOpposite = self._efeature.eOpposite
         if eOpposite:
             if eOpposite.many and not remove:
-                owner.__getattr__(eOpposite.name) # force resolve
+                owner.__getattr__(eOpposite.name)  # force resolve
                 object.__getattribute__(owner, eOpposite.name) \
                       .append(new_value, False)
             elif eOpposite.many and remove:
