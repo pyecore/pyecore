@@ -38,6 +38,6 @@ def test_link_writer2manybooks():
     book2 = library.Book()
     smith = library.Writer()
     smith.books.extend([book1, book2])
-    assert smith.books and smith.books[0] is book1 and smith.books[1] is book2
-    assert book1.authors and book1.authors[0] is smith
-    assert book2.authors and book2.authors[0] is smith
+    assert smith.books and book1 in smith.books and book2 in smith.books
+    assert book1.authors and smith in book1.authors
+    assert book2.authors and smith in book2.authors

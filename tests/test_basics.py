@@ -17,6 +17,22 @@ def test_ecoreutil_isinstance_none():
     assert EcoreUtils.isinstance(None, EClass)
 
 
+def test_ecoreutil_isinstance_integer():
+    assert EcoreUtils.isinstance(100, EInteger)
+
+
+def test_ecoreutil_isinstance_string():
+    assert EcoreUtils.isinstance('test', EString)
+
+
+def test_ecoreutil_isinstance_boolean():
+    assert EcoreUtils.isinstance(True, EBoolean)
+
+
+def test_ecoreutil_isinstance_estringtostringmap():
+    assert EcoreUtils.isinstance({3: '3'}, EStringToStringMapEntry)
+
+
 def test_eenum_empty_instance():
     MyEnum = EEnum('MyEnum')
     assert not MyEnum.default_value
@@ -38,3 +54,8 @@ def test_eenum_simple_instance_with_defaultvalue():
 def test_eenum_simple_instance_with_defaultvalue():
     with pytest.raises(AttributeError):
         MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'], default_value='D')
+
+
+def test_eenum_simple_instance():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert EcoreUtils.isinstance(MyEnum.A, EEnumLiteral)

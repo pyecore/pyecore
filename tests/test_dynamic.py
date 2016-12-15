@@ -212,3 +212,47 @@ def test_create_dynamic_subclass_from_abstract_eclass():
     b = B()
     assert EcoreUtils.isinstance(b, B)
     assert EcoreUtils.isinstance(b, A)
+
+
+def test_create_dynamic_contaiment_many_ereferene():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, upper=-1, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    assert b1.eContainer() is a1
+
+
+def test_create_dynamic_contaiment_many_ereferene_unset():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, upper=-1, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    assert b1.eContainer() is a1
+    a1.b.remove(b1)
+    assert b1.eContainer() is None
+
+
+def test_create_dynamic_contaiment_single_ereferene():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b = b1
+    assert b1.eContainer() is a1
+
+
+def test_create_dynamic_contaiment_single_ereferene_unset():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b = b1
+    assert b1.eContainer() is a1
+    a1.b = None
+    assert b1.eContainer() is None

@@ -82,6 +82,8 @@ class Core(object):
         if self._isready and isinstance(feat, EReference):
             if feat.containment and isinstance(value, EObject):
                 value._container = self
+            elif feat.containment and not value and previous_value:
+                previous_value._container = None
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 if eOpposite.many:
@@ -164,11 +166,13 @@ class EList(list):
         if not EcoreUtils.isinstance(value, self._efeature.eType):
             raise BadValueError(value, self._efeature.eType)
 
-    def _update_container(self, value):
+    def _update_container(self, value, previous_value=None):
         if not isinstance(self._efeature, EReference):
             return
-        if self._efeature.containment:
+        if self._efeature.containment and not previous_value:
             value._container = self._owner
+        elif self._efeature.containment and previous_value:
+            previous_value._container = value
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
@@ -202,7 +206,7 @@ class EList(list):
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
-            self._update_container(None)
+            self._update_container(None, previous_value=value)
             self._update_opposite(value, self._owner, remove=True)
         list.remove(self, value)
 
