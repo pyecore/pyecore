@@ -70,6 +70,7 @@ class Core(object):
             raise BadValueError(got=value, expected=feat.eType)
         elif not feat.many and not EcoreUtils.isinstance(value, feat.eType):
             raise BadValueError(got=value, expected=feat.eType)
+        object.__setattr__(self, name, value)
         if self._isready:
             self._isset.append(name)
         if self._isready and isinstance(feat, EReference):
@@ -78,6 +79,7 @@ class Core(object):
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 if eOpposite.many:
+                    value.__getattr__(eOpposite.name) # force resolve
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
@@ -89,7 +91,6 @@ class Core(object):
                           .remove(self)
                 elif current_object:
                     object.__setattr__(current_object, eOpposite.name, None)
-        object.__setattr__(self, name, value)
 
     def _promote(cls, abstract=False):
         cls.eClass = EClass(cls.__name__)
@@ -170,6 +171,7 @@ class EList(list):
         eOpposite = self._efeature.eOpposite
         if eOpposite:
             if eOpposite.many and not remove:
+                owner.__getattr__(eOpposite.name) # force resolve
                 object.__getattribute__(owner, eOpposite.name) \
                       .append(new_value, False)
             elif eOpposite.many and remove:
