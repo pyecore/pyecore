@@ -43,20 +43,20 @@ class Core(object):
             return object.__getattribute__(self, name)
         except AttributeError as e:
             ex = e
-        estruct = self.eClass.findEStructuralFeature(name)
-        if not estruct:
+        feature = self.eClass.findEStructuralFeature(name)
+        if not feature:
             raise ex
 
-        if estruct.many:
-            new_list = EList(self, estruct)
+        if feature.many:
+            new_list = EList(self, feature)
             self.__setattr__(name, new_list)
             return new_list
         else:
             default_value = None
-            if hasattr(estruct.eType, 'default_value'):
-                default_value = estruct.eType.default_value
-            if hasattr(estruct, 'default_value'):
-                default_value = estruct.default_value
+            if hasattr(feature.eType, 'default_value'):
+                default_value = feature.eType.default_value
+            if hasattr(feature, 'default_value'):
+                default_value = feature.default_value
             self.__setattr__(name, default_value)
             return default_value
 
@@ -302,6 +302,10 @@ class EEnum(EDatatype):
                 literal = EEnumLiteral(i, lit_name)
                 self.eLiterals.append(literal)
                 self.__setattr__(lit_name, literal)
+        if default_value:
+            self.default_value = self.__getattribute__(default_value)
+        elif not default_value and literals:
+            self.default_value = self.eLiterals[0]
 
     def __contains__(self, key):
         if isinstance(key, EEnumLiteral):

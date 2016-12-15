@@ -13,5 +13,28 @@ def test_get_nonexisting_EClassifier():
     assert not getEClassifier('EEClass')
 
 
-def test_ecore_isinstance_none():
+def test_ecoreutil_isinstance_none():
     assert EcoreUtils.isinstance(None, EClass)
+
+
+def test_eenum_empty_instance():
+    MyEnum = EEnum('MyEnum')
+    assert not MyEnum.default_value
+    assert not MyEnum.eLiterals
+
+
+def test_eenum_simple_instance():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert MyEnum.default_value
+    assert MyEnum.default_value is MyEnum.A
+
+
+def test_eenum_simple_instance_with_defaultvalue():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'], default_value='B')
+    assert MyEnum.default_value
+    assert MyEnum.default_value is MyEnum.B
+
+
+def test_eenum_simple_instance_with_defaultvalue():
+    with pytest.raises(AttributeError):
+        MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'], default_value='D')
