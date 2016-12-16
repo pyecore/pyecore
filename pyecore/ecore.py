@@ -6,7 +6,7 @@ nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 
 
 def getEClassifier(name, searchspace=None):
-    searchspace = searchspace if searchspace else __eClassifiers
+    searchspace = searchspace if searchspace else eClassifiers
     try:
         return searchspace[name]
     except KeyError:
@@ -540,4 +540,4 @@ Core._promote(EAttribute)
 Core._promote(EReference)
 
 # We compute all the Metaclasses from the current module (EPackage-alike)
-__eClassifiers = Core.compute_eclass(__name__)
+eClassifiers = Core.compute_eclass(__name__)

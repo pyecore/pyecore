@@ -57,5 +57,5 @@ class Library(EObject, metaclass=MetaEClass):
     def __init__(self):
         pass
 
-__eClassifiers = Ecore.Core.compute_eclass(__name__)
-getEClassifier = partial(Ecore.getEClassifier, searchspace=__eClassifiers)
+eClassifiers = Ecore.Core.compute_eclass(__name__)
+getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)

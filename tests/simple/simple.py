@@ -28,5 +28,5 @@ class B(EObject, metaclass=MetaEClass):
         pass
 
 
-__eClassifiers = Ecore.Core.compute_eclass(__name__)
-getEClassifier = partial(Ecore.getEClassifier, searchspace=__eClassifiers)
+eClassifiers = Ecore.Core.compute_eclass(__name__)
+getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
