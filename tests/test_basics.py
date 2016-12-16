@@ -59,3 +59,21 @@ def test_eenum_simple_instance_with_defaultvalue():
 def test_eenum_simple_instance():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
     assert EcoreUtils.isinstance(MyEnum.A, EEnumLiteral)
+
+
+def test_eenum_simple_search():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert MyEnum.A in MyEnum
+    assert 'A' in MyEnum
+
+
+def test_eenum_geteenum():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert MyEnum.getEEnumLiteral(name='A') is MyEnum.A
+    assert MyEnum.getEEnumLiteral(value=1) is MyEnum.B
+    assert MyEnum.getEEnumLiteral('F') is None
+
+
+def test_eenum_geteenum_print():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    print(MyEnum)

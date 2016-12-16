@@ -14,6 +14,49 @@ def test_create_dynamic_instance():
     assert isinstance(instance, EObject)
 
 
+def test_create_dynamic_simple_eattribute():
+    A = EClass('A')
+    A.eAttributes.append(EAttribute('name', EString))
+    a = A()
+    assert a.name is None
+    a.name = 'new_name'
+    assert a.name == 'new_name'
+
+
+def test_create_dynamic_simple_eattribute_badvalue():
+    A = EClass('A')
+    A.eAttributes.append(EAttribute('name', EString))
+    a = A()
+    with pytest.raises(BadValueError):
+        a.name = 42
+
+
+def test_create_dynamic_access_badtype():
+    A = EClass('A')
+    a = A()
+    with pytest.raises(AttributeError):
+        a.name
+
+
+def test_create_dynamic_many_eattribute():
+    A = EClass('A')
+    A.eAttributes.append(EAttribute('names', EString, upper=-1))
+    a = A()
+    assert a.names == []
+    a.names.append('name1')
+    a.names.append('name2')
+    assert 'name1' in a.names and 'name2' in a.names
+
+
+def test_create_dynamic_override_many_eattribute():
+    A = EClass('A')
+    A.eAttributes.append(EAttribute('names', EString, upper=-1))
+    a = A()
+    assert a.names == []
+    with pytest.raises(BadValueError):
+        a.names = 'test'
+
+
 def test_create_dynamic_simple_ereference():
     A = EClass('A')
     B = EClass('B')
@@ -52,6 +95,30 @@ def test_create_dynamic_many_ereference():
     b1 = B()
     a1.tob.append(b1)
     assert a1.tob and b1 in a1.tob and len(a1.tob) == 1
+
+
+def test_create_dynamic_many_ereference_filter():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, upper=-1))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    result = a1.b.select(lambda x: x)
+    assert result is not a1.b
+    assert b1 in result
+
+
+def test_create_dynamic_many_ereference_reject():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, upper=-1))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    result = a1.b.reject(lambda x: x)
+    assert result is not a1.b
+    assert b1 not in result and result == []
 
 
 def test_create_dynamic_many_ereference_wrongtype():
@@ -256,3 +323,23 @@ def test_create_dynamic_contaiment_single_ereferene_unset():
     assert b1.eContainer() is a1
     a1.b = None
     assert b1.eContainer() is None
+
+
+def test_dynamic_extend_ecore():
+    A = EClass('A')
+    A.eSuperTypes.append(EModelElement.eClass)  # A now extends EModelElement
+    a1 = A()
+    assert a1.eAnnotations == []
+    a1.eAnnotations.append(EAnnotation('test'))
+    assert len(a1.eAnnotations) == 1
+    a1.eAnnotations[0].details['new_value'] = True
+    assert 'new_value' in a1.eAnnotations[0].details
+
+
+def test_dynamic_crate_epackage():
+    A = EClass('A')
+    package = EPackage('testpack', nsURI='http://test/1.0', nsPrefix='test')
+    package.eClassifiers.append(A)
+    assert package.eClassifiers != []
+    assert A in package.eClassifiers
+    assert package.getEClassifier('A') is A
