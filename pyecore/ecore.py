@@ -2,6 +2,7 @@ import sys
 from inspect import getmembers, isclass
 
 
+nsPrefix = 'ecore'
 nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 
 
@@ -490,6 +491,8 @@ ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
 ETypedElement.default_value = EAttribute('default_value', type)
 
+EPackage.nsURI = EAttribute('nsURI', EString)
+EPackage.nsPrefix = EAttribute('nsPrefix', EString)
 EPackage.eClassifiers = EReference('eClassifiers', EClass, upper=-1,
                                    containment=True)
 EPackage.eSubpackages = EReference('eSubpackages', EPackage, upper=-1,
