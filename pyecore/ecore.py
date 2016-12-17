@@ -407,7 +407,7 @@ class EClass(EClassifier):
 
     @property
     def eStructuralFeatures(self):
-        return tuple(self.eAttributes + self.eReferences)
+        return self.eAttributes + self.eReferences
 
     def findEStructuralFeature(self, name):
         return next(
@@ -416,8 +416,8 @@ class EClass(EClassifier):
 
     def eAllSuperTypes(self, building=None):
         if isinstance(self, type):
-            return (x.eClass for x in self.mro() if x is not object and
-                    x is not self)
+            return [x.eClass for x in self.mro() if x is not object and
+                    x is not self]
         if not self.eSuperTypes:
             return []
         building = building if building else []
@@ -425,12 +425,12 @@ class EClass(EClassifier):
         [stypes.append(x) for x in self.eSuperTypes if x not in building]
         for ec in self.eSuperTypes:
             stypes.extend(ec.eAllSuperTypes(stypes))
-        return tuple(stypes)
+        return stypes
 
     def eAllStructuralFeatures(self):
-        feats = list(self.eStructuralFeatures)
+        feats = self.eStructuralFeatures
         [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
-        return tuple(feats)
+        return feats
 
 
 EClass.eClass = EClass
