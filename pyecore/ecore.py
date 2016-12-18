@@ -144,12 +144,12 @@ class EObject(object):
             return
         for key, value in _super.__dict__.items():
             if isinstance(value, EAttribute):
-                self.__setattr__(key, value)
+                object.__setattr__(self, key, value)
             elif isinstance(value, EReference):
                 if value.many:
-                    self.__setattr__(key, EList(self, value))
+                    object.__setattr__(self, key, EList(self, value))
                 else:
-                    self.__setattr__(key, None)
+                    object.__setattr__(self, key, None)
         for super_class in _super.__bases__:
             super_class.__initmetattr__(self, super_class)
 
@@ -469,6 +469,8 @@ class MetaEClass(type):
         # init instances by reflection
         EObject.__subinit__(obj)
         for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
+            if efeat.name in obj.__dict__:
+                continue
             if isinstance(efeat, EAttribute):
                 obj.__setattr__(efeat.name, efeat.default_value)
             elif efeat.many:
