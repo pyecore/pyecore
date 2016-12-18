@@ -77,3 +77,9 @@ def test_eenum_geteenum():
 def test_eenum_geteenum_print():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
     print(MyEnum)
+
+
+def test_eattribute_etype():
+    eattribute = EAttribute('test')
+    assert ETypedElement.eClass in eattribute.eClass.eAllSuperTypes()
+    assert eattribute.eClass.findEStructuralFeature('eType')
