@@ -27,7 +27,7 @@ class EcoreUtils(object):
             return True
         elif isinstance(_type, EEnum):
             return obj in _type
-        elif isinstance(_type, EDatatype) or isinstance(_type, EAttribute):
+        elif isinstance(_type, EDataType) or isinstance(_type, EAttribute):
             return isinstance(obj, _type.eType)
         elif isinstance(_type, EClass):
             if isinstance(obj, EObject):
@@ -294,7 +294,7 @@ class EClassifier(ENamedElement):
         super().__init__(name)
 
 
-class EDatatype(EClassifier):
+class EDataType(EClassifier):
     def __init__(self, name=None, eType=None, default_value=None):
         super().__init__(name)
         self.eType = eType
@@ -304,7 +304,7 @@ class EDatatype(EClassifier):
         return '{0}({1})'.format(self.name, self.eType.__name__)
 
 
-class EEnum(EDatatype):
+class EEnum(EDataType):
     def __init__(self, name, default_value=None, literals=None):
         super().__init__(name, eType=self)
         if literals:
@@ -364,7 +364,7 @@ class EAttribute(EStructuralFeature):
         super().__init__(name, eType, lower=lower, upper=upper,
                          derived=derived, changeable=changeable)
         self.default_value = default_value
-        if not self.default_value and isinstance(eType, EDatatype):
+        if not self.default_value and isinstance(eType, EDataType):
             self.default_value = eType.default_value
 
 
@@ -469,10 +469,10 @@ def abstract(cls):
 
 
 # meta-meta level
-EString = EDatatype('EString', str)
-EBoolean = EDatatype('EBoolean', bool, False)
-EInteger = EDatatype('EInteger', int, 0)
-EStringToStringMapEntry = EDatatype('EStringToStringMapEntry', dict, {})
+EString = EDataType('EString', str)
+EBoolean = EDataType('EBoolean', bool, False)
+EInteger = EDataType('EInteger', int, 0)
+EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation, upper=-1,
                                         containment=True)
@@ -532,7 +532,7 @@ Core._promote(EModelElement)
 Core._promote(ENamedElement)
 Core._promote(EAnnotation)
 Core._promote(EPackage)
-Core._promote(EDatatype)
+Core._promote(EDataType)
 Core._promote(EClassifier)
 Core._promote(EEnum)
 Core._promote(EEnumLiteral)
