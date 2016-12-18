@@ -313,6 +313,17 @@ def test_create_dynamic_contaiment_single_ereferene():
     assert b1.eContainer() is a1
 
 
+def test_create_dynamic_contaiment_getroot():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b = b1
+    assert EcoreUtils.getRoot(b1) is a1
+    assert EcoreUtils.getRoot(None) is None
+
+
 def test_create_dynamic_contaiment_single_ereferene_unset():
     A = EClass('A')
     B = EClass('B')
@@ -323,6 +334,54 @@ def test_create_dynamic_contaiment_single_ereferene_unset():
     assert b1.eContainer() is a1
     a1.b = None
     assert b1.eContainer() is None
+
+
+def test_create_dynamic_contaiment_containmentfeature():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b = b1
+    assert isinstance(b1.eContainmentFeature(), EReference)
+    assert b1.eContainmentFeature() in A.eReferences
+
+
+def test_create_dynamic_contaiment_containmentfeature_unset():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.b = b1
+    assert isinstance(b1.eContainmentFeature(), EReference)
+    assert b1.eContainmentFeature() in A.eReferences
+    a1.b = None
+    assert b1.eContainmentFeature() is None
+
+
+def test_create_dynamic_contaiment_containmentfeature_many():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True, upper=-1))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    assert isinstance(b1.eContainmentFeature(), EReference)
+    assert b1.eContainmentFeature() in A.eReferences
+
+
+def test_create_dynamic_contaiment_containmentfeature_many_unset():
+    A = EClass('A')
+    B = EClass('B')
+    A.eReferences.append(EReference('b', B, containment=True, upper=-1))
+    a1 = A()
+    b1 = B()
+    a1.b.append(b1)
+    assert isinstance(b1.eContainmentFeature(), EReference)
+    assert b1.eContainmentFeature() in A.eReferences
+    a1.b.remove(b1)
+    assert b1.eContainmentFeature() is None
 
 
 def test_dynamic_extend_ecore():

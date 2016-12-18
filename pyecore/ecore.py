@@ -36,6 +36,14 @@ class EcoreUtils(object):
             return False
         return isinstance(obj, _type)
 
+    def getRoot(obj):
+        if not obj:
+            return None
+        previous = obj
+        while previous.eContainer() is not None:
+            previous = previous.eContainer()
+        return previous
+
 
 class Core(object):
     def getattr(self, name):
@@ -83,8 +91,10 @@ class Core(object):
         if self._isready and isinstance(feat, EReference):
             if feat.containment and isinstance(value, EObject):
                 value._container = self
+                value._containment_feature = feat
             elif feat.containment and not value and previous_value:
                 previous_value._container = None
+                previous_value._containment_feature = None
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 if eOpposite.many:
@@ -137,6 +147,7 @@ class EObject(object):
         self._isset = []
         self._container = None
         self._isready = False
+        self._containment_feature = None
 
     def __initmetattr__(self, _super=None):
         _super = _super if _super else self.__class__
@@ -156,6 +167,9 @@ class EObject(object):
     def eContainer(self):
         return self._container
 
+    def eContainmentFeature(self):
+        return self._containment_feature
+
 
 class EList(list):
     def __init__(self, owner, efeature=None):
@@ -172,8 +186,10 @@ class EList(list):
             return
         if self._efeature.containment and not previous_value:
             value._container = self._owner
+            value._containment_feature = self._efeature
         elif self._efeature.containment and previous_value:
             previous_value._container = value
+            previous_value._containment_feature = value
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
@@ -506,7 +522,7 @@ ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
 ETypedElement.lower = EAttribute('lower', EInteger, derived=True)
 ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
 ETypedElement.upper = EAttribute('upper', EInteger, default_value=1,
-                                                    derived=True)
+                                 derived=True)
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
