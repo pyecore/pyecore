@@ -503,6 +503,7 @@ EPackage.eSuperPackage = EReference('eSuperPackage', EPackage, lower=1,
 EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
 
+EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eAttributes = EReference('eAttributes', EAttribute, upper=-1,
                                 containment=True)
 EClass.eReferences = EReference('eReferences', EReference, upper=-1,
