@@ -262,15 +262,31 @@ class ETypedElement(ENamedElement):
                  lower=0, upper=1, required=False):
         super().__init__(name)
         self.eType = eType
-        self.lower = lower
-        self.upper = upper
+        self.lowerBound = lower
+        self.upperBound = upper
         self.ordered = ordered
         self.unique = unique
         self.required = required
 
     @property
+    def upper(self):
+        return self.upperBound
+
+    @upper.setter
+    def upper(self, value):
+        self.upperBound = value
+
+    @property
+    def lower(self):
+        return self.lowerBound
+
+    @lower.setter
+    def lower(self, value):
+        self.lowerBound = value
+
+    @property
     def many(self):
-        return self.upper > 1 or self.upper < 0
+        return self.upperBound > 1 or self.upperBound < 0
 
 
 class EOperation(ETypedElement):
@@ -485,11 +501,22 @@ ENamedElement.name = EAttribute('name', EString)
 
 ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
-ETypedElement.lower = EAttribute('lower', EInteger)
-ETypedElement.upper = EAttribute('upper', EInteger, default_value=1)
+ETypedElement.lower = EAttribute('lower', EInteger, derived=True)
+ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
+ETypedElement.upper = EAttribute('upper', EInteger, default_value=1,
+                                                    derived=True)
+ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
 ETypedElement.default_value = EAttribute('default_value', type)
+
+EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
+                                           default_value=True)
+EStructuralFeature.volatile = EAttribute('volatile', EBoolean)
+EStructuralFeature.transient = EAttribute('transient', EBoolean)
+EStructuralFeature.unsettable = EAttribute('unsettable', EBoolean)
+EStructuralFeature.derived = EAttribute('derived', EBoolean)
+
 
 EPackage.nsURI = EAttribute('nsURI', EString)
 EPackage.nsPrefix = EAttribute('nsPrefix', EString)
