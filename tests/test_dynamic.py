@@ -16,7 +16,7 @@ def test_create_dynamic_instance():
 
 def test_create_dynamic_simple_eattribute():
     A = EClass('A')
-    A.eAttributes.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EAttribute('name', EString))
     a = A()
     assert a.name is None
     a.name = 'new_name'
@@ -25,7 +25,7 @@ def test_create_dynamic_simple_eattribute():
 
 def test_create_dynamic_simple_eattribute_badvalue():
     A = EClass('A')
-    A.eAttributes.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EAttribute('name', EString))
     a = A()
     with pytest.raises(BadValueError):
         a.name = 42
@@ -40,7 +40,7 @@ def test_create_dynamic_access_badtype():
 
 def test_create_dynamic_many_eattribute():
     A = EClass('A')
-    A.eAttributes.append(EAttribute('names', EString, upper=-1))
+    A.eStructuralFeatures.append(EAttribute('names', EString, upper=-1))
     a = A()
     assert a.names == []
     a.names.append('name1')
@@ -50,7 +50,7 @@ def test_create_dynamic_many_eattribute():
 
 def test_create_dynamic_override_many_eattribute():
     A = EClass('A')
-    A.eAttributes.append(EAttribute('names', EString, upper=-1))
+    A.eStructuralFeatures.append(EAttribute('names', EString, upper=-1))
     a = A()
     assert a.names == []
     with pytest.raises(BadValueError):
@@ -60,7 +60,7 @@ def test_create_dynamic_override_many_eattribute():
 def test_create_dynamic_simple_ereference():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B))
+    A.eStructuralFeatures.append(EReference('tob', B))
     a1 = A()
     b1 = B()
     a1.tob = b1
@@ -70,7 +70,7 @@ def test_create_dynamic_simple_ereference():
 def test_create_dynamic_simple_ereference_wrongtype():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B))
+    A.eStructuralFeatures.append(EReference('tob', B))
     a1 = A()
     with pytest.raises(BadValueError):
         a1.tob = 3
@@ -79,7 +79,7 @@ def test_create_dynamic_simple_ereference_wrongtype():
 def test_create_dynamic_simple_ereference_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B))
+    A.eStructuralFeatures.append(EReference('tob', B))
     a1 = A()
     b1 = B()
     a1.tob = b1
@@ -90,7 +90,7 @@ def test_create_dynamic_simple_ereference_unset():
 def test_create_dynamic_many_ereference():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B, upper=-1))
+    A.eStructuralFeatures.append(EReference('tob', B, upper=-1))
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
@@ -100,7 +100,7 @@ def test_create_dynamic_many_ereference():
 def test_create_dynamic_many_ereference_filter():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -112,7 +112,7 @@ def test_create_dynamic_many_ereference_filter():
 def test_create_dynamic_many_ereference_reject():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -124,7 +124,7 @@ def test_create_dynamic_many_ereference_reject():
 def test_create_dynamic_many_ereference_wrongtype():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B, upper=-1))
+    A.eStructuralFeatures.append(EReference('tob', B, upper=-1))
     a1 = A()
     with pytest.raises(BadValueError):
         a1.tob.append(3)
@@ -133,7 +133,7 @@ def test_create_dynamic_many_ereference_wrongtype():
 def test_create_dynamic_many_ereference_remove():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('tob', B, upper=-1))
+    A.eStructuralFeatures.append(EReference('tob', B, upper=-1))
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
@@ -144,8 +144,8 @@ def test_create_dynamic_many_ereference_remove():
 def test_create_dynamic_ereference_one2one():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B))
-    B.eReferences.append(EReference('a', A, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B))
+    B.eStructuralFeatures.append(EReference('a', A, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -156,8 +156,8 @@ def test_create_dynamic_ereference_one2one():
 def test_create_dynamic_ereference_one2one_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B))
-    B.eReferences.append(EReference('a', A, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B))
+    B.eStructuralFeatures.append(EReference('a', A, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -171,8 +171,8 @@ def test_create_dynamic_ereference_one2one_unset():
 def test_create_dynamic_ereference_many2one():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
-    B.eReferences.append(EReference('a', A, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
+    B.eStructuralFeatures.append(EReference('a', A, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -183,8 +183,8 @@ def test_create_dynamic_ereference_many2one():
 def test_create_dynamic_ereference_many2one_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
-    B.eReferences.append(EReference('a', A, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
+    B.eStructuralFeatures.append(EReference('a', A, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -198,8 +198,8 @@ def test_create_dynamic_ereference_many2one_unset():
 def test_create_dynamic_ereference_one2many():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B))
-    B.eReferences.append(EReference('a', A, upper=-1, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B))
+    B.eStructuralFeatures.append(EReference('a', A, upper=-1, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -210,8 +210,8 @@ def test_create_dynamic_ereference_one2many():
 def test_create_dynamic_ereference_one2many_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B))
-    B.eReferences.append(EReference('a', A, upper=-1, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B))
+    B.eStructuralFeatures.append(EReference('a', A, upper=-1, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -225,8 +225,8 @@ def test_create_dynamic_ereference_one2many_unset():
 def test_create_dynamic_ereference_many2many():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
-    B.eReferences.append(EReference('a', A, upper=-1, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
+    B.eStructuralFeatures.append(EReference('a', A, upper=-1, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -237,8 +237,8 @@ def test_create_dynamic_ereference_many2many():
 def test_create_dynamic_ereference_many2many_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1))
-    B.eReferences.append(EReference('a', A, upper=-1, eOpposite=A.eReferences[0]))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1))
+    B.eStructuralFeatures.append(EReference('a', A, upper=-1, eOpposite=A.eStructuralFeatures[0]))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -284,7 +284,7 @@ def test_create_dynamic_subclass_from_abstract_eclass():
 def test_create_dynamic_contaiment_many_ereferene():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1, containment=True))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -294,7 +294,7 @@ def test_create_dynamic_contaiment_many_ereferene():
 def test_create_dynamic_contaiment_many_ereferene_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, upper=-1, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, upper=-1, containment=True))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
@@ -306,7 +306,7 @@ def test_create_dynamic_contaiment_many_ereferene_unset():
 def test_create_dynamic_contaiment_single_ereferene():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -316,7 +316,7 @@ def test_create_dynamic_contaiment_single_ereferene():
 def test_create_dynamic_contaiment_getroot():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -327,7 +327,7 @@ def test_create_dynamic_contaiment_getroot():
 def test_create_dynamic_contaiment_single_ereferene_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True))
     a1 = A()
     b1 = B()
     a1.b = b1
@@ -339,23 +339,23 @@ def test_create_dynamic_contaiment_single_ereferene_unset():
 def test_create_dynamic_contaiment_containmentfeature():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True))
     a1 = A()
     b1 = B()
     a1.b = b1
     assert isinstance(b1.eContainmentFeature(), EReference)
-    assert b1.eContainmentFeature() in A.eReferences
+    assert b1.eContainmentFeature() in A.eStructuralFeatures
 
 
 def test_create_dynamic_contaiment_containmentfeature_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True))
     a1 = A()
     b1 = B()
     a1.b = b1
     assert isinstance(b1.eContainmentFeature(), EReference)
-    assert b1.eContainmentFeature() in A.eReferences
+    assert b1.eContainmentFeature() in A.eStructuralFeatures
     a1.b = None
     assert b1.eContainmentFeature() is None
 
@@ -363,23 +363,23 @@ def test_create_dynamic_contaiment_containmentfeature_unset():
 def test_create_dynamic_contaiment_containmentfeature_many():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True, upper=-1))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True, upper=-1))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
     assert isinstance(b1.eContainmentFeature(), EReference)
-    assert b1.eContainmentFeature() in A.eReferences
+    assert b1.eContainmentFeature() in A.eStructuralFeatures
 
 
 def test_create_dynamic_contaiment_containmentfeature_many_unset():
     A = EClass('A')
     B = EClass('B')
-    A.eReferences.append(EReference('b', B, containment=True, upper=-1))
+    A.eStructuralFeatures.append(EReference('b', B, containment=True, upper=-1))
     a1 = A()
     b1 = B()
     a1.b.append(b1)
     assert isinstance(b1.eContainmentFeature(), EReference)
-    assert b1.eContainmentFeature() in A.eReferences
+    assert b1.eContainmentFeature() in A.eStructuralFeatures
     a1.b.remove(b1)
     assert b1.eContainmentFeature() is None
 

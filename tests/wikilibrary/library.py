@@ -31,7 +31,7 @@ class Writer(EObject, metaclass=MetaEClass):
 
 Book.authors = EReference('authors', Writer, lower=1, upper=-1,
                           eOpposite=Writer.books)
-Book.eClass.eReferences.append(Book.authors)
+Book.eClass.eStructuralFeatures.append(Book.authors)
 
 
 class Employee(EObject, metaclass=MetaEClass):

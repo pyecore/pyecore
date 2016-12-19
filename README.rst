@@ -18,7 +18,7 @@ the fly (dynamic metamodel)::
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
     >>> A = EClass('A') # We create metaclass named 'A'
-    >>> A.eAttributes.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
+    >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
     >>> a1 = A()
     >>> a1.myname
     'new_name'
@@ -39,9 +39,9 @@ reflexive features::
     True
     >>> a1.eClass.eStructuralFeatures
     (<pyecore.ecore.EAttribute at 0x7f6bf6cd91d0>,)
-    >>> a1.eClass.eAttributes[0].name
+    >>> a1.eClass.eStructuralFeatures[0].name
     'myname'
-    >>> a1.eClass.eAttributes[0].eClass
+    >>> a1.eClass.eStructuralFeatures[0].eClass
     <EClass name="EAttribute">
     >>> a1.__getattr__('name')
     'a_instance'
@@ -91,8 +91,8 @@ Then, we can add metaproperties to the freshly created metaclass::
 
     >>> instance1.eClass.eAttributes
     []
-    >>> MyMetaclass.eAttributes.append(Ecore.EAttribute('name', Ecore.EString))
-    >>> instance1.eClass.eAttributes
+    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    >>> instance1.eClass.eStructuralFeatures
     [<pyecore.ecore.EAttribute object at 0x7f7da72ba940>]
     >>> str(instance1.name)
     'None'
@@ -103,7 +103,7 @@ Then, we can add metaproperties to the freshly created metaclass::
 We can also create a new metaclass ``B`` and a new metareferences towards ``B``::
 
     >>> B = Ecore.EClass('B')
-    >>> MyMetaclass.eReferences.append(Ecore.EReference('toB', B, containment=True))
+    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EReference('toB', B, containment=True))
     >>> b1 = B()
     >>> instance1.toB = b1
     >>> instance1.toB
@@ -114,8 +114,8 @@ We can also create a new metaclass ``B`` and a new metareferences towards ``B``:
 Opposite and 'collection' meta-references are also managed::
 
     >>> C = Ecore.EClass('C')
-    >>> C.eReferences.append(Ecore.EReference('toMy', MyMetaclass))
-    >>> MyMetaclass.eReferences.append(Ecore.EReference('toCs', C, upper=-1, eOpposite=C.eReferences[0]))
+    >>> C.eStructuralFeatures.append(Ecore.EReference('toMy', MyMetaclass))
+    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EReference('toCs', C, upper=-1, eOpposite=C.eStructuralFeatures[0]))
     >>> instance1.toCs
     []
     >>> c1 = C()
@@ -160,7 +160,7 @@ classical classes definitions in Python::
     # We need to update C in order to add the opposite meta-reference
     # At the moment, the information need to be added in two places
     C.toMy = EReference('toMy', MyMetaclass, eOpposite=MyMetaclass.toCs)
-    C.eClass.eReferences.append(C.toMy)
+    C.eClass.eStructuralFeatures.append(C.toMy)
 
     $ python
     ...
@@ -175,11 +175,7 @@ Liberty Regarding the Java EMF Implementation
 =============================================
 
 There is some meta-property that are not still coded inside PyEcore. More will
-come with time. At the moment, there is a slighlty difference between the
-default Java EMF implementation and PyEcore:
-
-* the ``eReferences`` and ``eAttributes`` meta-references are not derived, the ``eStructuralFeatures`` meta-reference is (in Java EMF, this is the opposite)
-
+come with time.
 
 State
 =====

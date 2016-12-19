@@ -120,14 +120,18 @@ class Core(object):
                 cls.eClass.eSuperTypes.append(_cls.eClass)
         # init eclass by reflection
         for k, v in cls.__dict__.items():
-            if isinstance(v, EAttribute):
+            if isinstance(v, EStructuralFeature):
                 if not v.name:
                     v.name = k
-                cls.eClass.eAttributes.append(v)
-            elif isinstance(v, EReference):
-                if not v.name:
-                    v.name = k
-                cls.eClass.eReferences.append(v)
+                cls.eClass.eStructuralFeatures.append(v)
+            # if isinstance(v, EAttribute):
+            #     if not v.name:
+            #         v.name = k
+            #     cls.eClass.eAttributes.append(v)
+            # elif isinstance(v, EReference):
+            #     if not v.name:
+            #         v.name = k
+            #     cls.eClass.eReferences.append(v)
 
     def compute_eclass(module_name):
         module = sys.modules[module_name]
@@ -402,9 +406,10 @@ class EAttribute(EStructuralFeature):
 
 class EReference(EStructuralFeature):
     def __init__(self, name=None, eType=None, lower=0, upper=1,
-                 containment=False, eOpposite=None, ordered=True, unique=True):
+                 containment=False, eOpposite=None, ordered=True, unique=True,
+                 derived=False):
         super().__init__(name, eType, ordered, unique, lower=lower,
-                         upper=upper)
+                         upper=upper, derived=derived)
         self.containment = containment
         self.eOpposite = eOpposite
         if eOpposite:
@@ -439,8 +444,14 @@ class EClass(EClassifier):
         return '<EClass name="{0}">'.format(self.name)
 
     @property
-    def eStructuralFeatures(self):
-        return self.eAttributes + self.eReferences
+    def eAttributes(self):
+        return list(filter(lambda x: isinstance(x, EAttribute),
+                           self.eStructuralFeatures))
+
+    @property
+    def eReferences(self):
+        return list(filter(lambda x: isinstance(x, EReference),
+                           self.eStructuralFeatures))
 
     def findEStructuralFeature(self, name):
         return next(
@@ -549,19 +560,21 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
 
 EClass.abstract = EAttribute('abstract', EBoolean)
-EClass.eAttributes = EReference('eAttributes', EAttribute, upper=-1,
-                                containment=True)
-EClass.eReferences = EReference('eReferences', EReference, upper=-1,
-                                containment=True)
+EClass.eStructuralFeatures = EReference('eStructuralFeatures',
+                                        EStructuralFeature,
+                                        upper=-1, containment=True)
+# EClass.eAttributes = EReference('eAttributes', EAttribute, upper=-1,
+#                                 derived=True)
+# EClass.eReferences = EReference('eReferences', EReference, upper=-1,
+#                                 derived=True)
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 
-EAttribute.eContainingClass = EReference('eContainingClass', EClass,
-                                         eOpposite=EClass.eAttributes)
+EStructuralFeature.eContainingClass = \
+                   EReference('eContainingClass', EClass,
+                              eOpposite=EClass.eStructuralFeatures)
 
 EReference.containment = EAttribute('containment', EBoolean)
 EReference.eOpposite = EReference('eOpposite', EReference)
-EReference.eContainingClass = EReference('eContainingClass', EClass,
-                                         eOpposite=EClass.eReferences)
 
 EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
                              containment=True)
