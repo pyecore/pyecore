@@ -393,6 +393,9 @@ class EStructuralFeature(ETypedElement):
         self.unsettable = unsettable
         self.derived = derived
 
+    def __repr__(self):
+        return '{0}: {1}'.format(self.name, self.eType)
+
 
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None,
@@ -563,10 +566,10 @@ EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
-# EClass.eAttributes = EReference('eAttributes', EAttribute, upper=-1,
-#                                 derived=True)
-# EClass.eReferences = EReference('eReferences', EReference, upper=-1,
-#                                 derived=True)
+EClass._eAttributes = EReference('eAttributes', EAttribute, upper=-1,
+                                derived=True)
+EClass._eReferences = EReference('eReferences', EReference, upper=-1,
+                                derived=True)
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 
 EStructuralFeature.eContainingClass = \
