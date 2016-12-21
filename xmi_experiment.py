@@ -31,19 +31,64 @@ def _navigate_from(path, start_obj):
             obj = tmp_obj[int(index)] if index else tmp_obj
         else:
             obj = obj.getEClassifier(key)
+    return obj
+
+
+class File_URI_decoder(object):
+    def can_handle(path):
+        return path.startswith('file://') or path.startswith('.')
+
+    def resolve(path):
+        pass
+
+
+class Registered_URI_decoder(object):
+    def can_handle(path):
+        uri, fragment = path.split('#')
+        try:
+            global_registry[uri]
+            return True
+        except KeyError:
+            return False
+
+    def resolve(path):
+        uri, fragment = path.split('#')
+        epackage = global_registry[uri]
+        return _navigate_from(fragment, epackage)
 
 
 class XMIResource(object):
     xsitype = None
+    _decoders = [File_URI_decoder, Registered_URI_decoder]
+
     def __init__(self, tree):
         self._tree = tree
         self.root = tree.getroot()
         self.uuid_dict = {}
         self.nsmap = self.root.nsmap
+        self._use_uuid = False
         self.reverse_nsmap = {v: k for k,v in self.nsmap.items()}
         XMIResource.xsitype = '{{{0}}}type'.format(self.nsmap['xsi'])
+        XMIResource.xmiid = '{{{0}}}id'.format(self.nsmap['xmi'])
         self._init_modelroot()
 
+    def _get_decoder(self, path):
+        decoder = next((x for x in self._decoders if x.can_handle(path)), None)
+        return decoder if decoder else self
+
+    def resolve(self, fragment):
+        if self._use_uuid:
+            try:
+                frag = fragment[2:] if fragment.startswith('//') else fragment
+                return self.uuid_dict[frag]
+            except KeyError:
+                pass
+        result = None
+        for root in self._contents:
+            print('search in', root)
+            result = _navigate_from(fragment, root)
+            if result:
+                return result
 
     @property
     def contents(self):
@@ -71,6 +116,7 @@ class XMIResource(object):
         if not eobject:
             raise TypeError({'{0} EClass does not exists'}.format(eclass_name))
         modelroot = eobject()
+        self._use_uuid = self.root.get(XMIResource.xmiid) is not None
         self._contents = [modelroot]
         for key, value in self.root.attrib.items():
             namespace, att_name = XMIResource.extract_namespace(key)
@@ -130,11 +176,9 @@ class XMIResource(object):
         if self._type_attribute(node):
             prefix, _type = node.get(XMIResource.xsitype).split(':')
             if node.get('href'):
-                print('Ref stuff for', _type)
-                print('info', node.get('href'))
-                print('will be put in', parent_eobj)
-                print()
-                return (None, None, [], [])
+                ref = node.get('href')
+                decoder = self._get_decoder(ref)
+                return (feature_container, decoder.resolve(ref), [], [])
             if not prefix:
                 raise ValueError('Prefix {0} is not registered'.format(prefix))
             epackage = self.prefix2epackage(prefix)
@@ -201,4 +245,6 @@ x = root.eClassifiers[0]()
 print(x.isAbs)
 print(_build_path(root.eClassifiers[0].eAttributes[1]))
 
-_navigate_from('//@eClassifiers.0/@eStructuralFeatures.1', root)
+print(_navigate_from('//@eClassifiers.0/@eStructuralFeatures.1', root))
+
+print(Registered_URI_decoder.resolve('http://www.eclipse.org/emf/2002/Ecore#//EClass'))
