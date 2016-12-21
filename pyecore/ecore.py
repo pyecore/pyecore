@@ -567,9 +567,9 @@ EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
 EClass._eAttributes = EReference('eAttributes', EAttribute, upper=-1,
-                                derived=True)
+                                 derived=True)
 EClass._eReferences = EReference('eReferences', EReference, upper=-1,
-                                derived=True)
+                                 derived=True)
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 
 EStructuralFeature.eContainingClass = \
@@ -607,3 +607,6 @@ Core._promote(EReference)
 
 # We compute all the Metaclasses from the current module (EPackage-alike)
 eClassifiers = Core.compute_eclass(__name__)
+__btypes = [EString, EBoolean, EInteger, EStringToStringMapEntry]
+__basic_types = {v.name: v for v in __btypes}
+eClassifiers.update(__basic_types)
