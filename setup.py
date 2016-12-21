@@ -23,6 +23,7 @@ setup(
                        'README.rst']
                    },
     include_package_data = True,
+    install_requires = ['lxml'],
     extras_require = {'testing': ['pytest'],},
 
     license = 'BSD 3-Clause',
