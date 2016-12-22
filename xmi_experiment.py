@@ -44,7 +44,11 @@ class File_URI_decoder(object):
 
 class Registered_URI_decoder(object):
     def can_handle(path):
-        uri, fragment = path.split('#')
+        fragment = path.split('#')
+        if len(fragment) == 2:
+            uri, fragment = fragment
+        else:
+            uri = None
         try:
             global_registry[uri]
             return True
@@ -79,7 +83,8 @@ class XMIResource(object):
     def resolve(self, fragment):
         if self._use_uuid:
             try:
-                frag = fragment[2:] if fragment.startswith('//') else fragment
+                frag = fragment[1:] if fragment.startswith('#') else fragment
+                frag = frag[2:] if frag.startswith('//') else frag
                 return self.uuid_dict[frag]
             except KeyError:
                 pass
@@ -118,6 +123,7 @@ class XMIResource(object):
         modelroot = eobject()
         self._use_uuid = self.root.get(XMIResource.xmiid) is not None
         self._contents = [modelroot]
+        self._later = []
         for key, value in self.root.attrib.items():
             namespace, att_name = XMIResource.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
@@ -137,6 +143,29 @@ class XMIResource(object):
                 modelroot.__setattr__(key, value)
         for child in self.root:
             self._do_extract(child, modelroot)
+        self._do_later_nodes()
+
+    def _do_later_nodes(self):
+        print(self._later)
+        for eobject, erefs in self._later:
+            for ref, value in erefs:
+                if ref.many:
+                    print('Many Later for', ref.name, value.split())
+                    for val in value.split():
+                        decoder = self._get_decoder(val)
+                        resolved_value = decoder.resolve(val)
+                        if not resolved_value:
+                            raise ValueError('EObject for {frag} is unknown',
+                                             frag=value)
+                        eobject.__getattribute__(ref.name) \
+                               .append(resolved_value)
+                    continue
+                decoder = self._get_decoder(value)
+                resolved_value = decoder.resolve(value)
+                if not resolved_value:
+                    raise ValueError('EObject for {frag} is unknown',
+                                     frag=value)
+                eobject.__setattr__(ref.name, resolved_value)
 
     def _do_extract(self, current_node, parent_eobj):
         if not self.contents:
@@ -151,12 +180,8 @@ class XMIResource(object):
                 continue
             print('set', eattribute.name, 'to', value)
             eobject.__setattr__(eattribute.name, value)
-        for ereference, value in erefs:
-            print('values', value)
-            if ereference.many:
-                print('Many Later for', ereference.name, value.split())
-                continue
-            print('set later', ereference.name, 'with', value)
+
+        self._later.append((eobject, erefs))
 
         # attach the new eobject to the parent one
         if feat_container and feat_container.many:
@@ -248,3 +273,17 @@ print(_build_path(root.eClassifiers[0].eAttributes[1]))
 print(_navigate_from('//@eClassifiers.0/@eStructuralFeatures.1', root))
 
 print(Registered_URI_decoder.resolve('http://www.eclipse.org/emf/2002/Ecore#//EClass'))
+
+print(root.eClassifiers[1].eSuperTypes)
+
+TClass = root.getEClassifier('TClass')
+TInterface = root.getEClassifier('TInterface')
+A = root.getEClassifier('A')
+B = root.getEClassifier('B')
+
+a1 = A()
+b1 = B()
+print(a1)
+a1.b = b1
+print(a1.b)
+print(Ecore.EcoreUtils.isinstance(a1, TInterface))
