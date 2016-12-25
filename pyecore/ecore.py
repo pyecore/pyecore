@@ -85,7 +85,10 @@ class Core(object):
         except AttributeError:
             previous_value = None
 
-        object.__setattr__(self, name, value)
+        if isinstance(feat.eType, EDataType) and isinstance(value, str):
+            object.__setattr__(self, name, feat.eType.from_string(value))
+        else:
+            object.__setattr__(self, name, value)
         if self._isready:
             self._isset.append(name)
         if self._isready and isinstance(feat, EReference):
@@ -98,7 +101,7 @@ class Core(object):
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 if eOpposite.many:
-                    value.__getattr__(eOpposite.name)  # force resolve
+                    value.__getattribute__(eOpposite.name)  # force resolve
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
@@ -124,14 +127,6 @@ class Core(object):
                 if not v.name:
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
-            # if isinstance(v, EAttribute):
-            #     if not v.name:
-            #         v.name = k
-            #     cls.eClass.eAttributes.append(v)
-            # elif isinstance(v, EReference):
-            #     if not v.name:
-            #         v.name = k
-            #     cls.eClass.eReferences.append(v)
 
     def compute_eclass(module_name):
         module = sys.modules[module_name]
@@ -201,7 +196,7 @@ class EList(list):
         eOpposite = self._efeature.eOpposite
         if eOpposite:
             if eOpposite.many and not remove:
-                owner.__getattr__(eOpposite.name)  # force resolve
+                owner.__getattribute__(eOpposite.name)  # force resolve
                 object.__getattribute__(owner, eOpposite.name) \
                       .append(new_value, False)
             elif eOpposite.many and remove:
@@ -282,8 +277,8 @@ class ETypedElement(ENamedElement):
                  lower=0, upper=1, required=False):
         super().__init__(name)
         self.eType = eType
-        self.lowerBound = lower
-        self.upperBound = upper
+        self.lowerBound = int(lower)
+        self.upperBound = int(upper)
         self.ordered = ordered
         self.unique = unique
         self.required = required
@@ -306,7 +301,7 @@ class ETypedElement(ENamedElement):
 
     @property
     def many(self):
-        return self.upperBound > 1 or self.upperBound < 0
+        return int(self.upperBound) > 1 or int(self.upperBound) < 0
 
 
 class EOperation(ETypedElement):
@@ -331,10 +326,16 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
-    def __init__(self, name=None, eType=None, default_value=None):
+    def __init__(self, name=None, eType=None, default_value=None,
+                 from_string=None):
         super().__init__(name)
         self.eType = eType
         self.default_value = default_value
+        if from_string:
+            self.from_string = from_string
+
+    def from_string(self, value):
+        return value
 
     def __repr__(self):
         return '{0}({1})'.format(self.name, self.eType.__name__)
@@ -431,7 +432,7 @@ class EClass(EClassifier):
             self.eSuperTypes.append(superclass)
         self.__metainstance = type(self.name, (EObject,), {
                                     'eClass': self,
-                                    '__getattr__': Core.getattr,
+                                    '__getattribute__': Core.getattr,
                                     '__setattr__': Core.setattr
                                 })
 
@@ -487,7 +488,7 @@ EClass.eClass = EClass
 class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
-        cls.__getattr__ = Core.getattr
+        cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
         Core._promote(cls)
 
@@ -518,8 +519,9 @@ def abstract(cls):
 
 # meta-meta level
 EString = EDataType('EString', str)
-EBoolean = EDataType('EBoolean', bool, False)
-EInteger = EDataType('EInteger', int, 0)
+EBoolean = EDataType('EBoolean', bool, False,
+                     from_string=lambda x: x in ['True', 'true'])
+EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation, upper=-1,
