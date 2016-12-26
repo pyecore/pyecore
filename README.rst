@@ -43,10 +43,10 @@ reflexive features::
     'myname'
     >>> a1.eClass.eStructuralFeatures[0].eClass
     <EClass name="EAttribute">
-    >>> a1.__getattr__('name')
+    >>> a1.__getattribute__('name')
     'a_instance'
     >>> a1.__setattr__('myname', 'reflexive')
-    >>> a1.__getattr__('myname')
+    >>> a1.__getattribute__('myname')
     'reflexive'
 
 Runtime type checking is also performed (regarding what you expressed in your)
