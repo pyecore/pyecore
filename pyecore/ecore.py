@@ -305,7 +305,7 @@ class ETypedElement(ENamedElement):
 
 
 class EOperation(ETypedElement):
-    def __init__(self, name, eType=None, params=None, exceptions=None):
+    def __init__(self, name=None, eType=None, params=None, exceptions=None):
         super().__init__(name, eType)
         if params:
             for param in params:
@@ -316,7 +316,7 @@ class EOperation(ETypedElement):
 
 
 class EParameter(ETypedElement):
-    def __init__(self, name, eType=None):
+    def __init__(self, name=None, eType=None):
         super().__init__(name, eType)
 
 
@@ -524,12 +524,14 @@ EBoolean = EDataType('EBoolean', bool, False,
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 
-EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation, upper=-1,
-                                        containment=True)
+EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
+                                        upper=-1, containment=True)
 EAnnotation.eModelElement = EReference('eModelElement', EModelElement,
                                        eOpposite=EModelElement.eAnnotations)
 EAnnotation.source = EAttribute('source', EString)
 EAnnotation.details = EAttribute('details', EStringToStringMapEntry)
+EAnnotation.references = EReference('references', EObject, upper=-1)
+EAnnotation.contents = EReference('contents', EObject, upper=-1)
 
 ENamedElement.name = EAttribute('name', EString)
 
@@ -537,8 +539,8 @@ ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
 ETypedElement.lower = EAttribute('lower', EInteger, derived=True)
 ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
-ETypedElement.upper = EAttribute('upper', EInteger, default_value=1,
-                                 derived=True)
+ETypedElement.upper = EAttribute('upper', EInteger,
+                                 default_value=1, derived=True)
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
@@ -550,16 +552,18 @@ EStructuralFeature.volatile = EAttribute('volatile', EBoolean)
 EStructuralFeature.transient = EAttribute('transient', EBoolean)
 EStructuralFeature.unsettable = EAttribute('unsettable', EBoolean)
 EStructuralFeature.derived = EAttribute('derived', EBoolean)
+EStructuralFeature.defaultValueLiteral = EAttribute('defaultValueLiteral',
+                                                    EString)
 
 
 EPackage.nsURI = EAttribute('nsURI', EString)
 EPackage.nsPrefix = EAttribute('nsPrefix', EString)
-EPackage.eClassifiers = EReference('eClassifiers', EClass, upper=-1,
-                                   containment=True)
-EPackage.eSubpackages = EReference('eSubpackages', EPackage, upper=-1,
-                                   containment=True)
-EPackage.eSuperPackage = EReference('eSuperPackage', EPackage, lower=1,
-                                    eOpposite=EPackage.eSubpackages)
+EPackage.eClassifiers = EReference('eClassifiers', EClassifier,
+                                   upper=-1, containment=True)
+EPackage.eSubpackages = EReference('eSubpackages', EPackage,
+                                   upper=-1, containment=True)
+EPackage.eSuperPackage = EReference('eSuperPackage', EPackage,
+                                    lower=1, eOpposite=EPackage.eSubpackages)
 
 EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
@@ -568,11 +572,13 @@ EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
-EClass._eAttributes = EReference('eAttributes', EAttribute, upper=-1,
-                                 derived=True)
-EClass._eReferences = EReference('eReferences', EReference, upper=-1,
-                                 derived=True)
+EClass._eAttributes = EReference('eAttributes', EAttribute,
+                                 upper=-1, derived=True)
+EClass._eReferences = EReference('eReferences', EReference,
+                                 upper=-1, derived=True)
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
+EClass.eOperations = EReference('eOperations', EOperation,
+                                upper=-1, containment=True)
 
 EStructuralFeature.eContainingClass = \
                    EReference('eContainingClass', EClass,
