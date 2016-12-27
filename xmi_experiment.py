@@ -203,6 +203,8 @@ class XMIResource(object):
             return
         eobject_info = self._decode_node(parent_eobj, current_node)
         feat_container, eobject, eatts, erefs = eobject_info
+        if not feat_container:
+            return
 
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
@@ -225,6 +227,11 @@ class XMIResource(object):
 
     def _decode_node(self, parent_eobj, node):
         feature_container = parent_eobj.eClass.findEStructuralFeature(node.tag)
+        if not feature_container:
+            raise ValueError('Feature {0} is unknown for {1}, line {2}'
+                             .format(node.tag,
+                                     parent_eobj.eClass.name,
+                                     node.sourceline,))
         if self._type_attribute(node):
             prefix, _type = node.get(XMIResource.xsitype).split(':')
             if node.get('href'):
@@ -240,13 +247,16 @@ class XMIResource(object):
                                                                      epackage))
         else:
             etype = feature_container.eType
-        if not feature_container:
-            raise ValueError('Feature {0} is unknown for {1}'
-                             .format(node.tag, parent_eobj.eClass.name))
+
         # we create the instance
         if etype is Ecore.EClass:
             name = node.get('name')
             eobject = etype(name)
+        elif etype is Ecore.EStringToStringMapEntry \
+             and feature_container is Ecore.EAnnotation.details:
+            parent_eobj.details[node.get('key')] = node.get('value')
+            print(parent_eobj.details)
+            return (None, None, [], [])
         else:
             eobject = etype()
 
@@ -289,22 +299,35 @@ class XMIResource(object):
         pass
 
 
-rset = ResourceSet()
+# rset = ResourceSet()
+# resource = XMIResource(tree)
+# # resource.resource_set = rset
+# root = resource.contents[0]
+# print(root.nsURI)
+#
+# print(root.eClassifiers[2].eReferences)
+# global_registry[root.nsURI] = root
+#
+# tree = etree.parse('xmi-tests/MyRoot.xmi')
+# resource = XMIResource(tree)
+#
+# my = root
+# root = resource.contents[0]
+# new_a = my.getEClassifier('A')()
+# new_a.name = 'test'
+# root.aContainer.append(new_a)
+# assert root.aContainer[0].b is root.bContainer[0]
+
+umltypes = Ecore.EPackage('umltypes')
+String = Ecore.EDataType('String', str)
+Boolean = Ecore.EDataType('Boolean', bool, False)
+umltypes.eClassifiers.append(Boolean)
+global_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+
+
+tree = etree.parse('xmi-tests/UML.ecore')
 resource = XMIResource(tree)
-# resource.resource_set = rset
 root = resource.contents[0]
-print(root.nsURI)
-
-print(root.eClassifiers[2].eReferences)
-myroot = root.eClassifiers[2]()
-print(myroot.eClass)
-global_registry[root.nsURI] = root
-
-tree = etree.parse('xmi-tests/MyRoot.xmi')
-resource = XMIResource(tree)
-
-root = resource.contents[0]
-print(root.aContainer[0])
 
 # print(root.eClassifiers[0].eAttributes[1].name)
 # x = root.eClassifiers[0]()
