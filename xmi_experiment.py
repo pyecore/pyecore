@@ -90,7 +90,6 @@ class XMIResource(object):
         XMIResource.xsitype = '{{{0}}}type'.format(self.nsmap['xsi'])
         XMIResource.xmiid = '{{{0}}}id'.format(self.nsmap['xmi'])
         self._init_modelroot()
-        print('INIT FINISHED')
         self._resourceset = None
 
     @property
@@ -128,7 +127,6 @@ class XMIResource(object):
             result = _navigate_from(fragment, root)
             if result:
                 self._resolve_mem[fragment] = result
-                print('add', fragment)
                 return result
 
     @property
@@ -332,5 +330,11 @@ if __name__ == '__main__':
     resource = XMIResource(tree)
     root = resource.contents[0]
     Class = root.getEClassifier('Class')
+    Property = root.getEClassifier('Property')
+    Visibility = root.getEClassifier('VisibilityKind')
     c = Class()
-    print(c.eClass.eAllStructuralFeatures())
+    p = Property()
+    p.name = 'testing'
+    p.type = c
+    c.ownedAttribute.append(p)
+    assert p in c.ownedAttribute
