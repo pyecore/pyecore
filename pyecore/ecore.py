@@ -1,3 +1,4 @@
+from ordered_set import OrderedSet
 import sys
 from inspect import getmembers, isclass
 
@@ -57,7 +58,7 @@ class Core(object):
             raise ex
 
         if feature.many:
-            new_list = EList(self, feature)
+            new_list = ECollection.create(self, feature)
             self.__setattr__(name, new_list)
             return new_list
         else:
@@ -157,7 +158,9 @@ class EObject(object):
                 object.__setattr__(self, key, value)
             elif isinstance(value, EReference):
                 if value.many:
-                    object.__setattr__(self, key, EList(self, value))
+                    object.__setattr__(self,
+                                       key,
+                                       ECollection.create(self, value))
                 else:
                     object.__setattr__(self, key, None)
         for super_class in _super.__bases__:
@@ -170,9 +173,18 @@ class EObject(object):
         return self._containment_feature
 
 
-class EList(list):
+class ECollection(object):
+    def create(owner, feature):
+        if feature.ordered and feature.unique:
+            return EList(owner, efeature=feature)
+        elif feature.ordered and not feature.unique:
+            return EList(owner, efeature=feature)
+        elif feature.unique:
+            return ESet(owner, efeature=feature)
+        else:
+            return EList(owner, efeature=feature)  # see for better implem
+
     def __init__(self, owner, efeature=None):
-        super().__init__()
         self._owner = owner
         self._efeature = efeature
 
@@ -206,42 +218,77 @@ class EList(list):
                 object.__setattr__(owner, eOpposite.name,
                                    None if remove else new_value)
 
+    def select(self, f):
+        return [x for x in self if f(x)]
+
+    def reject(self, f):
+        return [x for x in self if not f(x)]
+
+
+class EList(ECollection, list):
+    def __init__(self, owner, efeature=None):
+        super().__init__(owner, efeature)
+
     def append(self, value, update_opposite=True):
         self.check(value)
         if update_opposite:
             self._update_container(value)
             self._update_opposite(value, self._owner)
-        list.append(self, value)
+        super().append(value)
 
     def extend(self, sublist):
         all(self.check(x) for x in sublist)
         for x in sublist:
             self._update_container(x)
             self._update_opposite(x, self._owner)
-        list.extend(self, sublist)
+        super().extend(sublist)
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
             self._update_container(None, previous_value=value)
             self._update_opposite(value, self._owner, remove=True)
-        list.remove(self, value)
+        super().remove(value)
 
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
     def __setslice__(self, i, j, y):
         all(self.check(x) for x in y)
-        list.__setslice__(self, i, j, y)
+        super().__setslice__(i, j, y)
 
     def __setitem__(self, i, y):
         self.check(y)
         self._update_container(y)
         self._update_opposite(y, self._owner)
-        list.__setitem__(self, i, y)
+        super().__setitem__(i, y)
 
-    def select(self, f):
-        return [x for x in self if f(x)]
 
-    def reject(self, f):
-        return [x for x in self if not f(x)]
+class ESet(ECollection, set):
+    def __init__(self, owner, efeature=None):
+        super().__init__(owner, efeature)
+
+    def extend(self, value, update_opposite=True):
+        self.add(value, update_opposite)
+
+    def add(self, value, update_opposite=True):
+        self.check(value)
+        if update_opposite:
+            self._update_container(value)
+            self._update_opposite(value, self._owner)
+        super().add(value)
+
+
+class EOrderedSet(ECollection, OrderedSet):
+    def __init__(self, owner, efeature=None):
+        super().__init__(owner, efeature)
+
+    def extend(self, value, update_opposite=True):
+        self.add(value, update_opposite)
+
+    def add(self, value, update_opposite=True):
+        self.check(value)
+        if update_opposite:
+            self._update_container(value)
+            self._update_opposite(value, self._owner)
+        super().add(value)
 
 
 class EModelElement(EObject):
@@ -315,6 +362,16 @@ class EOperation(ETypedElement):
                 self.eExceptions.append(exception)
 
 
+class ETypeParameter(ENamedElement):
+    def __init__(self, name=None):
+        super().__init__(name)
+
+
+class EGenericType(EObject):
+    def __init__(self):
+        super().__init__()
+
+
 class EParameter(ETypedElement):
     def __init__(self, name=None, eType=None):
         super().__init__(name, eType)
@@ -338,11 +395,12 @@ class EDataType(EClassifier):
         return value
 
     def __repr__(self):
-        return '{0}({1})'.format(self.name, self.eType.__name__)
+        etype = self.eType.__name__ if self.eType else None
+        return '{0}({1})'.format(self.name, etype)
 
 
 class EEnum(EDataType):
-    def __init__(self, name, default_value=None, literals=None):
+    def __init__(self, name=None, default_value=None, literals=None):
         super().__init__(name, eType=self)
         if literals:
             for i, lit_name in enumerate(literals):
@@ -374,7 +432,7 @@ class EEnum(EDataType):
 
 
 class EEnumLiteral(ENamedElement):
-    def __init__(self, value, name):
+    def __init__(self, value=None, name=None):
         super().__init__(name)
         self.value = value
 
@@ -480,6 +538,14 @@ class EClass(EClassifier):
         [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
         return feats
 
+    def eAllOperations(self):
+        ops = self.eOperations
+        [ops.extend(x.eOperations) for x in self.eAllSuperTypes()]
+        return ops
+
+    def findEOperation(self, name):
+        return next((f for f in self.eAllOperations() if f.name == name), None)
+
 
 EClass.eClass = EClass
 
@@ -523,6 +589,7 @@ EBoolean = EDataType('EBoolean', bool, False,
                      from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
+EDiagnosticChain = EDataType('EDiagnosticChain', str)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -567,6 +634,11 @@ EPackage.eSuperPackage = EReference('eSuperPackage', EPackage,
 
 EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
+EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
+                                         upper=-1, containment=True)
+
+EDataType.instanceClassName = EAttribute('instanceClassName', EString)
+EDataType.serializable = EAttribute('serializable', EBoolean)
 
 EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
@@ -579,6 +651,7 @@ EClass._eReferences = EReference('eReferences', EReference,
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 EClass.eOperations = EReference('eOperations', EOperation,
                                 upper=-1, containment=True)
+EClass.instanceClassName = EAttribute('instanceClassName', EString)
 
 EStructuralFeature.eContainingClass = \
                    EReference('eContainingClass', EClass,
@@ -586,24 +659,36 @@ EStructuralFeature.eContainingClass = \
 
 EReference.containment = EAttribute('containment', EBoolean)
 EReference.eOpposite = EReference('eOpposite', EReference)
+EReference.resolveProxies = EAttribute('resolveProxies', EBoolean)
 
 EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
                              containment=True)
 
 EEnumLiteral.eEnum = EReference('eEnum', EEnum, eOpposite=EEnum.eLiterals)
+EEnumLiteral.name = EAttribute('name', EString)
+EEnumLiteral.value = EAttribute('value', EString)
 
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
+EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
+                                        upper=-1, containment=True)
 
 EParameter.eOperation = EReference('eOperation', EOperation)
 
+ETypeParameter.eBounds = EReference('eBounds', EGenericType,
+                                    upper=-1, containment=True)
+ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
+                                         upper=-1)
+
 Core._promote(EModelElement)
 Core._promote(ENamedElement)
+Core._promote(EGenericType)
+Core._promote(ETypeParameter)
 Core._promote(EAnnotation)
 Core._promote(EPackage)
 Core._promote(ETypedElement)
-Core._promote(EDataType)
 Core._promote(EClassifier)
+Core._promote(EDataType)
 Core._promote(EEnum)
 Core._promote(EEnumLiteral)
 Core._promote(EParameter)
@@ -615,6 +700,11 @@ Core._promote(EReference)
 
 # We compute all the Metaclasses from the current module (EPackage-alike)
 eClassifiers = Core.compute_eclass(__name__)
-__btypes = [EString, EBoolean, EInteger, EStringToStringMapEntry]
+__btypes = [EString,
+            EBoolean,
+            EInteger,
+            EStringToStringMapEntry,
+            EDiagnosticChain]
 __basic_types = {v.name: v for v in __btypes}
 eClassifiers.update(__basic_types)
+eClass = EPackage.eClass
