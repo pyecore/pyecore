@@ -76,7 +76,7 @@ class Core(object):
             object.__setattr__(self, name, value)
             return
 
-        if feat.many and not isinstance(value, EList):
+        if feat.many and not isinstance(value, ECollection):
             raise BadValueError(got=value, expected=feat.eType)
         elif not feat.many and not EcoreUtils.isinstance(value, feat.eType):
             raise BadValueError(got=value, expected=feat.eType)
@@ -176,7 +176,7 @@ class EObject(object):
 class ECollection(object):
     def create(owner, feature):
         if feature.ordered and feature.unique:
-            return EList(owner, efeature=feature)
+            return EOrderedSet(owner, efeature=feature)
         elif feature.ordered and not feature.unique:
             return EList(owner, efeature=feature)
         elif feature.unique:
@@ -218,6 +218,12 @@ class ECollection(object):
                 object.__setattr__(owner, eOpposite.name,
                                    None if remove else new_value)
 
+    def remove(self, value, update_opposite=True):
+        if update_opposite:
+            self._update_container(None, previous_value=value)
+            self._update_opposite(value, self._owner, remove=True)
+        super().remove(value)
+
     def select(self, f):
         return [x for x in self if f(x)]
 
@@ -243,12 +249,6 @@ class EList(ECollection, list):
             self._update_opposite(x, self._owner)
         super().extend(sublist)
 
-    def remove(self, value, update_opposite=True):
-        if update_opposite:
-            self._update_container(None, previous_value=value)
-            self._update_opposite(value, self._owner, remove=True)
-        super().remove(value)
-
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
     def __setslice__(self, i, j, y):
         all(self.check(x) for x in y)
@@ -261,11 +261,11 @@ class EList(ECollection, list):
         super().__setitem__(i, y)
 
 
-class ESet(ECollection, set):
+class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
 
-    def extend(self, value, update_opposite=True):
+    def append(self, value, update_opposite=True):
         self.add(value, update_opposite)
 
     def add(self, value, update_opposite=True):
@@ -275,20 +275,26 @@ class ESet(ECollection, set):
             self._update_opposite(value, self._owner)
         super().add(value)
 
+    def extend(self, sublist):
+        self.update(*sublist)
 
-class EOrderedSet(ECollection, OrderedSet):
+    def update(self, *others):
+        all(self.check(x) for x in others)
+        for x in others:
+            self._update_container(x)
+            self._update_opposite(x, self._owner)
+        super().update(others)
+
+
+class ESet(EAbstractSet, set):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
 
-    def extend(self, value, update_opposite=True):
-        self.add(value, update_opposite)
 
-    def add(self, value, update_opposite=True):
-        self.check(value)
-        if update_opposite:
-            self._update_container(value)
-            self._update_opposite(value, self._owner)
-        super().add(value)
+class EOrderedSet(EAbstractSet, OrderedSet):
+    def __init__(self, owner, efeature=None):
+        super().__init__(owner, efeature)
+        OrderedSet.__init__(self)
 
 
 class EModelElement(EObject):
@@ -432,7 +438,7 @@ class EEnum(EDataType):
 
 
 class EEnumLiteral(ENamedElement):
-    def __init__(self, value=None, name=None):
+    def __init__(self, value=0, name=None):
         super().__init__(name)
         self.value = value
 
@@ -571,7 +577,7 @@ class MetaEClass(type):
             if isinstance(efeat, EAttribute):
                 obj.__setattr__(efeat.name, efeat.default_value)
             elif efeat.many:
-                obj.__setattr__(efeat.name, EList(obj, efeature=efeat))
+                obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
             else:
                 obj.__setattr__(efeat.name, None)
         obj._isready = True
