@@ -522,24 +522,24 @@ class EClass(EClassifier):
 
     def eAllSuperTypes(self, building=None):
         if isinstance(self, type):
-            return [x.eClass for x in self.mro() if x is not object and
-                    x is not self]
+            return {x.eClass for x in self.mro() if x is not object and
+                    x is not self}
         if not self.eSuperTypes:
-            return []
+            return set()
         building = building if building else []
-        stypes = []
-        [stypes.append(x) for x in self.eSuperTypes if x not in building]
+        stypes = set()
+        [stypes.add(x) for x in self.eSuperTypes if x not in building]
         for ec in self.eSuperTypes:
-            stypes.extend(ec.eAllSuperTypes(stypes))
+            stypes |= (ec.eAllSuperTypes(stypes))
         return stypes
 
     def eAllStructuralFeatures(self):
-        feats = self.eStructuralFeatures
+        feats = list(self.eStructuralFeatures)
         [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
         return feats
 
     def eAllOperations(self):
-        ops = self.eOperations
+        ops = list(self.eOperations)
         [ops.extend(x.eOperations) for x in self.eAllSuperTypes()]
         return ops
 
