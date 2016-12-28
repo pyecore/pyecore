@@ -336,21 +336,21 @@ class ETypedElement(ENamedElement):
         self.unique = unique
         self.required = required
 
-    @property
-    def upper(self):
-        return self.upperBound
-
-    @upper.setter
-    def upper(self, value):
-        self.upperBound = value
-
-    @property
-    def lower(self):
-        return self.lowerBound
-
-    @lower.setter
-    def lower(self, value):
-        self.lowerBound = value
+    # @property
+    # def upper(self):
+    #     return self.upperBound
+    #
+    # @upper.setter
+    # def upper(self, value):
+    #     self.upperBound = value
+    #
+    # @property
+    # def lower(self):
+    #     return self.lowerBound
+    #
+    # @lower.setter
+    # def lower(self, value):
+    #     self.lowerBound = value
 
     @property
     def many(self):

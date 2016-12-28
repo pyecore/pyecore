@@ -402,3 +402,72 @@ def test_dynamic_crate_epackage():
     assert package.eClassifiers != []
     assert A in package.eClassifiers
     assert package.getEClassifier('A') is A
+
+
+def test_create_dynamic_ereference_ord_nonuni():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=False, upper=-1))
+    a1 = A()
+    b1 = B()
+    a1.tob.append(b1)
+    assert isinstance(a1.tob, EList)
+    assert b1 in a1.tob
+
+
+def test_create_dynamic_ereference_nonord_uni():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=True, upper=-1, ordered=False))
+    a1 = A()
+    b1 = B()
+    a1.tob.append(b1)
+    assert isinstance(a1.tob, ESet)
+    assert b1 in a1.tob
+
+
+def test_create_dynamic_ereference_nonord_nonuni():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=False, upper=-1, ordered=False))
+    a1 = A()
+    b1 = B()
+    a1.tob.append(b1)
+    assert isinstance(a1.tob, EList)
+    assert b1 in a1.tob
+
+
+def test_create_dynamic_ereference_elist_extend():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=False, upper=-1))
+    a1 = A()
+    b1 = B()
+    b2 = B()
+    assert isinstance(a1.tob, EList)
+    a1.tob.extend([b1, b2])
+    assert b1 in a1.tob
+    assert b2 in a1.tob
+
+
+def test_create_dynamic_ereference_elist_setitem():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=False, upper=-1))
+    a1 = A()
+    b1 = B()
+    b2 = B()
+    a1.tob.append(b1)
+    a1.tob[0] = b2
+    assert b1 not in a1.tob
+    assert b2 in a1.tob
+
+
+def test_create_dynamic_ereference_bounds():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, unique=False, lower=2, upper=5, ordered=False))
+    # assert A.eStructuralFeatures[0].lower == 2
+    # assert A.eStructuralFeatures[0].upper == 5
+    assert A.eStructuralFeatures[0].lowerBound == 2
+    assert A.eStructuralFeatures[0].upperBound == 5
