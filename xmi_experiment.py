@@ -31,11 +31,17 @@ def _navigate_from(path, start_obj):
         if key.startswith('@'):
             tmp_obj = obj.__getattribute__(key[1:])
             obj = tmp_obj[int(index)] if index else tmp_obj
+        elif key.startswith('%'):
+            return obj  # tmp
         else:
             try:
                 obj = obj.getEClassifier(key)
             except AttributeError:
-                obj = obj.findEStructuralFeature(key)
+                feat = obj.findEStructuralFeature(key)
+                if not feat:
+                    obj = obj.findEOperation(key)
+                else:
+                    obj = feat
     return obj
 
 
@@ -84,6 +90,7 @@ class XMIResource(object):
         XMIResource.xsitype = '{{{0}}}type'.format(self.nsmap['xsi'])
         XMIResource.xmiid = '{{{0}}}id'.format(self.nsmap['xmi'])
         self._init_modelroot()
+        print('INIT FINISHED')
         self._resourceset = None
 
     @property
@@ -107,6 +114,8 @@ class XMIResource(object):
     def resolve(self, fragment):
         if ' ' in fragment:
             fragment = fragment.split()[-1:][0]
+        if fragment in self._resolve_mem:
+            return self._resolve_mem[fragment]
         if self._use_uuid:
             try:
                 frag = fragment[1:] if fragment.startswith('#') else fragment
@@ -118,6 +127,8 @@ class XMIResource(object):
         for root in self._contents:
             result = _navigate_from(fragment, root)
             if result:
+                self._resolve_mem[fragment] = result
+                print('add', fragment)
                 return result
 
     @property
@@ -149,6 +160,7 @@ class XMIResource(object):
         self._use_uuid = self.root.get(XMIResource.xmiid) is not None
         self._contents = [modelroot]
         self._later = []
+        self._resolve_mem = {}
         for key, value in self.root.attrib.items():
             namespace, att_name = XMIResource.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
@@ -195,7 +207,6 @@ class XMIResource(object):
             resolved_value = decoder.resolve(value)
             if not resolved_value:
                 raise ValueError('EObject for {0} is unknown'.format(value))
-            print('resolved', resolved_value)
             eobject.__setattr__(ref.name, resolved_value)
 
     def _do_extract(self, current_node, parent_eobj):
@@ -213,7 +224,8 @@ class XMIResource(object):
                 continue
             eobject.__setattr__(eattribute.name, value)
 
-        self._later.append((eobject, erefs))
+        if erefs:
+            self._later.append((eobject, erefs))
 
         # attach the new eobject to the parent one
         if feat_container and feat_container.many:
@@ -226,6 +238,8 @@ class XMIResource(object):
             self._do_extract(child, eobject)
 
     def _decode_node(self, parent_eobj, node):
+        if node.tag == 'eGenericType':
+            return (None, None, [], [])
         feature_container = parent_eobj.eClass.findEStructuralFeature(node.tag)
         if not feature_container:
             raise ValueError('Feature {0} is unknown for {1}, line {2}'
@@ -255,7 +269,6 @@ class XMIResource(object):
         elif etype is Ecore.EStringToStringMapEntry \
              and feature_container is Ecore.EAnnotation.details:
             parent_eobj.details[node.get('key')] = node.get('value')
-            print(parent_eobj.details)
             return (None, None, [], [])
         else:
             eobject = etype()
@@ -299,55 +312,25 @@ class XMIResource(object):
         pass
 
 
-# rset = ResourceSet()
-# resource = XMIResource(tree)
-# # resource.resource_set = rset
-# root = resource.contents[0]
-# print(root.nsURI)
-#
-# print(root.eClassifiers[2].eReferences)
-# global_registry[root.nsURI] = root
-#
-# tree = etree.parse('xmi-tests/MyRoot.xmi')
-# resource = XMIResource(tree)
-#
-# my = root
-# root = resource.contents[0]
-# new_a = my.getEClassifier('A')()
-# new_a.name = 'test'
-# root.aContainer.append(new_a)
-# assert root.aContainer[0].b is root.bContainer[0]
+if __name__ == '__main__':
+    # UMLPrimitiveTypes Creation
+    umltypes = Ecore.EPackage('umltypes')
+    String = Ecore.EDataType('String', str)
+    Boolean = Ecore.EDataType('Boolean', bool, False)
+    Integer = Ecore.EDataType('Integer', int, 0)
+    UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
+    Real = Ecore.EDataType('Real', float, 0.0)
+    umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
+    global_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
 
-umltypes = Ecore.EPackage('umltypes')
-String = Ecore.EDataType('String', str)
-Boolean = Ecore.EDataType('Boolean', bool, False)
-umltypes.eClassifiers.append(Boolean)
-global_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+    tree = etree.parse('xmi-tests/Ecore.ecore')
+    resource = XMIResource(tree)
+    root = resource.contents[0]
+    global_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = root
 
-
-tree = etree.parse('xmi-tests/UML.ecore')
-resource = XMIResource(tree)
-root = resource.contents[0]
-
-# print(root.eClassifiers[0].eAttributes[1].name)
-# x = root.eClassifiers[0]()
-# print(x.isAbs)
-# print(_build_path(root.eClassifiers[0].eAttributes[1]))
-#
-# print(_navigate_from('//@eClassifiers.0/@eStructuralFeatures.1', root))
-#
-# print(Registered_URI_decoder.resolve('http://www.eclipse.org/emf/2002/Ecore#//EClass'))
-#
-# print(root.eClassifiers[1].eSuperTypes)
-#
-# TClass = root.getEClassifier('TClass')
-# TInterface = root.getEClassifier('TInterface')
-# A = root.getEClassifier('A')
-# B = root.getEClassifier('B')
-#
-# a1 = A()
-# b1 = B()
-# print(a1)
-# a1.b = b1
-# print(a1.b)
-# print(Ecore.EcoreUtils.isinstance(a1, TInterface))
+    tree = etree.parse('xmi-tests/UML.ecore')
+    resource = XMIResource(tree)
+    root = resource.contents[0]
+    Class = root.getEClassifier('Class')
+    c = Class()
+    print(c.eClass.eAllStructuralFeatures())
