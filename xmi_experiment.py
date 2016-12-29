@@ -147,9 +147,6 @@ class XMIResource(object):
         return node.get(XMIResource.xsitype)
 
     def _init_modelroot(self):
-        """
-        Initializes the model root during XMI deserialization
-        """
         nsURI, eclass_name = XMIResource.extract_namespace(self.root.tag)
         eobject = global_registry[nsURI].getEClassifier(eclass_name)
         if not eobject:
@@ -177,35 +174,7 @@ class XMIResource(object):
                 modelroot.__setattr__(key, value)
         for child in self.root:
             self._do_extract(child, modelroot)
-        self._do_later_nodes()
-
-    def _do_later_nodes(self):
-        opposite = []
-        for eobject, erefs in self._later:
-            for ref, value in erefs:
-                if ref.name == 'eOpposite':
-                    opposite.append((eobject, ref, value))
-                    continue
-                if ref.many:
-                    for val in value.split():
-                        decoder = self._get_decoder(val)
-                        resolved_value = decoder.resolve(val)
-                        if not resolved_value:
-                            raise ValueError('EObject for {0} is unknown'.format(value))
-                        eobject.__getattribute__(ref.name) \
-                               .append(resolved_value)
-                    continue
-                decoder = self._get_decoder(value)
-                resolved_value = decoder.resolve(value)
-                if not resolved_value:
-                    raise ValueError('EObject for {0} is unknown'.format(value))
-                eobject.__setattr__(ref.name, resolved_value)
-        for eobject, ref, value in opposite:
-            decoder = self._get_decoder(value)
-            resolved_value = decoder.resolve(value)
-            if not resolved_value:
-                raise ValueError('EObject for {0} is unknown'.format(value))
-            eobject.__setattr__(ref.name, resolved_value)
+        self._decode_ereferences()
 
     def _do_extract(self, current_node, parent_eobj):
         if not self.contents:
@@ -266,7 +235,11 @@ class XMIResource(object):
             eobject = etype(name)
         elif etype is Ecore.EStringToStringMapEntry \
              and feature_container is Ecore.EAnnotation.details:
-            parent_eobj.details[node.get('key')] = node.get('value')
+            annotation_key = node.get('key')
+            annotation_value = node.get('value')
+            parent_eobj.details[annotation_key] = annotation_value
+            if annotation_key == 'documentation':
+                parent_eobj.eContainer().__doc__ = annotation_value
             return (None, None, [], [])
         else:
             eobject = etype()
@@ -305,9 +278,33 @@ class XMIResource(object):
                                  .format(att_name, owner.eClass.name))
             return feature
 
-
-    def _build_instance(self, metaclass):
-        pass
+    def _decode_ereferences(self):
+        opposite = []
+        for eobject, erefs in self._later:
+            for ref, value in erefs:
+                if ref.name == 'eOpposite':
+                    opposite.append((eobject, ref, value))
+                    continue
+                if ref.many:
+                    for val in value.split():
+                        decoder = self._get_decoder(val)
+                        resolved_value = decoder.resolve(val)
+                        if not resolved_value:
+                            raise ValueError('EObject for {0} is unknown'.format(value))
+                        eobject.__getattribute__(ref.name) \
+                               .append(resolved_value)
+                    continue
+                decoder = self._get_decoder(value)
+                resolved_value = decoder.resolve(value)
+                if not resolved_value:
+                    raise ValueError('EObject for {0} is unknown'.format(value))
+                eobject.__setattr__(ref.name, resolved_value)
+        for eobject, ref, value in opposite:
+            decoder = self._get_decoder(value)
+            resolved_value = decoder.resolve(value)
+            if not resolved_value:
+                raise ValueError('EObject for {0} is unknown'.format(value))
+            eobject.__setattr__(ref.name, resolved_value)
 
 
 if __name__ == '__main__':
