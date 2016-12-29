@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Emacs tmp files
+*~
+
+# Experiments
+experiment*

@@ -1,0 +1,6 @@
+= Examples
+
+This folder contains some examples, more or less complete on the capacities of
+PyEcore. Each example proposes the static and dynamic version of a metamodel.
+
+* wikilibrary -> library example from the EMF wikipedia page: https://fr.wikipedia.org/wiki/Eclipse_Modeling_Framework#/media/File:EMF_based_meta-model.png
