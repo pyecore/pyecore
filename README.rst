@@ -1,9 +1,16 @@
-=======
-PyEcore
-=======
------------------------------------------------------------
-A Pythonic Implementation of the Eclipse Modeling Framework
------------------------------------------------------------
+====================================================================
+PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
+====================================================================
+
+.. highlight:: python
+
+Master |master-build| Develop |develop-build|
+
+.. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
+    :target: https://travis-ci.org/aranega/pyecore
+
+.. |develop-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=develop
+    :target: https://travis-ci.org/aranega/pyecore
 
 PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
 Python3. It's purpose is to handle model/metamodels in Python almost the same
@@ -100,7 +107,8 @@ Then, we can add metaproperties to the freshly created metaclass::
     >>> instance1.name
     'mystuff'
 
-We can also create a new metaclass ``B`` and a new metareferences towards ``B``::
+We can also create a new metaclass ``B`` and a new metareferences towards
+``B``::
 
     >>> B = Ecore.EClass('B')
     >>> MyMetaclass.eStructuralFeatures.append(Ecore.EReference('toB', B, containment=True))
@@ -169,6 +177,28 @@ classical classes definitions in Python::
     >>> c1 = C()
     >>> c1.toMy = instance1
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
+
+Installation
+============
+
+At the moment, the library is not on `pypi`, it will be added when the XMI
+deserialization/serialization will be working. At the moment, the installation
+must be performed manually (better in a virtualenv):
+
+.. code-block:: bash
+
+    $ python setup.py install
+
+
+Run the Tests
+=============
+
+Tests uses `py.test` and 'coverage'. Everything is driven by `Tox`, so in order
+to run the tests simply run:
+
+.. code-block:: bash
+
+    $ tox
 
 
 Liberty Regarding the Java EMF Implementation
