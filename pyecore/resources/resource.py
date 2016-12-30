@@ -11,7 +11,6 @@ class ResourceSet(object):
         if isinstance(uri, str):
             uri = URI(uri)
         try:
-            print(uri.extension)
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
             resource = self.resource_factory['*']
