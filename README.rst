@@ -178,6 +178,27 @@ classical classes definitions in Python::
     >>> c1.toMy = instance1
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
+
+Importing an Existing XMI Metamodel
+===================================
+
+XMI support is still a work in progress, but the XMI import is on good tracks.
+Currently, only basic XMI metamodel (``.ecore``) and model instances can be
+loaded::
+
+    >>> from pyecore.resources import ResourceSet, URI
+    >>> rset = ResourceSet()
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> rset.metamodel_registry[mm_root.nsURI] = mm_root
+    >>> # At this point, the .ecore is loaded in the 'rset' as a metamodel
+    >>> resource = rset.get_resource(URI('path/to/instance.xmi'))
+    >>> model_root = resource.contents[0]
+    >>> # At this point, the model instance is loaded!
+
+The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
+basic operations are enabled: ``create_resource/get_resource/load/save...``.
+
 Installation
 ============
 
@@ -223,12 +244,13 @@ In the current state, the project implements:
 * reference eopposite,
 * containment reference,
 * introspection,
-* select/reject on collections.
+* select/reject on collections,
+* Eclipse XMI import (partially).
 
 The things that are in the roadmap:
 
 * documentation,
-* Eclipse XMI import/export (the hard part),
+* Eclipse XMI export (the hard part),
 * code generator for the static part,
 * EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,
