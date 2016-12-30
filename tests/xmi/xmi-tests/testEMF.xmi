@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmi:id="_pwAiAKGdEeawbN_F_HFDxg" name="testEMF" nsURI="http://testEMF/1.0">
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiA6GdEeawbN_F_HFDxg" name="TClass" eSuperTypes="_pwAiHKGdEeawbN_F_HFDxg">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_pwAiBqGdEeawbN_F_HFDxg" name="abstract">
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_pwAiCqGdEeawbN_F_HFDxg" name="isAbs" derived="true">
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiD6GdEeawbN_F_HFDxg" name="A" eSuperTypes="_pwAiA6GdEeawbN_F_HFDxg _pwAiGKGdEeawbN_F_HFDxg">
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_pwAiEqGdEeawbN_F_HFDxg" name="b" eType="_pwAiI6GdEeawbN_F_HFDxg">
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiGKGdEeawbN_F_HFDxg" name="TInterface" eSuperTypes="_pwAiHKGdEeawbN_F_HFDxg">
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiHKGdEeawbN_F_HFDxg" name="NamedElement" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_pwAiH6GdEeawbN_F_HFDxg" name="name">
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiI6GdEeawbN_F_HFDxg" name="B" eSuperTypes="_pwAiHKGdEeawbN_F_HFDxg">
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_pwAiJqGdEeawbN_F_HFDxg" name="c" upperBound="-1" eType="_pwAiK6GdEeawbN_F_HFDxg" containment="true">
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_pwAiK6GdEeawbN_F_HFDxg" name="C" eSuperTypes="_pwAiHKGdEeawbN_F_HFDxg"/>
+</ecore:EPackage>
