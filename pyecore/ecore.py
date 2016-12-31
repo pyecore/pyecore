@@ -65,7 +65,7 @@ class Core(object):
             default_value = None
             if hasattr(feature.eType, 'default_value'):
                 default_value = feature.eType.default_value
-            if hasattr(feature, 'default_value'):
+            elif hasattr(feature, 'default_value'):
                 default_value = feature.default_value
             self.__setattr__(name, default_value)
             return default_value

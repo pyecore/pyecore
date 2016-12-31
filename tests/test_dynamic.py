@@ -23,6 +23,15 @@ def test_create_dynamic_simple_eattribute():
     assert a.name == 'new_name'
 
 
+def test_create_dynamic_simple_eattribute_boolean():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('isStuff', EBoolean))
+    a = A()
+    assert a.isStuff is False
+    a.isStuff = True
+    assert a.isStuff is True
+
+
 def test_create_dynamic_simple_eattribute_badvalue():
     A = EClass('A')
     A.eStructuralFeatures.append(EAttribute('name', EString))
