@@ -21,7 +21,9 @@ instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
 version. To achieve this, PyEcore relies on reflection (a lot).
 
 Let see by yourself how it works on a very simple metamodel created on
-the fly (dynamic metamodel)::
+the fly (dynamic metamodel):
+
+.. code-block:: python
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
     >>> A = EClass('A') # We create metaclass named 'A'
@@ -36,7 +38,9 @@ the fly (dynamic metamodel)::
     True
 
 PyEcore also support introspection and the EMF reflexive API using basic Python
-reflexive features::
+reflexive features:
+
+.. code-block:: python
 
     >>> a1.eClass # some introspection
     <EClass name="A">
@@ -57,7 +61,9 @@ reflexive features::
     'reflexive'
 
 Runtime type checking is also performed (regarding what you expressed in your)
-metamodel::
+metamodel:
+
+.. code-block:: python
 
     >>> a1.myname = 1
     Traceback (most recent call last):
@@ -78,23 +84,31 @@ Dynamic Metamodels
 Dynamic metamodels reflects the ability to create metamodels "on-the-fly". You
 can create metaclass hierarchie, add ``EAttribute`` and ``EReference``.
 
-In order to create a new metaclass, you need to create an ``EClass`` instance::
+In order to create a new metaclass, you need to create an ``EClass`` instance:
+
+.. code-block:: python
 
     >>> import pyecore.ecore as Ecore
     >>> MyMetaclass = Ecore.EClass('MyMetaclass')
 
-You can then create instances of your metaclass::
+You can then create instances of your metaclass:
+
+.. code-block:: python
 
     >>> instance1 = MyMetaclass()
     >>> instance2 = MyMetaclass()
     >>> assert instance1 is not instance2
 
-From the created instances, we can go back to the metaclasses::
+From the created instances, we can go back to the metaclasses:
+
+.. code-block:: python
 
     >>> instance1.eClass
     <EClass name="MyMetaclass">
 
-Then, we can add metaproperties to the freshly created metaclass::
+Then, we can add metaproperties to the freshly created metaclass:
+
+.. code-block:: python
 
     >>> instance1.eClass.eAttributes
     []
@@ -108,7 +122,9 @@ Then, we can add metaproperties to the freshly created metaclass::
     'mystuff'
 
 We can also create a new metaclass ``B`` and a new metareferences towards
-``B``::
+``B``:
+
+.. code-block:: python
 
     >>> B = Ecore.EClass('B')
     >>> MyMetaclass.eStructuralFeatures.append(Ecore.EReference('toB', B, containment=True))
@@ -119,7 +135,9 @@ We can also create a new metaclass ``B`` and a new metareferences towards
     >>> b1.eContainer() is instance1   # because 'toB' is a containment reference
     True
 
-Opposite and 'collection' meta-references are also managed::
+Opposite and 'collection' meta-references are also managed:
+
+.. code-block:: python
 
     >>> C = Ecore.EClass('C')
     >>> C.eStructuralFeatures.append(Ecore.EReference('toMy', MyMetaclass))
@@ -136,7 +154,9 @@ Static Metamodels
 =================
 
 The static definition of a metamodel using PyEcore mostly relies on the
-classical classes definitions in Python::
+classical classes definitions in Python:
+
+.. code-block:: python
 
     $ cat example.py
     """
@@ -184,7 +204,9 @@ Importing an Existing XMI Metamodel
 
 XMI support is still a work in progress, but the XMI import is on good tracks.
 Currently, only basic XMI metamodel (``.ecore``) and model instances can be
-loaded::
+loaded:
+
+.. code-block:: python
 
     >>> from pyecore.resources import ResourceSet, URI
     >>> rset = ResourceSet()
