@@ -18,29 +18,29 @@ def _build_path(obj):
         return '{0}/{1}'.format(_build_path(parent), name)
 
 if __name__ == '__main__':
-    # rset = ResourceSet()
-    #
-    # # UMLPrimitiveTypes Creation
-    # umltypes = Ecore.EPackage('umltypes')
-    # String = Ecore.EDataType('String', str)
-    # Boolean = Ecore.EDataType('Boolean', bool, False)
-    # Integer = Ecore.EDataType('Integer', int, 0)
-    # UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
-    # Real = Ecore.EDataType('Real', float, 0.0)
-    # umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
-    # rset.resources['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
-    #
-    # # Register Ecore metamodel instance
-    # resource = rset.get_resource(URI('xmi-tests/Ecore.ecore'))
-    # rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
-    #
-    # resource = rset.get_resource(URI('xmi-tests/UML.ecore'))
-
     rset = ResourceSet()
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/My.ecore'))
-    metamodel = resource.contents[0]
-    rset.metamodel_registry[metamodel.nsURI] = metamodel
 
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/MyRoot.xmi'))
-    root = resource.contents[0]
-    print(root.aContainer)
+    # UMLPrimitiveTypes Creation
+    umltypes = Ecore.EPackage('umltypes')
+    String = Ecore.EDataType('String', str)
+    Boolean = Ecore.EDataType('Boolean', bool, False)
+    Integer = Ecore.EDataType('Integer', int, 0)
+    UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
+    Real = Ecore.EDataType('Real', float, 0.0)
+    umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
+    rset.resources['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+
+    # Register Ecore metamodel instance
+    resource = rset.get_resource(URI('xmi-tests/Ecore.ecore'))
+    rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
+
+    resource = rset.get_resource(URI('xmi-tests/UML.ecore'))
+
+    # rset = ResourceSet()
+    # resource = rset.get_resource(URI('tests/xmi/xmi-tests/My.ecore'))
+    # metamodel = resource.contents[0]
+    # rset.metamodel_registry[metamodel.nsURI] = metamodel
+    #
+    # resource = rset.get_resource(URI('tests/xmi/xmi-tests/MyRoot.xmi'))
+    # root = resource.contents[0]
+    # print(root.aContainer)

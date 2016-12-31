@@ -13,7 +13,7 @@ class ResourceSet(object):
         try:
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
-            resource = self.resource_factory['*']
+            resource = self.resource_factory['*'](uri)
         self.resources[uri._uri] = resource
         resource._resourceset = self
         resource._decoders.insert(0, self)
@@ -42,6 +42,8 @@ class ResourceSet(object):
 
 class URI(object):
     def __init__(self, uri):
+        if uri is None:
+            raise TypeError('URI cannot be None')
         self._uri = uri
         self._split()
 
@@ -50,7 +52,10 @@ class URI(object):
             self._protocol, rest = self._uri.split('://')
         else:
             self._protocol, rest = None, self._uri
-        self._extension = rest.split('.')[-1:][0] if rest else None
+        if '.' in rest:
+            self._extension = rest.split('.')[-1:][0]
+        else:
+            self._extension = None
 
     @property
     def protocol(self):
@@ -65,6 +70,7 @@ class URI(object):
         return self._uri
 
 
+# Not yet implementedn will return a kind of proxy
 class File_URI_decoder(object):
     def can_resolve(path):
         return path.startswith('file://') or path.startswith('.')
@@ -103,6 +109,7 @@ class Resource(object):
         self.prefixes = {}
         self._resourceset = None
         self._uri = uri
+        self._decoders = list(Resource._decoders)
 
     @property
     def uri(self):
