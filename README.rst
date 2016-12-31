@@ -232,6 +232,14 @@ must be performed manually (better in a virtualenv):
 
     $ python setup.py install
 
+Dependencies
+============
+
+The dependencies required by pyecore are:
+
+* ordered-set which is used for the ``ordered`` and ``unique`` collections expressed in the metamodel,
+* lxml which is used for the XMI parsing.
+
 
 Run the Tests
 =============
