@@ -98,3 +98,4 @@ def test_resourceset_getresource_ecore_UML():
     assert root.getEClassifier('Class')
     assert root.getEClassifier('Interface')
     assert root.getEClassifier('State')
+    assert root.eResource is resource

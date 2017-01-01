@@ -186,13 +186,16 @@ class EObject(object):
             return self.__getattribute__(feature)
         elif isinstance(feature, EStructuralFeature):
             return self.__getattribute__(feature.name)
-        return None
+        raise TypeError('Feature must have str or EStructuralFeature type')
 
     def eSet(self, feature, value):
         if isinstance(feature, str):
             self.__setattr__(feature, value)
         elif isinstance(feature, EStructuralFeature):
             self.__setattr__(feature.name, value)
+        else:
+            raise TypeError('Feature must have str or '
+                            'EStructuralFeature type')
 
     @property
     def eContents(self):
@@ -292,9 +295,9 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
-    def __setslice__(self, i, j, y):
-        all(self.check(x) for x in y)
-        super().__setslice__(i, j, y)
+    # def __setslice__(self, i, j, y):
+    #     all(self.check(x) for x in y)
+    #     super().__setslice__(i, j, y)
 
     def __setitem__(self, i, y):
         self.check(y)
