@@ -1,3 +1,6 @@
+from uuid import uuid4
+import pyecore.ecore as Ecore
+
 global_registry = {}
 
 
@@ -103,13 +106,14 @@ class Global_URI_decoder(object):
 class Resource(object):
     _decoders = [Global_URI_decoder, File_URI_decoder]
 
-    def __init__(self, uri=None):
+    def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
-        self._use_uuid = False
+        self._use_uuid = use_uuid
         self.prefixes = {}
         self._resourceset = None
         self._uri = uri
         self._decoders = list(Resource._decoders)
+        self._contents = []
 
     @property
     def uri(self):
@@ -174,3 +178,39 @@ class Resource(object):
                     else:
                         obj = feat
         return obj
+
+    def _build_path_from(self, obj):
+        if not obj.eContainmentFeature():
+            return '/'
+        if self._use_uuid:
+            self._assign_uuid(obj)
+            return obj._xmiid
+        feat = obj.eContainmentFeature()
+        parent = obj.eContainer()
+        name = feat.name
+        # TODO decode root names (non '@' prefixed)
+        if feat.many:
+            index = parent.__getattribute__(name).index(obj)
+            return '{0}/@{1}.{2}' \
+                   .format(self._build_path_from(parent), name, str(index))
+        else:
+            return '{0}/{1}'.format(self._build_path_from(parent), name)
+
+    def _assign_uuid(self, obj):
+        # sets an uuid if the resource should deal with
+        # and obj has none yet (addition to the resource for example)
+        if not obj._xmiid:
+            uuid = uuid4()
+            self.uuid_dict[uuid] = obj
+            obj._xmiid = uuid
+
+    def append(self, root):
+        if not isinstance(root, Ecore.EObject):
+            raise ValueError('The resource requires an EObject type, '
+                             'but received {0} instead.'.format(type(root)))
+        self._contents.append(root)
+        for eobject in root.eAllContents():
+            eobject._eresource = self
+
+    def extend(self, values):
+        map(self.append, values)
