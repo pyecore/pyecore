@@ -181,6 +181,38 @@ class EObject(object):
     def eResource(self):
         return self._eresource
 
+    def eGet(self, feature):
+        if isinstance(feature, str):
+            return self.__getattribute__(feature)
+        elif isinstance(feature, EStructuralFeature):
+            return self.__getattribute__(feature.name)
+        return None
+
+    def eSet(self, feature, value):
+        if isinstance(feature, str):
+            self.__setattr__(feature, value)
+        elif isinstance(feature, EStructuralFeature):
+            self.__setattr__(feature.name, value)
+
+    @property
+    def eContents(self):
+        children = []
+        for feature in self.eClass.eAllStructuralFeatures():
+            if isinstance(feature, EAttribute):
+                continue
+            if feature.containment:
+                values = self.__getattribute__(feature.name) \
+                         if feature.many \
+                         else [self.__getattribute__(feature)]
+                children.extend(values)
+        return children
+
+    def eAllContents(self):
+        objs = list(self.eContents)
+        for obj in list(objs):
+            objs.extend(list(obj.eAllContents()))
+        return iter(objs)
+
 
 class ECollection(object):
     def create(owner, feature):
