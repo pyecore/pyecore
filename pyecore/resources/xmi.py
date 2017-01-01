@@ -53,6 +53,7 @@ class XMIResource(Resource):
         if not eobject:
             raise TypeError({'{0} EClass does not exists'}.format(eclass_name))
         modelroot = eobject()
+        modelroot._eresource = self
         self._use_uuid = xmlroot.get(XMIResource.xmiid) is not None
         self._contents = [modelroot]
         self._later = []
@@ -145,6 +146,7 @@ class XMIResource(Resource):
             return (None, None, [], [])
         else:
             eobject = etype()
+        eobject._eresource = self
 
         # we sort the node feature (no containments)
         eatts = []

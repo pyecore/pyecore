@@ -144,6 +144,7 @@ class EObject(object):
         self._container = None
         self._isready = False
         self._containment_feature = None
+        self._eresource = None
 
     def __initmetattr__(self, _super=None):
         _super = _super if _super else self.__class__
@@ -173,6 +174,9 @@ class EObject(object):
             feature = self.eClass.findEStructuralFeature(feature)
         return feature in self._isset
 
+    @property
+    def eResource(self):
+        return self._eresource
 
 class ECollection(object):
     def create(owner, feature):

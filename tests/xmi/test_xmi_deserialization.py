@@ -25,6 +25,8 @@ def test_xmiresource_load_ecore_testEMF():
     assert A.findEStructuralFeature('isAbs')
     assert a.isAbs is False
     assert a.abstract is False
+    assert a.eResource is None
+    assert A.eResource is resource
 
 
 def test_resourceset_getresource_ecore_My():
@@ -57,6 +59,9 @@ def test_resourceset_getresource_instance_MyRoot():
     assert len(root.aContainer) == 2
     assert len(root.bContainer) == 1
     assert root.aContainer[0].b is root.bContainer[0]
+    assert root.eResource is resource
+    assert root.aContainer[0].eResource is resource
+    assert root.eResource.resource_set is rset
 
 
 def test_resourceset_getresource_ecore_Ecore():
@@ -70,6 +75,7 @@ def test_resourceset_getresource_ecore_Ecore():
     assert root.getEClassifier('EAttribute')
     assert root.getEClassifier('EReference')
     assert root.getEClassifier('EPackage')
+    assert root.eResource is resource
 
 
 def test_resourceset_getresource_ecore_UML():
