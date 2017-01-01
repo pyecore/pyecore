@@ -1,9 +1,16 @@
-=======
-PyEcore
-=======
------------------------------------------------------------
-A Pythonic Implementation of the Eclipse Modeling Framework
------------------------------------------------------------
+====================================================================
+PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
+====================================================================
+
+.. highlight:: python
+
+Master |master-build| Develop |develop-build|
+
+.. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
+    :target: https://travis-ci.org/aranega/pyecore
+
+.. |develop-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=develop
+    :target: https://travis-ci.org/aranega/pyecore
 
 PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
 Python3. It's purpose is to handle model/metamodels in Python almost the same
@@ -14,7 +21,9 @@ instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
 version. To achieve this, PyEcore relies on reflection (a lot).
 
 Let see by yourself how it works on a very simple metamodel created on
-the fly (dynamic metamodel)::
+the fly (dynamic metamodel):
+
+.. code-block:: python
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
     >>> A = EClass('A') # We create metaclass named 'A'
@@ -29,7 +38,9 @@ the fly (dynamic metamodel)::
     True
 
 PyEcore also support introspection and the EMF reflexive API using basic Python
-reflexive features::
+reflexive features:
+
+.. code-block:: python
 
     >>> a1.eClass # some introspection
     <EClass name="A">
@@ -50,7 +61,9 @@ reflexive features::
     'reflexive'
 
 Runtime type checking is also performed (regarding what you expressed in your)
-metamodel::
+metamodel:
+
+.. code-block:: python
 
     >>> a1.myname = 1
     Traceback (most recent call last):
@@ -71,23 +84,31 @@ Dynamic Metamodels
 Dynamic metamodels reflects the ability to create metamodels "on-the-fly". You
 can create metaclass hierarchie, add ``EAttribute`` and ``EReference``.
 
-In order to create a new metaclass, you need to create an ``EClass`` instance::
+In order to create a new metaclass, you need to create an ``EClass`` instance:
+
+.. code-block:: python
 
     >>> import pyecore.ecore as Ecore
     >>> MyMetaclass = Ecore.EClass('MyMetaclass')
 
-You can then create instances of your metaclass::
+You can then create instances of your metaclass:
+
+.. code-block:: python
 
     >>> instance1 = MyMetaclass()
     >>> instance2 = MyMetaclass()
     >>> assert instance1 is not instance2
 
-From the created instances, we can go back to the metaclasses::
+From the created instances, we can go back to the metaclasses:
+
+.. code-block:: python
 
     >>> instance1.eClass
     <EClass name="MyMetaclass">
 
-Then, we can add metaproperties to the freshly created metaclass::
+Then, we can add metaproperties to the freshly created metaclass:
+
+.. code-block:: python
 
     >>> instance1.eClass.eAttributes
     []
@@ -100,7 +121,10 @@ Then, we can add metaproperties to the freshly created metaclass::
     >>> instance1.name
     'mystuff'
 
-We can also create a new metaclass ``B`` and a new metareferences towards ``B``::
+We can also create a new metaclass ``B`` and a new metareferences towards
+``B``:
+
+.. code-block:: python
 
     >>> B = Ecore.EClass('B')
     >>> MyMetaclass.eStructuralFeatures.append(Ecore.EReference('toB', B, containment=True))
@@ -111,7 +135,9 @@ We can also create a new metaclass ``B`` and a new metareferences towards ``B``:
     >>> b1.eContainer() is instance1   # because 'toB' is a containment reference
     True
 
-Opposite and 'collection' meta-references are also managed::
+Opposite and 'collection' meta-references are also managed:
+
+.. code-block:: python
 
     >>> C = Ecore.EClass('C')
     >>> C.eStructuralFeatures.append(Ecore.EReference('toMy', MyMetaclass))
@@ -128,7 +154,9 @@ Static Metamodels
 =================
 
 The static definition of a metamodel using PyEcore mostly relies on the
-classical classes definitions in Python::
+classical classes definitions in Python:
+
+.. code-block:: python
 
     $ cat example.py
     """
@@ -171,6 +199,88 @@ classical classes definitions in Python::
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
 
+Importing an Existing XMI Metamodel/Model
+=========================================
+
+XMI support is still a work in progress, but the XMI import is on good tracks.
+Currently, only basic XMI metamodel (``.ecore``) and model instances can be
+loaded:
+
+.. code-block:: python
+
+    >>> from pyecore.resources import ResourceSet, URI
+    >>> rset = ResourceSet()
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> rset.metamodel_registry[mm_root.nsURI] = mm_root
+    >>> # At this point, the .ecore is loaded in the 'rset' as a metamodel
+    >>> resource = rset.get_resource(URI('path/to/instance.xmi'))
+    >>> model_root = resource.contents[0]
+    >>> # At this point, the model instance is loaded!
+
+The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
+basic operations are enabled: ``create_resource/get_resource/load/save...``.
+
+Exporting an Existing XMI Resource
+==================================
+
+As for the XMI import, the XMI export (serialization) is still somehow very
+basic. Here is an example of how you could save your objects in a file:
+
+.. code-block:: python
+
+    >>> # we suppose we have an already existing model in 'root'
+    >>> from pyecore.resources.xmi import XMIResource
+    >>> from pyecore.resources import URI
+    >>> resource = XMIResource(URI('my/path.xmi'))
+    >>> resource.append(root)  # We add the root to the resource
+    >>> resource.save()  # will save the result in 'my/path.xmi'
+    >>> resource.save(output='test/path.xmi'  # save the result in 'test/path.xmi'
+
+
+You can also use a ``ResourceSet`` to deal with this:
+
+.. code-block:: python
+
+    >>> # we suppose we have an already existing model in 'root'
+    >>> from pyecore.resources import ResourceSet, URI
+    >>> rset = ResourceSet()
+    >>> resource = rset.create_resource(URI('my/path.xmi'))
+    >>> resource.append(root)
+    >>> resource.save()
+    
+
+Installation
+============
+
+At the moment, the library is not on `pypi`, it will be added when the XMI
+deserialization/serialization will be working. At the moment, the installation
+must be performed manually (better in a virtualenv):
+
+.. code-block:: bash
+
+    $ python setup.py install
+
+Dependencies
+============
+
+The dependencies required by pyecore are:
+
+* ordered-set which is used for the ``ordered`` and ``unique`` collections expressed in the metamodel,
+* lxml which is used for the XMI parsing.
+
+
+Run the Tests
+=============
+
+Tests uses `py.test` and 'coverage'. Everything is driven by `Tox`, so in order
+to run the tests simply run:
+
+.. code-block:: bash
+
+    $ tox
+
+
 Liberty Regarding the Java EMF Implementation
 =============================================
 
@@ -193,12 +303,16 @@ In the current state, the project implements:
 * reference eopposite,
 * containment reference,
 * introspection,
-* select/reject on collections.
+* select/reject on collections,
+* Eclipse XMI import (partially)
+* Eclipse XMI export (partially).
+
+The XMI import/export are still in an early stage of developement: no cross
+resources references, not able to resolve file path uris and stuffs.
 
 The things that are in the roadmap:
 
 * documentation,
-* Eclipse XMI import/export (the hard part),
 * code generator for the static part,
 * EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,

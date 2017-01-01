@@ -23,6 +23,15 @@ def test_create_dynamic_simple_eattribute():
     assert a.name == 'new_name'
 
 
+def test_create_dynamic_simple_eattribute_boolean():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('isStuff', EBoolean))
+    a = A()
+    assert a.isStuff is False
+    a.isStuff = True
+    assert a.isStuff is True
+
+
 def test_create_dynamic_simple_eattribute_badvalue():
     A = EClass('A')
     A.eStructuralFeatures.append(EAttribute('name', EString))
@@ -471,3 +480,13 @@ def test_create_dynamic_ereference_bounds():
     # assert A.eStructuralFeatures[0].upper == 5
     assert A.eStructuralFeatures[0].lowerBound == 2
     assert A.eStructuralFeatures[0].upperBound == 5
+
+
+def test_create_simple_metamodel():
+    ec = EClass('A')
+    eat = EAttribute('eatt', eType=EString)
+    ec.eStructuralFeatures.append(eat)
+    pack = EPackage('epack')
+    pack.eClassifiers.append(ec)
+    assert ec in pack.eContents and eat not in pack.eContents
+    assert ec in pack.eAllContents() and eat in pack.eAllContents()

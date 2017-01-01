@@ -62,11 +62,7 @@ class Core(object):
             self.__setattr__(name, new_list)
             return new_list
         else:
-            default_value = None
-            if hasattr(feature.eType, 'default_value'):
-                default_value = feature.eType.default_value
-            if hasattr(feature, 'default_value'):
-                default_value = feature.default_value
+            default_value = feature.get_default_value()
             self.__setattr__(name, default_value)
             return default_value
 
@@ -90,8 +86,8 @@ class Core(object):
             object.__setattr__(self, name, feat.eType.from_string(value))
         else:
             object.__setattr__(self, name, value)
-        if self._isready:
-            self._isset.append(name)
+        if self._isready and value != feat.get_default_value:
+            self._isset.add(feat)
         if self._isready and isinstance(feat, EReference):
             if feat.containment and isinstance(value, EObject):
                 value._container = self
@@ -106,6 +102,9 @@ class Core(object):
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
+                    if value._isready and \
+                            eOpposite.get_default_value != self:
+                        value._isset.add(eOpposite)
             elif feat.eOpposite and value is None:
                 eOpposite = feat.eOpposite
                 if previous_value and eOpposite.many:
@@ -144,10 +143,11 @@ class EObject(object):
 
     def __subinit__(self):
         self._xmiid = None
-        self._isset = []
+        self._isset = set()
         self._container = None
         self._isready = False
         self._containment_feature = None
+        self._eresource = None
 
     def __initmetattr__(self, _super=None):
         _super = _super if _super else self.__class__
@@ -171,6 +171,50 @@ class EObject(object):
 
     def eContainmentFeature(self):
         return self._containment_feature
+
+    def eIsSet(self, feature):
+        if isinstance(feature, str):
+            feature = self.eClass.findEStructuralFeature(feature)
+        return feature in self._isset
+
+    @property
+    def eResource(self):
+        return self._eresource
+
+    def eGet(self, feature):
+        if isinstance(feature, str):
+            return self.__getattribute__(feature)
+        elif isinstance(feature, EStructuralFeature):
+            return self.__getattribute__(feature.name)
+        raise TypeError('Feature must have str or EStructuralFeature type')
+
+    def eSet(self, feature, value):
+        if isinstance(feature, str):
+            self.__setattr__(feature, value)
+        elif isinstance(feature, EStructuralFeature):
+            self.__setattr__(feature.name, value)
+        else:
+            raise TypeError('Feature must have str or '
+                            'EStructuralFeature type')
+
+    @property
+    def eContents(self):
+        children = []
+        for feature in self.eClass.eAllStructuralFeatures():
+            if isinstance(feature, EAttribute):
+                continue
+            if feature.containment:
+                values = self.__getattribute__(feature.name) \
+                         if feature.many \
+                         else [self.__getattribute__(feature)]
+                children.extend(values)
+        return children
+
+    def eAllContents(self):
+        objs = list(self.eContents)
+        for obj in list(objs):
+            objs.extend(list(obj.eAllContents()))
+        return iter(objs)
 
 
 class ECollection(object):
@@ -248,17 +292,19 @@ class EList(ECollection, list):
             self._update_container(x)
             self._update_opposite(x, self._owner)
         super().extend(sublist)
+        self._owner._isset.add(self._efeature)
 
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
-    def __setslice__(self, i, j, y):
-        all(self.check(x) for x in y)
-        super().__setslice__(i, j, y)
+    # def __setslice__(self, i, j, y):
+    #     all(self.check(x) for x in y)
+    #     super().__setslice__(i, j, y)
 
     def __setitem__(self, i, y):
         self.check(y)
         self._update_container(y)
         self._update_opposite(y, self._owner)
         super().__setitem__(i, y)
+        self._owner._isset.add(self._efeature)
 
 
 class EAbstractSet(ECollection):
@@ -459,7 +505,8 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
 
     def __repr__(self):
-        return '{0}: {1}'.format(self.name, self.eType)
+        etype = self.eType if self.eType else None
+        return '{0}: {1}'.format(self.name, etype)
 
 
 class EAttribute(EStructuralFeature):
@@ -470,6 +517,11 @@ class EAttribute(EStructuralFeature):
         self.default_value = default_value
         if not self.default_value and isinstance(eType, EDataType):
             self.default_value = eType.default_value
+
+    def get_default_value(self):
+        if self.default_value is not None:
+            return self.default_value
+        return self.eType.default_value
 
 
 class EReference(EStructuralFeature):
@@ -484,6 +536,9 @@ class EReference(EStructuralFeature):
             eOpposite.eOpposite = self
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
             self.eType = eType.eClass
+
+    def get_default_value(self):
+        return None
 
 
 class EClass(EClassifier):
