@@ -102,6 +102,9 @@ class Core(object):
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
+                    if value._isready and \
+                            eOpposite.get_default_value != self:
+                        value._isset.add(eOpposite)
             elif feat.eOpposite and value is None:
                 eOpposite = feat.eOpposite
                 if previous_value and eOpposite.many:
@@ -177,6 +180,7 @@ class EObject(object):
     @property
     def eResource(self):
         return self._eresource
+
 
 class ECollection(object):
     def create(owner, feature):
