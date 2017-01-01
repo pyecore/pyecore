@@ -102,6 +102,9 @@ class Core(object):
                     object.__getattribute__(value, eOpposite.name).append(self)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
+                    if value._isready and \
+                            eOpposite.get_default_value != self:
+                        value._isset.add(eOpposite)
             elif feat.eOpposite and value is None:
                 eOpposite = feat.eOpposite
                 if previous_value and eOpposite.many:
@@ -177,6 +180,42 @@ class EObject(object):
     @property
     def eResource(self):
         return self._eresource
+
+    def eGet(self, feature):
+        if isinstance(feature, str):
+            return self.__getattribute__(feature)
+        elif isinstance(feature, EStructuralFeature):
+            return self.__getattribute__(feature.name)
+        raise TypeError('Feature must have str or EStructuralFeature type')
+
+    def eSet(self, feature, value):
+        if isinstance(feature, str):
+            self.__setattr__(feature, value)
+        elif isinstance(feature, EStructuralFeature):
+            self.__setattr__(feature.name, value)
+        else:
+            raise TypeError('Feature must have str or '
+                            'EStructuralFeature type')
+
+    @property
+    def eContents(self):
+        children = []
+        for feature in self.eClass.eAllStructuralFeatures():
+            if isinstance(feature, EAttribute):
+                continue
+            if feature.containment:
+                values = self.__getattribute__(feature.name) \
+                         if feature.many \
+                         else [self.__getattribute__(feature)]
+                children.extend(values)
+        return children
+
+    def eAllContents(self):
+        objs = list(self.eContents)
+        for obj in list(objs):
+            objs.extend(list(obj.eAllContents()))
+        return iter(objs)
+
 
 class ECollection(object):
     def create(owner, feature):
@@ -256,9 +295,9 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     # for Python2 compatibility, in Python3, __setslice__ is deprecated
-    def __setslice__(self, i, j, y):
-        all(self.check(x) for x in y)
-        super().__setslice__(i, j, y)
+    # def __setslice__(self, i, j, y):
+    #     all(self.check(x) for x in y)
+    #     super().__setslice__(i, j, y)
 
     def __setitem__(self, i, y):
         self.check(y)

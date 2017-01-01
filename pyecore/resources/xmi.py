@@ -2,19 +2,23 @@ from lxml import etree
 from pyecore.resources.resource import Resource
 import pyecore.ecore as Ecore
 
+xsi = 'xsi'
+xsi_url = 'http://www.w3.org/2001/XMLSchema-instance'
+xmi = 'xmi'
+xmi_url = 'http://www.omg.org/XMI'
+
 
 class XMIResource(Resource):
-    def __init__(self, uri=None):
-        super().__init__(uri)
-        self._contents = []
+    def __init__(self, uri=None, use_uuid=False):
+        super().__init__(uri, use_uuid)
 
     def load(self):
         tree = etree.parse(self.uri.plain)
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
-        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes['xsi'])
-        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes['xmi'])
+        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes[xsi])
+        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[xmi])
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
         for child in xmlroot:
@@ -28,7 +32,8 @@ class XMIResource(Resource):
             return self._resolve_mem[fragment]
         if self._use_uuid:
             try:
-                frag = fragment[1:] if fragment.startswith('#') else fragment
+                frag = fragment[1:] if fragment.startswith('#') \
+                                    else fragment
                 frag = frag[2:] if frag.startswith('//') else frag
                 return self.uuid_dict[frag]
             except KeyError:
@@ -214,3 +219,67 @@ class XMIResource(Resource):
 
     def _clean_registers(self):
         delattr(self, '_later')
+
+    def save(self, output=None):
+        output = output if output else self.uri.plain
+        if not self.contents:
+            with open(output, 'wb') as out:
+                tree = etree.ElementTree()
+                tree.write(out,
+                           xml_declaration=True,
+                           encoding=tree.docinfo.encoding)
+        else:
+            tree = etree.ElementTree(self._go_accross_from(self.contents[0]))
+            with open(output, 'wb') as out:
+                tree.write(out,
+                           pretty_print=True,
+                           xml_declaration=True,
+                           encoding=tree.docinfo.encoding)
+
+    def _go_accross_from(self, obj):
+        if not obj.eContainmentFeature():  # obj is the root
+            prefix = obj.eClass.ePackage.nsPrefix
+            nsURI = obj.eClass.ePackage.nsURI
+            root_node = etree.QName(nsURI, obj.eClass.name)
+            nsmap = {xmi: xmi_url,
+                     xsi: xsi_url,
+                     prefix: nsURI}
+            node = etree.Element(root_node, nsmap=nsmap)
+            xmi_version = etree.QName(xmi_url, 'version')
+            node.attrib[xmi_version] = '2.0'
+        else:
+            node = etree.Element(obj.eContainmentFeature().name)
+            if obj.eContainmentFeature().eType != obj.eClass:
+                xsi_type = etree.QName(xsi_url, 'type')
+                prefix = obj.eClass.ePackage.nsPrefix
+                node.attrib[xsi_type] = '{0}:{1}' \
+                                        .format(prefix, obj.eClass.name)
+        if self._use_uuid:
+            self._assign_uuid(obj)
+            xmi_id = '{{{0}}}id'.format(xmi_url)
+            node.attrib[xmi_id] = self._xmiid
+
+        for feat in obj._isset:
+            value = obj.__getattribute__(feat.name)
+            if isinstance(feat, Ecore.EAttribute):
+                if feat.many and value:
+                    node.attrib[feat.name] = ' '.join(value)
+                elif value != feat.get_default_value():
+                    node.attrib[feat.name] = str(value)
+            elif isinstance(feat, Ecore.EReference) \
+                    and not feat.containment:
+                if feat.many and value:
+                    results = list(map(self._build_path_from, value))
+                    result = ' '.join(results)
+                    node.attrib[feat.name] = result
+                else:
+                    node.attrib[feat.name] = self._build_path_from(value)
+            if isinstance(feat, Ecore.EReference) and \
+                    feat.containment and feat.many:
+                children = obj.__getattribute__(feat.name)
+                for child in children:
+                    node.append(self._go_accross_from(child))
+            elif isinstance(feat, Ecore.EReference) and feat.containment:
+                child = obj.__getattribute__(feat.name)
+                node.append(self._go_accross_from(child))
+        return node
