@@ -199,8 +199,8 @@ classical classes definitions in Python:
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
 
-Importing an Existing XMI Metamodel
-===================================
+Importing an Existing XMI Metamodel/Model
+=========================================
 
 XMI support is still a work in progress, but the XMI import is on good tracks.
 Currently, only basic XMI metamodel (``.ecore``) and model instances can be
@@ -220,6 +220,35 @@ loaded:
 
 The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
+
+Exporting an Existing XMI Resource
+==================================
+
+As for the XMI import, the XMI export (serialization) is still somehow very
+basic. Here is an example of how you could save your objects in a file:
+
+.. code-block:: python
+
+    >>> # we suppose we have an already existing model in 'root'
+    >>> from pyecore.resources.xmi import XMIResource
+    >>> from pyecore.resources import URI
+    >>> resource = XMIResource(URI('my/path.xmi'))
+    >>> resource.append(root)  # We add the root to the resource
+    >>> resource.save()  # will save the result in 'my/path.xmi'
+    >>> resource.save(output='test/path.xmi'  # save the result in 'test/path.xmi'
+
+
+You can also use a ``ResourceSet`` to deal with this:
+
+.. code-block:: python
+
+    >>> # we suppose we have an already existing model in 'root'
+    >>> from pyecore.resources import ResourceSet, URI
+    >>> rset = ResourceSet()
+    >>> resource = rset.create_resource(URI('my/path.xmi'))
+    >>> resource.append(root)
+    >>> resource.save()
+    
 
 Installation
 ============
@@ -275,12 +304,15 @@ In the current state, the project implements:
 * containment reference,
 * introspection,
 * select/reject on collections,
-* Eclipse XMI import (partially).
+* Eclipse XMI import (partially)
+* Eclipse XMI export (partially).
+
+The XMI import/export are still in an early stage of developement: no cross
+resources references, not able to resolve file path uris and stuffs.
 
 The things that are in the roadmap:
 
 * documentation,
-* Eclipse XMI export (the hard part),
 * code generator for the static part,
 * EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,
