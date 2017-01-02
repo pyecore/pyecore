@@ -161,13 +161,19 @@ class Resource(object):
         features = list(filter(None, path.split('/')))
         feat_info = [x.split('.') for x in features]
         obj = start_obj
+        annot_content = False
         for feat in feat_info:
             key, index = feat if len(feat) > 1 else (feat[0], None)
             if key.startswith('@'):
                 tmp_obj = obj.__getattribute__(key[1:])
                 obj = tmp_obj[int(index)] if index else tmp_obj
             elif key.startswith('%'):
-                return obj  # tmp
+                key = key[1:-1]
+                obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
+                annot_content = True
+            elif annot_content:
+                annot_content = False
+                obj = obj.contents.select(lambda x: x.name == key)[0]
             else:
                 try:
                     obj = obj.getEClassifier(key)
