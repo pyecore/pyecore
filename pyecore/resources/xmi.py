@@ -13,6 +13,7 @@ class XMIResource(Resource):
         super().__init__(uri, use_uuid)
 
     def load(self):
+        self._meta_cache = {}
         tree = etree.parse(self.uri.plain)
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
@@ -21,9 +22,17 @@ class XMIResource(Resource):
         XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[xmi])
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
+        print('root decoded')
+        if not self.contents:
+            self._clean_registers()
+            return
+        print('decode nodes')
         for child in xmlroot:
             self._decode_eobject(child, modelroot)
+        print('nodes OK')
+        print('decode refs')
         self._decode_ereferences()
+        print('REFS OK')
         self._clean_registers()
 
     def resolve(self, fragment):
@@ -48,6 +57,15 @@ class XMIResource(Resource):
     def extract_namespace(tag):
         qname = etree.QName(tag)
         return qname.namespace, qname.localname
+
+    def _find_in_metacache(self, obj, name):
+        fname = obj.eClass.name + '#' + name
+        try:
+            return self._meta_cache[fname]
+        except KeyError:
+            feat = obj.eClass.findEStructuralFeature(name)
+            self._meta_cache[fname] = feat
+            return feat
 
     def _type_attribute(self, node):
         return node.get(XMIResource.xsitype)
@@ -77,15 +95,13 @@ class XMIResource(Resource):
                 except KeyError:
                     pass
             elif not namespace:
-                feature = eobject.eClass.findEStructuralFeature(key)
+                feature = self._find_in_metacache(eobject, key)
                 if not feature:
                     continue
                 modelroot.__setattr__(key, value)
         return modelroot
 
     def _decode_eobject(self, current_node, parent_eobj):
-        if not self.contents:
-            return
         eobject_info = self._decode_node(parent_eobj, current_node)
         feat_container, eobject, eatts, erefs = eobject_info
         if not feat_container:
@@ -116,7 +132,7 @@ class XMIResource(Resource):
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
             return (None, None, [], [])
-        feature_container = parent_eobj.eClass.findEStructuralFeature(node.tag)
+        feature_container = self._find_in_metacache(parent_eobj, node.tag)
         if not feature_container:
             raise ValueError('Feature {0} is unknown for {1}, line {2}'
                              .format(node.tag,
@@ -183,7 +199,7 @@ class XMIResource(Resource):
         elif namespace:
             pass
         elif not namespace:
-            feature = owner.eClass.findEStructuralFeature(att_name)
+            feature = self._find_in_metacache(owner, att_name)
             if not feature:
                 raise ValueError('Feature {0} does not exists for type {1}'
                                  .format(att_name, owner.eClass.name))
@@ -221,6 +237,7 @@ class XMIResource(Resource):
 
     def _clean_registers(self):
         delattr(self, '_later')
+        delattr(self, '_meta_cache')
 
     def save(self, output=None):
         output = output if output else self.uri.plain

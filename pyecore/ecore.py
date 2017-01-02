@@ -1,7 +1,6 @@
 from functools import partial
 from ordered_set import OrderedSet
 import sys
-import types
 
 
 nsPrefix = 'ecore'
@@ -70,11 +69,13 @@ class Core(object):
 
         if feature.many:
             new_list = ECollection.create(self, feature)
-            self.__setattr__(name, new_list)
+            object.__setattr__(self, name, new_list)
+            self._isset.add(feature)
             return new_list
         else:
             default_value = feature.get_default_value()
-            self.__setattr__(name, default_value)
+            object.__setattr__(self, name, default_value)
+            self._isset.add(feature)
             return default_value
 
     def setattr(self, name, value):
@@ -92,10 +93,6 @@ class Core(object):
             previous_value = object.__getattribute__(self, feat.name)
         except AttributeError:
             previous_value = None
-
-        # if isinstance(feat.eType, EDataType) and isinstance(value, str):
-        #     object.__setattr__(self, name, feat.eType.from_string(value))
-        # else:
         object.__setattr__(self, name, value)
         if self._isready and value != feat.get_default_value:
             self._isset.add(feat)
@@ -563,6 +560,8 @@ class EClass(EClassifier):
     def __init__(self, name=None, superclass=None, abstract=False):
         super().__init__(name)
         self.abstract = abstract
+        self._estypes_cache = None
+        self._estrucs_cache = None
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
@@ -595,35 +594,54 @@ class EClass(EClassifier):
                            self.eStructuralFeatures))
 
     def findEStructuralFeature(self, name):
-        return next(
-                (f for f in self.eAllStructuralFeatures() if f.name == name),
-                None)
-
-    def eAllSuperTypes(self, building=None):
-        if isinstance(self, type):
-            return {x.eClass for x in self.mro() if x is not object and
-                    x is not self}
+        struct = next(
+                  (f for f in self.eStructuralFeatures if f.name == name),
+                  None)
+        if struct:
+            return struct
         if not self.eSuperTypes:
-            return set()
-        building = building if building else []
-        stypes = set()
-        [stypes.add(x) for x in self.eSuperTypes if x not in building]
-        for ec in self.eSuperTypes:
-            stypes |= (ec.eAllSuperTypes(stypes))
-        return stypes
+            return None
+        for stype in self.eSuperTypes:
+            struct = stype.findEStructuralFeature(name)
+            if struct:
+                break
+        return struct
+
+    def eAllSuperTypes(self):
+        # if isinstance(self, type):
+        #     return (x.eClass for x in self.mro() if x is not object and
+        #             x is not self)
+        if not self.eSuperTypes:
+            return iter(set())
+        result = set()
+        for stype in self.eSuperTypes:
+            result.add(stype)
+            result |= frozenset(stype.eAllSuperTypes())
+        return result
 
     def eAllStructuralFeatures(self):
-        feats = list(self.eStructuralFeatures)
-        [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
+        feats = set(self.eStructuralFeatures)
+        for x in self.eAllSuperTypes():
+            feats.update(x.eStructuralFeatures)
         return feats
 
     def eAllOperations(self):
-        ops = list(self.eOperations)
-        [ops.extend(x.eOperations) for x in self.eAllSuperTypes()]
+        ops = set(self.eOperations)
+        for x in self.eAllSuperTypes():
+            ops.update(x.eOperations)
         return ops
 
     def findEOperation(self, name):
-        return next((f for f in self.eAllOperations() if f.name == name), None)
+        op = next((f for f in self.eOperations if f.name == name), None)
+        if op:
+            return op
+        if not self.eSuperTypes:
+            return None
+        for stype in self.eSuperTypes:
+            op = stype.findEOperation(name)
+            if op:
+                break
+        return op
 
 
 EClass.eClass = EClass
@@ -637,6 +655,9 @@ class MetaEClass(type):
         cls.__setattr__ = Core.setattr
         Core.register_classifier(cls, promote=True)
 
+    # def __new__(cls, name, bases, dict):
+    #     return type(name, bases, dict)
+
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
@@ -644,7 +665,7 @@ class MetaEClass(type):
         obj = type.__call__(cls, *args, **kwargs)
         # init instances by reflection
         EObject.__subinit__(obj)
-        for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
+        for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
             if efeat.name in obj.__dict__:
                 continue
             if isinstance(efeat, EAttribute):
