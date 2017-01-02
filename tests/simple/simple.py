@@ -26,7 +26,3 @@ class B(EObject, metaclass=MetaEClass):
 
     def __init__(self):
         pass
-
-
-eClassifiers = Ecore.Core.compute_eclass(__name__)
-getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)

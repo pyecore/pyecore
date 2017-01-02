@@ -1,10 +1,15 @@
+from functools import partial
 from ordered_set import OrderedSet
 import sys
-from inspect import getmembers, isclass
 
 
 nsPrefix = 'ecore'
 nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
+
+# This var will be automatically populated.
+# In this case, it MUST be set to an empty dict,
+# otherwise, the getEClassifier would be overriden
+eClassifiers = {}  # Will be automatically populated
 
 
 def getEClassifier(name, searchspace=None):
@@ -128,12 +133,18 @@ class Core(object):
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
 
-    def compute_eclass(module_name):
-        module = sys.modules[module_name]
-
-        def is_valid_eclass(_class):
-            return isclass(_class) and _class.__module__ is module_name
-        return {k: v for k, v in getmembers(module, is_valid_eclass)}
+    def register_classifier(cls, abstract=False, promote=False):
+        if promote:
+            Core._promote(cls, abstract)
+        epackage = sys.modules[cls.__module__]
+        if not hasattr(epackage, 'eClassifiers'):
+            eclassifs = {}
+            epackage.eClassifiers = eclassifs
+            epackage.getEClassifier = partial(getEClassifier,
+                                              searchspace=eclassifs)
+        cls.eClass.ePackage = epackage
+        cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
+        epackage.eClassifiers[cname] = cls
 
 
 class EObject(object):
@@ -617,7 +628,7 @@ class MetaEClass(type):
         super().__init__(name, bases, nmspc)
         cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
-        Core._promote(cls)
+        Core.register_classifier(cls, promote=True)
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -741,31 +752,36 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
 
-Core._promote(EModelElement)
-Core._promote(ENamedElement)
-Core._promote(EGenericType)
-Core._promote(ETypeParameter)
-Core._promote(EAnnotation)
-Core._promote(EPackage)
-Core._promote(ETypedElement)
-Core._promote(EClassifier)
-Core._promote(EDataType)
-Core._promote(EEnum)
-Core._promote(EEnumLiteral)
-Core._promote(EParameter)
-Core._promote(EOperation)
-Core._promote(EClass)
-Core._promote(EStructuralFeature)
-Core._promote(EAttribute)
-Core._promote(EReference)
+Core.register_classifier(EModelElement, promote=True)
+Core.register_classifier(ENamedElement, promote=True)
+Core.register_classifier(EGenericType, promote=True)
+Core.register_classifier(ETypeParameter, promote=True)
+Core.register_classifier(EAnnotation, promote=True)
+Core.register_classifier(EPackage, promote=True)
+Core.register_classifier(ETypedElement, promote=True)
+Core.register_classifier(EClassifier, promote=True)
+Core.register_classifier(EDataType, promote=True)
+Core.register_classifier(EEnum, promote=True)
+Core.register_classifier(EEnumLiteral, promote=True)
+Core.register_classifier(EParameter, promote=True)
+Core.register_classifier(EOperation, promote=True)
+Core.register_classifier(EClass, promote=True)
+Core.register_classifier(EStructuralFeature, promote=True)
+Core.register_classifier(EAttribute, promote=True)
+Core.register_classifier(EReference, promote=True)
+Core.register_classifier(EString)
+Core.register_classifier(EBoolean)
+Core.register_classifier(EInteger)
+Core.register_classifier(EStringToStringMapEntry)
+Core.register_classifier(EDiagnosticChain)
 
 # We compute all the Metaclasses from the current module (EPackage-alike)
-eClassifiers = Core.compute_eclass(__name__)
-__btypes = [EString,
-            EBoolean,
-            EInteger,
-            EStringToStringMapEntry,
-            EDiagnosticChain]
-__basic_types = {v.name: v for v in __btypes}
-eClassifiers.update(__basic_types)
+
+# __btypes = [EString,
+#             EBoolean,
+#             EInteger,
+#             EStringToStringMapEntry,
+#             EDiagnosticChain]
+# __basic_types = {v.name: v for v in __btypes}
+# eClassifiers.update(__basic_types)
 eClass = EPackage.eClass

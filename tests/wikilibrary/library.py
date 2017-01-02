@@ -1,4 +1,3 @@
-from functools import partial
 import pyecore.ecore as Ecore
 from pyecore.ecore import EObject, EAttribute, EString, EEnum, EReference, \
                           MetaEClass, EInteger
@@ -9,7 +8,7 @@ nsURI = 'http://emf.wikipedia.org/2011/Library'
 BookCategory = EEnum('BookCategory', literals=['ScienceFiction',
                                                'Biography',
                                                'Mistery'])
-
+Ecore.Core.register_classifier(BookCategory)  # This is required now
 
 class Book(EObject, metaclass=MetaEClass):
     title = EAttribute(eType=EString)
@@ -51,6 +50,3 @@ class Library(EObject, metaclass=MetaEClass):
 
     def __init__(self):
         pass
-
-eClassifiers = Ecore.Core.compute_eclass(__name__)
-getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
