@@ -662,6 +662,7 @@ EBoolean = EDataType('EBoolean', bool, False,
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
+ENativeType = EDataType('ENativeType', type)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -683,7 +684,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-ETypedElement.default_value = EAttribute('default_value', type)
+ETypedElement.default_value = EAttribute('default_value', ENativeType)
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -774,14 +775,6 @@ Core.register_classifier(EBoolean)
 Core.register_classifier(EInteger)
 Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
+Core.register_classifier(ENativeType)
 
-# We compute all the Metaclasses from the current module (EPackage-alike)
-
-# __btypes = [EString,
-#             EBoolean,
-#             EInteger,
-#             EStringToStringMapEntry,
-#             EDiagnosticChain]
-# __basic_types = {v.name: v for v in __btypes}
-# eClassifiers.update(__basic_types)
 eClass = EPackage.eClass

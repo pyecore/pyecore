@@ -237,10 +237,11 @@ class XMIResource(Resource):
                            encoding=tree.docinfo.encoding)
 
     def _go_accross_from(self, obj):
+        eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
-            prefix = obj.eClass.ePackage.nsPrefix
-            nsURI = obj.eClass.ePackage.nsURI
-            root_node = etree.QName(nsURI, obj.eClass.name)
+            prefix = eclass.ePackage.nsPrefix
+            nsURI = eclass.ePackage.nsURI
+            root_node = etree.QName(nsURI, eclass.name)
             nsmap = {xmi: xmi_url,
                      xsi: xsi_url,
                      prefix: nsURI}
@@ -249,17 +250,20 @@ class XMIResource(Resource):
             node.attrib[xmi_version] = '2.0'
         else:
             node = etree.Element(obj.eContainmentFeature().name)
-            if obj.eContainmentFeature().eType != obj.eClass:
+            if obj.eContainmentFeature().eType != eclass:
                 xsi_type = etree.QName(xsi_url, 'type')
-                prefix = obj.eClass.ePackage.nsPrefix
+                prefix = eclass.ePackage.nsPrefix
                 node.attrib[xsi_type] = '{0}:{1}' \
-                                        .format(prefix, obj.eClass.name)
+                                        .format(prefix, eclass.name)
         if self._use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(xmi_url)
             node.attrib[xmi_id] = self._xmiid
 
-        for feat in obj._isset:
+        feats = obj._isset if obj._isset else eclass.eAllStructuralFeatures()
+        for feat in feats:
+            if feat.derived:
+                continue
             value = obj.__getattribute__(feat.name)
             if isinstance(feat, Ecore.EAttribute):
                 if feat.many and value:
@@ -272,7 +276,7 @@ class XMIResource(Resource):
                     results = list(map(self._build_path_from, value))
                     result = ' '.join(results)
                     node.attrib[feat.name] = result
-                else:
+                elif not feat.many and value:
                     node.attrib[feat.name] = self._build_path_from(value)
             if isinstance(feat, Ecore.EReference) and \
                     feat.containment and feat.many:
