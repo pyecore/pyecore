@@ -260,8 +260,8 @@ class XMIResource(Resource):
             xmi_id = '{{{0}}}id'.format(xmi_url)
             node.attrib[xmi_id] = self._xmiid
 
-        feats = obj._isset if obj._isset else eclass.eAllStructuralFeatures()
-        for feat in feats:
+        # feats = obj._isset if obj._isset else eclass.eAllStructuralFeatures()
+        for feat in obj._isset:
             if feat.derived:
                 continue
             value = obj.__getattribute__(feat.name)

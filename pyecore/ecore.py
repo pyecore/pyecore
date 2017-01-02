@@ -1,6 +1,7 @@
 from functools import partial
 from ordered_set import OrderedSet
 import sys
+import types
 
 
 nsPrefix = 'ecore'
@@ -31,6 +32,11 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
+        elif _type is EPackage:
+            return isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+        elif _type is EClassifier:
+            return isinstance(obj, _type) or \
+                        hasattr(obj, '_staticEClass') and obj._staticEClass
         elif isinstance(_type, EEnum):
             return obj in _type
         elif isinstance(_type, EDataType) or isinstance(_type, EAttribute):
@@ -87,10 +93,10 @@ class Core(object):
         except AttributeError:
             previous_value = None
 
-        if isinstance(feat.eType, EDataType) and isinstance(value, str):
-            object.__setattr__(self, name, feat.eType.from_string(value))
-        else:
-            object.__setattr__(self, name, value)
+        # if isinstance(feat.eType, EDataType) and isinstance(value, str):
+        #     object.__setattr__(self, name, feat.eType.from_string(value))
+        # else:
+        object.__setattr__(self, name, value)
         if self._isready and value != feat.get_default_value:
             self._isset.add(feat)
         if self._isready and isinstance(feat, EReference):
@@ -151,6 +157,7 @@ class EObject(object):
     def __init__(self):
         self.__initmetattr__()
         self.__subinit__()
+        self._isready = True
 
     def __subinit__(self):
         self._xmiid = None
@@ -662,7 +669,7 @@ EBoolean = EDataType('EBoolean', bool, False,
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
-ENativeType = EDataType('ENativeType', type)
+ENativeType = EDataType('ENativeType', object)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -739,7 +746,7 @@ EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
 
 EEnumLiteral.eEnum = EReference('eEnum', EEnum, eOpposite=EEnum.eLiterals)
 EEnumLiteral.name = EAttribute('name', EString)
-EEnumLiteral.value = EAttribute('value', EString)
+EEnumLiteral.value = EAttribute('value', EInteger)
 
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
@@ -776,5 +783,8 @@ Core.register_classifier(EInteger)
 Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
+
+EObject.__getattribute__ = Core.getattr
+EObject.__setattr__ = Core.setattr
 
 eClass = EPackage.eClass
