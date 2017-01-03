@@ -22,17 +22,12 @@ class XMIResource(Resource):
         XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[xmi])
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
-        print('root decoded')
         if not self.contents:
             self._clean_registers()
             return
-        print('decode nodes')
         for child in xmlroot:
             self._decode_eobject(child, modelroot)
-        print('nodes OK')
-        print('decode refs')
         self._decode_ereferences()
-        print('REFS OK')
         self._clean_registers()
 
     def resolve(self, fragment):
