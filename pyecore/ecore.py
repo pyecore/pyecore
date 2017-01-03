@@ -70,12 +70,10 @@ class Core(object):
         if feature.many:
             new_list = ECollection.create(self, feature)
             object.__setattr__(self, name, new_list)
-            self._isset.add(feature)
             return new_list
         else:
             default_value = feature.get_default_value()
             object.__setattr__(self, name, default_value)
-            self._isset.add(feature)
             return default_value
 
     def setattr(self, name, value):
