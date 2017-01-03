@@ -14,7 +14,7 @@ class XMIResource(Resource):
 
     def load(self):
         self._meta_cache = {}
-        tree = etree.parse(self.uri.plain)
+        tree = etree.parse(self.uri.create_instream())
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
@@ -29,6 +29,7 @@ class XMIResource(Resource):
             self._decode_eobject(child, modelroot)
         self._decode_ereferences()
         self._clean_registers()
+        self.uri.close_stream()
 
     def resolve(self, fragment):
         fragment = Resource.normalize(fragment)
@@ -235,20 +236,17 @@ class XMIResource(Resource):
         delattr(self, '_meta_cache')
 
     def save(self, output=None):
-        output = output if output else self.uri.plain
+        output = output if output else self.uri.create_outstream()
         if not self.contents:
-            with open(output, 'wb') as out:
-                tree = etree.ElementTree()
-                tree.write(out,
-                           xml_declaration=True,
-                           encoding=tree.docinfo.encoding)
+            tree = etree.ElementTree()
         else:
-            tree = etree.ElementTree(self._go_accross_from(self.contents[0]))
-            with open(output, 'wb') as out:
-                tree.write(out,
-                           pretty_print=True,
-                           xml_declaration=True,
-                           encoding=tree.docinfo.encoding)
+            root = self.contents[0]
+            tree = etree.ElementTree(self._go_accross_from(root))
+        with output as out:
+            tree.write(out,
+                       pretty_print=True,
+                       xml_declaration=True,
+                       encoding=tree.docinfo.encoding)
 
     def _go_accross_from(self, obj):
         eclass = obj.eClass

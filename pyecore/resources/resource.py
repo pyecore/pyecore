@@ -1,4 +1,5 @@
 from uuid import uuid4
+import urllib.request
 import pyecore.ecore as Ecore
 
 global_registry = {}
@@ -49,6 +50,7 @@ class URI(object):
             raise TypeError('URI cannot be None')
         self._uri = uri
         self._split()
+        self.__stream = None
 
     def _split(self):
         if '://' in self._uri:
@@ -71,6 +73,30 @@ class URI(object):
     @property
     def plain(self):
         return self._uri
+
+    def create_instream(self):
+        self.__stream = open(self.plain, 'rb')
+        return self.__stream
+
+    def close_stream(self):
+        if self.__stream:
+            self.__stream.close()
+
+    def create_outstream(self):
+        self.__stream = open(self.plain, 'wb')
+        return self.__stream
+
+
+class HttpURI(URI):
+    def __init__(self, uri):
+        super().__init__(uri)
+
+    def create_instream(self):
+        self.__stream = urllib.request.urlopen(self.plain)
+        return self.__stream
+
+    def create_outstream(self):
+        raise NotImplementedError('Cannot create an outstream for HttpURI')
 
 
 # Not yet implementedn will return a kind of proxy
