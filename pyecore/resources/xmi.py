@@ -277,7 +277,14 @@ class XMIResource(Resource):
             if feat.derived:
                 continue
             value = obj.__getattribute__(feat.name)
-            if isinstance(feat, Ecore.EAttribute):
+            if hasattr(feat.eType, 'eType') and feat.eType.eType is dict:
+                tag = feat.name
+                for key, val in value.items():
+                    entry = etree.Element(tag)
+                    entry.attrib['key'] = key
+                    entry.attrib['value'] = val
+                    node.append(entry)
+            elif isinstance(feat, Ecore.EAttribute):
                 if feat.many and value:
                     node.attrib[feat.name] = ' '.join(value)
                 elif value != feat.get_default_value():
