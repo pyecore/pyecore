@@ -4,7 +4,7 @@ PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
 
 .. highlight:: python
 
-Master |master-build| Develop |develop-build|
+|master-build| (develop |develop-build|)
 
 .. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
     :target: https://travis-ci.org/aranega/pyecore
@@ -248,7 +248,7 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource = rset.create_resource(URI('my/path.xmi'))
     >>> resource.append(root)
     >>> resource.save()
-    
+
 
 Installation
 ============

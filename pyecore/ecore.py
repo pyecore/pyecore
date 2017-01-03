@@ -1,10 +1,15 @@
+from functools import partial
 from ordered_set import OrderedSet
 import sys
-from inspect import getmembers, isclass
 
 
 nsPrefix = 'ecore'
 nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
+
+# This var will be automatically populated.
+# In this case, it MUST be set to an empty dict,
+# otherwise, the getEClassifier would be overriden
+eClassifiers = {}  # Will be automatically populated
 
 
 def getEClassifier(name, searchspace=None):
@@ -26,6 +31,11 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
+        elif _type is EPackage:
+            return isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+        elif _type is EClassifier:
+            return isinstance(obj, _type) or \
+                        hasattr(obj, '_staticEClass') and obj._staticEClass
         elif isinstance(_type, EEnum):
             return obj in _type
         elif isinstance(_type, EDataType) or isinstance(_type, EAttribute):
@@ -59,11 +69,11 @@ class Core(object):
 
         if feature.many:
             new_list = ECollection.create(self, feature)
-            self.__setattr__(name, new_list)
+            object.__setattr__(self, name, new_list)
             return new_list
         else:
             default_value = feature.get_default_value()
-            self.__setattr__(name, default_value)
+            object.__setattr__(self, name, default_value)
             return default_value
 
     def setattr(self, name, value):
@@ -81,11 +91,7 @@ class Core(object):
             previous_value = object.__getattribute__(self, feat.name)
         except AttributeError:
             previous_value = None
-
-        if isinstance(feat.eType, EDataType) and isinstance(value, str):
-            object.__setattr__(self, name, feat.eType.from_string(value))
-        else:
-            object.__setattr__(self, name, value)
+        object.__setattr__(self, name, value)
         if self._isready and value != feat.get_default_value:
             self._isset.add(feat)
         if self._isready and isinstance(feat, EReference):
@@ -128,18 +134,25 @@ class Core(object):
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
 
-    def compute_eclass(module_name):
-        module = sys.modules[module_name]
-
-        def is_valid_eclass(_class):
-            return isclass(_class) and _class.__module__ is module_name
-        return {k: v for k, v in getmembers(module, is_valid_eclass)}
+    def register_classifier(cls, abstract=False, promote=False):
+        if promote:
+            Core._promote(cls, abstract)
+        epackage = sys.modules[cls.__module__]
+        if not hasattr(epackage, 'eClassifiers'):
+            eclassifs = {}
+            epackage.eClassifiers = eclassifs
+            epackage.getEClassifier = partial(getEClassifier,
+                                              searchspace=eclassifs)
+        cls.eClass.ePackage = epackage
+        cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
+        epackage.eClassifiers[cname] = cls
 
 
 class EObject(object):
     def __init__(self):
         self.__initmetattr__()
         self.__subinit__()
+        self._isready = True
 
     def __subinit__(self):
         self._xmiid = None
@@ -285,6 +298,7 @@ class EList(ECollection, list):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().append(value)
+        self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
         all(self.check(x) for x in sublist)
@@ -320,6 +334,7 @@ class EAbstractSet(ECollection):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
+        self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
         self.update(*sublist)
@@ -330,6 +345,7 @@ class EAbstractSet(ECollection):
             self._update_container(x)
             self._update_opposite(x, self._owner)
         super().update(others)
+        self._owner._isset.add(self._efeature)
 
 
 class ESet(EAbstractSet, set):
@@ -545,6 +561,8 @@ class EClass(EClassifier):
     def __init__(self, name=None, superclass=None, abstract=False):
         super().__init__(name)
         self.abstract = abstract
+        self._estypes_cache = None
+        self._estrucs_cache = None
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
@@ -577,35 +595,54 @@ class EClass(EClassifier):
                            self.eStructuralFeatures))
 
     def findEStructuralFeature(self, name):
-        return next(
-                (f for f in self.eAllStructuralFeatures() if f.name == name),
-                None)
-
-    def eAllSuperTypes(self, building=None):
-        if isinstance(self, type):
-            return {x.eClass for x in self.mro() if x is not object and
-                    x is not self}
+        struct = next(
+                  (f for f in self.eStructuralFeatures if f.name == name),
+                  None)
+        if struct:
+            return struct
         if not self.eSuperTypes:
-            return set()
-        building = building if building else []
-        stypes = set()
-        [stypes.add(x) for x in self.eSuperTypes if x not in building]
-        for ec in self.eSuperTypes:
-            stypes |= (ec.eAllSuperTypes(stypes))
-        return stypes
+            return None
+        for stype in self.eSuperTypes:
+            struct = stype.findEStructuralFeature(name)
+            if struct:
+                break
+        return struct
+
+    def eAllSuperTypes(self):
+        # if isinstance(self, type):
+        #     return (x.eClass for x in self.mro() if x is not object and
+        #             x is not self)
+        if not self.eSuperTypes:
+            return iter(set())
+        result = set()
+        for stype in self.eSuperTypes:
+            result.add(stype)
+            result |= frozenset(stype.eAllSuperTypes())
+        return result
 
     def eAllStructuralFeatures(self):
-        feats = list(self.eStructuralFeatures)
-        [feats.extend(x.eStructuralFeatures) for x in self.eAllSuperTypes()]
+        feats = set(self.eStructuralFeatures)
+        for x in self.eAllSuperTypes():
+            feats.update(x.eStructuralFeatures)
         return feats
 
     def eAllOperations(self):
-        ops = list(self.eOperations)
-        [ops.extend(x.eOperations) for x in self.eAllSuperTypes()]
+        ops = set(self.eOperations)
+        for x in self.eAllSuperTypes():
+            ops.update(x.eOperations)
         return ops
 
     def findEOperation(self, name):
-        return next((f for f in self.eAllOperations() if f.name == name), None)
+        op = next((f for f in self.eOperations if f.name == name), None)
+        if op:
+            return op
+        if not self.eSuperTypes:
+            return None
+        for stype in self.eSuperTypes:
+            op = stype.findEOperation(name)
+            if op:
+                break
+        return op
 
 
 EClass.eClass = EClass
@@ -617,7 +654,10 @@ class MetaEClass(type):
         super().__init__(name, bases, nmspc)
         cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
-        Core._promote(cls)
+        Core.register_classifier(cls, promote=True)
+
+    # def __new__(cls, name, bases, dict):
+    #     return type(name, bases, dict)
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -626,7 +666,7 @@ class MetaEClass(type):
         obj = type.__call__(cls, *args, **kwargs)
         # init instances by reflection
         EObject.__subinit__(obj)
-        for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
+        for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
             if efeat.name in obj.__dict__:
                 continue
             if isinstance(efeat, EAttribute):
@@ -651,6 +691,7 @@ EBoolean = EDataType('EBoolean', bool, False,
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
+ENativeType = EDataType('ENativeType', object)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -672,7 +713,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-ETypedElement.default_value = EAttribute('default_value', type)
+ETypedElement.default_value = EAttribute('default_value', ENativeType)
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -727,7 +768,7 @@ EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
 
 EEnumLiteral.eEnum = EReference('eEnum', EEnum, eOpposite=EEnum.eLiterals)
 EEnumLiteral.name = EAttribute('name', EString)
-EEnumLiteral.value = EAttribute('value', EString)
+EEnumLiteral.value = EAttribute('value', EInteger)
 
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
@@ -741,31 +782,31 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
 
-Core._promote(EModelElement)
-Core._promote(ENamedElement)
-Core._promote(EGenericType)
-Core._promote(ETypeParameter)
-Core._promote(EAnnotation)
-Core._promote(EPackage)
-Core._promote(ETypedElement)
-Core._promote(EClassifier)
-Core._promote(EDataType)
-Core._promote(EEnum)
-Core._promote(EEnumLiteral)
-Core._promote(EParameter)
-Core._promote(EOperation)
-Core._promote(EClass)
-Core._promote(EStructuralFeature)
-Core._promote(EAttribute)
-Core._promote(EReference)
+Core.register_classifier(EModelElement, promote=True)
+Core.register_classifier(ENamedElement, promote=True)
+Core.register_classifier(EGenericType, promote=True)
+Core.register_classifier(ETypeParameter, promote=True)
+Core.register_classifier(EAnnotation, promote=True)
+Core.register_classifier(EPackage, promote=True)
+Core.register_classifier(ETypedElement, promote=True)
+Core.register_classifier(EClassifier, promote=True)
+Core.register_classifier(EDataType, promote=True)
+Core.register_classifier(EEnum, promote=True)
+Core.register_classifier(EEnumLiteral, promote=True)
+Core.register_classifier(EParameter, promote=True)
+Core.register_classifier(EOperation, promote=True)
+Core.register_classifier(EClass, promote=True)
+Core.register_classifier(EStructuralFeature, promote=True)
+Core.register_classifier(EAttribute, promote=True)
+Core.register_classifier(EReference, promote=True)
+Core.register_classifier(EString)
+Core.register_classifier(EBoolean)
+Core.register_classifier(EInteger)
+Core.register_classifier(EStringToStringMapEntry)
+Core.register_classifier(EDiagnosticChain)
+Core.register_classifier(ENativeType)
 
-# We compute all the Metaclasses from the current module (EPackage-alike)
-eClassifiers = Core.compute_eclass(__name__)
-__btypes = [EString,
-            EBoolean,
-            EInteger,
-            EStringToStringMapEntry,
-            EDiagnosticChain]
-__basic_types = {v.name: v for v in __btypes}
-eClassifiers.update(__basic_types)
+EObject.__getattribute__ = Core.getattr
+EObject.__setattr__ = Core.setattr
+
 eClass = EPackage.eClass
