@@ -300,6 +300,7 @@ class EList(ECollection, list):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().append(value)
+        self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
         all(self.check(x) for x in sublist)
@@ -335,6 +336,7 @@ class EAbstractSet(ECollection):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
+        self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
         self.update(*sublist)
@@ -345,6 +347,7 @@ class EAbstractSet(ECollection):
             self._update_container(x)
             self._update_opposite(x, self._owner)
         super().update(others)
+        self._owner._isset.add(self._efeature)
 
 
 class ESet(EAbstractSet, set):
