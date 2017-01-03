@@ -206,7 +206,7 @@ class Resource(object):
         # sets an uuid if the resource should deal with
         # and obj has none yet (addition to the resource for example)
         if not obj._xmiid:
-            uuid = uuid4()
+            uuid = str(uuid4())
             self.uuid_dict[uuid] = obj
             obj._xmiid = uuid
 

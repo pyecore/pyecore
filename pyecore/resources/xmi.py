@@ -272,7 +272,7 @@ class XMIResource(Resource):
         if self._use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(xmi_url)
-            node.attrib[xmi_id] = self._xmiid
+            node.attrib[xmi_id] = obj._xmiid
 
         # feats = obj._isset if obj._isset else eclass.eAllStructuralFeatures()
         for feat in obj._isset:
