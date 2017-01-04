@@ -221,6 +221,41 @@ loaded:
 The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
 
+
+Adding External Resources
+-------------------------
+
+External resources for metamodel loading should be added in the resource set.
+For example, some metamodels use the XMLType instead of the Ecore one.
+The resource creation should be done by hand first:
+
+.. code-block:: python
+
+    String = Ecore.EDataType('String', str)
+    Double = Ecore.EDataType('Double', int)
+    Int = Ecore.EDataType('Int', int)
+    IntObject = Ecore.EDataType('IntObject', int)
+    Boolean = Ecore.EDataType('Boolean', bool)
+    EJavaObject = Ecore.EDataType('EJavaObject', object)
+    Long = Ecore.EDataType('Long', int)
+    xmltype = Ecore.EPackage()
+    xmltype.eClassifiers.extend([String,
+                                 Double,
+                                 Int,
+                                 EJavaObject,
+                                 Long,
+                                 Boolean,
+                                 IntObject])
+    xmltype.nsURI = 'http://www.eclipse.org/emf/2003/XMLType'
+    xmltype.nsPrefix = 'xmltype'
+    xmltype.name = 'xmltype'
+    resource = rset.create_resource(URI(xmltype.nsURI))
+    resource.append(xmltype)
+
+    # Then the resource can be loaded (here from an http address)
+    resource = rset.get_resource(HttpURI('http://myadress.ecore'))
+    root = resource.contents[0]
+
 Exporting an Existing XMI Resource
 ==================================
 
@@ -235,7 +270,7 @@ basic. Here is an example of how you could save your objects in a file:
     >>> resource = XMIResource(URI('my/path.xmi'))
     >>> resource.append(root)  # We add the root to the resource
     >>> resource.save()  # will save the result in 'my/path.xmi'
-    >>> resource.save(output='test/path.xmi'  # save the result in 'test/path.xmi'
+    >>> resource.save(output=URI('test/path.xmi'))  # save the result in 'test/path.xmi'
 
 
 You can also use a ``ResourceSet`` to deal with this:
@@ -284,8 +319,9 @@ to run the tests simply run:
 Liberty Regarding the Java EMF Implementation
 =============================================
 
-There is some meta-property that are not still coded inside PyEcore. More will
-come with time.
+* There is some meta-property that are not still coded inside PyEcore. More will come with time,
+* ``Resource`` can only contain a single root at the moment,
+* External resources (like ``http://www.eclipse.org/emf/2003/XMLType``) must be create by hand an loaded in the ``global_registry`` or as a ``resource`` of a ``ResourceSet``.
 
 State
 =====
