@@ -4,13 +4,16 @@ PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
 
 .. highlight:: python
 
-|master-build| (develop |develop-build|)
+|master-build| |license|
 
 .. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
     :target: https://travis-ci.org/aranega/pyecore
 
 .. |develop-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=develop
     :target: https://travis-ci.org/aranega/pyecore
+
+.. |license| image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
+    :target: https://raw.githubusercontent.com/aranega/pyecore/develop/LICENSE
 
 PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
 Python3. It's purpose is to handle model/metamodels in Python almost the same
