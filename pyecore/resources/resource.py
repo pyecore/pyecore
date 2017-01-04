@@ -1,4 +1,5 @@
 from uuid import uuid4
+import urllib.request
 import pyecore.ecore as Ecore
 
 global_registry = {}
@@ -40,6 +41,8 @@ class ResourceSet(object):
         path = Resource.normalize(uri)
         uri, fragment = path.split('#')
         epackage = self.resources[uri]
+        if isinstance(epackage, Resource):
+            epackage = epackage.contents[0]
         return Resource._navigate_from(fragment, epackage)
 
 
@@ -49,6 +52,7 @@ class URI(object):
             raise TypeError('URI cannot be None')
         self._uri = uri
         self._split()
+        self.__stream = None
 
     def _split(self):
         if '://' in self._uri:
@@ -72,6 +76,30 @@ class URI(object):
     def plain(self):
         return self._uri
 
+    def create_instream(self):
+        self.__stream = open(self.plain, 'rb')
+        return self.__stream
+
+    def close_stream(self):
+        if self.__stream:
+            self.__stream.close()
+
+    def create_outstream(self):
+        self.__stream = open(self.plain, 'wb')
+        return self.__stream
+
+
+class HttpURI(URI):
+    def __init__(self, uri):
+        super().__init__(uri)
+
+    def create_instream(self):
+        self.__stream = urllib.request.urlopen(self.plain)
+        return self.__stream
+
+    def create_outstream(self):
+        raise NotImplementedError('Cannot create an outstream for HttpURI')
+
 
 # Not yet implementedn will return a kind of proxy
 class File_URI_decoder(object):
@@ -90,11 +118,7 @@ class Global_URI_decoder(object):
             uri, fragment = fragment
         else:
             uri = None
-        try:
-            global_registry[uri]
-            return True
-        except KeyError:
-            return False
+        return uri in global_registry
 
     def resolve(path):
         path = Resource.normalize(path)
@@ -156,7 +180,7 @@ class Resource(object):
         return decoder if decoder else self
 
     def _navigate_from(path, start_obj):
-        if '#' in path:
+        if '#' in path[:1]:
             path = path[1:]
         features = list(filter(None, path.split('/')))
         feat_info = [x.split('.') for x in features]
@@ -176,6 +200,15 @@ class Resource(object):
                 obj = obj.contents.select(lambda x: x.name == key)[0]
             else:
                 try:
+                    subpack = next((p for p in obj.eSubpackages
+                                    if p.name == key),
+                                   None)
+                    if subpack:
+                        obj = subpack
+                        continue
+                except Exception:
+                    pass
+                try:
                     obj = obj.getEClassifier(key)
                 except AttributeError:
                     feat = obj.findEStructuralFeature(key)
@@ -186,21 +219,32 @@ class Resource(object):
         return obj
 
     def _build_path_from(self, obj):
-        if not obj.eContainmentFeature():
-            return '/'
+        if obj.eResource != self:
+            eclass = obj.eClass
+            prefix = eclass.ePackage.nsPrefix
+            _type = '{0}:{1}'.format(prefix, eclass.name)
+            uri_fragment = obj.eURIFragment()
+            if obj.eResource:
+                uri = obj.eResource.uri.plain
+            else:
+                uri = ''
+                root = obj.eRoot()
+                for reguri, value in global_registry.items():
+                    if value is root:
+                        uri = reguri
+                        break
+                if not uri:
+                    for reguri, value in global_registry.items():
+                        if value is root:
+                            uri = reguri
+                            break
+            if not uri_fragment.startswith('#'):
+                uri_fragment = '#' + uri_fragment
+            return '{0} {1}{2}'.format(_type, uri, uri_fragment)
         if self._use_uuid:
             self._assign_uuid(obj)
             return obj._xmiid
-        feat = obj.eContainmentFeature()
-        parent = obj.eContainer()
-        name = feat.name
-        # TODO decode root names (non '@' prefixed)
-        if feat.many:
-            index = parent.__getattribute__(name).index(obj)
-            return '{0}/@{1}.{2}' \
-                   .format(self._build_path_from(parent), name, str(index))
-        else:
-            return '{0}/{1}'.format(self._build_path_from(parent), name)
+        return obj.eURIFragment()
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with

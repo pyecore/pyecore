@@ -14,7 +14,7 @@ class XMIResource(Resource):
 
     def load(self):
         self._meta_cache = {}
-        tree = etree.parse(self.uri.plain)
+        tree = etree.parse(self.uri.create_instream())
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
@@ -29,6 +29,7 @@ class XMIResource(Resource):
             self._decode_eobject(child, modelroot)
         self._decode_ereferences()
         self._clean_registers()
+        self.uri.close_stream()
 
     def resolve(self, fragment):
         fragment = Resource.normalize(fragment)
@@ -235,31 +236,32 @@ class XMIResource(Resource):
         delattr(self, '_meta_cache')
 
     def save(self, output=None):
-        output = output if output else self.uri.plain
+        output = output.create_outstream() \
+                 if output \
+                 else self.uri.create_outstream()
         if not self.contents:
-            with open(output, 'wb') as out:
-                tree = etree.ElementTree()
-                tree.write(out,
-                           xml_declaration=True,
-                           encoding=tree.docinfo.encoding)
+            tree = etree.ElementTree()
         else:
-            tree = etree.ElementTree(self._go_accross_from(self.contents[0]))
-            with open(output, 'wb') as out:
-                tree.write(out,
-                           pretty_print=True,
-                           xml_declaration=True,
-                           encoding=tree.docinfo.encoding)
+            root = self.contents[0]
+            tree = etree.ElementTree(self._go_accross_from(root))
+        with output as out:
+            tree.write(out,
+                       pretty_print=True,
+                       xml_declaration=True,
+                       encoding=tree.docinfo.encoding)
 
     def _go_accross_from(self, obj):
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
-            prefix = eclass.ePackage.nsPrefix
-            nsURI = eclass.ePackage.nsURI
-            root_node = etree.QName(nsURI, eclass.name)
+            epackage = eclass.ePackage
+            prefix = epackage.nsPrefix
+            nsURI = epackage.nsURI
+            tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {xmi: xmi_url,
-                     xsi: xsi_url,
-                     prefix: nsURI}
-            node = etree.Element(root_node, nsmap=nsmap)
+                     xsi: xsi_url}
+            if nsURI:
+                nsmap[prefix] = nsURI
+            node = etree.Element(tag, nsmap=nsmap)
             xmi_version = etree.QName(xmi_url, 'version')
             node.attrib[xmi_version] = '2.0'
         else:
@@ -279,7 +281,14 @@ class XMIResource(Resource):
             if feat.derived:
                 continue
             value = obj.__getattribute__(feat.name)
-            if isinstance(feat, Ecore.EAttribute):
+            if hasattr(feat.eType, 'eType') and feat.eType.eType is dict:
+                tag = feat.name
+                for key, val in value.items():
+                    entry = etree.Element(tag)
+                    entry.attrib['key'] = key
+                    entry.attrib['value'] = val
+                    node.append(entry)
+            elif isinstance(feat, Ecore.EAttribute):
                 if feat.many and value:
                     node.attrib[feat.name] = ' '.join(value)
                 elif value != feat.get_default_value():

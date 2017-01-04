@@ -3,18 +3,23 @@ Library example from the EMF wikipedia page:
 https://fr.wikipedia.org/wiki/Eclipse_Modeling_Framework#/media/File:EMF_based_meta-model.png
 The static metamodel had been produced by hand in this example
 """
+import sys
 import pyecore.ecore as Ecore
 from pyecore.ecore import EObject, EAttribute, EString, EEnum, EReference, \
                           MetaEClass, EInteger
 
+name = 'library'
 nsPrefix = 'lib'
 nsURI = 'http://emf.wikipedia.org/2011/Library'
+
+# Do not remove
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 
 BookCategory = EEnum('BookCategory', literals=['ScienceFiction',
                                                'Biography',
                                                'Mistery'])
-# Registration is mandatory for extra EEnum and EDataType instances
-Ecore.Core.register_classifier(BookCategory)
+
+
 
 class Book(EObject, metaclass=MetaEClass):
     title = EAttribute(eType=EString)
@@ -57,5 +62,16 @@ class Library(EObject, metaclass=MetaEClass):
     def __init__(self):
         pass
 
-eClassifiers = Ecore.Core.compute_eclass(__name__)
-getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
+
+# ==
+#   Warning, do not remove
+# ==
+eURIFragment = Ecore.default_eURIFragment
+eModule = sys.modules[__name__]
+otherClassifiers = [BookCategory]
+for classif in otherClassifiers:
+    eClassifiers[classif.name] = classif
+    classif._container = eModule
+
+for classif in eClassifiers.values():
+    eClass.eClassifiers.append(classif.eClass)

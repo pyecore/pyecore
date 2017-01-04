@@ -10,6 +10,15 @@ nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 # In this case, it MUST be set to an empty dict,
 # otherwise, the getEClassifier would be overriden
 eClassifiers = {}  # Will be automatically populated
+eSubpackages = []
+
+
+def default_eURIFragment():
+    return '/'
+
+
+def eURIFragment():
+    return '#/'
 
 
 def getEClassifier(name, searchspace=None):
@@ -32,7 +41,8 @@ class EcoreUtils(object):
         if obj is None:
             return True
         elif _type is EPackage:
-            return isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+            return isinstance(obj, _type) or \
+                        isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
             return isinstance(obj, _type) or \
                         hasattr(obj, '_staticEClass') and obj._staticEClass
@@ -146,6 +156,10 @@ class Core(object):
         cls.eClass.ePackage = epackage
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
+        if isinstance(cls, EDataType):
+            cls._container = epackage
+        else:
+            cls.eClass._container = epackage
 
 
 class EObject(object):
@@ -229,6 +243,26 @@ class EObject(object):
             objs.extend(list(obj.eAllContents()))
         return iter(objs)
 
+    def eURIFragment(self):
+        if not self.eContainer():
+            return '/'
+        feat = self.eContainmentFeature()
+        parent = self.eContainer()
+        name = feat.name
+        if feat.many:
+            index = parent.__getattribute__(name).index(self)
+            return '{0}/@{1}.{2}' \
+                   .format(parent.eURIFragment(), name, str(index))
+        else:
+            return '{0}/{1}'.format(parent.eURIFragment(), name)
+
+    def eRoot(self):
+        if not isinstance(self.eContainer(), EObject):
+            return self.eContainer()
+        if not self.eContainer():
+            return self
+        return self.eContainer().eRoot()
+
 
 class ECollection(object):
     def create(owner, feature):
@@ -308,11 +342,6 @@ class EList(ECollection, list):
         super().extend(sublist)
         self._owner._isset.add(self._efeature)
 
-    # for Python2 compatibility, in Python3, __setslice__ is deprecated
-    # def __setslice__(self, i, j, y):
-    #     all(self.check(x) for x in y)
-    #     super().__setslice__(i, j, y)
-
     def __setitem__(self, i, y):
         self.check(y)
         self._update_container(y)
@@ -375,6 +404,11 @@ class ENamedElement(EModelElement):
     def __init__(self, name=None):
         super().__init__()
         self.name = name
+
+    def eURIFragment(self):
+        if not self.eContainer():
+            return '#/'
+        return '{0}/{1}'.format(self.eContainer().eURIFragment(), self.name)
 
 
 class EPackage(ENamedElement):
@@ -561,8 +595,7 @@ class EClass(EClassifier):
     def __init__(self, name=None, superclass=None, abstract=False):
         super().__init__(name)
         self.abstract = abstract
-        self._estypes_cache = None
-        self._estrucs_cache = None
+        self._staticEClass = False
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
@@ -692,6 +725,7 @@ EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
+EJavaObject = EDataType('EJavaObject', object)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -713,7 +747,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-ETypedElement.default_value = EAttribute('default_value', ENativeType)
+# ETypedElement.default_value = EAttribute('default_value', ENativeType)
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -754,6 +788,7 @@ EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 EClass.eOperations = EReference('eOperations', EOperation,
                                 upper=-1, containment=True)
 EClass.instanceClassName = EAttribute('instanceClassName', EString)
+EClass.interface = EAttribute('interface', EBoolean)
 
 EStructuralFeature.eContainingClass = \
                    EReference('eContainingClass', EClass,
@@ -769,6 +804,7 @@ EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
 EEnumLiteral.eEnum = EReference('eEnum', EEnum, eOpposite=EEnum.eLiterals)
 EEnumLiteral.name = EAttribute('name', EString)
 EEnumLiteral.value = EAttribute('value', EInteger)
+EEnumLiteral.literal = EAttribute('literal', EString)
 
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
@@ -782,12 +818,17 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
 
-Core.register_classifier(EModelElement, promote=True)
-Core.register_classifier(ENamedElement, promote=True)
+Core._promote(EModelElement)
+Core._promote(ENamedElement)
+Core._promote(EAnnotation)
+Core._promote(EPackage)
+eClass = EPackage.eClass
+Core.register_classifier(EModelElement)
+Core.register_classifier(ENamedElement)
+Core.register_classifier(EAnnotation)
+Core.register_classifier(EPackage)
 Core.register_classifier(EGenericType, promote=True)
 Core.register_classifier(ETypeParameter, promote=True)
-Core.register_classifier(EAnnotation, promote=True)
-Core.register_classifier(EPackage, promote=True)
 Core.register_classifier(ETypedElement, promote=True)
 Core.register_classifier(EClassifier, promote=True)
 Core.register_classifier(EDataType, promote=True)
@@ -805,8 +846,7 @@ Core.register_classifier(EInteger)
 Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
+Core.register_classifier(EJavaObject)
 
 EObject.__getattribute__ = Core.getattr
 EObject.__setattr__ = Core.setattr
-
-eClass = EPackage.eClass
