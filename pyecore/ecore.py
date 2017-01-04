@@ -10,6 +10,7 @@ nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 # In this case, it MUST be set to an empty dict,
 # otherwise, the getEClassifier would be overriden
 eClassifiers = {}  # Will be automatically populated
+eSubpackages = []
 
 
 def getEClassifier(name, searchspace=None):
@@ -32,7 +33,8 @@ class EcoreUtils(object):
         if obj is None:
             return True
         elif _type is EPackage:
-            return isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+            return isinstance(obj, _type) or \
+                        isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
             return isinstance(obj, _type) or \
                         hasattr(obj, '_staticEClass') and obj._staticEClass
@@ -692,6 +694,7 @@ EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
+EJavaObject = EDataType('EJavaObject', object)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -754,6 +757,7 @@ EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 EClass.eOperations = EReference('eOperations', EOperation,
                                 upper=-1, containment=True)
 EClass.instanceClassName = EAttribute('instanceClassName', EString)
+EClass.interface = EAttribute('interface', EBoolean)
 
 EStructuralFeature.eContainingClass = \
                    EReference('eContainingClass', EClass,
@@ -769,6 +773,7 @@ EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
 EEnumLiteral.eEnum = EReference('eEnum', EEnum, eOpposite=EEnum.eLiterals)
 EEnumLiteral.name = EAttribute('name', EString)
 EEnumLiteral.value = EAttribute('value', EInteger)
+EEnumLiteral.literal = EAttribute('literal', EString)
 
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
@@ -805,6 +810,7 @@ Core.register_classifier(EInteger)
 Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
+Core.register_classifier(EJavaObject)
 
 EObject.__getattribute__ = Core.getattr
 EObject.__setattr__ = Core.setattr
