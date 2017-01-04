@@ -41,6 +41,8 @@ class ResourceSet(object):
         path = Resource.normalize(uri)
         uri, fragment = path.split('#')
         epackage = self.resources[uri]
+        if isinstance(epackage, Resource):
+            epackage = epackage.contents[0]
         return Resource._navigate_from(fragment, epackage)
 
 
@@ -116,11 +118,7 @@ class Global_URI_decoder(object):
             uri, fragment = fragment
         else:
             uri = None
-        try:
-            global_registry[uri]
-            return True
-        except KeyError:
-            return False
+        return uri in global_registry
 
     def resolve(path):
         path = Resource.normalize(path)
@@ -182,7 +180,7 @@ class Resource(object):
         return decoder if decoder else self
 
     def _navigate_from(path, start_obj):
-        if '#' in path:
+        if '#' in path[:1]:
             path = path[1:]
         features = list(filter(None, path.split('/')))
         feat_info = [x.split('.') for x in features]
@@ -202,6 +200,15 @@ class Resource(object):
                 obj = obj.contents.select(lambda x: x.name == key)[0]
             else:
                 try:
+                    subpack = next((p for p in obj.eSubpackages
+                                    if p.name == key),
+                                   None)
+                    if subpack:
+                        obj = subpack
+                        continue
+                except Exception:
+                    pass
+                try:
                     obj = obj.getEClassifier(key)
                 except AttributeError:
                     feat = obj.findEStructuralFeature(key)
@@ -212,6 +219,17 @@ class Resource(object):
         return obj
 
     def _build_path_from(self, obj):
+        if obj.eResource and obj.eResource != self:
+            eclass = obj.eClass
+            prefix = eclass.ePackage.nsPrefix
+            _type = '{0}:{1}'.format(prefix, eclass.name)
+            uri = '{0} {1}#{2}'.format(_type,
+                                       obj.eResource.uri.plain,
+                                       obj.eResource._build_path_from(obj))
+            return uri
+        return self._do_build_path_from(obj)
+
+    def _do_build_path_from(self, obj):
         if not obj.eContainmentFeature():
             return '/'
         if self._use_uuid:
@@ -224,9 +242,9 @@ class Resource(object):
         if feat.many:
             index = parent.__getattribute__(name).index(obj)
             return '{0}/@{1}.{2}' \
-                   .format(self._build_path_from(parent), name, str(index))
+                   .format(self._do_build_path_from(parent), name, str(index))
         else:
-            return '{0}/{1}'.format(self._build_path_from(parent), name)
+            return '{0}/{1}'.format(self._do_build_path_from(parent), name)
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with
