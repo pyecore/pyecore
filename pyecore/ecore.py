@@ -233,8 +233,8 @@ class EObject(object):
             if feature.containment:
                 values = self.__getattribute__(feature.name) \
                          if feature.many \
-                         else [self.__getattribute__(feature)]
-                children.extend(values)
+                         else [self.__getattribute__(feature.name)]
+                children.extend(filter(None, values))
         return children
 
     def eAllContents(self):
