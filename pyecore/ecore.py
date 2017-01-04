@@ -747,7 +747,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-ETypedElement.default_value = EAttribute('default_value', ENativeType)
+# ETypedElement.default_value = EAttribute('default_value', ENativeType)
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)

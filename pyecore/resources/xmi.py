@@ -236,7 +236,9 @@ class XMIResource(Resource):
         delattr(self, '_meta_cache')
 
     def save(self, output=None):
-        output = output if output else self.uri.create_outstream()
+        output = output.create_outstream() \
+                 if output \
+                 else self.uri.create_outstream()
         if not self.contents:
             tree = etree.ElementTree()
         else:
