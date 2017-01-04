@@ -219,32 +219,32 @@ class Resource(object):
         return obj
 
     def _build_path_from(self, obj):
-        if obj.eResource and obj.eResource != self:
+        if obj.eResource != self:
             eclass = obj.eClass
             prefix = eclass.ePackage.nsPrefix
             _type = '{0}:{1}'.format(prefix, eclass.name)
-            uri = '{0} {1}#{2}'.format(_type,
-                                       obj.eResource.uri.plain,
-                                       obj.eResource._build_path_from(obj))
-            return uri
-        return self._do_build_path_from(obj)
-
-    def _do_build_path_from(self, obj):
-        if not obj.eContainmentFeature():
-            return '/'
+            uri_fragment = obj.eURIFragment()
+            if obj.eResource:
+                uri = obj.eResource.uri.plain
+            else:
+                uri = ''
+                root = obj.eRoot()
+                for reguri, value in global_registry.items():
+                    if value is root:
+                        uri = reguri
+                        break
+                if not uri:
+                    for reguri, value in global_registry.items():
+                        if value is root:
+                            uri = reguri
+                            break
+            if not uri_fragment.startswith('#'):
+                uri_fragment = '#' + uri_fragment
+            return '{0} {1}{2}'.format(_type, uri, uri_fragment)
         if self._use_uuid:
             self._assign_uuid(obj)
             return obj._xmiid
-        feat = obj.eContainmentFeature()
-        parent = obj.eContainer()
-        name = feat.name
-        # TODO decode root names (non '@' prefixed)
-        if feat.many:
-            index = parent.__getattribute__(name).index(obj)
-            return '{0}/@{1}.{2}' \
-                   .format(self._do_build_path_from(parent), name, str(index))
-        else:
-            return '{0}/{1}'.format(self._do_build_path_from(parent), name)
+        return obj.eURIFragment()
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with

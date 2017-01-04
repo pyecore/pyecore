@@ -251,13 +251,15 @@ class XMIResource(Resource):
     def _go_accross_from(self, obj):
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
-            prefix = eclass.ePackage.nsPrefix
-            nsURI = eclass.ePackage.nsURI
-            root_node = etree.QName(nsURI, eclass.name)
+            epackage = eclass.ePackage
+            prefix = epackage.nsPrefix
+            nsURI = epackage.nsURI
+            tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {xmi: xmi_url,
-                     xsi: xsi_url,
-                     prefix: nsURI}
-            node = etree.Element(root_node, nsmap=nsmap)
+                     xsi: xsi_url}
+            if nsURI:
+                nsmap[prefix] = nsURI
+            node = etree.Element(tag, nsmap=nsmap)
             xmi_version = etree.QName(xmi_url, 'version')
             node.attrib[xmi_version] = '2.0'
         else:
