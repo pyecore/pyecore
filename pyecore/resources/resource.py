@@ -169,7 +169,10 @@ class Resource(object):
                 return self.resource_set.metamodel_registry[nsuri]
             except KeyError:
                 pass
-        return global_registry[nsuri]
+            try:
+                return global_registry[nsuri]
+            except KeyError:
+                raise KeyError('Unknown metamodel with uri: {0}'.format(nsuri))
 
     def normalize(fragment):
         return fragment.split()[-1:][0] if ' ' in fragment else fragment
