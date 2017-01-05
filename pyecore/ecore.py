@@ -257,10 +257,10 @@ class EObject(object):
             return '{0}/{1}'.format(parent.eURIFragment(), name)
 
     def eRoot(self):
-        if not isinstance(self.eContainer(), EObject):
-            return self.eContainer()
         if not self.eContainer():
             return self
+        if not isinstance(self.eContainer(), EObject):
+            return self.eContainer()
         return self.eContainer().eRoot()
 
 

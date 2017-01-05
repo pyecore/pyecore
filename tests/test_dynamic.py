@@ -5,6 +5,20 @@ from pyecore.ecore import *
 def test_create_dynamic_eclass():
     A = EClass('A')
     assert isinstance(A, EObject) and isinstance(A, EClass)
+    assert A.eStructuralFeatures == []
+    assert A.eReferences == []
+    assert A.eAttributes == []
+    assert A.eOperations == []
+    assert A.eAllOperations() == set()
+    assert A.eAllStructuralFeatures() == set()
+
+
+def test_create_dynamic_eclass_urifragment():
+    A = EClass('A')
+    assert A.eURIFragment() == '#/'  # A is the root at this point
+    pack = EPackage('pack')
+    pack.eClassifiers.append(A)  # pack is the root now
+    assert A.eURIFragment() == '#//A'
 
 
 def test_create_dynamic_instance():
@@ -12,6 +26,12 @@ def test_create_dynamic_instance():
     instance = A()
     assert EcoreUtils.isinstance(instance, A)
     assert isinstance(instance, EObject)
+
+
+def test_create_dynamic_instance_urifragment():
+    A = EClass('A')
+    instance = A()
+    assert instance.eURIFragment() == '/'
 
 
 def test_create_dynamic_simple_eattribute():
@@ -74,6 +94,19 @@ def test_create_dynamic_simple_ereference():
     b1 = B()
     a1.tob = b1
     assert a1.tob is b1
+    assert A.eStructuralFeatures[0].get_default_value() is None
+    assert A.eStructuralFeatures[0] in A.eReferences
+    assert A.eStructuralFeatures is not A.eReferences
+
+
+def test_create_dynamic_simple_ereference_urifragment():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.tob = b1
+    assert b1.eURIFragment() == '//tob'
 
 
 def test_create_dynamic_simple_ereference_wrongtype():
@@ -104,6 +137,16 @@ def test_create_dynamic_many_ereference():
     b1 = B()
     a1.tob.append(b1)
     assert a1.tob and b1 in a1.tob and len(a1.tob) == 1
+
+
+def test_create_dynamic_many_ereference_urifragment():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, upper=-1, containment=True))
+    a1 = A()
+    b1 = B()
+    a1.tob.append(b1)
+    assert b1.eURIFragment() == '//@tob.0'
 
 
 def test_create_dynamic_many_ereference_filter():

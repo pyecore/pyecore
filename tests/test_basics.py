@@ -123,3 +123,17 @@ def test_eobject_eset_simple():
 def test_estructuralfeature_repr():
     eattribute = EAttribute()
     assert eattribute.__repr__() is not None
+
+
+def test_urifragment_default():
+    assert default_eURIFragment() == '/'
+
+
+def test_urifragment_ecore():
+    assert eURIFragment() == '#/'
+
+
+def test_urifragment_static_ecore():
+    assert EClass.eClass.eURIFragment() == '#//EClass'
+    assert EPackage.eClass.eURIFragment() == '#//EPackage'
+    assert EDataType.eClass.eURIFragment() == '#//EDataType'
