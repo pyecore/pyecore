@@ -59,8 +59,10 @@ class URI(object):
             self._protocol, rest = self._uri.split('://')
         else:
             self._protocol, rest = None, self._uri
-        if '.' in rest:
-            self._extension = rest.split('.')[-1:][0]
+        self._segments = rest.split('/')
+        self._last_segment = self._segments[-1:][0]
+        if '.' in self._last_segment:
+            self._extension = self._last_segment.split('.')[-1:][0]
         else:
             self._extension = None
 
@@ -75,6 +77,14 @@ class URI(object):
     @property
     def plain(self):
         return self._uri
+
+    @property
+    def segments(self):
+        return self._segments
+
+    @property
+    def last_segment(self):
+        return self._last_segment
 
     def create_instream(self):
         self.__stream = open(self.plain, 'rb')
@@ -152,7 +162,7 @@ class Resource(object):
         return self._contents
 
     def resolve(self, fragment):
-        raise NotImplemented('resolve method must be implemented')
+        raise NotImplementedError('resolve method must be implemented')
 
     def prefix2epackage(self, prefix):
         try:
