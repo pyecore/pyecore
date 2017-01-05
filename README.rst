@@ -234,13 +234,16 @@ The resource creation should be done by hand first:
 
 .. code-block:: python
 
+    int_conversion = lambda x: int(x)  # translating str to int durint load()
     String = Ecore.EDataType('String', str)
-    Double = Ecore.EDataType('Double', int)
-    Int = Ecore.EDataType('Int', int)
-    IntObject = Ecore.EDataType('IntObject', int)
-    Boolean = Ecore.EDataType('Boolean', bool)
+    Double = Ecore.EDataType('Double', int, 0, from_string=int_conversion)
+    Int = Ecore.EDataType('Int', int, from_string=int_conversion)
+    IntObject = Ecore.EDataType('IntObject', int, None,
+                                from_string=int_conversion)
+    Boolean = Ecore.EDataType('Boolean', bool, False,
+                              from_string=lambda x: x in ['True', 'true'])
+    Long = Ecore.EDataType('Long', int, 0, from_string=int_conversion)
     EJavaObject = Ecore.EDataType('EJavaObject', object)
-    Long = Ecore.EDataType('Long', int)
     xmltype = Ecore.EPackage()
     xmltype.eClassifiers.extend([String,
                                  Double,
