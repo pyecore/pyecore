@@ -233,8 +233,8 @@ class EObject(object):
             if feature.containment:
                 values = self.__getattribute__(feature.name) \
                          if feature.many \
-                         else [self.__getattribute__(feature)]
-                children.extend(values)
+                         else [self.__getattribute__(feature.name)]
+                children.extend(filter(None, values))
         return children
 
     def eAllContents(self):
@@ -257,10 +257,10 @@ class EObject(object):
             return '{0}/{1}'.format(parent.eURIFragment(), name)
 
     def eRoot(self):
-        if not isinstance(self.eContainer(), EObject):
-            return self.eContainer()
         if not self.eContainer():
             return self
+        if not isinstance(self.eContainer(), EObject):
+            return self.eContainer()
         return self.eContainer().eRoot()
 
 

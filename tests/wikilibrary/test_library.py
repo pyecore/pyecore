@@ -1,3 +1,4 @@
+import sys
 import pytest
 import library
 import pyecore.ecore as Ecore
@@ -5,6 +6,7 @@ import pyecore.ecore as Ecore
 
 def test_get_existing_EClassifier():
     assert library.getEClassifier('Book')
+    assert library.getEClassifier('BookCategory')
 
 
 def test_get_nonexisting_EClassifier():
@@ -64,3 +66,26 @@ def test_instance_eisset():
     assert library.Writer.name in smith._isset
     assert smith.eIsSet(library.Writer.name)
     assert smith.eIsSet('name')
+
+
+def test_instance_urifragment():
+    lib = library.Library()
+    assert lib.eURIFragment() == '/'
+    smith = library.Writer()
+    lib.writers.append(smith)
+    assert smith.eURIFragment() == '//@writers.0'
+
+
+def test_library_epackage():
+    assert library.Book.eClass.ePackage is library.eClass
+    assert sys.modules[library.Book.__module__] is library.eModule
+    assert library.BookCategory.eContainer() is library.eModule
+
+
+def test_library_eroot():
+    lib = library.Library()
+    smith = library.Writer()
+    lib.writers.append(smith)
+    assert smith.eContainer() is lib
+    assert smith.eRoot() is lib
+    assert library.Library.eClass.eRoot() is library.eClass

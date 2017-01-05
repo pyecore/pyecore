@@ -235,14 +235,35 @@ class XMIResource(Resource):
         delattr(self, '_later')
         delattr(self, '_meta_cache')
 
+    def register_nsmap(self, prefix, uri):
+        if uri in self.reverse_nsmap:
+            return
+        if prefix not in self.prefixes:
+            self.prefixes[prefix] = uri
+            self.reverse_nsmap[uri] = prefix
+            return
+        l = filter(lambda x: x.startswith(prefix), self.prefixes.keys())
+        prefix = '{0}_{1}'.format(prefix, len(list(l)))
+        self.prefixes[prefix] = uri
+        self.reverse_nsmap[uri] = prefix
+
     def save(self, output=None):
         output = output.create_outstream() \
                  if output \
                  else self.uri.create_outstream()
+        self.prefixes = {}
+        self.reverse_nsmap = {}
         if not self.contents:
             tree = etree.ElementTree()
         else:
             root = self.contents[0]
+            for eobj in root.eAllContents():
+                eclass = eobj.eClass
+                epackage = eclass.ePackage
+                prefix = epackage.nsPrefix
+                nsURI = epackage.nsURI
+                self.register_nsmap(prefix, nsURI)
+
             tree = etree.ElementTree(self._go_accross_from(root))
         with output as out:
             tree.write(out,
@@ -259,8 +280,7 @@ class XMIResource(Resource):
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {xmi: xmi_url,
                      xsi: xsi_url}
-            if nsURI:
-                nsmap[prefix] = nsURI
+            nsmap.update(self.prefixes)
             node = etree.Element(tag, nsmap=nsmap)
             xmi_version = etree.QName(xmi_url, 'version')
             node.attrib[xmi_version] = '2.0'
@@ -268,7 +288,8 @@ class XMIResource(Resource):
             node = etree.Element(obj.eContainmentFeature().name)
             if obj.eContainmentFeature().eType != eclass:
                 xsi_type = etree.QName(xsi_url, 'type')
-                prefix = eclass.ePackage.nsPrefix
+                uri = eclass.ePackage.nsURI
+                prefix = self.reverse_nsmap[uri]
                 node.attrib[xsi_type] = '{0}:{1}' \
                                         .format(prefix, eclass.name)
         if self._use_uuid:
@@ -276,7 +297,6 @@ class XMIResource(Resource):
             xmi_id = '{{{0}}}id'.format(xmi_url)
             node.attrib[xmi_id] = obj._xmiid
 
-        # feats = obj._isset if obj._isset else eclass.eAllStructuralFeatures()
         for feat in obj._isset:
             if feat.derived:
                 continue

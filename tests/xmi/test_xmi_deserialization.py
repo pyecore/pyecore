@@ -2,6 +2,28 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource
+from pyecore.resources.resource import HttpURI
+
+def test_uri_http():
+    uri = HttpURI('https://api.genmymodel.com/projects/_L0eC8P1oEeW9zv77lynsJg/xmi')
+    assert uri.plain == 'https://api.genmymodel.com/projects/_L0eC8P1oEeW9zv77lynsJg/xmi'
+    assert uri.protocol == 'https'
+    assert uri.extension is None
+    assert len(uri.segments) == 4
+    assert uri.last_segment == 'xmi'
+    assert uri.segments[0] == 'api.genmymodel.com'
+    flike = uri.create_instream()
+    assert flike.getcode() == 200
+    with pytest.raises(NotImplementedError):
+        uri.create_outstream()
+
+
+def test_uri_simple():
+    uri = URI('a/b/c.ecore')
+    assert uri.plain == 'a/b/c.ecore'
+    assert uri.protocol is None
+    assert uri.last_segment == 'c.ecore'
+    assert uri.extension == 'ecore'
 
 
 def test_xmiresource_load_ecore_testEMF():
