@@ -236,14 +236,16 @@ class XMIResource(Resource):
         delattr(self, '_meta_cache')
 
     def register_nsmap(self, prefix, uri):
+        if uri in self.reverse_nsmap:
+            return
         if prefix not in self.prefixes:
             self.prefixes[prefix] = uri
             self.reverse_nsmap[uri] = prefix
-        if self.prefixes[prefix] != uri:
-            l = filter(lambda x: x.startswith(prefix), self.prefixes.keys())
-            prefix = '{0}_{1}'.format(prefix, len(list(l)))
-            self.prefixes[prefix] = uri
-            self.reverse_nsmap[uri] = prefix
+            return
+        l = filter(lambda x: x.startswith(prefix), self.prefixes.keys())
+        prefix = '{0}_{1}'.format(prefix, len(list(l)))
+        self.prefixes[prefix] = uri
+        self.reverse_nsmap[uri] = prefix
 
     def save(self, output=None):
         output = output.create_outstream() \
