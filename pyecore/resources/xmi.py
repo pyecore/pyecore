@@ -258,20 +258,19 @@ class XMIResource(Resource):
         else:
             root = self.contents[0]
             for eobj in root.eAllContents():
-                eclass = eobj.eClass
-                epackage = eclass.ePackage
+                epackage = eobj.eClass.ePackage
                 prefix = epackage.nsPrefix
                 nsURI = epackage.nsURI
                 self.register_nsmap(prefix, nsURI)
 
-            tree = etree.ElementTree(self._go_accross_from(root))
+            tree = etree.ElementTree(self._go_across(root))
         with output as out:
             tree.write(out,
                        pretty_print=True,
                        xml_declaration=True,
                        encoding=tree.docinfo.encoding)
 
-    def _go_accross_from(self, obj):
+    def _go_across(self, obj):
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
             epackage = eclass.ePackage
@@ -313,6 +312,10 @@ class XMIResource(Resource):
                     node.attrib[feat.name] = ' '.join(value)
                 elif value != feat.get_default_value():
                     node.attrib[feat.name] = feat.to_string(value)
+
+            elif isinstance(feat, Ecore.EReference) and \
+                    feat.eOpposite and feat.eOpposite.containment:
+                continue
             elif isinstance(feat, Ecore.EReference) \
                     and not feat.containment:
                 if feat.many and value:
@@ -321,12 +324,9 @@ class XMIResource(Resource):
                     node.attrib[feat.name] = result
                 elif not feat.many and value:
                     node.attrib[feat.name] = self._build_path_from(value)
-            if isinstance(feat, Ecore.EReference) and \
-                    feat.containment and feat.many:
+            if isinstance(feat, Ecore.EReference) and feat.containment:
                 children = obj.__getattribute__(feat.name)
+                children = children if feat.many else [children]
                 for child in children:
-                    node.append(self._go_accross_from(child))
-            elif isinstance(feat, Ecore.EReference) and feat.containment:
-                child = obj.__getattribute__(feat.name)
-                node.append(self._go_accross_from(child))
+                    node.append(self._go_across(child))
         return node
