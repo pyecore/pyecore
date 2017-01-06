@@ -683,7 +683,7 @@ class EClass(EClassifier):
         return op
 
 
-EClass.eClass = EClass
+# EClass.eClass = EClass
 
 
 # Meta methods for static EClass
@@ -694,16 +694,14 @@ class MetaEClass(type):
         cls.__setattr__ = Core.setattr
         Core.register_classifier(cls, promote=True)
 
-    # def __new__(cls, name, bases, dict):
-    #     return type(name, bases, dict)
-
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         obj = type.__call__(cls, *args, **kwargs)
         # init instances by reflection
-        EObject.__subinit__(obj)
+        if not hasattr(obj, '_isready'):
+            EObject.__subinit__(obj)
         for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
             if efeat.name in obj.__dict__:
                 continue
