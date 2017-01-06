@@ -247,6 +247,12 @@ class XMIResource(Resource):
         self.prefixes[prefix] = uri
         self.reverse_nsmap[uri] = prefix
 
+    def register_eobject_epackage(self, eobj):
+        epackage = eobj.eClass.ePackage
+        prefix = epackage.nsPrefix
+        nsURI = epackage.nsURI
+        self.register_nsmap(prefix, nsURI)
+
     def save(self, output=None):
         output = output.create_outstream() \
                  if output \
@@ -257,11 +263,9 @@ class XMIResource(Resource):
             tree = etree.ElementTree()
         else:
             root = self.contents[0]
+            self.register_eobject_epackage(root)
             for eobj in root.eAllContents():
-                epackage = eobj.eClass.ePackage
-                prefix = epackage.nsPrefix
-                nsURI = epackage.nsURI
-                self.register_nsmap(prefix, nsURI)
+                self.register_eobject_epackage(eobj)
 
             tree = etree.ElementTree(self._go_across(root))
         with output as out:
