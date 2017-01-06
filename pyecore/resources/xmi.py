@@ -308,10 +308,11 @@ class XMIResource(Resource):
                     entry.attrib['value'] = val
                     node.append(entry)
             elif isinstance(feat, Ecore.EAttribute):
+                etype = feat.eType
                 if feat.many and value:
-                    node.attrib[feat.name] = ' '.join(value)
+                    node.attrib[feat.name] = ' '.join(etype.to_string(value))
                 elif value != feat.get_default_value():
-                    node.attrib[feat.name] = feat.to_string(value)
+                    node.attrib[feat.name] = etype.to_string(value)
 
             elif isinstance(feat, Ecore.EReference) and \
                     feat.eOpposite and feat.eOpposite.containment:
