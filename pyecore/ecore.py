@@ -153,7 +153,7 @@ class Core(object):
             epackage.eClassifiers = eclassifs
             epackage.getEClassifier = partial(getEClassifier,
                                               searchspace=eclassifs)
-        cls.eClass.ePackage = epackage
+        object.__setattr__(cls.eClass, 'ePackage', epackage)
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if isinstance(cls, EDataType):
