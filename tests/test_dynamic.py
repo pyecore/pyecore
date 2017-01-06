@@ -374,6 +374,7 @@ def test_create_dynamic_contaiment_getroot():
     a1.b = b1
     assert EcoreUtils.getRoot(b1) is a1
     assert EcoreUtils.getRoot(None) is None
+    assert b1.eRoot() is a1
 
 
 def test_create_dynamic_contaiment_single_ereferene_unset():
