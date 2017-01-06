@@ -312,7 +312,7 @@ class XMIResource(Resource):
                 if feat.many and value:
                     node.attrib[feat.name] = ' '.join(value)
                 elif value != feat.get_default_value():
-                    node.attrib[feat.name] = str(value)
+                    node.attrib[feat.name] = feat.to_string(value)
             elif isinstance(feat, Ecore.EReference) \
                     and not feat.containment:
                 if feat.many and value:

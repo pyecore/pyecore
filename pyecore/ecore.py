@@ -486,15 +486,20 @@ class EClassifier(ENamedElement):
 
 class EDataType(EClassifier):
     def __init__(self, name=None, eType=None, default_value=None,
-                 from_string=None):
+                 from_string=None, to_string=None):
         super().__init__(name)
         self.eType = eType
         self.default_value = default_value
         if from_string:
             self.from_string = from_string
+        if to_string:
+            self.to_stringt = to_string
 
     def from_string(self, value):
         return value
+
+    def to_string(self, value):
+        return str(value)
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
