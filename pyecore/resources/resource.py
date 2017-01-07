@@ -6,12 +6,33 @@ global_registry = {}
 
 
 class ResourceSet(object):
+    """Defines a Resource container.
+
+    A ResourceSet can contains many Resources and has the ability to create new
+    ones. It also gives a way of isolating resources from each others and to
+    "localy" register metamodels.
+
+    Each created
+
+    .. seealso:: Resource
+    """
     def __init__(self):
         self.resources = {}
         self.metamodel_registry = {}
         self.resource_factory = dict(ResourceSet.resource_factory)
 
     def create_resource(self, uri):
+        """Creates a new Resource.
+
+        The created ressource type depends on the used URI.
+
+        :param uri: the resource URI
+        :type uri: URI
+        :return: a new Resource
+        :rtype: Resource
+
+        .. seealso:: URI, Resource, XMIResource
+        """
         if isinstance(uri, str):
             uri = URI(uri)
         try:

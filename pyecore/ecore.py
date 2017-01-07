@@ -1,3 +1,17 @@
+"""Ecore runtime and Ecore metamodel
+
+This module defines the basic classes and behavior for PyEcore (EMF Python
+implementation:
+
+* EObject
+* EPackage
+* EClass
+* EAttribute
+* EReference
+* EDataType
+* EcoreUtils
+
+"""
 from functools import partial
 from ordered_set import OrderedSet
 import sys
@@ -14,10 +28,22 @@ eSubpackages = []
 
 
 def default_eURIFragment():
+    """
+    Gets the default root URI fragment.
+
+    :return: the root URI fragment
+    :rtype: str
+    """
     return '/'
 
 
 def eURIFragment():
+    """
+    Gets the URI fragment for the Ecore module.
+
+    :return: the root URI fragment for Ecore
+    :rtype: str
+    """
     return '#/'
 
 
