@@ -187,9 +187,17 @@ class Resource(object):
     def normalize(fragment):
         return fragment.split()[-1:][0] if ' ' in fragment else fragment
 
+    def _is_external(self, path):
+        path = Resource.normalize(path)
+        uri, fragment = path.split('#') if '#' in path else (None, path)
+        return uri
+
     def _get_decoder(self, path):
         decoder = next((x for x in self._decoders if x.can_resolve(path)),
                        None)
+        uri = self._is_external(path)
+        if not decoder and uri:
+            raise TypeError('Resource cannot be resolved: {0}'.format(uri))
         return decoder if decoder else self
 
     def _navigate_from(path, start_obj):
@@ -232,6 +240,9 @@ class Resource(object):
         return obj
 
     def _build_path_from(self, obj):
+        if isinstance(obj, type):
+            obj = obj.eClass
+
         if obj.eResource != self:
             eclass = obj.eClass
             prefix = eclass.ePackage.nsPrefix

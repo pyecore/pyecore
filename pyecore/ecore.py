@@ -22,7 +22,7 @@ def eURIFragment():
 
 
 def getEClassifier(name, searchspace=None):
-    searchspace = searchspace if searchspace else eClassifiers
+    searchspace = searchspace or eClassifiers
     try:
         return searchspace[name]
     except KeyError:
@@ -153,7 +153,7 @@ class Core(object):
             epackage.eClassifiers = eclassifs
             epackage.getEClassifier = partial(getEClassifier,
                                               searchspace=eclassifs)
-        cls.eClass.ePackage = epackage
+        object.__setattr__(cls.eClass, 'ePackage', epackage)
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if isinstance(cls, EDataType):
@@ -177,7 +177,7 @@ class EObject(object):
         self._eresource = None
 
     def __initmetattr__(self, _super=None):
-        _super = _super if _super else self.__class__
+        _super = _super or self.__class__
         if _super is EObject:
             return
         for key, value in _super.__dict__.items():
@@ -486,15 +486,20 @@ class EClassifier(ENamedElement):
 
 class EDataType(EClassifier):
     def __init__(self, name=None, eType=None, default_value=None,
-                 from_string=None):
+                 from_string=None, to_string=None):
         super().__init__(name)
         self.eType = eType
         self.default_value = default_value
         if from_string:
             self.from_string = from_string
+        if to_string:
+            self.to_stringt = to_string
 
     def from_string(self, value):
         return value
+
+    def to_string(self, value):
+        return str(value)
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -555,8 +560,7 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
 
     def __repr__(self):
-        etype = self.eType if self.eType else None
-        return '{0}: {1}'.format(self.name, etype)
+        return '{0}: {1}'.format(self.name, self.eType)
 
 
 class EAttribute(EStructuralFeature):
@@ -678,9 +682,6 @@ class EClass(EClassifier):
         return op
 
 
-EClass.eClass = EClass
-
-
 # Meta methods for static EClass
 class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
@@ -689,16 +690,14 @@ class MetaEClass(type):
         cls.__setattr__ = Core.setattr
         Core.register_classifier(cls, promote=True)
 
-    # def __new__(cls, name, bases, dict):
-    #     return type(name, bases, dict)
-
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         obj = type.__call__(cls, *args, **kwargs)
         # init instances by reflection
-        EObject.__subinit__(obj)
+        if not hasattr(obj, '_isready'):
+            EObject.__subinit__(obj)
         for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
             if efeat.name in obj.__dict__:
                 continue
