@@ -22,7 +22,7 @@ def eURIFragment():
 
 
 def getEClassifier(name, searchspace=None):
-    searchspace = searchspace if searchspace else eClassifiers
+    searchspace = searchspace or eClassifiers
     try:
         return searchspace[name]
     except KeyError:
@@ -177,7 +177,7 @@ class EObject(object):
         self._eresource = None
 
     def __initmetattr__(self, _super=None):
-        _super = _super if _super else self.__class__
+        _super = _super or self.__class__
         if _super is EObject:
             return
         for key, value in _super.__dict__.items():
@@ -560,8 +560,7 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
 
     def __repr__(self):
-        etype = self.eType if self.eType else None
-        return '{0}: {1}'.format(self.name, etype)
+        return '{0}: {1}'.format(self.name, self.eType)
 
 
 class EAttribute(EStructuralFeature):
@@ -681,9 +680,6 @@ class EClass(EClassifier):
             if op:
                 break
         return op
-
-
-# EClass.eClass = EClass
 
 
 # Meta methods for static EClass
