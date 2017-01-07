@@ -240,6 +240,9 @@ class Resource(object):
         return obj
 
     def _build_path_from(self, obj):
+        if isinstance(obj, type):
+            obj = obj.eClass
+
         if obj.eResource != self:
             eclass = obj.eClass
             prefix = eclass.ePackage.nsPrefix
