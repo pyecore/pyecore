@@ -103,10 +103,11 @@ class Core(object):
         except AttributeError:
             previous_value = None
         object.__setattr__(self, name, value)
-        self.notify(Notification(old=previous_value,
-                                 new=value,
-                                 feature=feat,
-                                 kind=Kind.SET))
+        notif = Notification(old=previous_value,
+                             new=value,
+                             feature=feat,
+                             kind=Kind.UNSET if value is None else Kind.SET)
+        self.notify(notif)
         if self._isready and value != feat.get_default_value:
             self._isset.add(feat)
         if self._isready and isinstance(feat, EReference):
@@ -393,6 +394,7 @@ class EList(ECollection, list):
 class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
+        self._fromupdate = False
 
     def append(self, value, update_opposite=True):
         self.add(value, update_opposite)
@@ -403,15 +405,17 @@ class EAbstractSet(ECollection):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
-        self._owner.notify(Notification(new=value,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD))
+        if not self._fromupdate:
+            self._owner.notify(Notification(new=value,
+                                            feature=self._efeature,
+                                            kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
         self.update(*sublist)
 
     def update(self, *others):
+        self._fromupdate = True
         all(self.check(x) for x in others)
         for x in others:
             self._update_container(x)
@@ -421,6 +425,7 @@ class EAbstractSet(ECollection):
                                         feature=self._efeature,
                                         kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
+        self._fromupdate = False
 
 
 class ESet(EAbstractSet, set):

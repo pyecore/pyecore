@@ -49,14 +49,14 @@ class Notification(object):
 
 
 class EObserver(object):
-    def __init__(self, observable=None, notify=None):
-        if observable:
-            observable.listeners.append(self)
+    def __init__(self, enotifier=None, notify=None):
+        if enotifier:
+            enotifier.listeners.append(self)
         if notify:
             self.notify = notify
 
-    def observe(self, observable):
-        observable.listeners.append(self)
+    def observe(self, enotifier):
+        enotifier.listeners.append(self)
 
     def notify(self, notification):
         pass
