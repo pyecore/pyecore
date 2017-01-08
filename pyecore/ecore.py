@@ -394,7 +394,7 @@ class EList(ECollection, list):
 class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
-        self._fromupdate = False
+        self._orderedset = False
 
     def append(self, value, update_opposite=True):
         self.add(value, update_opposite)
@@ -405,7 +405,7 @@ class EAbstractSet(ECollection):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
-        if not self._fromupdate:
+        if not self._orderedset:
             self._owner.notify(Notification(new=value,
                                             feature=self._efeature,
                                             kind=Kind.ADD))
@@ -415,7 +415,6 @@ class EAbstractSet(ECollection):
         self.update(*sublist)
 
     def update(self, *others):
-        self._fromupdate = True
         all(self.check(x) for x in others)
         for x in others:
             self._update_container(x)
@@ -425,7 +424,6 @@ class EAbstractSet(ECollection):
                                         feature=self._efeature,
                                         kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
-        self._fromupdate = False
 
 
 class ESet(EAbstractSet, set):
@@ -437,6 +435,14 @@ class EOrderedSet(EAbstractSet, OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
         OrderedSet.__init__(self)
+        self._orderedset = True
+
+    def update(self, *others):
+        OrderedSet.update(self, others)
+        self._owner.notify(Notification(new=others,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD_MANY))
+        self._owner._isset.add(self._efeature)
 
 
 class EModelElement(EObject):
