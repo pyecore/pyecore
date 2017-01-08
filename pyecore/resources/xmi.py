@@ -1,5 +1,5 @@
 from lxml import etree
-from pyecore.resources.resource import Resource
+from .resource import Resource
 import pyecore.ecore as Ecore
 
 xsi = 'xsi'

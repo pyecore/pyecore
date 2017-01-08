@@ -1,5 +1,6 @@
 from functools import partial
 from ordered_set import OrderedSet
+from .notification import ENotifer, Notification, Kind
 import sys
 
 
@@ -102,6 +103,11 @@ class Core(object):
         except AttributeError:
             previous_value = None
         object.__setattr__(self, name, value)
+        notif = Notification(old=previous_value,
+                             new=value,
+                             feature=feat,
+                             kind=Kind.UNSET if value is None else Kind.SET)
+        self.notify(notif)
         if self._isready and value != feat.get_default_value:
             self._isset.add(feat)
         if self._isready and isinstance(feat, EReference):
@@ -113,11 +119,17 @@ class Core(object):
                 previous_value._containment_feature = None
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
+                previous_value = value.__getattribute__(eOpposite.name)
+                notif = Notification(new=self, feature=eOpposite)
                 if eOpposite.many:
-                    value.__getattribute__(eOpposite.name)  # force resolve
+                    # value.__getattribute__(eOpposite.name)  # force resolve
                     object.__getattribute__(value, eOpposite.name).append(self)
+                    notif.kind = Kind.ADD
+                    value.notify(notif)
                 else:
                     object.__setattr__(value, eOpposite.name, self)
+                    notif.kind = Kind.SET
+                    value.notify(notif)
                     if value._isready and \
                             eOpposite.get_default_value != self:
                         value._isset.add(eOpposite)
@@ -126,8 +138,14 @@ class Core(object):
                 if previous_value and eOpposite.many:
                     object.__getattribute__(previous_value, eOpposite.name) \
                           .remove(self)
+                    previous_value.notify(Notification(old=self,
+                                                       feature=eOpposite,
+                                                       kind=Kind.REMOVE))
                 elif previous_value:
                     object.__setattr__(previous_value, eOpposite.name, None)
+                    previous_value.notify(Notification(old=self,
+                                                       feature=eOpposite,
+                                                       kind=Kind.UNSET))
 
     def _promote(cls, abstract=False):
         cls.eClass = EClass(cls.__name__)
@@ -162,7 +180,7 @@ class Core(object):
             cls.eClass._container = epackage
 
 
-class EObject(object):
+class EObject(ENotifer):
     def __init__(self):
         self.__initmetattr__()
         self.__subinit__()
@@ -175,6 +193,7 @@ class EObject(object):
         self._isready = False
         self._containment_feature = None
         self._eresource = None
+        self.listeners = []
 
     def __initmetattr__(self, _super=None):
         _super = _super or self.__class__
@@ -302,18 +321,31 @@ class ECollection(object):
                 owner.__getattribute__(eOpposite.name)  # force resolve
                 object.__getattribute__(owner, eOpposite.name) \
                       .append(new_value, False)
+                owner.notify(Notification(new=new_value,
+                                          feature=eOpposite,
+                                          kind=Kind.ADD))
             elif eOpposite.many and remove:
                 object.__getattribute__(owner, eOpposite.name) \
                       .remove(new_value, False)
+                owner.notify(Notification(old=new_value,
+                                          feature=eOpposite,
+                                          kind=Kind.REMOVE))
             else:
-                object.__setattr__(owner, eOpposite.name,
-                                   None if remove else new_value)
+                new_value = None if remove else new_value
+                kind = Kind.UNSET if remove else Kind.SET
+                object.__setattr__(owner, eOpposite.name, new_value)
+                owner.notify(Notification(new=new_value,
+                                          feature=eOpposite,
+                                          kind=kind))
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
             self._update_container(None, previous_value=value)
             self._update_opposite(value, self._owner, remove=True)
         super().remove(value)
+        self._owner.notify(Notification(old=value,
+                                        feature=self._efeature,
+                                        kind=Kind.REMOVE))
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -332,6 +364,9 @@ class EList(ECollection, list):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().append(value)
+        self._owner.notify(Notification(new=value,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
@@ -340,6 +375,9 @@ class EList(ECollection, list):
             self._update_container(x)
             self._update_opposite(x, self._owner)
         super().extend(sublist)
+        self._owner.notify(Notification(new=sublist,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
@@ -347,12 +385,16 @@ class EList(ECollection, list):
         self._update_container(y)
         self._update_opposite(y, self._owner)
         super().__setitem__(i, y)
+        self._owner.notify(Notification(new=y,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
 
 
 class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
+        self._orderedset_update = False
 
     def append(self, value, update_opposite=True):
         self.add(value, update_opposite)
@@ -363,6 +405,10 @@ class EAbstractSet(ECollection):
             self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
+        if not self._orderedset_update:
+            self._owner.notify(Notification(new=value,
+                                            feature=self._efeature,
+                                            kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
@@ -374,6 +420,9 @@ class EAbstractSet(ECollection):
             self._update_container(x)
             self._update_opposite(x, self._owner)
         super().update(others)
+        self._owner.notify(Notification(new=others,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
 
 
@@ -386,6 +435,15 @@ class EOrderedSet(EAbstractSet, OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
         OrderedSet.__init__(self)
+
+    def update(self, *others):
+        self._orderedset_update = True
+        OrderedSet.update(self, others)
+        self._owner.notify(Notification(new=others,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD_MANY))
+        self._owner._isset.add(self._efeature)
+        self._orderedset_update = False
 
 
 class EModelElement(EObject):
