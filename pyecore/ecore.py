@@ -1,6 +1,6 @@
 from functools import partial
 from ordered_set import OrderedSet
-from .notification import Observable, Notification, Kind
+from .notification import ENotifer, Notification, Kind
 import sys
 
 
@@ -179,7 +179,7 @@ class Core(object):
             cls.eClass._container = epackage
 
 
-class EObject(Observable):
+class EObject(ENotifer):
     def __init__(self):
         self.__initmetattr__()
         self.__subinit__()

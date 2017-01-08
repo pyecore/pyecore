@@ -1,6 +1,6 @@
 
 
-class Observable(object):
+class ENotifer(object):
     def notify(self, notification):
         notification.notifier = notification.notifier or self
         for listener in self.listeners:
@@ -48,7 +48,7 @@ class Notification(object):
                         self.feature))
 
 
-class Observer(object):
+class EObserver(object):
     def __init__(self, observable=None, notify=None):
         if observable:
             observable.listeners.append(self)
@@ -60,11 +60,3 @@ class Observer(object):
 
     def notify(self, notification):
         pass
-
-
-class PrintObserver(Observer):
-    def __init__(self, observable=None):
-        super().__init__(observable)
-
-    def notify(self, notification):
-        print(notification)
