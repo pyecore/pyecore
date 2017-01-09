@@ -12,7 +12,14 @@ class ResourceSet(object):
     ones. It also gives a way of isolating resources from each others and to
     "localy" register metamodels.
 
-    Each created
+    Resource can be created empty (using ``create_resource(...)``) or with data
+    fetched from the actual resource content (using ``get_resource(...)``).
+
+    A ResourceSet contains 3 handy properties:
+
+    * ``resources`` which is a dictonary of the ResourceSet loaded resources (key is the plain string URI, value: the resource).
+    * ``metamodel_registry`` which is a dictonary of the ResourceSet known metamodels (key is the plain string metamodel URI, value: the metamodel EPackage root)
+    * ``resource_factory`` which is a factory used by the ResourceSet to build the right Resource kind regarding the URI.
 
     .. seealso:: Resource
     """
@@ -45,11 +52,30 @@ class ResourceSet(object):
         return resource
 
     def get_resource(self, uri):
+        """Gets a new Resource.
+
+        Creates a new and deserialize/load the content the content of the
+        resource pointed by URI.
+
+        :param uri: the resource URI
+        :type uri: URI
+        :return: a new initialized Resource
+        :rtype: Resource
+
+        .. seealso:: URI, Resource, XMIResource, create_resource(...)
+        """
         resource = self.create_resource(uri)
         resource.load()
         return resource
 
     def can_resolve(self, uri_path):
+        """Is the ResourceSet able to resolve the given URI?
+
+        The ResourceSet acts like a 'decoder' by offering the ability to resolve
+        an URI path and returns the Resource.
+
+        .. seealso:: Global_URI_decoder
+        """
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.split('#')
         if len(fragment) == 2:
@@ -59,6 +85,10 @@ class ResourceSet(object):
         return uri in self.resources
 
     def resolve(self, uri):
+        """Resolves an URI and returns the associated Resource
+
+        .. seealso:: Global_URI_decoder
+        """
         path = Resource.normalize(uri)
         uri, fragment = path.split('#')
         epackage = self.resources[uri]
