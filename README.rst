@@ -202,6 +202,68 @@ classical classes definitions in Python:
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
 
+Notifications
+=============
+
+PyEcore gives you the ability to listen to modifications performed on an
+element. The ``EObserver`` class provides a basic observer which can receive
+notifications from the ``EObject`` it is register in:
+
+.. code-block:: python
+
+    >>> import library as lib  # we use the wikipedia library example
+    >>> from pyecore.notification import EObserver, Kind
+    >>> smith = lib.Writer()
+    >>> b1 = lib.Book()
+    >>> observer = EObserver(smith, notify=lambda x: print(x))
+    >>> b1.authors.append(smith)  # observer receive the notification from smith because 'authors' is eOpposite or 'books'
+
+The ``EObserver`` notification method can be set using a lambda as in the
+previous example, using a regular function or by class inheritance:
+
+.. code-block:: python
+
+    >>> def print_notif(notification):
+    ...:    print(notification)
+    ...:
+    >>> observer = EObserver()
+    >>> observer.observe(b1)
+    >>> observer.notify = print_notif
+    >>> b1.authors.append(smith)  # observer receive the notification from b1
+
+Using inheritance:
+
+.. code-block:: python
+
+    >>> class PrintNotification(EObserver):
+    ...:    def __init__(self, notifier=None):
+    ...:        super().__init__(enotifier=notifier)
+    ...:
+    ...:    def notify(self, notification):
+    ...:        print(notification)
+    ...:
+    ...:
+    >>> observer = PrintNotification(b1)
+    >>> b1.authors.append(smith)  # observer receive the notification from b1
+
+The ``Notification`` object contains information about the performed
+modification:
+
+* ``new`` -> the new added value (can be a collection) or ``None`` is remove or unset
+* ``old`` -> the replaced value (always ``None`` for collections)
+* ``feature`` -> the ``EStructuralFeature`` modified
+* ``notifer`` -> the object that have been modified
+* ``kind`` -> the kind of modification performed
+
+The different kind of notifications that can be currently received are:
+
+* ``ADD`` -> when an object is added to a collection
+* ``ADD_MANY`` -> when many objects are added to a collection
+* ``REMOVE`` -> when an object is removed from a collection
+* ``SET`` -> when a value is set in an attribute/reference
+* ``UNSET`` -> when a value is removed from an attribute/reference
+
+
 Importing an Existing XMI Metamodel/Model
 =========================================
 
@@ -346,8 +408,9 @@ In the current state, the project implements:
 * containment reference,
 * introspection,
 * select/reject on collections,
-* Eclipse XMI import (partially)
-* Eclipse XMI export (partially).
+* Eclipse XMI import (partially),
+* Eclipse XMI export (partially),
+* simple notification/Event system.
 
 The XMI import/export are still in an early stage of developement: no cross
 resources references, not able to resolve file path uris and stuffs.
@@ -358,7 +421,6 @@ The things that are in the roadmap:
 * code generator for the static part,
 * EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,
-* notification/Event system,
 * command system (?).
 
 
