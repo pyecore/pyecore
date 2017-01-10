@@ -195,6 +195,8 @@ class XMIResource(Resource):
         elif namespace:
             pass
         elif not namespace:
+            if att_name == 'href':
+                return
             feature = self._find_in_metacache(owner, att_name)
             if not feature:
                 raise ValueError('Feature {0} does not exists for type {1}'

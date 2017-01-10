@@ -543,10 +543,25 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
+    javaTransMap = {'java.lang.String': str,
+                    'boolean': bool,
+                    'java.lang.Boolean': bool,
+                    'byte': int,
+                    'int': int,
+                    'java.lang.Integer': int,
+                    'java.lang.Class': type,
+                    'java.util.Map': {},
+                    'java.util.Map$Entry': {},
+                    'double': int,
+                    'java.lang.Double': int,
+                    'char': str,
+                    'java.lang.Character': str}  # Must be completed
+
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None):
         super().__init__(name)
         self.eType = eType
+        self._instanceClassName = None
         self.default_value = default_value
         if from_string:
             self.from_string = from_string
@@ -558,6 +573,18 @@ class EDataType(EClassifier):
 
     def to_string(self, value):
         return str(value)
+
+    @property
+    def instanceClassName(self):
+        return self._instanceClassName
+
+    @instanceClassName.setter
+    def instanceClassName(self, name):
+        self._instanceClassName = name
+        try:
+            self.eType = self.javaTransMap[name]
+        except KeyError:
+            pass
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -593,7 +620,8 @@ class EEnum(EDataType):
             return None
 
     def __repr__(self):
-        return self.name + str(self.eLiterals)
+        name = self.name or ''
+        return name + str(self.eLiterals)
 
 
 class EEnumLiteral(ENamedElement):
@@ -830,7 +858,7 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
 EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                          upper=-1, containment=True)
 
-EDataType.instanceClassName = EAttribute('instanceClassName', EString)
+EDataType._instanceClassName = EAttribute('instanceClassName', EString)
 EDataType.serializable = EAttribute('serializable', EBoolean)
 
 EClass.abstract = EAttribute('abstract', EBoolean)
