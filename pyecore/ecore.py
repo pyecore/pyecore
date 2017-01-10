@@ -290,7 +290,7 @@ class ECollection(object):
         elif feature.ordered and not feature.unique:
             return EList(owner, efeature=feature)
         elif feature.unique:
-            return ESet(owner, efeature=feature)
+            return EOrderedSet(owner, efeature=feature)
         else:
             return EList(owner, efeature=feature)  # see for better implem
 

@@ -475,7 +475,8 @@ def test_create_dynamic_ereference_nonord_uni():
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
-    assert isinstance(a1.tob, ESet)
+    # assert isinstance(a1.tob, ESet)
+    assert isinstance(a1.tob, EOrderedSet)
     assert b1 in a1.tob
 
 
