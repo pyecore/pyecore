@@ -232,11 +232,9 @@ class Resource(object):
                 try:
                     obj = obj.getEClassifier(key)
                 except AttributeError:
-                    feat = obj.findEStructuralFeature(key)
-                    if not feat:
-                        obj = obj.findEOperation(key)
-                    else:
-                        obj = feat
+                    obj = next((c for c in obj.eContents
+                               if hasattr(c, 'name') and c.name == key),
+                               None)
         return obj
 
     def _build_path_from(self, obj):
