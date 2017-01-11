@@ -134,12 +134,12 @@ class XMIResource(Resource):
                              .format(node.tag,
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
+        if node.get('href'):
+            ref = node.get('href')
+            decoder = self._get_href_decoder(ref)
+            return (feature_container, decoder.resolve(ref), [], [])
         if self._type_attribute(node):
             prefix, _type = node.get(XMIResource.xsitype).split(':')
-            if node.get('href'):
-                ref = node.get('href')
-                decoder = self._get_href_decoder(ref)
-                return (feature_container, decoder.resolve(ref), [], [])
             if not prefix:
                 raise ValueError('Prefix {0} is not registered, line {1}'
                                  .format(prefix, node.tag))
@@ -276,6 +276,7 @@ class XMIResource(Resource):
                  else self.uri.create_outstream()
         self.prefixes = {}
         self.reverse_nsmap = {}
+        # Compute required nsmap for subpackages
         if not self.contents:
             tree = etree.ElementTree()
         else:
@@ -342,10 +343,28 @@ class XMIResource(Resource):
                     and not feat.containment:
                 if feat.many and value:
                     results = list(map(self._build_path_from, value))
-                    result = ' '.join(results)
-                    node.attrib[feat.name] = result
+                    embedded = []
+                    crossref = []
+                    for frag, cref in results:
+                        if cref:
+                            crossref.append(frag)
+                        else:
+                            embedded.append(frag)
+                    if embedded:
+                        result = ' '.join(embedded)
+                        node.attrib[feat.name] = result
+                    for ref in crossref:
+                        sub = etree.SubElement(node, feat.name)
+                        sub.attrib['href'] = ref
                 elif not feat.many and value:
-                    node.attrib[feat.name] = self._build_path_from(value)
+                    # node.attrib[feat.name] = self._build_path_from(value)
+                    frag, cref = self._build_path_from(value)
+                    if cref:
+                        sub = etree.SubElement(node, feat.name)
+                        sub.attrib['href'] = frag
+                    else:
+                        node.attrib[feat.name] = frag
+
             if isinstance(feat, Ecore.EReference) and feat.containment:
                 children = obj.__getattribute__(feat.name)
                 children = children if feat.many else [children]

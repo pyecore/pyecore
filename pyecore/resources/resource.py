@@ -246,15 +246,19 @@ class Resource(object):
             prefix = eclass.ePackage.nsPrefix
             _type = '{0}:{1}'.format(prefix, eclass.name)
             uri_fragment = obj.eURIFragment()
+            crossref = False
             if obj.eResource:
                 uri = obj.eResource.uri.plain
+                crossref = True
             else:
                 uri = ''
                 root = obj.eRoot()
-                for reguri, value in global_registry.items():
-                    if value is root:
-                        uri = reguri
-                        break
+                if self.resource_set:
+                    local_mm_registry = self.resource_set.metamodel_registry
+                    for reguri, value in local_mm_registry.items():
+                        if value is root:
+                            uri = reguri
+                            break
                 if not uri:
                     for reguri, value in global_registry.items():
                         if value is root:
@@ -262,11 +266,15 @@ class Resource(object):
                             break
             if not uri_fragment.startswith('#'):
                 uri_fragment = '#' + uri_fragment
-            return '{0} {1}{2}'.format(_type, uri, uri_fragment)
+            if crossref:
+                print(uri_fragment)
+                return ('{0}{1}'.format(uri, uri_fragment), True)
+            else:
+                return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
         if self._use_uuid:
             self._assign_uuid(obj)
-            return obj._xmiid
-        return obj.eURIFragment()
+            return (obj._xmiid, False)
+        return (obj.eURIFragment(), False)
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with
