@@ -190,12 +190,12 @@ class Resource(object):
     def _is_external(self, path):
         path = Resource.normalize(path)
         uri, fragment = path.split('#') if '#' in path else (None, path)
-        return uri
+        return uri, fragment
 
-    def _get_decoder(self, path):
+    def _get_href_decoder(self, path):
         decoder = next((x for x in self._decoders if x.can_resolve(path)),
                        None)
-        uri = self._is_external(path)
+        uri, _ = self._is_external(path)
         if not decoder and uri:
             raise TypeError('Resource cannot be resolved: {0}'.format(uri))
         return decoder if decoder else self

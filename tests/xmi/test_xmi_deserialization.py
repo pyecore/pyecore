@@ -103,7 +103,7 @@ def test_resourceset_getresource_ecore_Ecore():
 def test_resourceset_getresource_ecore_UML():
     global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
-    # UMLPrimitiveTypes Creation
+    # UMLPrimitiveTypes Metaclasses Creation
     umltypes = Ecore.EPackage('umltypes')
     String = Ecore.EDataType('String', str)
     Boolean = Ecore.EDataType('Boolean', bool, False)
@@ -111,11 +111,11 @@ def test_resourceset_getresource_ecore_UML():
     UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
     Real = Ecore.EDataType('Real', float, 0.0)
     umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
-    resource = rset.create_resource(URI('platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'))
-    resource.append(umltypes)
+    rset.metamodel_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
     # Register Ecore metamodel instance
     resource = rset.get_resource(URI('tests/xmi/xmi-tests/Ecore.ecore'))
-    rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
+    rset.metamodel_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
+    # Load the UML metamodel
     resource = rset.get_resource(URI('tests/xmi/xmi-tests/UML.ecore'))
     root = resource.contents[0]
     assert root.getEClassifier('Class')

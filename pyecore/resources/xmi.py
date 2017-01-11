@@ -138,7 +138,7 @@ class XMIResource(Resource):
             prefix, _type = node.get(XMIResource.xsitype).split(':')
             if node.get('href'):
                 ref = node.get('href')
-                decoder = self._get_decoder(ref)
+                decoder = self._get_href_decoder(ref)
                 return (feature_container, decoder.resolve(ref), [], [])
             if not prefix:
                 raise ValueError('Prefix {0} is not registered, line {1}'
@@ -215,8 +215,9 @@ class XMIResource(Resource):
                 else:
                     values = [value]
                 for value in values:
-                    decoder = self._get_decoder(value)
-                    resolved_value = decoder.resolve(value)
+                    # decoder = self._get_decoder(value)
+                    # resolved_value = decoder.resolve(value)
+                    resolved_value = self._resolve_nonhref(value)
                     if not resolved_value:
                         raise ValueError('EObject for {0} is unknown'
                                          .format(value))
@@ -227,11 +228,25 @@ class XMIResource(Resource):
                         eobject.__setattr__(ref.name, resolved_value)
 
         for eobject, ref, value in opposite:
-            decoder = self._get_decoder(value)
-            resolved_value = decoder.resolve(value)
+            # decoder = self._get_decoder(value)
+            # resolved_value = decoder.resolve(value)
+            resolved_value = self._resolve_nonhref(value)
             if not resolved_value:
                 raise ValueError('EObject for {0} is unknown'.format(value))
             eobject.__setattr__(ref.name, resolved_value)
+
+    def _resolve_nonhref(self, path):
+        uri, fragment = self._is_external(path)
+        if fragment in self._resolve_mem:
+            return self._resolve_mem[fragment]
+        if uri:
+            epackage = self.get_metamodel(uri)
+            if not epackage:
+                raise TypeError('Cannot resolve metamodel: {0}'.format(uri))
+            val = Resource._navigate_from(fragment, epackage)
+            self._resolve_mem[uri] = val
+            return val
+        return self.resolve(fragment)
 
     def _clean_registers(self):
         delattr(self, '_later')
