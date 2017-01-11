@@ -287,8 +287,8 @@ The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
 
 
-Adding External Resources
--------------------------
+Adding External Metamodel Resources
+-----------------------------------
 
 External resources for metamodel loading should be added in the resource set.
 For example, some metamodels use the XMLType instead of the Ecore one.
@@ -317,12 +317,34 @@ The resource creation should be done by hand first:
     xmltype.nsURI = 'http://www.eclipse.org/emf/2003/XMLType'
     xmltype.nsPrefix = 'xmltype'
     xmltype.name = 'xmltype'
-    resource = rset.create_resource(URI(xmltype.nsURI))
-    resource.append(xmltype)
+    rset.metamodel_registry[xmltype.nsURI] = xmltype
 
     # Then the resource can be loaded (here from an http address)
     resource = rset.get_resource(HttpURI('http://myadress.ecore'))
     root = resource.contents[0]
+
+
+Adding External resources
+-------------------------
+
+When a model reference another one, they both need to be added inside the same
+ResourceSet.
+
+.. code-block:: python
+
+    rset.get_resource(URI('uri/towards/my/first/resource'))
+    resource = rset.get_resource(URI('uri/towards/my/secon/resource'))
+
+If for some reason, you want to dynamically create the resource which is
+required for XMI deserialization of another one, you need to create an empty
+resource first:
+
+.. code-block:: python
+
+    # Other model is 'external_model'
+    resource = rset.create_resource(URI('the/wanted/uri'))
+    resource.append(external_model)
+    
 
 Exporting an Existing XMI Resource
 ==================================
