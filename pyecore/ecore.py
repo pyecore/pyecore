@@ -694,7 +694,7 @@ class EClass(EClassifier):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
             self.eSuperTypes.append(superclass)
-        self.__metainstance = type(self.name, (EObject,), {
+        self._metainstance = type(self.name, (EObject,), {
                                     'eClass': self,
                                     '__getattribute__': Core.getattr,
                                     '__setattr__': Core.setattr
@@ -704,7 +704,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self.__metainstance()
+        obj = self._metainstance()
         obj._isready = True
         return obj
 
