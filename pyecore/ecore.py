@@ -267,7 +267,7 @@ class EObject(ENotifer):
             return '/'
         feat = self.eContainmentFeature()
         parent = self.eContainer()
-        if hasattr(self, 'name'):
+        if hasattr(self, 'name') and self.name:
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
         name = feat.name
         if feat.many:
