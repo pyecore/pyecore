@@ -237,6 +237,7 @@ class Resource(object):
                                None)
         return obj
 
+    # Refactor me
     def _build_path_from(self, obj):
         if isinstance(obj, type):
             obj = obj.eClass
@@ -267,7 +268,6 @@ class Resource(object):
             if not uri_fragment.startswith('#'):
                 uri_fragment = '#' + uri_fragment
             if crossref:
-                print(uri_fragment)
                 return ('{0}{1}'.format(uri, uri_fragment), True)
             else:
                 return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
@@ -289,6 +289,7 @@ class Resource(object):
             raise ValueError('The resource requires an EObject type, '
                              'but received {0} instead.'.format(type(root)))
         self._contents.append(root)
+        root._eresource = self
         for eobject in root.eAllContents():
             eobject._eresource = self
 

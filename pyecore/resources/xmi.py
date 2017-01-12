@@ -341,7 +341,9 @@ class XMIResource(Resource):
                 continue
             elif isinstance(feat, Ecore.EReference) \
                     and not feat.containment:
-                if feat.many and value:
+                if not value:
+                    continue
+                if feat.many:
                     results = list(map(self._build_path_from, value))
                     embedded = []
                     crossref = []
@@ -356,8 +358,7 @@ class XMIResource(Resource):
                     for ref in crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = ref
-                elif not feat.many and value:
-                    # node.attrib[feat.name] = self._build_path_from(value)
+                else:
                     frag, cref = self._build_path_from(value)
                     if cref:
                         sub = etree.SubElement(node, feat.name)
