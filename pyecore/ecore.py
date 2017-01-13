@@ -1,6 +1,6 @@
 from functools import partial
 from ordered_set import OrderedSet
-from .notification import ENotifer, Notification, Kind
+from .notification import ENotifer, Notification, Kind, EObserver
 import sys
 
 
@@ -148,7 +148,7 @@ class Core(object):
                                                        kind=Kind.UNSET))
 
     def _promote(cls, abstract=False):
-        cls.eClass = EClass(cls.__name__)
+        cls.eClass = EClass(cls.__name__, metainstance=cls)
         cls.eClass.abstract = abstract
         cls._staticEClass = True
         # init super types
@@ -686,7 +686,8 @@ class EReference(EStructuralFeature):
 
 
 class EClass(EClassifier):
-    def __init__(self, name=None, superclass=None, abstract=False):
+    def __init__(self, name=None, superclass=None, abstract=False,
+                 metainstance=None):
         super().__init__(name)
         self.abstract = abstract
         self._staticEClass = False
@@ -694,11 +695,18 @@ class EClass(EClassifier):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
             self.eSuperTypes.append(superclass)
-        self._metainstance = type(self.name, (EObject,), {
-                                    'eClass': self,
-                                    '__getattribute__': Core.getattr,
-                                    '__setattr__': Core.setattr
-                                })
+        if metainstance:
+            self._metainstance = metainstance
+        else:
+            self._metainstance = type(self.name,
+                                      self.__compute_supertypes(),
+                                      {
+                                        'eClass': self,
+                                        '__getattribute__': Core.getattr,
+                                        '__setattr__': Core.setattr
+                                      })
+        self.supertypes_updater = EObserver(self)
+        self.supertypes_updater.notify = self.__update_supertypes
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
@@ -707,6 +715,23 @@ class EClass(EClassifier):
         obj = self._metainstance()
         obj._isready = True
         return obj
+
+    def __update_supertypes(self, notification):
+        if notification.feature is not EClass.eSuperTypes:
+            return
+        new_supers = self.__compute_supertypes()
+        self._metainstance.__bases__ = new_supers
+
+    def __compute_supertypes(self):
+        if not self.eSuperTypes:
+            return (EObject,)
+        else:
+            eSuperTypes = list(self.eSuperTypes)
+            return tuple(map(lambda x: x._metainstance, eSuperTypes))
+
+    @property
+    def python_class(self):
+        return self._metainstance
 
     def __repr__(self):
         return '<EClass name="{0}">'.format(self.name)

@@ -89,3 +89,9 @@ def test_library_eroot():
     assert smith.eContainer() is lib
     assert smith.eRoot() is lib
     assert library.Library.eClass.eRoot() is library.eClass
+
+
+def test_static_eclass_class():
+    lib = library.Library()
+    assert lib.eClass.python_class is library.Library
+    assert library.Library.eClass.python_class.eClass is library.Library.eClass
