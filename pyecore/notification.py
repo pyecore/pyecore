@@ -4,7 +4,7 @@ class ENotifer(object):
     def notify(self, notification):
         notification.notifier = notification.notifier or self
         for listener in self.listeners:
-            listener.notify(notification)
+            listener.notifyChanged(notification)
 
 
 def enum(enumName, *listValueNames):
@@ -49,14 +49,14 @@ class Notification(object):
 
 
 class EObserver(object):
-    def __init__(self, enotifier=None, notify=None):
-        if enotifier:
-            enotifier.listeners.append(self)
-        if notify:
-            self.notify = notify
+    def __init__(self, notifier=None, notifyChanged=None):
+        if notifier:
+            notifier.listeners.append(self)
+        if notifyChanged:
+            self.notifyChanged = notifyChanged
 
-    def observe(self, enotifier):
-        enotifier.listeners.append(self)
+    def observe(self, notifier):
+        notifier.listeners.append(self)
 
-    def notify(self, notification):
+    def notifyChanged(self, notification):
         pass

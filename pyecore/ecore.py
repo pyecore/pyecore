@@ -706,7 +706,7 @@ class EClass(EClassifier):
                                         '__setattr__': Core.setattr
                                       })
         self.supertypes_updater = EObserver(self)
-        self.supertypes_updater.notify = self.__update_supertypes
+        self.supertypes_updater.notifyChanged = self.__update_supertypes
 
     def __call__(self, *args, **kwargs):
         if self.abstract:

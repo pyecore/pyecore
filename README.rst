@@ -215,7 +215,7 @@ notifications from the ``EObject`` it is register in:
     >>> from pyecore.notification import EObserver, Kind
     >>> smith = lib.Writer()
     >>> b1 = lib.Book()
-    >>> observer = EObserver(smith, notify=lambda x: print(x))
+    >>> observer = EObserver(smith, notifyChanged=lambda x: print(x))
     >>> b1.authors.append(smith)  # observer receive the notification from smith because 'authors' is eOpposite or 'books'
 
 The ``EObserver`` notification method can be set using a lambda as in the
@@ -228,7 +228,7 @@ previous example, using a regular function or by class inheritance:
     ...:
     >>> observer = EObserver()
     >>> observer.observe(b1)
-    >>> observer.notify = print_notif
+    >>> observer.notifyChanged = print_notif
     >>> b1.authors.append(smith)  # observer receive the notification from b1
 
 Using inheritance:
@@ -237,9 +237,9 @@ Using inheritance:
 
     >>> class PrintNotification(EObserver):
     ...:    def __init__(self, notifier=None):
-    ...:        super().__init__(enotifier=notifier)
+    ...:        super().__init__(notifier=notifier)
     ...:
-    ...:    def notify(self, notification):
+    ...:    def notifyChanged(self, notification):
     ...:        print(notification)
     ...:
     ...:
@@ -344,7 +344,7 @@ resource first:
     # Other model is 'external_model'
     resource = rset.create_resource(URI('the/wanted/uri'))
     resource.append(external_model)
-    
+
 
 Exporting an Existing XMI Resource
 ==================================
