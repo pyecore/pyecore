@@ -29,9 +29,9 @@ the fly (dynamic metamodel):
 .. code-block:: python
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
-    >>> A = EClass('A') # We create metaclass named 'A'
+    >>> A = EClass('A')  # We create metaclass named 'A'
     >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
-    >>> a1 = A()
+    >>> a1 = A()  # We create an instance
     >>> a1.myname
     'new_name'
     >>> a1.myname = 'a_instance'
@@ -200,6 +200,81 @@ classical classes definitions in Python:
     >>> c1 = C()
     >>> c1.toMy = instance1
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
+
+
+Deep Journey Inside PyEcore
+===========================
+
+This section will provide some explanation of how PyEcore works.
+
+EClasse Instances as Factories
+------------------------------
+
+The most noticeable difference between PyEcore and Java-EMF implementation is
+the fact that there is no factories (as you probably already seen). Each EClass
+instance is in itself a factory. This allows you to do this kind of tricks:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> eobject = A()  # We create an A instance
+    >>> eobject.eClass
+    <EClass name="A">
+    >>> eobject2 = eobject.eClass()  # We create another A instance
+    >>> assert isinstance(eobject2, eobject.__class__)
+    >>> from pyecore.ecore import EcoreUtils
+    >>> assert EcoreUtils.isinstance(eobject2, A)
+
+
+In fact, each EClass instance create a new Python ``class`` named after the
+EClass name and keep a strong relationship towards it. Moreover, EClass
+implements is a ``callable`` and each time ``()`` is called on an EClass
+instance, an instance of the associated Python ``class`` is created. Here is a
+small example:
+
+.. code-block:: python
+
+    >>> MyClass = EClass('MyClass')  # We create an EClass instance
+    >>> type(MyClass)
+    pyecore.ecore.EClass
+    >>> MyClass.python_class
+    pyecore.ecore.MyClass
+    >>> myclass_instance = MyClass()  # MyClass is callable, creates an instance of the 'python_class' class
+    >>> myclass_instance
+    <pyecore.ecore.MyClass at 0x7f64b697df98>
+    >>> type(myclass_instance)
+    pyecore.ecore.MyClass
+    # We can access the EClass instance from the created instance and go back
+    >>> myclass_instance.eClass
+    <EClass name="MyClass">
+    >>> assert myclass_instance.eClass is MyClass
+    >>> assert myclass_instance.eClass.python_class is MyClass.python_class
+    >>> assert myclass_instance.eClass.python_class.eClass is MyClass
+    >>> assert myclass_instance.__class__ is MyClass.python_class
+    >>> assert myclass_instance.__class__.eClass is MyClass
+    >>> assert myclass_instance.__class__.eClass is myclass_instance.eClass
+
+
+The Python class hierarchie (inheritance tree) associated to the EClass instance
+is automatically updated when new super EClass instances are added/removed:
+
+.. code-block:: python
+
+    >>> B = EClass('B')  # in complement, we create a new B metaclass
+    >>> list(B.eAllSuperTypes())
+    []
+    >>> B.eSuperTypes.append(A)  # B inherits from A
+    >>> list(B.eAllSuperTypes())
+    {<EClass name="A">}
+    >>> B.python_class.mro()
+    [pyecore.ecore.B,
+     pyecore.ecore.A,
+     pyecore.ecore.EObject,
+     pyecore.ecore.ENotifier,
+     object]
+    >>> b_instance = B()
+    >>> assert isinstance(b, A.python_class)
+    >>> assert EcoreUtils.isinstance(b, A)
 
 
 Notifications
