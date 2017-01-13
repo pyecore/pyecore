@@ -106,9 +106,8 @@ class XMIResource(Resource):
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
             if eattribute.many:
-                for strval in value.split():
-                    val = eattribute.eType.from_string(strval)
-                    eobject.__getattribute__(eattribute.name).append(val)
+                results = map(eattribute.eType.from_string, value.split())
+                eobject.__getattribute__(eattribute.name).extend(results)
             val = eattribute.eType.from_string(value)
             eobject.__setattr__(eattribute.name, val)
 
