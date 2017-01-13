@@ -526,6 +526,11 @@ class EOperation(ETypedElement):
                 self.eExceptions.append(exception)
 
 
+class EParameter(ETypedElement):
+    def __init__(self, name=None, eType=None, required=False):
+        super().__init__(name, eType, required=required)
+
+
 class ETypeParameter(ENamedElement):
     def __init__(self, name=None):
         super().__init__(name)
@@ -534,11 +539,6 @@ class ETypeParameter(ENamedElement):
 class EGenericType(EObject):
     def __init__(self):
         super().__init__()
-
-
-class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None):
-        super().__init__(name, eType)
 
 
 class EClassifier(ENamedElement):
@@ -718,6 +718,9 @@ class EClass(EClassifier):
 
     def __update_supertypes(self, notification):
         if notification.feature is not EClass.eSuperTypes:
+            return
+        # We do not update in case of static metamodel (could be changed)
+        if hasattr(self.python_class, '_staticEClass'):
             return
         new_supers = self.__compute_supertypes()
         self._metainstance.__bases__ = new_supers
