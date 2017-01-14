@@ -2,6 +2,7 @@ from functools import partial
 from ordered_set import OrderedSet
 from .notification import ENotifer, Notification, Kind, EObserver
 import sys
+import keyword
 
 
 nsPrefix = 'ecore'
@@ -525,10 +526,31 @@ class EOperation(ETypedElement):
             for exception in exceptions:
                 self.eExceptions.append(exception)
 
+    def normalized_name(self):
+        name = self.name
+        if keyword.iskeyword(name):
+            name = '_' + name
+        return name
+
+    def to_code(self):
+        parameters = [x.to_code() for x in self.eParameters]
+        return """def {0}(self, {1}):
+        raise NotImplementedError('Method {0}({1}) is not yet implemented')
+        """.format(self.normalized_name(), ', '.join(parameters))
+
 
 class EParameter(ETypedElement):
     def __init__(self, name=None, eType=None, required=False):
         super().__init__(name, eType, required=required)
+
+    def to_code(self):
+        if self.required:
+            return "{0}".format(self.name)
+        if hasattr(self.eType, 'default_value'):
+            default_value = self.eType.default_value
+        else:
+            default_value = None
+        return "{0}={1}".format(self.name, default_value)
 
 
 class ETypeParameter(ENamedElement):
@@ -716,14 +738,25 @@ class EClass(EClassifier):
         obj._isready = True
         return obj
 
-    def __update_supertypes(self, notification):
-        if notification.feature is not EClass.eSuperTypes:
-            return
+    def __update_supertypes(self, notif):
         # We do not update in case of static metamodel (could be changed)
         if hasattr(self.python_class, '_staticEClass'):
             return
-        new_supers = self.__compute_supertypes()
-        self._metainstance.__bases__ = new_supers
+        if notif.feature is EClass.eSuperTypes:
+            new_supers = self.__compute_supertypes()
+            self._metainstance.__bases__ = new_supers
+        elif notif.feature is EClass.eOperations:
+            if notif.kind is Kind.ADD:
+                self.__create_fun(notif.new)
+            elif notif.kind is Kind.REMOVE:
+                delattr(self.python_class, notif.new.name)
+
+    def __create_fun(self, eoperation):
+        name = eoperation.normalized_name()
+        ns = {}
+        code = compile(eoperation.to_code(), "<str>", "exec")
+        exec(code, ns)
+        setattr(self.python_class, name, ns[name])
 
     def __compute_supertypes(self):
         if not self.eSuperTypes:
