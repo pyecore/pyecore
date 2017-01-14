@@ -29,9 +29,9 @@ the fly (dynamic metamodel):
 .. code-block:: python
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
-    >>> A = EClass('A') # We create metaclass named 'A'
+    >>> A = EClass('A')  # We create metaclass named 'A'
     >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
-    >>> a1 = A()
+    >>> a1 = A()  # We create an instance
     >>> a1.myname
     'new_name'
     >>> a1.myname = 'a_instance'
@@ -62,6 +62,9 @@ reflexive features:
     >>> a1.__setattr__('myname', 'reflexive')
     >>> a1.__getattribute__('myname')
     'reflexive'
+    >>> a1.eSet('myname', 'newname')
+    >>> a1.eGet('myname')
+    'newname'
 
 Runtime type checking is also performed (regarding what you expressed in your)
 metamodel:
@@ -80,6 +83,8 @@ PyEcore does support dynamic metamodel and static ones (see details in next
 sections).
 
 *The project is at an early stage and still requires more love.*
+
+.. contents:: :depth: 2
 
 Dynamic Metamodels
 ==================
@@ -202,6 +207,62 @@ classical classes definitions in Python:
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
 
+Static/Dynamic ``EOperation``
+=============================
+
+PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
+For static metamodel, the solution is simple, a simple method with the code is
+added inside the defined class. The corresponding ``EOperation`` is created on
+the fly. Theire is still some "requirements" for this. In order to be understood
+as an ``EOperation`` candidate, the defined method must have at least one
+parameter and the first parameter must always be named ``self``.
+
+For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
+the ``EClass`` instance, adds an "empty" implementation:
+
+.. code-block:: python
+
+    >>> import pyecore.ecore as Ecore
+    >>> A = Ecore.EClass('A')
+    >>> operation = Ecore.EOperation('myoperation')
+    >>> param1 = Ecore.EParameter('param1', eType=Ecore.EString, required=True)
+    >>> operation.eParameters.append(param1)
+    >>> A.eOperations.append(operation)
+    >>> a = A()
+    >>> help(a.myoperation)
+    Help on method myoperation:
+
+    myoperation(param1) method of pyecore.ecore.A instance
+    >>> a.myoperation('test')
+    ...
+    NotImplementedError: Method myoperation(param1) is not yet implemented
+
+For each ``EParameter``, the ``required`` parameter express the fact that the
+parameter is required or not in the produced operation:
+
+.. code-block:: python
+
+    >>> operation2 = Ecore.EOperation('myoperation2')
+    >>> p1 = Ecore.EParameter('p1', eType=Ecore.EString)
+    >>> operation2.eParameters.append(p1)
+    >>> A.eOperations.append(operation2)
+    >>> a = A()
+    >>> a.operation2(p1='test')  # Will raise a NotImplementedError exception
+
+You can then create an implementation for the eoperation and link it to the
+EClass:
+
+.. code-block:: python
+
+    >>> def myoperation(self, param1):
+    ...:    print(self, param1)
+    ...:
+    >>> A.python_class.myoperation = myoperation
+
+To be able to propose a dynamic empty implementation of the operation, PyEcore
+relies on Python code generation at runtime.
+
+
 Notifications
 =============
 
@@ -215,7 +276,7 @@ notifications from the ``EObject`` it is register in:
     >>> from pyecore.notification import EObserver, Kind
     >>> smith = lib.Writer()
     >>> b1 = lib.Book()
-    >>> observer = EObserver(smith, notify=lambda x: print(x))
+    >>> observer = EObserver(smith, notifyChanged=lambda x: print(x))
     >>> b1.authors.append(smith)  # observer receive the notification from smith because 'authors' is eOpposite or 'books'
 
 The ``EObserver`` notification method can be set using a lambda as in the
@@ -228,7 +289,7 @@ previous example, using a regular function or by class inheritance:
     ...:
     >>> observer = EObserver()
     >>> observer.observe(b1)
-    >>> observer.notify = print_notif
+    >>> observer.notifyChanged = print_notif
     >>> b1.authors.append(smith)  # observer receive the notification from b1
 
 Using inheritance:
@@ -237,9 +298,9 @@ Using inheritance:
 
     >>> class PrintNotification(EObserver):
     ...:    def __init__(self, notifier=None):
-    ...:        super().__init__(enotifier=notifier)
+    ...:        super().__init__(notifier=notifier)
     ...:
-    ...:    def notify(self, notification):
+    ...:    def notifyChanged(self, notification):
     ...:        print(notification)
     ...:
     ...:
@@ -262,6 +323,81 @@ The different kind of notifications that can be currently received are:
 * ``REMOVE`` -> when an object is removed from a collection
 * ``SET`` -> when a value is set in an attribute/reference
 * ``UNSET`` -> when a value is removed from an attribute/reference
+
+
+Deep Journey Inside PyEcore
+===========================
+
+This section will provide some explanation of how PyEcore works.
+
+EClasse Instances as Factories
+------------------------------
+
+The most noticeable difference between PyEcore and Java-EMF implementation is
+the fact that there is no factories (as you probably already seen). Each EClass
+instance is in itself a factory. This allows you to do this kind of tricks:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> eobject = A()  # We create an A instance
+    >>> eobject.eClass
+    <EClass name="A">
+    >>> eobject2 = eobject.eClass()  # We create another A instance
+    >>> assert isinstance(eobject2, eobject.__class__)
+    >>> from pyecore.ecore import EcoreUtils
+    >>> assert EcoreUtils.isinstance(eobject2, A)
+
+
+In fact, each EClass instance create a new Python ``class`` named after the
+EClass name and keep a strong relationship towards it. Moreover, EClass
+implements is a ``callable`` and each time ``()`` is called on an EClass
+instance, an instance of the associated Python ``class`` is created. Here is a
+small example:
+
+.. code-block:: python
+
+    >>> MyClass = EClass('MyClass')  # We create an EClass instance
+    >>> type(MyClass)
+    pyecore.ecore.EClass
+    >>> MyClass.python_class
+    pyecore.ecore.MyClass
+    >>> myclass_instance = MyClass()  # MyClass is callable, creates an instance of the 'python_class' class
+    >>> myclass_instance
+    <pyecore.ecore.MyClass at 0x7f64b697df98>
+    >>> type(myclass_instance)
+    pyecore.ecore.MyClass
+    # We can access the EClass instance from the created instance and go back
+    >>> myclass_instance.eClass
+    <EClass name="MyClass">
+    >>> assert myclass_instance.eCla.
+
+    >>> assert myclass_instance.eClass.python_class is MyClass.python_class
+    >>> assert myclass_instance.eClass.python_class.eClass is MyClass
+    >>> assert myclass_instance.__class__ is MyClass.python_class
+    >>> assert myclass_instance.__class__.eClass is MyClass
+    >>> assert myclass_instance.__class__.eClass is myclass_instance.eClass
+
+
+The Python class hierarchie (inheritance tree) associated to the EClass instance
+
+.. code-block:: python
+
+    >>> B = EClass('B')  # in complement, we create a new B metaclass
+    >>> list(B.eAllSuperTypes())
+    []
+    >>> B.eSuperTypes.append(A)  # B inherits from A
+    >>> list(B.eAllSuperTypes())
+    {<EClass name="A">}
+    >>> B.python_class.mro()
+    [pyecore.ecore.B,
+     pyecore.ecore.A,
+     pyecore.ecore.EObject,
+     pyecore.ecore.ENotifier,
+     object]
+    >>> b_instance = B()
+    >>> assert isinstance(b, A.python_class)
+    >>> assert EcoreUtils.isinstance(b, A)
 
 
 Importing an Existing XMI Metamodel/Model
@@ -287,8 +423,8 @@ The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
 
 
-Adding External Resources
--------------------------
+Adding External Metamodel Resources
+-----------------------------------
 
 External resources for metamodel loading should be added in the resource set.
 For example, some metamodels use the XMLType instead of the Ecore one.
@@ -317,12 +453,34 @@ The resource creation should be done by hand first:
     xmltype.nsURI = 'http://www.eclipse.org/emf/2003/XMLType'
     xmltype.nsPrefix = 'xmltype'
     xmltype.name = 'xmltype'
-    resource = rset.create_resource(URI(xmltype.nsURI))
-    resource.append(xmltype)
+    rset.metamodel_registry[xmltype.nsURI] = xmltype
 
     # Then the resource can be loaded (here from an http address)
     resource = rset.get_resource(HttpURI('http://myadress.ecore'))
     root = resource.contents[0]
+
+
+Adding External resources
+-------------------------
+
+When a model reference another one, they both need to be added inside the same
+ResourceSet.
+
+.. code-block:: python
+
+    rset.get_resource(URI('uri/towards/my/first/resource'))
+    resource = rset.get_resource(URI('uri/towards/my/secon/resource'))
+
+If for some reason, you want to dynamically create the resource which is
+required for XMI deserialization of another one, you need to create an empty
+resource first:
+
+.. code-block:: python
+
+    # Other model is 'external_model'
+    resource = rset.create_resource(URI('the/wanted/uri'))
+    resource.append(external_model)
+
 
 Exporting an Existing XMI Resource
 ==================================
@@ -410,7 +568,8 @@ In the current state, the project implements:
 * select/reject on collections,
 * Eclipse XMI import (partially),
 * Eclipse XMI export (partially),
-* simple notification/Event system.
+* simple notification/Event system,
+* EOperations support.
 
 The XMI import/export are still in an early stage of developement: no cross
 resources references, not able to resolve file path uris and stuffs.
@@ -419,7 +578,6 @@ The things that are in the roadmap:
 
 * documentation,
 * code generator for the static part,
-* EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,
 * command system (?).
 

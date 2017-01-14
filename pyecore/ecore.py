@@ -1,7 +1,9 @@
 from functools import partial
 from ordered_set import OrderedSet
-from .notification import ENotifer, Notification, Kind
+from .notification import ENotifer, Notification, Kind, EObserver
 import sys
+import keyword
+import inspect
 
 
 nsPrefix = 'ecore'
@@ -43,7 +45,7 @@ class EcoreUtils(object):
             return True
         elif _type is EPackage:
             return isinstance(obj, _type) or \
-                        isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+                        inspect.isclass(obj) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
             return isinstance(obj, _type) or \
                         hasattr(obj, '_staticEClass') and obj._staticEClass
@@ -148,7 +150,7 @@ class Core(object):
                                                        kind=Kind.UNSET))
 
     def _promote(cls, abstract=False):
-        cls.eClass = EClass(cls.__name__)
+        cls.eClass = EClass(cls.__name__, metainstance=cls)
         cls.eClass.abstract = abstract
         cls._staticEClass = True
         # init super types
@@ -161,6 +163,21 @@ class Core(object):
                 if not v.name:
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
+            elif inspect.isfunction(v):
+                argspect = inspect.getargspec(v)
+                args = argspect.args
+                if len(args) < 1 or args[0] != 'self':
+                    continue
+                op = EOperation(v.__name__)
+                defaults = argspect.defaults
+                len_defaults = len(defaults) if defaults else 0
+                nb_required = len(args) - len_defaults
+                for i, p in enumerate(args):
+                    parameter = EParameter(p, eType=ENativeType)
+                    if i < nb_required:
+                        parameter.required = True
+                    op.eParameters.append(parameter)
+                cls.eClass.eOperations.append(op)
 
     def register_classifier(cls, abstract=False, promote=False):
         if promote:
@@ -450,6 +467,15 @@ class EModelElement(EObject):
     def __init__(self):
         super().__init__()
 
+    def eURIFragment(self):
+        if not self.eContainer():
+            return '#/'
+        parent = self.eContainer()
+        if hasattr(self, 'name') and self.name:
+            return '{0}/{1}'.format(parent.eURIFragment(), self.name)
+        else:
+            return super().eURIFragment()
+
 
 class EAnnotation(EModelElement):
     def __init__(self, source=None):
@@ -462,11 +488,6 @@ class ENamedElement(EModelElement):
     def __init__(self, name=None):
         super().__init__()
         self.name = name
-
-    def eURIFragment(self):
-        if not self.eContainer():
-            return '#/'
-        return '{0}/{1}'.format(self.eContainer().eURIFragment(), self.name)
 
 
 class EPackage(ENamedElement):
@@ -521,6 +542,32 @@ class EOperation(ETypedElement):
             for exception in exceptions:
                 self.eExceptions.append(exception)
 
+    def normalized_name(self):
+        name = self.name
+        if keyword.iskeyword(name):
+            name = '_' + name
+        return name
+
+    def to_code(self):
+        parameters = [x.to_code() for x in self.eParameters]
+        return """def {0}(self, {1}):
+        raise NotImplementedError('Method {0}({1}) is not yet implemented')
+        """.format(self.normalized_name(), ', '.join(parameters))
+
+
+class EParameter(ETypedElement):
+    def __init__(self, name=None, eType=None, required=False):
+        super().__init__(name, eType, required=required)
+
+    def to_code(self):
+        if self.required:
+            return "{0}".format(self.name)
+        if hasattr(self.eType, 'default_value'):
+            default_value = self.eType.default_value
+        else:
+            default_value = None
+        return "{0}={1}".format(self.name, default_value)
+
 
 class ETypeParameter(ENamedElement):
     def __init__(self, name=None):
@@ -530,11 +577,6 @@ class ETypeParameter(ENamedElement):
 class EGenericType(EObject):
     def __init__(self):
         super().__init__()
-
-
-class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None):
-        super().__init__(name, eType)
 
 
 class EClassifier(ENamedElement):
@@ -682,7 +724,8 @@ class EReference(EStructuralFeature):
 
 
 class EClass(EClassifier):
-    def __init__(self, name=None, superclass=None, abstract=False):
+    def __init__(self, name=None, superclass=None, abstract=False,
+                 metainstance=None):
         super().__init__(name)
         self.abstract = abstract
         self._staticEClass = False
@@ -690,19 +733,57 @@ class EClass(EClassifier):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
             self.eSuperTypes.append(superclass)
-        self.__metainstance = type(self.name, (EObject,), {
-                                    'eClass': self,
-                                    '__getattribute__': Core.getattr,
-                                    '__setattr__': Core.setattr
-                                })
+        if metainstance:
+            self._metainstance = metainstance
+        else:
+            self._metainstance = type(self.name,
+                                      self.__compute_supertypes(),
+                                      {
+                                        'eClass': self,
+                                        '__getattribute__': Core.getattr,
+                                        '__setattr__': Core.setattr
+                                      })
+        self.supertypes_updater = EObserver(self)
+        self.supertypes_updater.notifyChanged = self.__update
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self.__metainstance()
+        obj = self._metainstance()
         obj._isready = True
         return obj
+
+    def __update(self, notif):
+        # We do not update in case of static metamodel (could be changed)
+        if hasattr(self.python_class, '_staticEClass'):
+            return
+        if notif.feature is EClass.eSuperTypes:
+            new_supers = self.__compute_supertypes()
+            self._metainstance.__bases__ = new_supers
+        elif notif.feature is EClass.eOperations:
+            if notif.kind is Kind.ADD:
+                self.__create_fun(notif.new)
+            elif notif.kind is Kind.REMOVE:
+                delattr(self.python_class, notif.new.name)
+
+    def __create_fun(self, eoperation):
+        name = eoperation.normalized_name()
+        ns = {}
+        code = compile(eoperation.to_code(), "<str>", "exec")
+        exec(code, ns)
+        setattr(self.python_class, name, ns[name])
+
+    def __compute_supertypes(self):
+        if not self.eSuperTypes:
+            return (EObject,)
+        else:
+            eSuperTypes = list(self.eSuperTypes)
+            return tuple(map(lambda x: x._metainstance, eSuperTypes))
+
+    @property
+    def python_class(self):
+        return self._metainstance
 
     def __repr__(self):
         return '<EClass name="{0}">'.format(self.name)
@@ -772,9 +853,9 @@ class EClass(EClassifier):
 class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
+        Core.register_classifier(cls, promote=True)
         cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
-        Core.register_classifier(cls, promote=True)
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -891,6 +972,9 @@ EEnumLiteral.name = EAttribute('name', EString)
 EEnumLiteral.value = EAttribute('value', EInteger)
 EEnumLiteral.literal = EAttribute('literal', EString)
 
+EStructuralFeature.eContainingClass = \
+                   EReference('eContainingClass', EClass,
+                              eOpposite=EClass.eOperations)
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,

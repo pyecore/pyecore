@@ -106,9 +106,8 @@ class XMIResource(Resource):
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
             if eattribute.many:
-                for strval in value.split():
-                    val = eattribute.eType.from_string(strval)
-                    eobject.__getattribute__(eattribute.name).append(val)
+                results = map(eattribute.eType.from_string, value.split())
+                eobject.__getattribute__(eattribute.name).extend(results)
             val = eattribute.eType.from_string(value)
             eobject.__setattr__(eattribute.name, val)
 
@@ -134,12 +133,12 @@ class XMIResource(Resource):
                              .format(node.tag,
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
+        if node.get('href'):
+            ref = node.get('href')
+            decoder = self._get_href_decoder(ref)
+            return (feature_container, decoder.resolve(ref), [], [])
         if self._type_attribute(node):
             prefix, _type = node.get(XMIResource.xsitype).split(':')
-            if node.get('href'):
-                ref = node.get('href')
-                decoder = self._get_decoder(ref)
-                return (feature_container, decoder.resolve(ref), [], [])
             if not prefix:
                 raise ValueError('Prefix {0} is not registered, line {1}'
                                  .format(prefix, node.tag))
@@ -215,8 +214,9 @@ class XMIResource(Resource):
                 else:
                     values = [value]
                 for value in values:
-                    decoder = self._get_decoder(value)
-                    resolved_value = decoder.resolve(value)
+                    # decoder = self._get_decoder(value)
+                    # resolved_value = decoder.resolve(value)
+                    resolved_value = self._resolve_nonhref(value)
                     if not resolved_value:
                         raise ValueError('EObject for {0} is unknown'
                                          .format(value))
@@ -227,11 +227,25 @@ class XMIResource(Resource):
                         eobject.__setattr__(ref.name, resolved_value)
 
         for eobject, ref, value in opposite:
-            decoder = self._get_decoder(value)
-            resolved_value = decoder.resolve(value)
+            # decoder = self._get_decoder(value)
+            # resolved_value = decoder.resolve(value)
+            resolved_value = self._resolve_nonhref(value)
             if not resolved_value:
                 raise ValueError('EObject for {0} is unknown'.format(value))
             eobject.__setattr__(ref.name, resolved_value)
+
+    def _resolve_nonhref(self, path):
+        uri, fragment = self._is_external(path)
+        if fragment in self._resolve_mem:
+            return self._resolve_mem[fragment]
+        if uri:
+            epackage = self.get_metamodel(uri)
+            if not epackage:
+                raise TypeError('Cannot resolve metamodel: {0}'.format(uri))
+            val = Resource._navigate_from(fragment, epackage)
+            self._resolve_mem[uri] = val
+            return val
+        return self.resolve(fragment)
 
     def _clean_registers(self):
         delattr(self, '_later')
@@ -261,6 +275,7 @@ class XMIResource(Resource):
                  else self.uri.create_outstream()
         self.prefixes = {}
         self.reverse_nsmap = {}
+        # Compute required nsmap for subpackages
         if not self.contents:
             tree = etree.ElementTree()
         else:
@@ -325,12 +340,31 @@ class XMIResource(Resource):
                 continue
             elif isinstance(feat, Ecore.EReference) \
                     and not feat.containment:
-                if feat.many and value:
+                if not value:
+                    continue
+                if feat.many:
                     results = list(map(self._build_path_from, value))
-                    result = ' '.join(results)
-                    node.attrib[feat.name] = result
-                elif not feat.many and value:
-                    node.attrib[feat.name] = self._build_path_from(value)
+                    embedded = []
+                    crossref = []
+                    for frag, cref in results:
+                        if cref:
+                            crossref.append(frag)
+                        else:
+                            embedded.append(frag)
+                    if embedded:
+                        result = ' '.join(embedded)
+                        node.attrib[feat.name] = result
+                    for ref in crossref:
+                        sub = etree.SubElement(node, feat.name)
+                        sub.attrib['href'] = ref
+                else:
+                    frag, cref = self._build_path_from(value)
+                    if cref:
+                        sub = etree.SubElement(node, feat.name)
+                        sub.attrib['href'] = frag
+                    else:
+                        node.attrib[feat.name] = frag
+
             if isinstance(feat, Ecore.EReference) and feat.containment:
                 children = obj.__getattribute__(feat.name)
                 children = children if feat.many else [children]

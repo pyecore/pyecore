@@ -5,10 +5,10 @@ from pyecore.notification import EObserver, Kind
 
 class LastNotification(EObserver):
     def __init__(self, notifier=None):
-        super().__init__(enotifier=notifier)
+        super().__init__(notifier=notifier)
         self.notification = None
 
-    def notify(self, notification):
+    def notifyChanged(self, notification):
         self.notification = notification
 
 

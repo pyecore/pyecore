@@ -53,11 +53,11 @@ def test_notification_print(lib):
 def test_notification_add(lib):
     root = lib.Root()
     a1 = lib.A()
-    notify = lambda x: assert_wrap(x.kind is Kind.ADD
-                                   and x.new is a1
-                                   and x.feature.name == 'namedElements'
-                                   and x.notifier is root)
-    observer = EObserver(root, notify=notify)
+    notifyChanged = lambda x: assert_wrap(x.kind is Kind.ADD
+                                          and x.new is a1
+                                          and x.feature.name == 'namedElements'
+                                          and x.notifier is root)
+    observer = EObserver(root, notifyChanged=notifyChanged)
     root.namedElements.append(a1)
 
 
@@ -68,12 +68,12 @@ def test_notification_eopposite(lib):
                                    and x.new is a1
                                    and x.feature.name == 'inner'
                                    and x.notifier is b1)
-    o1 = EObserver(b1, notify=notify)
+    o1 = EObserver(b1, notifyChanged=notify)
     notify = lambda x: assert_wrap(x.kind is Kind.SET
                                    and x.new is b1
                                    and x.feature.name == 'parent'
                                    and x.notifier is a1)
-    o2 = EObserver(a1, notify=notify)
+    o2 = EObserver(a1, notifyChanged=notify)
 
 
 def test_notification_attribute(lib):
@@ -83,30 +83,31 @@ def test_notification_attribute(lib):
                                    and x.new is 'test'
                                    and x.feature.name == 'name'
                                    and x.notifier is a1)
-    o1 = EObserver(a1, notify=notify)
+    o1 = EObserver(a1, notifyChanged=notify)
     a1.name = 'test'
 
-    o1.notify = lambda x: assert_wrap(x.kind is Kind.SET
-                                      and x.old is 'test'
-                                      and x.new is 'test2'
-                                      and x.feature.name == 'name'
-                                      and x.notifier is a1)
+    o1.notifyChanged = lambda x: assert_wrap(x.kind is Kind.SET
+                                             and x.old is 'test'
+                                             and x.new is 'test2'
+                                             and x.feature.name == 'name'
+                                             and x.notifier is a1)
     a1.name = 'test2'
 
-    o1.notify = lambda x: assert_wrap(x.kind is Kind.UNSET
-                                      and x.old is 'test2'
-                                      and x.new is None
-                                      and x.feature.name == 'name'
-                                      and x.notifier is a1)
+    o1.notifyChanged = lambda x: assert_wrap(x.kind is Kind.UNSET
+                                             and x.old is 'test2'
+                                             and x.new is None
+                                             and x.feature.name == 'name'
+                                             and x.notifier is a1)
     a1.name = None
 
 
 class ObserverCounter(EObserver):
     def __init__(self, notifier=None):
-        super().__init__(enotifier=notifier)
+        super().__init__(notifier=notifier)
         self.calls = 0
 
-    def notify(self, notification):
+    def notifyChanged(self, notification):
+        self.repr = notification.__repr__()
         self.calls += 1
         self.kind = notification.kind
         self.value = notification.new
