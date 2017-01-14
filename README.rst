@@ -62,6 +62,9 @@ reflexive features:
     >>> a1.__setattr__('myname', 'reflexive')
     >>> a1.__getattribute__('myname')
     'reflexive'
+    >>> a1.eSet('myname', 'newname')
+    >>> a1.eGet('myname')
+    'newname'
 
 Runtime type checking is also performed (regarding what you expressed in your)
 metamodel:
@@ -80,6 +83,8 @@ PyEcore does support dynamic metamodel and static ones (see details in next
 sections).
 
 *The project is at an early stage and still requires more love.*
+
+.. contents:: :depth: 2
 
 Dynamic Metamodels
 ==================
@@ -207,7 +212,10 @@ Static/Dynamic ``EOperation``
 
 PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
 For static metamodel, the solution is simple, a simple method with the code is
-added inside the defined class.
+added inside the defined class. The corresponding ``EOperation`` is created on
+the fly. Theire is still some "requirements" for this. In order to be understood
+as an ``EOperation`` candidate, the defined method must have at least one
+parameter and the first parameter must always be named ``self``.
 
 For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
 the ``EClass`` instance, adds an "empty" implementation:
@@ -225,12 +233,21 @@ the ``EClass`` instance, adds an "empty" implementation:
     Help on method myoperation:
 
     myoperation(param1) method of pyecore.ecore.A instance
-    >>> a.myoperation(3)
+    >>> a.myoperation('test')
     ...
     NotImplementedError: Method myoperation(param1) is not yet implemented
 
 For each ``EParameter``, the ``required`` parameter express the fact that the
-parameter is required or not in the produced operation.
+parameter is required or not in the produced operation:
+
+.. code-block:: python
+
+    >>> operation2 = Ecore.EOperation('myoperation2')
+    >>> p1 = Ecore.EParameter('p1', eType=Ecore.EString)
+    >>> operation2.eParameters.append(p1)
+    >>> A.eOperations.append(operation2)
+    >>> a = A()
+    >>> a.operation2(p1='test')  # Will raise a NotImplementedError exception
 
 You can then create an implementation for the eoperation and link it to the
 EClass:

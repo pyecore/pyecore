@@ -3,6 +3,7 @@ from ordered_set import OrderedSet
 from .notification import ENotifer, Notification, Kind, EObserver
 import sys
 import keyword
+import inspect
 
 
 nsPrefix = 'ecore'
@@ -44,7 +45,7 @@ class EcoreUtils(object):
             return True
         elif _type is EPackage:
             return isinstance(obj, _type) or \
-                        isinstance(obj, type(sys)) and hasattr(obj, 'nsURI')
+                        inspect.isclass(obj) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
             return isinstance(obj, _type) or \
                         hasattr(obj, '_staticEClass') and obj._staticEClass
@@ -162,6 +163,21 @@ class Core(object):
                 if not v.name:
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
+            elif inspect.isfunction(v):
+                argspect = inspect.getargspec(v)
+                args = argspect.args
+                if len(args) < 1 or args[0] != 'self':
+                    continue
+                op = EOperation(v.__name__)
+                defaults = argspect.defaults
+                len_defaults = len(defaults) if defaults else 0
+                nb_required = len(args) - len_defaults
+                for i, p in enumerate(args):
+                    parameter = EParameter(p, eType=ENativeType)
+                    if i < nb_required:
+                        parameter.required = True
+                    op.eParameters.append(parameter)
+                cls.eClass.eOperations.append(op)
 
     def register_classifier(cls, abstract=False, promote=False):
         if promote:
@@ -837,9 +853,9 @@ class EClass(EClassifier):
 class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
+        Core.register_classifier(cls, promote=True)
         cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
-        Core.register_classifier(cls, promote=True)
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -956,6 +972,9 @@ EEnumLiteral.name = EAttribute('name', EString)
 EEnumLiteral.value = EAttribute('value', EInteger)
 EEnumLiteral.literal = EAttribute('literal', EString)
 
+EStructuralFeature.eContainingClass = \
+                   EReference('eContainingClass', EClass,
+                              eOpposite=EClass.eOperations)
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
