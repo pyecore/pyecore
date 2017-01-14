@@ -62,6 +62,9 @@ reflexive features:
     >>> a1.__setattr__('myname', 'reflexive')
     >>> a1.__getattribute__('myname')
     'reflexive'
+    >>> a1.eSet('myname', 'newname')
+    >>> a1.eGet('myname')
+    'newname'
 
 Runtime type checking is also performed (regarding what you expressed in your)
 metamodel:
@@ -80,6 +83,8 @@ PyEcore does support dynamic metamodel and static ones (see details in next
 sections).
 
 *The project is at an early stage and still requires more love.*
+
+.. contents:: :depth: 2
 
 Dynamic Metamodels
 ==================
@@ -202,79 +207,60 @@ classical classes definitions in Python:
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
 
 
-Deep Journey Inside PyEcore
-===========================
+Static/Dynamic ``EOperation``
+=============================
 
-This section will provide some explanation of how PyEcore works.
+PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
+For static metamodel, the solution is simple, a simple method with the code is
+added inside the defined class. The corresponding ``EOperation`` is created on
+the fly. Theire is still some "requirements" for this. In order to be understood
+as an ``EOperation`` candidate, the defined method must have at least one
+parameter and the first parameter must always be named ``self``.
 
-EClasse Instances as Factories
-------------------------------
-
-The most noticeable difference between PyEcore and Java-EMF implementation is
-the fact that there is no factories (as you probably already seen). Each EClass
-instance is in itself a factory. This allows you to do this kind of tricks:
-
-.. code-block:: python
-
-    >>> A = EClass('A')
-    >>> eobject = A()  # We create an A instance
-    >>> eobject.eClass
-    <EClass name="A">
-    >>> eobject2 = eobject.eClass()  # We create another A instance
-    >>> assert isinstance(eobject2, eobject.__class__)
-    >>> from pyecore.ecore import EcoreUtils
-    >>> assert EcoreUtils.isinstance(eobject2, A)
-
-
-In fact, each EClass instance create a new Python ``class`` named after the
-EClass name and keep a strong relationship towards it. Moreover, EClass
-implements is a ``callable`` and each time ``()`` is called on an EClass
-instance, an instance of the associated Python ``class`` is created. Here is a
-small example:
+For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
+the ``EClass`` instance, adds an "empty" implementation:
 
 .. code-block:: python
 
-    >>> MyClass = EClass('MyClass')  # We create an EClass instance
-    >>> type(MyClass)
-    pyecore.ecore.EClass
-    >>> MyClass.python_class
-    pyecore.ecore.MyClass
-    >>> myclass_instance = MyClass()  # MyClass is callable, creates an instance of the 'python_class' class
-    >>> myclass_instance
-    <pyecore.ecore.MyClass at 0x7f64b697df98>
-    >>> type(myclass_instance)
-    pyecore.ecore.MyClass
-    # We can access the EClass instance from the created instance and go back
-    >>> myclass_instance.eClass
-    <EClass name="MyClass">
-    >>> assert myclass_instance.eClass is MyClass
-    >>> assert myclass_instance.eClass.python_class is MyClass.python_class
-    >>> assert myclass_instance.eClass.python_class.eClass is MyClass
-    >>> assert myclass_instance.__class__ is MyClass.python_class
-    >>> assert myclass_instance.__class__.eClass is MyClass
-    >>> assert myclass_instance.__class__.eClass is myclass_instance.eClass
+    >>> import pyecore.ecore as Ecore
+    >>> A = Ecore.EClass('A')
+    >>> operation = Ecore.EOperation('myoperation')
+    >>> param1 = Ecore.EParameter('param1', eType=Ecore.EString, required=True)
+    >>> operation.eParameters.append(param1)
+    >>> A.eOperations.append(operation)
+    >>> a = A()
+    >>> help(a.myoperation)
+    Help on method myoperation:
 
+    myoperation(param1) method of pyecore.ecore.A instance
+    >>> a.myoperation('test')
+    ...
+    NotImplementedError: Method myoperation(param1) is not yet implemented
 
-The Python class hierarchie (inheritance tree) associated to the EClass instance
-is automatically updated when new super EClass instances are added/removed:
+For each ``EParameter``, the ``required`` parameter express the fact that the
+parameter is required or not in the produced operation:
 
 .. code-block:: python
 
-    >>> B = EClass('B')  # in complement, we create a new B metaclass
-    >>> list(B.eAllSuperTypes())
-    []
-    >>> B.eSuperTypes.append(A)  # B inherits from A
-    >>> list(B.eAllSuperTypes())
-    {<EClass name="A">}
-    >>> B.python_class.mro()
-    [pyecore.ecore.B,
-     pyecore.ecore.A,
-     pyecore.ecore.EObject,
-     pyecore.ecore.ENotifier,
-     object]
-    >>> b_instance = B()
-    >>> assert isinstance(b, A.python_class)
-    >>> assert EcoreUtils.isinstance(b, A)
+    >>> operation2 = Ecore.EOperation('myoperation2')
+    >>> p1 = Ecore.EParameter('p1', eType=Ecore.EString)
+    >>> operation2.eParameters.append(p1)
+    >>> A.eOperations.append(operation2)
+    >>> a = A()
+    >>> a.operation2(p1='test')  # Will raise a NotImplementedError exception
+
+You can then create an implementation for the eoperation and link it to the
+EClass:
+
+.. code-block:: python
+
+    >>> def myoperation(self, param1):
+    ...:    print(self, param1)
+    ...:
+    >>> A.python_class.myoperation = myoperation
+
+To be able to propose a dynamic empty implementation of the operation, PyEcore
+relies on Python code generation at runtime.
 
 
 Notifications
@@ -337,6 +323,81 @@ The different kind of notifications that can be currently received are:
 * ``REMOVE`` -> when an object is removed from a collection
 * ``SET`` -> when a value is set in an attribute/reference
 * ``UNSET`` -> when a value is removed from an attribute/reference
+
+
+Deep Journey Inside PyEcore
+===========================
+
+This section will provide some explanation of how PyEcore works.
+
+EClasse Instances as Factories
+------------------------------
+
+The most noticeable difference between PyEcore and Java-EMF implementation is
+the fact that there is no factories (as you probably already seen). Each EClass
+instance is in itself a factory. This allows you to do this kind of tricks:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> eobject = A()  # We create an A instance
+    >>> eobject.eClass
+    <EClass name="A">
+    >>> eobject2 = eobject.eClass()  # We create another A instance
+    >>> assert isinstance(eobject2, eobject.__class__)
+    >>> from pyecore.ecore import EcoreUtils
+    >>> assert EcoreUtils.isinstance(eobject2, A)
+
+
+In fact, each EClass instance create a new Python ``class`` named after the
+EClass name and keep a strong relationship towards it. Moreover, EClass
+implements is a ``callable`` and each time ``()`` is called on an EClass
+instance, an instance of the associated Python ``class`` is created. Here is a
+small example:
+
+.. code-block:: python
+
+    >>> MyClass = EClass('MyClass')  # We create an EClass instance
+    >>> type(MyClass)
+    pyecore.ecore.EClass
+    >>> MyClass.python_class
+    pyecore.ecore.MyClass
+    >>> myclass_instance = MyClass()  # MyClass is callable, creates an instance of the 'python_class' class
+    >>> myclass_instance
+    <pyecore.ecore.MyClass at 0x7f64b697df98>
+    >>> type(myclass_instance)
+    pyecore.ecore.MyClass
+    # We can access the EClass instance from the created instance and go back
+    >>> myclass_instance.eClass
+    <EClass name="MyClass">
+    >>> assert myclass_instance.eCla.
+
+    >>> assert myclass_instance.eClass.python_class is MyClass.python_class
+    >>> assert myclass_instance.eClass.python_class.eClass is MyClass
+    >>> assert myclass_instance.__class__ is MyClass.python_class
+    >>> assert myclass_instance.__class__.eClass is MyClass
+    >>> assert myclass_instance.__class__.eClass is myclass_instance.eClass
+
+
+The Python class hierarchie (inheritance tree) associated to the EClass instance
+
+.. code-block:: python
+
+    >>> B = EClass('B')  # in complement, we create a new B metaclass
+    >>> list(B.eAllSuperTypes())
+    []
+    >>> B.eSuperTypes.append(A)  # B inherits from A
+    >>> list(B.eAllSuperTypes())
+    {<EClass name="A">}
+    >>> B.python_class.mro()
+    [pyecore.ecore.B,
+     pyecore.ecore.A,
+     pyecore.ecore.EObject,
+     pyecore.ecore.ENotifier,
+     object]
+    >>> b_instance = B()
+    >>> assert isinstance(b, A.python_class)
+    >>> assert EcoreUtils.isinstance(b, A)
 
 
 Importing an Existing XMI Metamodel/Model
@@ -507,7 +568,8 @@ In the current state, the project implements:
 * select/reject on collections,
 * Eclipse XMI import (partially),
 * Eclipse XMI export (partially),
-* simple notification/Event system.
+* simple notification/Event system,
+* EOperations support.
 
 The XMI import/export are still in an early stage of developement: no cross
 resources references, not able to resolve file path uris and stuffs.
@@ -516,7 +578,6 @@ The things that are in the roadmap:
 
 * documentation,
 * code generator for the static part,
-* EOperations support (static is ok, but not the dynamic metamodel, not in a proper way),
 * object deletion,
 * command system (?).
 

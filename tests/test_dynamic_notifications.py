@@ -107,6 +107,7 @@ class ObserverCounter(EObserver):
         self.calls = 0
 
     def notifyChanged(self, notification):
+        self.repr = notification.__repr__()
         self.calls += 1
         self.kind = notification.kind
         self.value = notification.new
