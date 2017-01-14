@@ -728,7 +728,7 @@ class EClass(EClassifier):
                                         '__setattr__': Core.setattr
                                       })
         self.supertypes_updater = EObserver(self)
-        self.supertypes_updater.notifyChanged = self.__update_supertypes
+        self.supertypes_updater.notifyChanged = self.__update
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
@@ -738,7 +738,7 @@ class EClass(EClassifier):
         obj._isready = True
         return obj
 
-    def __update_supertypes(self, notif):
+    def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
         if hasattr(self.python_class, '_staticEClass'):
             return
