@@ -1,0 +1,8 @@
+= Ecore to PyEcore Generator
+
+This directory contains the Ecore2PyEcore generator which is a direct generator
+from `.ecore` files to a static PyEcore metamodel definition.
+
+The generator is provided as a single MTL (Acceleo) script that can be run in
+Eclipse. It has been written and developed in GenMyModel which can be used for
+the `.ecore` metamodel definition and the static PyEcore code generation.

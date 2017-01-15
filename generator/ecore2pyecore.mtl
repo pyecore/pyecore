@@ -1,0 +1,92 @@
+[module ecore2pyecore('http://www.eclipse.org/emf/2002/Ecore')/]
+
+
+[template public generate(p : EPackage) ? (p.eSuperPackage = null)]
+[comment @main/]
+
+[comment generate __init__/]
+[file (p.name + '/' + '__init__.py', false, 'UTF-8')]
+import pyecore.ecore as Ecore
+
+from . import [p.name/]
+[for (sub : EPackage | p.eSubpackages)]
+from . import [sub.name/]
+[/for]
+
+name = '[p.name/]'
+nsURI = '[p.nsURI/]'
+prefix = '[p.nsPrefix/]'
+
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eSubPackages = ['['/][p.eSubpackages.name->sep(', ')/]]
+eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
+
+otherClassifiers = ['[]'/]
+for classif in otherClassifiers:
+    eClassifiers['['/]classif.name] = classif
+    classif._container = metaroot
+
+for classif in eClassifiers.values():
+    eClass.eClassifiers.append(classif.eClass)
+
+for subpack in eSubpackages:
+    eClass.eSubpackages.append(subpack.eClass)
+
+[/file]
+
+[comment generate module /]
+[file (p.name + '/' + p.name + '.py', false, 'UTF-8')]
+from pyecore.ecore import *
+import pyecore.ecore as Ecore
+
+[for (c : EClassifier | p.eClassifiers->filter(EEnum))]
+[c.generate()/]
+[/for]
+[for (c : EClassifier | p.eClassifiers->filter(EClass)->sortedBy(nbSuperTypes()))]
+[c.generate()/]
+[/for]
+[/file]
+[/template]
+
+
+[template public generate(c : EClassifier)/]
+[template public generate(e : EEnum)]
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals)]'[l.name/]',[/for]])
+[/template]
+
+
+[template public generate(c : EClass)]
+
+
+[c.classHeader()/]:
+    [for (a : EAttribute | c.eAttributes) after('\n')]
+    [a.generate()/]
+    [/for]
+     def __init__(self):
+        super().__init__()
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
+class [c.name/]([c.eSuperTypes.name->sep(', ')/])
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
+class [c.name/](EObject, metaclass=MetaEClass)
+[/template]
+
+
+[template public generate(a : EAttribute)]
+[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (not a.ordered)], ordered=False[/if][if (not a.unique)], unique=False[/if])
+[/template]
+
+
+
+
+[query public nbSuperTypes(c : EClass) : Integer =
+    if c.eSuperTypes->isEmpty() then 0
+    else c.eSuperTypes->size() + c.eSuperTypes.nbSuperTypes()->sum()
+    endif
+/]
