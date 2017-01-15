@@ -1,17 +1,28 @@
 [module ecore2pyecore('http://www.eclipse.org/emf/2002/Ecore')/]
 
 
-[template public generate(p : EPackage) ? (p.eSuperPackage = null)]
+[template public generate(p : EPackage)]
 [comment @main/]
 
 [comment generate __init__/]
-[file (p.name + '/' + '__init__.py', false, 'UTF-8')]
+[file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
 import pyecore.ecore as Ecore
 
+from [p.name/] import [p.eClassifiers.name->sep(', ')/]
+
 from . import [p.name/]
+[if (p.eSuperPackage <> null)]from .. import [p.eSuperPackage.name/]
+[/if]
 [for (sub : EPackage | p.eSubpackages)]
 from . import [sub.name/]
 [/for]
+
+[if (p.eSuperPackage = null)]
+[for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null))]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[/for]
+[/if]
+
 
 name = '[p.name/]'
 nsURI = '[p.nsURI/]'
@@ -22,7 +33,7 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 eSubPackages = ['['/][p.eSubpackages.name->sep(', ')/]]
 eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
 
-otherClassifiers = ['[]'/]
+otherClassifiers = ['['/][p.eClassifiers->filter(EEnum).name->sep(', ')/]]
 for classif in otherClassifiers:
     eClassifiers['['/]classif.name] = classif
     classif._container = metaroot
@@ -36,10 +47,13 @@ for subpack in eSubpackages:
 [/file]
 
 [comment generate module /]
-[file (p.name + '/' + p.name + '.py', false, 'UTF-8')]
+[file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
 
+[for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
+from [c.ePackage.qualifiedName()/] import [c.name/]
+[/for]
 [for (c : EClassifier | p.eClassifiers->filter(EEnum))]
 [c.generate()/]
 [/for]
@@ -59,9 +73,14 @@ import pyecore.ecore as Ecore
 [template public generate(c : EClass)]
 
 
+[if (c.abstract)]@abstract
+[/if]
 [c.classHeader()/]:
-    [for (a : EAttribute | c.eAttributes) after('\n')]
+    [for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
     [a.generate()/]
+    [/for]
+    [for (r : EReference | c.eReferences) after('\n')]
+    [r.name/] = EReference([r.referenceQualifiers()/])
     [/for]
      def __init__(self):
         super().__init__()
@@ -83,10 +102,43 @@ class [c.name/](EObject, metaclass=MetaEClass)
 [/template]
 
 
+[template public referenceQualifiers(e : EReference) post(replaceAll('\n', '').replaceAll('placeholder,\\ ?', ''))]
+placeholder
+[if (e.many)], upper=-1[/if]
+[if (not e.ordered)], ordered=False[/if]
+[if (not e.unique)], unique=False[/if]
+[if (e.containment)], containment=True[/if]
+[/template]
+
+
+[query public importFromOtherPackages(p : EPackage) : OrderedSet(EClassifier) =
+    p.eClassifiers
+            ->filter(EClass)
+            .eAllSuperTypes
+            ->flatten()
+            ->select(c | c.ePackage <> p)
+            ->addAll(
+                p.eClassifiers
+                ->filter(EClass)
+                .eAttributes
+                .eType
+                ->select(e | e.oclIsKindOf(EEnum) and e.ePackage <> p))
+            ->asOrderedSet()
+/]
 
 
 [query public nbSuperTypes(c : EClass) : Integer =
-    if c.eSuperTypes->isEmpty() then 0
-    else c.eSuperTypes->size() + c.eSuperTypes.nbSuperTypes()->sum()
+    c.eAllSuperTypes->size()
+/]
+
+
+[query public qualifiedName(e : ENamedElement) : String =
+    if (e.eContainer() = null) then e.name
+    else e.eContainer().oclAsType(ENamedElement).qualifiedName() + '.' + e.name
     endif
+/]
+
+
+[query public qualifiedPath(e : ENamedElement) : String =
+    e.qualifiedName().replaceAll('\\.', '/')
 /]
