@@ -17,12 +17,6 @@ from . import [p.name/]
 from . import [sub.name/]
 [/for]
 
-[if (p.eSuperPackage = null)]
-[for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null))]
-[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
-[/for]
-[/if]
-
 
 name = '[p.name/]'
 nsURI = '[p.nsURI/]'
@@ -33,6 +27,22 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 eSubPackages = ['['/][p.eSubpackages.name->sep(', ')/]]
 eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
 
+
+[if (p.eSuperPackage = null)]
+[for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null)) before('# Non opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[/for]
+[let opposite : Sequence(EReference) = p.eAllContents(EReference)->select(eOpposite <> null)]
+[for (e : EReference | opposite) before('# opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[if (e.isOppositeBeforeMeIn(opposite))]
+[e.eContainingClass.name/].[e.name/].eOpposite = [e.eOpposite.eContainingClass.name/].[e.eOpposite.name/]
+[/if]
+[/for]
+[/let]
+[/if]
+
+# Manage all other EClassifiers (EEnum, EDatatypes...)
 otherClassifiers = ['['/][p.eClassifiers->filter(EEnum).name->sep(', ')/]]
 for classif in otherClassifiers:
     eClassifiers['['/]classif.name] = classif
@@ -141,4 +151,9 @@ placeholder
 
 [query public qualifiedPath(e : ENamedElement) : String =
     e.qualifiedName().replaceAll('\\.', '/')
+/]
+
+
+[query public isOppositeBeforeMeIn(e : EReference, list : Sequence(EReference)) : Boolean =
+    list->indexOf(e.eOpposite) < list->indexOf(e)
 /]
