@@ -7,10 +7,11 @@
 [comment generate __init__/]
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
 import pyecore.ecore as Ecore
-from [p.name/] import [p.eClassifiers.name->sep(', ')/]
+from .[p.name/] import getEClassifier, eClassifiers
+from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
 [if (p.eSuperPackage = null)]
 [for (sub : EPackage | p.eAllContents(EPackage))]
-from [sub.qualifiedName()/] import [p.eAllContents(EReference).eType->select(ePackage = sub)->asOrderedSet().name->sep(', ')/]
+from [sub.qualifiedName().replaceAll('^[^.]+', '')/] import [p.eAllContents(EReference).eType->select(ePackage = sub)->asOrderedSet().name->sep(', ')/]
 [/for]
 [/if]
 from . import [p.name/]
@@ -24,11 +25,11 @@ __all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name
 
 name = '[p.name/]'
 nsURI = '[p.nsURI/]'
-prefix = '[p.nsPrefix/]'
+nsPrefix = '[p.nsPrefix/]'
 
 eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 
-eSubPackages = ['['/][p.eSubpackages.name->sep(', ')/]]
+eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
 eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
 
 
@@ -50,7 +51,7 @@ eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[
 otherClassifiers = ['['/][p.eClassifiers->filter(EEnum).name->sep(', ')/]]
 for classif in otherClassifiers:
     eClassifiers['['/]classif.name] = classif
-    classif._container = metaroot
+    classif._container = [p.name/]
 
 for classif in eClassifiers.values():
     eClass.eClassifiers.append(classif.eClass)
@@ -96,7 +97,7 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
     [for (r : EReference | c.eReferences) after('\n')]
     [r.name/] = EReference([r.referenceQualifiers()/])
     [/for]
-     def __init__(self):
+    def __init__(self):
         super().__init__()
 [/template]
 
@@ -112,11 +113,11 @@ class [c.name/](EObject, metaclass=MetaEClass)
 
 
 [template public generate(a : EAttribute)]
-[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (not a.ordered)], ordered=False[/if][if (not a.unique)], unique=False[/if])
+[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
-[template public referenceQualifiers(e : EReference) post(replaceAll('\n', '').replaceAll('placeholder,\\ ?', ''))]
+[template public referenceQualifiers(e : EReference) post(replaceAll('\n', '').replaceAll('placeholder,?\\ ?', ''))]
 placeholder
 [if (e.many)], upper=-1[/if]
 [if (not e.ordered)], ordered=False[/if]
