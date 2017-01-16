@@ -1019,3 +1019,11 @@ Core.register_classifier(EJavaObject)
 
 EObject.__getattribute__ = Core.getattr
 EObject.__setattr__ = Core.setattr
+
+__all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
+           'EPackage', 'EGenericType', 'ETypeParameter', 'ETypedElement',
+           'EClassifier', 'EDataType', 'EEnum', 'EEnumLiteral', 'EParameter',
+           'EOperation', 'EClass', 'EStructuralFeature', 'EAttribute',
+           'EReference', 'EString', 'EBoolean', 'EInteger',
+           'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
+           'EJavaObject', 'abstract', 'MetaEClass']
