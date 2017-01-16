@@ -7,9 +7,12 @@
 [comment generate __init__/]
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
 import pyecore.ecore as Ecore
-
 from [p.name/] import [p.eClassifiers.name->sep(', ')/]
-
+[if (p.eSuperPackage = null)]
+[for (sub : EPackage | p.eAllContents(EPackage))]
+from [sub.qualifiedName()/] import [p.eAllContents(EReference).eType->select(ePackage = sub)->asOrderedSet().name->sep(', ')/]
+[/for]
+[/if]
 from . import [p.name/]
 [if (p.eSuperPackage <> null)]from .. import [p.eSuperPackage.name/]
 [/if]
@@ -17,6 +20,7 @@ from . import [p.name/]
 from . import [sub.name/]
 [/for]
 
+__all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name/]'[/for]]
 
 name = '[p.name/]'
 nsURI = '[p.nsURI/]'
