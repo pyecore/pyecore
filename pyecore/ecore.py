@@ -164,6 +164,8 @@ class Core(object):
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
             elif inspect.isfunction(v):
+                if k == '__init__':
+                    continue
                 argspect = inspect.getargspec(v)
                 args = argspect.args
                 if len(args) < 1 or args[0] != 'self':
