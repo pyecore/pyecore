@@ -1026,4 +1026,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EOperation', 'EClass', 'EStructuralFeature', 'EAttribute',
            'EReference', 'EString', 'EBoolean', 'EInteger',
            'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
-           'EJavaObject', 'abstract', 'MetaEClass']
+           'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
+           'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError']
