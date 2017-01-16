@@ -100,7 +100,7 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
     def __init__(self):
         super().__init__()[for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
     def [o.name/](self, [o.eParameters.name->sep(', ')/]):
-        NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
+        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
 [/template]
 
 
