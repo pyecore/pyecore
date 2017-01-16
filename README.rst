@@ -162,7 +162,10 @@ Static Metamodels
 =================
 
 The static definition of a metamodel using PyEcore mostly relies on the
-classical classes definitions in Python:
+classical classes definitions in Python. The following example is more related
+to a 'by hand' static metamodel definition. This way of producing metamodels is
+kinda deprecated as a MTL generator (in ``/generator``) automatically produces a
+static metamodel from the ``.ecore`` definition.
 
 .. code-block:: python
 
@@ -205,6 +208,11 @@ classical classes definitions in Python:
     >>> c1 = C()
     >>> c1.toMy = instance1
     >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
+
+
+The automatic code generator defines a Python package hierarchie instead of
+only a Python module. This allows more freedom for dedicated operations and
+references between packages.
 
 
 Static/Dynamic ``EOperation``
@@ -569,7 +577,8 @@ In the current state, the project implements:
 * Eclipse XMI import (partially),
 * Eclipse XMI export (partially),
 * simple notification/Event system,
-* EOperations support.
+* EOperations support,
+* code generator for the static part.
 
 The XMI import/export are still in an early stage of developement: no cross
 resources references, not able to resolve file path uris and stuffs.
@@ -577,7 +586,6 @@ resources references, not able to resolve file path uris and stuffs.
 The things that are in the roadmap:
 
 * documentation,
-* code generator for the static part,
 * object deletion,
 * command system (?).
 
