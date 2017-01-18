@@ -100,7 +100,14 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
     [r.name/] = EReference([r.referenceQualifiers()/])
     [/for]
     def __init__(self):
-        super().__init__()[for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
+        super().__init__()[for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
+    @property
+    def [d.name/](self):
+        return self._[d.name/]
+
+    @[d.name/].setter
+    def [d.name/](self, value):
+        self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
     def [o.name/](self, [o.eParameters.name->sep(', ')/]):
         raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
 [/template]
@@ -116,8 +123,13 @@ class [c.name/](EObject, metaclass=MetaEClass)
 [/template]
 
 
-[template public generate(a : EAttribute)]
+[template public generate(a : EAttribute) ? (not derived)]
 [a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+
+[template public generate(a : EAttribute) ? (derived)]
+_[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
