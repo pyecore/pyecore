@@ -1,6 +1,6 @@
 from uuid import uuid4
 import urllib.request
-import pyecore.ecore as Ecore
+from .. import ecore as Ecore
 
 global_registry = {}
 

@@ -1,6 +1,6 @@
 from lxml import etree
 from .resource import Resource
-import pyecore.ecore as Ecore
+from .. import ecore as Ecore
 
 xsi = 'xsi'
 xsi_url = 'http://www.w3.org/2001/XMLSchema-instance'
