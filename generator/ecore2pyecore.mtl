@@ -1,0 +1,180 @@
+[module ecore2pyecore('http://www.eclipse.org/emf/2002/Ecore')/]
+
+
+[template public generate(p : EPackage)]
+[comment @main/]
+
+[comment generate __init__/]
+[file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
+import pyecore.ecore as Ecore
+from .[p.name/] import getEClassifier, eClassifiers
+from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
+[if (p.eSuperPackage = null)]
+[let containingTypes : Sequence(EClassifier) = p.eAllContents(EReference).eContainingClass]
+[for (sub : EPackage | p.eAllContents(EPackage))]
+from [sub.qualifiedName().replaceAll('^[^.]+', '')/] import [p.eAllContents(EReference).eType->union(containingTypes)->select(ePackage = sub).name->asOrderedSet()->sep(', ')/]
+[/for]
+[/let]
+[/if]
+from . import [p.name/]
+[if (p.eSuperPackage <> null)]from .. import [p.eSuperPackage.name/]
+[/if]
+[for (sub : EPackage | p.eSubpackages)]
+from . import [sub.name/]
+[/for]
+
+__all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name/]'[/for]]
+
+name = '[p.name/]'
+nsURI = '[p.nsURI/]'
+nsPrefix = '[p.nsPrefix/]'
+
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
+eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
+
+
+[if (p.eSuperPackage = null)]
+[for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null)) before('# Non opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[/for]
+[let opposite : Sequence(EReference) = p.eAllContents(EReference)->select(eOpposite <> null)]
+[for (e : EReference | opposite) before('# opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[if (e.isOppositeBeforeMeIn(opposite))]
+[e.eContainingClass.name/].[e.name/].eOpposite = [e.eOpposite.eContainingClass.name/].[e.eOpposite.name/]
+[/if]
+[/for]
+[/let]
+[/if]
+
+# Manage all other EClassifiers (EEnum, EDatatypes...)
+otherClassifiers = ['['/][p.eClassifiers->filter(EEnum).name->sep(', ')/]]
+for classif in otherClassifiers:
+    eClassifiers['['/]classif.name] = classif
+    classif._container = [p.name/]
+
+for classif in eClassifiers.values():
+    eClass.eClassifiers.append(classif.eClass)
+
+for subpack in eSubpackages:
+    eClass.eSubpackages.append(subpack.eClass)
+
+[/file]
+
+[comment generate module /]
+[file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
+from pyecore.ecore import *
+import pyecore.ecore as Ecore
+
+[for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
+from [c.ePackage.qualifiedName()/] import [c.name/]
+[/for]
+[for (c : EClassifier | p.eClassifiers->filter(EEnum))]
+[c.generate()/]
+[/for]
+[for (c : EClassifier | p.eClassifiers->filter(EClass)->sortedBy(nbSuperTypes()))]
+[c.generate()/]
+[/for]
+[/file]
+[/template]
+
+
+[template public generate(c : EClassifier)/]
+[template public generate(e : EEnum)]
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals)]'[l.name/]',[/for]])
+[/template]
+
+
+[template public generate(c : EClass)]
+
+
+[if (c.abstract)]@abstract
+[/if]
+[c.classHeader()/]:
+    [for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
+    [a.generate()/]
+    [/for]
+    [for (r : EReference | c.eReferences) after('\n')]
+    [r.name/] = EReference([r.referenceQualifiers()/])
+    [/for]
+    def __init__(self):
+        super().__init__()[for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
+    @property
+    def [d.name/](self):
+        return self._[d.name/]
+
+    @[d.name/].setter
+    def [d.name/](self, value):
+        self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
+    def [o.name/](self, [o.eParameters.name->sep(', ')/]):
+        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
+class [c.name/]([c.eSuperTypes.name->sep(', ')/])
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
+class [c.name/](EObject, metaclass=MetaEClass)
+[/template]
+
+
+[template public generate(a : EAttribute) ? (not derived)]
+[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+
+[template public generate(a : EAttribute) ? (derived)]
+_[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+
+[template public referenceQualifiers(e : EReference) post(replaceAll('\n', '').replaceAll('placeholder,?\\ ?', ''))]
+placeholder
+[if (e.many)], upper=-1[/if]
+[if (not e.ordered)], ordered=False[/if]
+[if (not e.unique)], unique=False[/if]
+[if (e.containment)], containment=True[/if]
+[/template]
+
+
+[query public importFromOtherPackages(p : EPackage) : OrderedSet(EClassifier) =
+    p.eClassifiers
+            ->filter(EClass)
+            .eAllSuperTypes
+            ->flatten()
+            ->select(c | c.ePackage <> p)
+            ->addAll(
+                p.eClassifiers
+                ->filter(EClass)
+                .eAttributes
+                .eType
+                ->select(e | e.oclIsKindOf(EEnum) and e.ePackage <> p))
+            ->asOrderedSet()
+/]
+
+
+[query public nbSuperTypes(c : EClass) : Integer =
+    c.eAllSuperTypes->size()
+/]
+
+
+[query public qualifiedName(e : ENamedElement) : String =
+    if (e.eContainer() = null) then e.name
+    else e.eContainer().oclAsType(ENamedElement).qualifiedName() + '.' + e.name
+    endif
+/]
+
+
+[query public qualifiedPath(e : ENamedElement) : String =
+    e.qualifiedName().replaceAll('\\.', '/')
+/]
+
+
+[query public isOppositeBeforeMeIn(e : EReference, list : Sequence(EReference)) : Boolean =
+    list->indexOf(e.eOpposite) < list->indexOf(e)
+/]

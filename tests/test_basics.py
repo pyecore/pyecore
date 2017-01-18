@@ -1,16 +1,17 @@
 import pytest
 from pyecore.ecore import *
+import pyecore.ecore as Ecore
 
 def test_ecore_URI():
-    assert nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
+    assert Ecore.nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
 
 
 def test_get_existing_EClassifier():
-    assert getEClassifier('EClass')
+    assert Ecore.getEClassifier('EClass')
 
 
 def test_get_nonexisting_EClassifier():
-    assert not getEClassifier('EEClass')
+    assert not Ecore.getEClassifier('EEClass')
 
 
 def test_ecoreutil_isinstance_none():
@@ -126,11 +127,11 @@ def test_estructuralfeature_repr():
 
 
 def test_urifragment_default():
-    assert default_eURIFragment() == '/'
+    assert Ecore.default_eURIFragment() == '/'
 
 
 def test_urifragment_ecore():
-    assert eURIFragment() == '#/'
+    assert Ecore.eURIFragment() == '#/'
 
 
 def test_urifragment_static_ecore():

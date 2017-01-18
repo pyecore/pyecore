@@ -164,6 +164,8 @@ class Core(object):
                     v.name = k
                 cls.eClass.eStructuralFeatures.append(v)
             elif inspect.isfunction(v):
+                if k == '__init__':
+                    continue
                 argspect = inspect.getargspec(v)
                 args = argspect.args
                 if len(args) < 1 or args[0] != 'self':
@@ -216,9 +218,11 @@ class EObject(ENotifer):
         _super = _super or self.__class__
         if _super is EObject:
             return
+        for super_class in _super.__bases__:
+            super_class.__initmetattr__(self, super_class)
         for key, value in _super.__dict__.items():
             if isinstance(value, EAttribute):
-                object.__setattr__(self, key, value)
+                object.__setattr__(self, key, value.eType.default_value)
             elif isinstance(value, EReference):
                 if value.many:
                     object.__setattr__(self,
@@ -226,8 +230,6 @@ class EObject(ENotifer):
                                        ECollection.create(self, value))
                 else:
                     object.__setattr__(self, key, None)
-        for super_class in _super.__bases__:
-            super_class.__initmetattr__(self, super_class)
 
     def eContainer(self):
         return self._container
@@ -856,6 +858,7 @@ class MetaEClass(type):
         Core.register_classifier(cls, promote=True)
         cls.__getattribute__ = Core.getattr
         cls.__setattr__ = Core.setattr
+        cls._staticEClass = True
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
@@ -865,6 +868,7 @@ class MetaEClass(type):
         # init instances by reflection
         if not hasattr(obj, '_isready'):
             EObject.__subinit__(obj)
+        # required for 'at runtime' added features
         for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
             if efeat.name in obj.__dict__:
                 continue
@@ -1019,3 +1023,12 @@ Core.register_classifier(EJavaObject)
 
 EObject.__getattribute__ = Core.getattr
 EObject.__setattr__ = Core.setattr
+
+__all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
+           'EPackage', 'EGenericType', 'ETypeParameter', 'ETypedElement',
+           'EClassifier', 'EDataType', 'EEnum', 'EEnumLiteral', 'EParameter',
+           'EOperation', 'EClass', 'EStructuralFeature', 'EAttribute',
+           'EReference', 'EString', 'EBoolean', 'EInteger',
+           'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
+           'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
+           'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError']
