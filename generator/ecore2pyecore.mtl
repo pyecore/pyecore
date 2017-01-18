@@ -129,7 +129,7 @@ class [c.name/](EObject, metaclass=MetaEClass)
 
 
 [template public generate(a : EAttribute) ? (derived)]
-_[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+_[a.name/] = EAttribute(name='[a.name/]', eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
