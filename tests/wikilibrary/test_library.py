@@ -27,6 +27,13 @@ def test_create_writer():
     assert smith.books == []
 
 
+def test_book_defaultvalue():
+    book = library.Book()
+    assert book.category is library.BookCategory.ScienceFiction
+    assert book.pages == 0
+    assert book.title is Ecore.EString.default_value
+
+
 def test_link_writer2book():
     book = library.Book()
     smith = library.Writer()
