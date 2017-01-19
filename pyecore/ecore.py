@@ -116,9 +116,11 @@ class Core(object):
             if feat.containment and isinstance(value, EObject):
                 value._container = self
                 value._containment_feature = feat
+                value._eresource = self.eResource
             elif feat.containment and not value and previous_value:
                 previous_value._container = None
                 previous_value._containment_feature = None
+                previous_value._eresource = None
             if feat.eOpposite and isinstance(value, EObject):
                 eOpposite = feat.eOpposite
                 previous_value = value.__getattribute__(eOpposite.name)
@@ -193,10 +195,15 @@ class Core(object):
         object.__setattr__(cls.eClass, 'ePackage', epackage)
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
+        resource = None
+        if hasattr(epackage, 'eResource'):
+            resource = epackage.eResource
         if isinstance(cls, EDataType):
             cls._container = epackage
+            cls._eresource = resource
         else:
             cls.eClass._container = epackage
+            cls._eresource = resource
 
 
 class EObject(ENotifer):
@@ -327,9 +334,11 @@ class ECollection(object):
         if self._efeature.containment and not previous_value:
             value._container = self._owner
             value._containment_feature = self._efeature
+            value._eresource = self._owner.eResource
         elif self._efeature.containment and previous_value:
             previous_value._container = value
             previous_value._containment_feature = value
+            previous_value._eresource = value.eResource if value else None
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
