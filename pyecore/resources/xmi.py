@@ -160,7 +160,10 @@ class XMIResource(Resource):
             annotation_value = node.get('value')
             parent_eobj.details[annotation_key] = annotation_value
             if annotation_key == 'documentation':
-                parent_eobj.eContainer().__doc__ = annotation_value
+                container = parent_eobj.eContainer()
+                if hasattr(container, 'python_class'):
+                    container = container.python_class
+                container.__doc__ = annotation_value
             return (None, None, [], [])
         else:
             eobject = etype()
