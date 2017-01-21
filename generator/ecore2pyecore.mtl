@@ -92,7 +92,7 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
 
 [if (c.abstract)]@abstract
 [/if]
-[c.classHeader()/]:
+[c.classHeader()/]
     [for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
     [a.generate()/]
     [/for]
@@ -109,17 +109,29 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
     def [d.name/](self, value):
         self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
     def [o.name/](self, [o.eParameters.name->sep(', ')/]):
+        [if (c.getDocumentation() <> '')]
+        """
+        [c.getDocumentation()/]
+        """[/if]
         raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
 [/template]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
-class [c.name/]([c.eSuperTypes.name->sep(', ')/])
+class [c.name/]([c.eSuperTypes.name->sep(', ')/]):
+    [if (c.getDocumentation() <> '')]
+    """
+    [c.getDocumentation()/]
+    """[/if]
 [/template]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
-class [c.name/](EObject, metaclass=MetaEClass)
+class [c.name/](EObject, metaclass=MetaEClass):
+    [if (c.getDocumentation() <> '')]
+    """
+    [c.getDocumentation()/]
+    """[/if]
 [/template]
 
 
@@ -177,4 +189,12 @@ placeholder
 
 [query public isOppositeBeforeMeIn(e : EReference, list : Sequence(EReference)) : Boolean =
     list->indexOf(e.eOpposite) < list->indexOf(e)
+/]
+
+
+[query public getDocumentation(m : EModelElement) : String =
+    let annotation : EAnnotation = m.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
+    in if annotation = null then ''
+       else annotation.details->select(key = 'documentation').value->any(true)
+       endif
 /]
