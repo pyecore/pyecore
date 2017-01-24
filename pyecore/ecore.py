@@ -697,7 +697,7 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
 
     def __repr__(self):
-        return '{0}: {1}'.format(self.name, self.eType)
+        return '<EStructuralFeature {0}: {1}>'.format(self.name, self.eType)
 
 
 class EAttribute(EStructuralFeature):
