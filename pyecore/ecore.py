@@ -329,14 +329,17 @@ class ECollection(object):
     def _update_container(self, value, previous_value=None):
         if not isinstance(self._efeature, EReference):
             return
-        if self._efeature.containment and not previous_value:
-            value._container = self._owner
-            value._containment_feature = self._efeature
-            value._eresource = self._owner.eResource
-        elif self._efeature.containment and previous_value:
-            previous_value._container = value
-            previous_value._containment_feature = value
-            previous_value._eresource = value.eResource if value else None
+        if not self._efeature.containment:
+            return
+        if not previous_value:
+            object.__setattr__(value, '_container', self._owner)
+            object.__setattr__(value, '_containment_feature', self._efeature)
+            object.__setattr__(value, '_eresource', self._owner.eResource)
+        elif previous_value:
+            object.__setattr__(previous_value, '_container', value)
+            object.__setattr__(previous_value, '_containment_feature', value)
+            object.__setattr__(previous_value, '_eresource',
+                               value.eResource if value else None)
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
