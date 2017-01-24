@@ -196,15 +196,12 @@ class Core(object):
         object.__setattr__(cls.eClass, 'ePackage', epackage)
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
-        resource = None
         if hasattr(epackage, 'eResource'):
-            resource = epackage.eResource
+            cls._eresource = epackage.eResource
         if isinstance(cls, EDataType):
             cls._container = epackage
-            cls._eresource = resource
         else:
             cls.eClass._container = epackage
-            cls._eresource = resource
 
 
 class EObject(ENotifer):
