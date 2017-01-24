@@ -6,6 +6,7 @@ import keyword
 import inspect
 
 
+name = 'ecore'
 nsPrefix = 'ecore'
 nsURI = 'http://www.eclipse.org/emf/2002/Ecore'
 
@@ -1000,15 +1001,11 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
 
-Core._promote(EModelElement)
-Core._promote(ENamedElement)
-Core._promote(EAnnotation)
-Core._promote(EPackage)
-eClass = EPackage.eClass
-Core.register_classifier(EModelElement)
-Core.register_classifier(ENamedElement)
-Core.register_classifier(EAnnotation)
-Core.register_classifier(EPackage)
+eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+Core.register_classifier(EModelElement, promote=True)
+Core.register_classifier(ENamedElement, promote=True)
+Core.register_classifier(EAnnotation, promote=True)
+Core.register_classifier(EPackage, promote=True)
 Core.register_classifier(EGenericType, promote=True)
 Core.register_classifier(ETypeParameter, promote=True)
 Core.register_classifier(ETypedElement, promote=True)

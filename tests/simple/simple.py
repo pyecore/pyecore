@@ -4,9 +4,11 @@ from pyecore.ecore import EObject, EAttribute, EString, EEnum, EReference, \
                           MetaEClass, EInteger, abstract
 
 
+name = 'simple'
 nsPrefix = 'simple'
 nsURI = 'http://simple/1.0'
 
+eClass = Ecore.EPackage(name=name, nsPrefix=nsPrefix, nsURI=nsURI)
 
 @abstract
 class AbstractA(EObject, metaclass=MetaEClass):
