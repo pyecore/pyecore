@@ -520,22 +520,6 @@ class ETypedElement(ENamedElement):
         self.unique = unique
         self.required = required
 
-    # @property
-    # def upper(self):
-    #     return self.upperBound
-    #
-    # @upper.setter
-    # def upper(self, value):
-    #     self.upperBound = value
-    #
-    # @property
-    # def lower(self):
-    #     return self.lowerBound
-    #
-    # @lower.setter
-    # def lower(self, value):
-    #     self.lowerBound = value
-
     @property
     def many(self):
         return int(self.upperBound) > 1 or int(self.upperBound) < 0
@@ -723,13 +707,21 @@ class EReference(EStructuralFeature):
                          upper=upper, derived=derived)
         self.containment = containment
         self.eOpposite = eOpposite
-        if eOpposite:
-            eOpposite.eOpposite = self
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
             self.eType = eType.eClass
 
     def get_default_value(self):
         return None
+
+    @property
+    def eOpposite(self):
+        return self._eop
+
+    @eOpposite.setter
+    def eOpposite(self, value):
+        self._eop = value
+        if value:
+            value._eop = self
 
 
 class EClass(EClassifier):
@@ -972,7 +964,7 @@ EStructuralFeature.eContainingClass = \
                               eOpposite=EClass.eStructuralFeatures)
 
 EReference.containment = EAttribute('containment', EBoolean)
-EReference.eOpposite = EReference('eOpposite', EReference)
+EReference._eOpposite = EReference('eOpposite', EReference)
 EReference.resolveProxies = EAttribute('resolveProxies', EBoolean)
 
 EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
@@ -983,15 +975,15 @@ EEnumLiteral.name = EAttribute('name', EString)
 EEnumLiteral.value = EAttribute('value', EInteger)
 EEnumLiteral.literal = EAttribute('literal', EString)
 
-EStructuralFeature.eContainingClass = \
-                   EReference('eContainingClass', EClass,
-                              eOpposite=EClass.eOperations)
+EOperation.eContainingClass = EReference('eContainingClass', EClass,
+                                         eOpposite=EClass.eOperations)
 EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                         upper=-1, containment=True)
 
-EParameter.eOperation = EReference('eOperation', EOperation)
+EParameter.eOperation = EReference('eOperation', EOperation,
+                                   eOpposite=EOperation.eParameters)
 
 ETypeParameter.eBounds = EReference('eBounds', EGenericType,
                                     upper=-1, containment=True)
