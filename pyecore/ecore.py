@@ -687,6 +687,34 @@ class EStructuralFeature(ETypedElement):
     def name(self, name):
         self._name = name
 
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        name = self.name
+        if name not in instance.__dict__.keys():
+            if self.many:
+                new_value = ECollection.create(owner, self)
+            else:
+                new_value = EValue(owner, self)
+            instance.__dict__[name] = new_value
+        value = instance.__dict__[name]
+        if isinstance(value, EValue):
+            return value.__get__(instance, owner)
+        else:
+            return value
+
+    def __set__(self, instance, value):
+        if isinstance(value, ECollection):
+            instance.__dict__[self.name] = value
+            return
+        if self.name not in instance.__dict__.keys():
+            evalue = EValue(instance, self)
+            instance.__dict__[self.name] = evalue
+        previous_value = instance.__dict__[self.name]
+        if isinstance(previous_value, ECollection):
+            raise BadValueError(got=value, expected=previous_value.__class__)
+        instance.__dict__[self.name].__set__(instance, value)
+
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
         name = self.name if hasattr(self, 'name') else None
@@ -751,8 +779,6 @@ class EClass(EClassifier):
                                       {
                                         'eClass': self,
                                         '_staticEClass': self._staticEClass,
-                                        # '__getattribute__': Core.getattr,
-                                        # '__setattr__': Core.setattr
                                       })
         self.supertypes_updater = EObserver(self)
         self.supertypes_updater.notifyChanged = self.__update
@@ -768,7 +794,7 @@ class EClass(EClassifier):
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
         if hasattr(self.python_class, '_staticEClass') \
-            and self.python_class._staticEClass:
+                and self.python_class._staticEClass:
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
@@ -871,8 +897,6 @@ class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
         Core.register_classifier(cls, promote=True)
-        # cls.__getattribute__ = Core.getattr
-        # cls.__setattr__ = Core.setattr
         cls._staticEClass = True
 
     def __call__(cls, *args, **kwargs):
@@ -901,44 +925,6 @@ def abstract(cls):
     cls.eClass.abstract = True
     return cls
 
-
-# EObject.__getattribute__ = Core.getattr
-# EObject.__setattr__ = Core.setattr
-# EStructuralFeature.__get__ = Core.get
-# EStructuralFeature.__set__ = Core.set
-
-def __get__(self, instance, owner=None):
-    if instance is None:
-        return self
-    name = self.name
-    if name not in instance.__dict__.keys():
-        if self.many:
-            new_value = ECollection.create(owner, self)
-        else:
-            new_value = EValue(owner, self)
-        instance.__dict__[name] = new_value
-    value = instance.__dict__[name]
-    if isinstance(value, EValue):
-        return value.__get__(instance, owner)
-    else:
-        return value
-
-def __set__(self, instance, value):
-    if isinstance(value, ECollection):
-        instance.__dict__[self.name] = value
-        return
-    if self.name not in instance.__dict__.keys():
-        owner = self.eContainer() if instance._staticEClass else instance
-        evalue = EValue(instance, self)
-        instance.__dict__[self.name] = evalue
-    previous_value = instance.__dict__[self.name]
-    if isinstance(previous_value, ECollection):
-        raise BadValueError(got=value, expected=previous_value.__class__)
-    instance.__dict__[self.name].__set__(instance, value)
-
-
-EStructuralFeature.__get__ = __get__
-EStructuralFeature.__set__ = __set__
 
 # meta-meta level
 EString = EDataType('EString', str)
@@ -1069,7 +1055,6 @@ Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
-
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
