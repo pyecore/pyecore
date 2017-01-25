@@ -59,7 +59,7 @@ class EcoreUtils(object):
                 return obj.eClass is _type \
                        or _type in obj.eClass.eAllSuperTypes()
             return False
-        return obj is _type or isinstance(obj, _type)
+        return isinstance(obj, _type) or obj is _type.eClass
 
     def getRoot(obj):
         if not obj:
@@ -71,102 +71,6 @@ class EcoreUtils(object):
 
 
 class Core(object):
-
-
-    def getattr(self, name):
-        print('__in getattr')
-        ex = None
-        try:
-            return object.__getattribute__(self, name)
-        except AttributeError as e:
-            ex = e
-        feature = self.eClass.findEStructuralFeature(name)
-        if not feature:
-            raise ex
-
-        # return feature
-        if feature.many:
-            new_list = ECollection.create(self, feature)
-            object.__setattr__(self, name, new_list)
-            return new_list
-        else:
-            evalue = EValue(self, feature)
-            default_value = feature.get_default_value()
-            evalue.value = default_value
-            object.__setattr__(self, name, evalue)
-            return evalue
-
-    def setattr(self, name, value):
-        try:
-            previous_value = Core.getattr(self, name)
-            if isinstance(previous_value, EValue):
-                previous_value.value = value
-                return
-        except AttributeError:
-            pass
-        object.__setattr__(self, name, value)
-        return
-        # feat = self.eClass.findEStructuralFeature(name)
-        # if not feat:
-        #     object.__setattr__(self, name, value)
-        #     return
-
-        if feat.many and not isinstance(value, ECollection):
-            raise BadValueError(got=value, expected=feat.eType)
-        elif not feat.many and not EcoreUtils.isinstance(value, feat.eType):
-            raise BadValueError(got=value, expected=feat.eType)
-
-        try:
-            previous_value = object.__getattribute__(self, feat.name)
-        except AttributeError:
-            previous_value = None
-        object.__setattr__(self, name, value)
-        notif = Notification(old=previous_value,
-                             new=value,
-                             feature=feat,
-                             kind=Kind.UNSET if value is None else Kind.SET)
-        self.notify(notif)
-        if self._isready and value != feat.get_default_value:
-            self._isset.add(feat)
-        if self._isready and isinstance(feat, EReference):
-            if feat.containment and isinstance(value, EObject):
-                value._container = self
-                value._containment_feature = feat
-                value._eresource = self.eResource
-            elif feat.containment and not value and previous_value:
-                previous_value._container = None
-                previous_value._containment_feature = None
-                previous_value._eresource = None
-            if feat.eOpposite and isinstance(value, EObject):
-                eOpposite = feat.eOpposite
-                previous_value = value.__getattribute__(eOpposite.name)
-                notif = Notification(new=self, feature=eOpposite)
-                if eOpposite.many:
-                    # value.__getattribute__(eOpposite.name)  # force resolve
-                    object.__getattribute__(value, eOpposite.name).append(self)
-                    notif.kind = Kind.ADD
-                    value.notify(notif)
-                else:
-                    object.__setattr__(value, eOpposite.name, self)
-                    notif.kind = Kind.SET
-                    value.notify(notif)
-                    if value._isready and \
-                            eOpposite.get_default_value != self:
-                        value._isset.add(eOpposite)
-            elif feat.eOpposite and value is None:
-                eOpposite = feat.eOpposite
-                if previous_value and eOpposite.many:
-                    object.__getattribute__(previous_value, eOpposite.name) \
-                          .remove(self)
-                    previous_value.notify(Notification(old=self,
-                                                       feature=eOpposite,
-                                                       kind=Kind.REMOVE))
-                elif previous_value:
-                    object.__setattr__(previous_value, eOpposite.name, None)
-                    previous_value.notify(Notification(old=self,
-                                                       feature=eOpposite,
-                                                       kind=Kind.UNSET))
-
     def _promote(cls, abstract=False):
         cls.eClass = EClass(cls.__name__, metainstance=cls)
         cls.eClass.abstract = abstract
@@ -221,9 +125,10 @@ class Core(object):
 
 class EObject(ENotifer):
     _staticEClass = True
+
     def __init__(self):
-        self.__initmetattr__()
         self.__subinit__()
+        self.__initmetattr__()
         self._isready = True
 
     def __subinit__(self):
@@ -325,49 +230,7 @@ class EObject(ENotifer):
         return self.eContainer().eRoot()
 
 
-class EValue(object):
-    def __init__(self, owner, efeature=None, value=None):
-        self._owner = owner
-        self._efeature = efeature
-        self._value = value
-
-    def check(self, value):
-        if not EcoreUtils.isinstance(value, self._efeature.eType):
-            raise BadValueError(value, self._efeature.eType)
-
-    def _update_container(self, value, previous_value=None):
-        if not isinstance(self._efeature, EReference):
-            return
-        if not self._efeature.containment:
-            return
-        if not previous_value:
-            value._container = self._owner
-            value._containment_feature = self._efeature
-            value._eresource = self._owner.eResource
-        elif previous_value:
-            previous_value._container = value
-            previous_value._containment_feature = value
-            previous_value._eresource = value.eResource if value else None
-
-    def __set__(self, instance, value):
-        self.check(value)
-        self._value = value
-
-    def __get__(self, obj, owner=None):
-        return self._value
-
-
-class ECollection(object):
-    def create(owner, feature):
-        if feature.ordered and feature.unique:
-            return EOrderedSet(owner, efeature=feature)
-        elif feature.ordered and not feature.unique:
-            return EList(owner, efeature=feature)
-        elif feature.unique:
-            return EOrderedSet(owner, efeature=feature)
-        else:
-            return EList(owner, efeature=feature)  # see for better implem
-
+class PyEcoreValue(object):
     def __init__(self, owner, efeature=None):
         self._owner = owner
         self._efeature = efeature
@@ -381,7 +244,7 @@ class ECollection(object):
             return
         if not self._efeature.containment:
             return
-        if not previous_value:
+        if isinstance(value, EObject):
             object.__setattr__(value, '_container', self._owner)
             object.__setattr__(value, '_containment_feature', self._efeature)
             object.__setattr__(value, '_eresource', self._owner.eResource)
@@ -390,6 +253,86 @@ class ECollection(object):
             object.__setattr__(previous_value, '_containment_feature', value)
             object.__setattr__(previous_value, '_eresource',
                                value.eResource if value else None)
+
+
+class EValue(PyEcoreValue):
+    def __init__(self, owner, efeature=None, value=None):
+        super().__init__(owner, efeature)
+        self._value = value
+
+    def check(self, value):
+        if not EcoreUtils.isinstance(value, self._efeature.eType):
+            raise BadValueError(value, self._efeature.eType)
+
+    def __get__(self, obj, owner=None):
+        return self._value
+
+    def __set__(self, instance, value, update_opposite=True):
+        self.check(value)
+        previous_value = self._value
+        self._value = value
+        # This case happend during meta-EReference initialization
+        if not self._owner or not isinstance(self._owner, EObject):
+            return
+        owner = self._owner
+        efeature = self._efeature
+        notif = Notification(old=previous_value,
+                             new=value,
+                             feature=efeature,
+                             kind=Kind.UNSET if value is None else Kind.SET)
+        owner.notify(notif)
+        if owner._isready and value != efeature.get_default_value:
+            owner._isset.add(efeature)
+
+        self._update_container(value, previous_value)
+        if not isinstance(efeature, EReference) or not update_opposite:
+            return
+
+        if efeature.eOpposite and isinstance(value, EObject):
+            eOpposite = efeature.eOpposite
+            previous_value = value.__getattribute__(eOpposite.name)
+            notif = Notification(new=owner, feature=eOpposite)
+            if eOpposite.many:
+                value.__getattribute__(eOpposite.name).append(owner)
+                notif.kind = Kind.ADD
+                value.notify(notif)
+            else:
+                # We disable the eOpposite update
+                value.__dict__[eOpposite.name]. \
+                      __set__(None, owner, update_opposite=False)
+                notif.kind = Kind.SET
+                value.notify(notif)
+                if value._isready and \
+                        eOpposite.get_default_value != owner:
+                    value._isset.add(eOpposite)
+        elif efeature.eOpposite and value is None:
+            eOpposite = efeature.eOpposite
+            if previous_value and eOpposite.many:
+                object.__getattribute__(previous_value, eOpposite.name) \
+                      .remove(owner)
+                previous_value.notify(Notification(old=owner,
+                                                   feature=eOpposite,
+                                                   kind=Kind.REMOVE))
+            elif previous_value:
+                object.__setattr__(previous_value, eOpposite.name, None)
+                previous_value.notify(Notification(old=owner,
+                                                   feature=eOpposite,
+                                                   kind=Kind.UNSET))
+
+
+class ECollection(PyEcoreValue):
+    def create(owner, feature):
+        if feature.ordered and feature.unique:
+            return EOrderedSet(owner, efeature=feature)
+        elif feature.ordered and not feature.unique:
+            return EList(owner, efeature=feature)
+        elif feature.unique:
+            return EOrderedSet(owner, efeature=feature)
+        else:
+            return EList(owner, efeature=feature)  # see for better implem
+
+    def __init__(self, owner, efeature=None):
+        super().__init__(owner, efeature)
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
@@ -412,7 +355,9 @@ class ECollection(object):
             else:
                 new_value = None if remove else new_value
                 kind = Kind.UNSET if remove else Kind.SET
-                object.__setattr__(owner, eOpposite.name, new_value)
+                object.__getattribute__(owner, eOpposite.name)  # Force load
+                owner.__dict__[eOpposite.name] \
+                     .__set__(None, new_value, update_opposite=False)
                 owner.notify(Notification(new=new_value,
                                           feature=eOpposite,
                                           kind=kind))
@@ -742,28 +687,6 @@ class EStructuralFeature(ETypedElement):
     def name(self, name):
         self._name = name
 
-    def __get__(self, instance, owner=None):
-        if instance is None:
-            return self
-        name = self.name
-        if name not in instance.__dict__.keys():
-            collection = ECollection.create(instance, self)
-            instance.__dict__[name] = collection
-        value = instance.__dict__[name]
-        if isinstance(value, EValue):
-            return value.__get__(instance, owner)
-        else:
-            return value
-
-    def __set__(self, instance, value):
-        if isinstance(value, ECollection):
-            instance.__dict__[self.name] = value
-            return
-        if self.name not in instance.__dict__.keys():
-            evalue = EValue(instance, self)
-            instance.__dict__[self.name] = evalue
-        instance.__dict__[self.name].__set__(instance, value)
-
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
         name = self.name if hasattr(self, 'name') else None
@@ -984,6 +907,39 @@ def abstract(cls):
 # EStructuralFeature.__get__ = Core.get
 # EStructuralFeature.__set__ = Core.set
 
+def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    name = self.name
+    if name not in instance.__dict__.keys():
+        if self.many:
+            new_value = ECollection.create(owner, self)
+        else:
+            new_value = EValue(owner, self)
+        instance.__dict__[name] = new_value
+    value = instance.__dict__[name]
+    if isinstance(value, EValue):
+        return value.__get__(instance, owner)
+    else:
+        return value
+
+def __set__(self, instance, value):
+    if isinstance(value, ECollection):
+        instance.__dict__[self.name] = value
+        return
+    if self.name not in instance.__dict__.keys():
+        owner = self.eContainer() if instance._staticEClass else instance
+        evalue = EValue(instance, self)
+        instance.__dict__[self.name] = evalue
+    previous_value = instance.__dict__[self.name]
+    if isinstance(previous_value, ECollection):
+        raise BadValueError(got=value, expected=previous_value.__class__)
+    instance.__dict__[self.name].__set__(instance, value)
+
+
+EStructuralFeature.__get__ = __get__
+EStructuralFeature.__set__ = __set__
+
 # meta-meta level
 EString = EDataType('EString', str)
 EBoolean = EDataType('EBoolean', bool, False,
@@ -1004,8 +960,6 @@ EAnnotation.source = EAttribute('source', EString)
 EAnnotation.details = EAttribute('details', EStringToStringMapEntry)
 EAnnotation.references = EReference('references', EObject, upper=-1)
 EAnnotation.contents = EReference('contents', EObject, upper=-1)
-
-
 
 ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
@@ -1115,7 +1069,6 @@ Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
-
 
 
 
