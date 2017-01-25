@@ -139,6 +139,7 @@ class EObject(ENotifer):
         self._containment_feature = None
         self._eresource = None
         self.listeners = []
+        self._eternal_listener = []
 
     def __initmetattr__(self, _super=None):
         _super = _super or self.__class__
@@ -780,8 +781,9 @@ class EClass(EClassifier):
                                         'eClass': self,
                                         '_staticEClass': self._staticEClass,
                                       })
-        self.supertypes_updater = EObserver(self)
+        self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
+        self._eternal_listener.append(self.supertypes_updater)
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
