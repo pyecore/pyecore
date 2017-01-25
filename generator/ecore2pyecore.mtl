@@ -8,6 +8,7 @@
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
 import pyecore.ecore as Ecore
 from .[p.name/] import getEClassifier, eClassifiers
+from .[p.name/] import name, nsURI, nsPrefix, eClass, eSubpackages, eSuperPackage
 from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
 [if (p.eSuperPackage = null)]
 [let containingTypes : Sequence(EClassifier) = p.eAllContents(EReference).eContainingClass]
@@ -24,16 +25,6 @@ from . import [sub.name/]
 [/for]
 
 __all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name/]'[/for]]
-
-name = '[p.name/]'
-nsURI = '[p.nsURI/]'
-nsPrefix = '[p.nsPrefix/]'
-
-eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
-
-eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
-eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
-
 
 [if (p.eSuperPackage = null)]
 [for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null)) before('# Non opposite EReferences\n') after('\n')]
@@ -67,6 +58,16 @@ for subpack in eSubpackages:
 [file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
+
+[comment We generate first all the stuffs for PyEcore/]
+name = '[p.name/]'
+nsURI = '[p.nsURI/]'
+nsPrefix = '[p.nsPrefix/]'
+
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
+eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
 
 [for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
 from [c.ePackage.qualifiedName()/] import [c.name/]
