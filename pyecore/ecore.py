@@ -46,9 +46,9 @@ class EcoreUtils(object):
             return True
         elif _type is EPackage:
             return isinstance(obj, _type) or \
-                        inspect.isclass(obj) and hasattr(obj, 'nsURI')
+                       inspect.ismodule(obj) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
-            return isinstance(obj, _type) or \
+            return obj is _type or isinstance(obj, _type) or \
                         hasattr(obj, '_staticEClass') and obj._staticEClass
         elif isinstance(_type, EEnum):
             return obj in _type
@@ -59,7 +59,7 @@ class EcoreUtils(object):
                 return obj.eClass is _type \
                        or _type in obj.eClass.eAllSuperTypes()
             return False
-        return isinstance(obj, _type)
+        return obj is _type or isinstance(obj, _type)
 
     def getRoot(obj):
         if not obj:
@@ -71,7 +71,10 @@ class EcoreUtils(object):
 
 
 class Core(object):
+
+
     def getattr(self, name):
+        print('__in getattr')
         ex = None
         try:
             return object.__getattribute__(self, name)
@@ -81,20 +84,32 @@ class Core(object):
         if not feature:
             raise ex
 
+        # return feature
         if feature.many:
             new_list = ECollection.create(self, feature)
             object.__setattr__(self, name, new_list)
             return new_list
         else:
+            evalue = EValue(self, feature)
             default_value = feature.get_default_value()
-            object.__setattr__(self, name, default_value)
-            return default_value
+            evalue.value = default_value
+            object.__setattr__(self, name, evalue)
+            return evalue
 
     def setattr(self, name, value):
-        feat = self.eClass.findEStructuralFeature(name)
-        if not feat:
-            object.__setattr__(self, name, value)
-            return
+        try:
+            previous_value = Core.getattr(self, name)
+            if isinstance(previous_value, EValue):
+                previous_value.value = value
+                return
+        except AttributeError:
+            pass
+        object.__setattr__(self, name, value)
+        return
+        # feat = self.eClass.findEStructuralFeature(name)
+        # if not feat:
+        #     object.__setattr__(self, name, value)
+        #     return
 
         if feat.many and not isinstance(value, ECollection):
             raise BadValueError(got=value, expected=feat.eType)
@@ -205,6 +220,7 @@ class Core(object):
 
 
 class EObject(ENotifer):
+    _staticEClass = True
     def __init__(self):
         self.__initmetattr__()
         self.__subinit__()
@@ -225,16 +241,18 @@ class EObject(ENotifer):
             return
         for super_class in _super.__bases__:
             super_class.__initmetattr__(self, super_class)
-        for key, value in _super.__dict__.items():
-            if isinstance(value, EAttribute):
-                object.__setattr__(self, key, value.eType.default_value)
-            elif isinstance(value, EReference):
-                if value.many:
-                    object.__setattr__(self,
-                                       key,
-                                       ECollection.create(self, value))
-                else:
-                    object.__setattr__(self, key, None)
+        for key, feature in _super.__dict__.items():
+            if not isinstance(feature, EStructuralFeature):
+                continue
+            if feature.many:
+                object.__setattr__(self,
+                                   key,
+                                   ECollection.create(self, feature))
+            else:
+                default_value = None
+                if isinstance(feature, EAttribute):
+                    default_value = feature.eType.default_value
+                object.__setattr__(self, key, default_value)
 
     def eContainer(self):
         return self._container
@@ -305,6 +323,38 @@ class EObject(ENotifer):
         if not isinstance(self.eContainer(), EObject):
             return self.eContainer()
         return self.eContainer().eRoot()
+
+
+class EValue(object):
+    def __init__(self, owner, efeature=None, value=None):
+        self._owner = owner
+        self._efeature = efeature
+        self._value = value
+
+    def check(self, value):
+        if not EcoreUtils.isinstance(value, self._efeature.eType):
+            raise BadValueError(value, self._efeature.eType)
+
+    def _update_container(self, value, previous_value=None):
+        if not isinstance(self._efeature, EReference):
+            return
+        if not self._efeature.containment:
+            return
+        if not previous_value:
+            value._container = self._owner
+            value._containment_feature = self._efeature
+            value._eresource = self._owner.eResource
+        elif previous_value:
+            previous_value._container = value
+            previous_value._containment_feature = value
+            previous_value._eresource = value.eResource if value else None
+
+    def __set__(self, instance, value):
+        self.check(value)
+        self._value = value
+
+    def __get__(self, obj, owner=None):
+        return self._value
 
 
 class ECollection(object):
@@ -682,9 +732,42 @@ class EStructuralFeature(ETypedElement):
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        name = self.name
+        if name not in instance.__dict__.keys():
+            collection = ECollection.create(instance, self)
+            instance.__dict__[name] = collection
+        value = instance.__dict__[name]
+        if isinstance(value, EValue):
+            return value.__get__(instance, owner)
+        else:
+            return value
+
+    def __set__(self, instance, value):
+        if isinstance(value, ECollection):
+            instance.__dict__[self.name] = value
+            return
+        if self.name not in instance.__dict__.keys():
+            evalue = EValue(instance, self)
+            instance.__dict__[self.name] = evalue
+        instance.__dict__[self.name].__set__(instance, value)
 
     def __repr__(self):
-        return '<EStructuralFeature {0}: {1}>'.format(self.name, self.eType)
+        eType = self.eType if hasattr(self, 'eType') else None
+        name = self.name if hasattr(self, 'name') else None
+        return '<EStructuralFeature {0}: {1}>'.format(name, eType)
 
 
 class EAttribute(EStructuralFeature):
@@ -744,8 +827,9 @@ class EClass(EClassifier):
                                       self.__compute_supertypes(),
                                       {
                                         'eClass': self,
-                                        '__getattribute__': Core.getattr,
-                                        '__setattr__': Core.setattr
+                                        '_staticEClass': self._staticEClass,
+                                        # '__getattribute__': Core.getattr,
+                                        # '__setattr__': Core.setattr
                                       })
         self.supertypes_updater = EObserver(self)
         self.supertypes_updater.notifyChanged = self.__update
@@ -760,7 +844,8 @@ class EClass(EClassifier):
 
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
-        if hasattr(self.python_class, '_staticEClass'):
+        if hasattr(self.python_class, '_staticEClass') \
+            and self.python_class._staticEClass:
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
@@ -768,6 +853,11 @@ class EClass(EClassifier):
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
+            elif notif.kind is Kind.REMOVE:
+                delattr(self.python_class, notif.new.name)
+        elif notif.feature is EClass.eStructuralFeatures:
+            if notif.kind is Kind.ADD:
+                setattr(self.python_class, notif.new.name, notif.new)
             elif notif.kind is Kind.REMOVE:
                 delattr(self.python_class, notif.new.name)
 
@@ -858,8 +948,8 @@ class MetaEClass(type):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
         Core.register_classifier(cls, promote=True)
-        cls.__getattribute__ = Core.getattr
-        cls.__setattr__ = Core.setattr
+        # cls.__getattribute__ = Core.getattr
+        # cls.__setattr__ = Core.setattr
         cls._staticEClass = True
 
     def __call__(cls, *args, **kwargs):
@@ -889,6 +979,11 @@ def abstract(cls):
     return cls
 
 
+# EObject.__getattribute__ = Core.getattr
+# EObject.__setattr__ = Core.setattr
+# EStructuralFeature.__get__ = Core.get
+# EStructuralFeature.__set__ = Core.set
+
 # meta-meta level
 EString = EDataType('EString', str)
 EBoolean = EDataType('EBoolean', bool, False,
@@ -899,6 +994,8 @@ EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
 
+ENamedElement.name = EAttribute('name', EString)
+
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
 EAnnotation.eModelElement = EReference('eModelElement', EModelElement,
@@ -908,7 +1005,7 @@ EAnnotation.details = EAttribute('details', EStringToStringMapEntry)
 EAnnotation.references = EReference('references', EObject, upper=-1)
 EAnnotation.contents = EReference('contents', EObject, upper=-1)
 
-ENamedElement.name = EAttribute('name', EString)
+
 
 ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
@@ -1019,8 +1116,8 @@ Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
 
-EObject.__getattribute__ = Core.getattr
-EObject.__setattr__ = Core.setattr
+
+
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EPackage', 'EGenericType', 'ETypeParameter', 'ETypedElement',

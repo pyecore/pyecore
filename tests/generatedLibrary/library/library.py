@@ -1,6 +1,15 @@
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
 
+name = 'library'
+nsURI = 'http://emf.wikipedia.org/2011/Library'
+nsPrefix = 'lib'
+
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+eSubpackages = []
+eSuperPackage = None
+
+
 BookCategory = EEnum('BookCategory', literals=['ScienceFiction','Biographie','Mistery',])
 
 
