@@ -34,7 +34,7 @@ map_result = {}
 
 
 @mapping
-def createEPackage(self : Ecore.EPackage) -> Ecore.EPackage:
+def createEPackage(self: Ecore.EPackage) -> Ecore.EPackage:
     result.name = self.name + 'Copy'
     result.nsURI = self.nsURI
     result.nsPrefix = self.nsPrefix
@@ -42,9 +42,9 @@ def createEPackage(self : Ecore.EPackage) -> Ecore.EPackage:
         result.eClassifiers.append(createEClass(x, result))
 
 
-@when(lambda self, parent: isinstance(self, Ecore.EClass))
+@when(lambda self, parent: self.name)
 @mapping
-def createEClass(self : Ecore.EClass, parent : Ecore.EPackage) -> Ecore.EClass:
+def createEClass(self: Ecore.EClass, parent: Ecore.EPackage) -> Ecore.EClass:
     result.name = self.name + 'Copy'
     result.abstract = self.abstract
     for attribute in self.eAttributes:
@@ -53,7 +53,7 @@ def createEClass(self : Ecore.EClass, parent : Ecore.EPackage) -> Ecore.EClass:
 
 
 @mapping
-def copyEAttribute(self : Ecore.EAttribute) -> Ecore.EAttribute:
+def copyEAttribute(self: Ecore.EAttribute) -> Ecore.EAttribute:
     result.name = self.name + 'Copy'
     result.lowerBound = self.lowerBound
     result.upperBound = self.upperBound

@@ -58,6 +58,9 @@ for subpack in eSubpackages:
 [file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
+[for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
+from [c.ePackage.qualifiedName()/] import [c.name/]
+[/for]
 
 [comment We generate first all the stuffs for PyEcore/]
 name = '[p.name/]'
@@ -69,9 +72,7 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
 eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
 
-[for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
-from [c.ePackage.qualifiedName()/] import [c.name/]
-[/for]
+
 [for (c : EClassifier | p.eClassifiers->filter(EEnum))]
 [c.generate()/]
 [/for]
@@ -119,20 +120,20 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
-class [c.name/]([c.eSuperTypes.name->sep(', ')/]):
-    [if (c.getDocumentation() <> '')]
+class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '')]
     """
     [c.getDocumentation()/]
-    """[/if]
+    """
+    [/if]
 [/template]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
-class [c.name/](EObject, metaclass=MetaEClass):
-    [if (c.getDocumentation() <> '')]
+class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
     """
     [c.getDocumentation()/]
-    """[/if]
+    """
+    [/if]
 [/template]
 
 
