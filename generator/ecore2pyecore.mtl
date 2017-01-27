@@ -8,6 +8,7 @@
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
 import pyecore.ecore as Ecore
 from .[p.name/] import getEClassifier, eClassifiers
+from .[p.name/] import name, nsURI, nsPrefix, eClass
 from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
 [if (p.eSuperPackage = null)]
 [let containingTypes : Sequence(EClassifier) = p.eAllContents(EReference).eContainingClass]
@@ -25,15 +26,8 @@ from . import [sub.name/]
 
 __all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name/]'[/for]]
 
-name = '[p.name/]'
-nsURI = '[p.nsURI/]'
-nsPrefix = '[p.nsPrefix/]'
-
-eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
-
 eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
 eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
-
 
 [if (p.eSuperPackage = null)]
 [for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null)) before('# Non opposite EReferences\n') after('\n')]
@@ -67,10 +61,18 @@ for subpack in eSubpackages:
 [file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
-
 [for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
 from [c.ePackage.qualifiedName()/] import [c.name/]
 [/for]
+
+[comment We generate first all the stuffs for PyEcore/]
+name = '[p.name/]'
+nsURI = '[p.nsURI/]'
+nsPrefix = '[p.nsPrefix/]'
+
+eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+
 [for (c : EClassifier | p.eClassifiers->filter(EEnum))]
 [c.generate()/]
 [/for]
@@ -118,30 +120,44 @@ from [c.ePackage.qualifiedName()/] import [c.name/]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
-class [c.name/]([c.eSuperTypes.name->sep(', ')/]):
-    [if (c.getDocumentation() <> '')]
-    """
-    [c.getDocumentation()/]
-    """[/if]
+class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '')]
+
+    """[c.getDocumentation()/]"""[/if]
 [/template]
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
-class [c.name/](EObject, metaclass=MetaEClass):
-    [if (c.getDocumentation() <> '')]
-    """
-    [c.getDocumentation()/]
-    """[/if]
+class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
+
+    """[c.getDocumentation()/]"""[/if]
 [/template]
 
 
 [template public generate(a : EAttribute) ? (not derived)]
-[a.name/] = EAttribute(eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
 [template public generate(a : EAttribute) ? (derived)]
-_[a.name/] = EAttribute(name='[a.name/]', eType=[a.eType.name/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+_[a.name/] = EAttribute(name='[a.name/]', eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+[template public transtype(t : ETypedElement) ? (t.eType.isInOtherResource()) post(trim().replaceAll('\\n',''))]
+[if (t.eType.name = 'String')]EString
+[elseif (t.eType.name = 'Boolean')]EBoolean
+[elseif (t.eType.name = 'Int')]EInt
+[elseif (t.eType.name = 'Integer')]EInteger
+[elseif (t.eType.name = 'EJavaObject')]EJavaObject
+[elseif (t.eType.name = 'IntObject')]EInteger
+[elseif (t.eType.name = 'Double')]EDouble
+[elseif (t.eType.name = 'Long')]ELong
+[else][t.eType.name/]
+[/if]
+[/template]
+
+
+[template public transtype(t : ETypedElement) ? (not t.eType.isInOtherResource()) post(trim().replaceAll('\\n',''))]
+[t.eType.name/]
 [/template]
 
 
@@ -197,4 +213,14 @@ placeholder
     in if annotation = null then ''
        else annotation.details->select(key = 'documentation').value->any(true)
        endif
+/]
+
+
+[query public modelRoot(s : String) : EPackage =
+    EPackage.allInstances()->select(eSuperPackage = null)->any(true)
+/]
+
+
+[query public isInOtherResource(e : EModelElement) : Boolean =
+    e.eResource() <> modelRoot('').eResource()
 /]
