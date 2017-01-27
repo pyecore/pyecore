@@ -147,9 +147,10 @@ _[a.name/] = EAttribute(name='[a.name/]', eType=[a.transtype()/][if (a.many)], u
 [elseif (t.eType.name = 'Boolean')]EBoolean
 [elseif (t.eType.name = 'Int')]EInt
 [elseif (t.eType.name = 'Integer')]EInteger
-[elseif (t.eType.name = 'EJavaObject')]ENativeObject
+[elseif (t.eType.name = 'EJavaObject')]EJavaObject
 [elseif (t.eType.name = 'IntObject')]EInteger
 [elseif (t.eType.name = 'Double')]EDouble
+[elseif (t.eType.name = 'Long')]ELong
 [else][t.eType.name/]
 [/if]
 [/template]

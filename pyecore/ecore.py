@@ -934,6 +934,7 @@ EBoolean = EDataType('EBoolean', bool, False,
                      from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
+ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
@@ -1070,4 +1071,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
-           'EInt', 'EFloat']
+           'EInt', 'EFloat', 'ELong']
