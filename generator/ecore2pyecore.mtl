@@ -85,7 +85,7 @@ eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[
 
 [template public generate(c : EClassifier)/]
 [template public generate(e : EEnum)]
-[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals)]'[l.name/]',[/for]])
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals) separator(', ')]'[l.name/]'[/for]])
 [/template]
 
 
