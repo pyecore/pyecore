@@ -3,7 +3,7 @@
 class ENotifer(object):
     def notify(self, notification):
         notification.notifier = notification.notifier or self
-        for listener in self.listeners:
+        for listener in self._eternal_listener + self.listeners:
             listener.notifyChanged(notification)
 
 
