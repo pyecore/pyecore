@@ -2,8 +2,6 @@
 PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
 ====================================================================
 
-.. highlight:: python
-
 |master-build| |license|
 
 .. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
@@ -591,8 +589,6 @@ The things that are in the roadmap:
 * object deletion,
 * documentation,
 * command system (?).
-
-.. include:: CHANGELOG.rst
 
 Existing Projects
 =================
