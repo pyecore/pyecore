@@ -378,8 +378,6 @@ small example:
     # We can access the EClass instance from the created instance and go back
     >>> myclass_instance.eClass
     <EClass name="MyClass">
-    >>> assert myclass_instance.eCla.
-
     >>> assert myclass_instance.eClass.python_class is MyClass.python_class
     >>> assert myclass_instance.eClass.python_class.eClass is MyClass
     >>> assert myclass_instance.__class__ is MyClass.python_class
@@ -404,8 +402,8 @@ The Python class hierarchie (inheritance tree) associated to the EClass instance
      pyecore.ecore.ENotifier,
      object]
     >>> b_instance = B()
-    >>> assert isinstance(b, A.python_class)
-    >>> assert EcoreUtils.isinstance(b, A)
+    >>> assert isinstance(b_instance, A.python_class)
+    >>> assert EcoreUtils.isinstance(b_instance, A)
 
 
 Importing an Existing XMI Metamodel/Model
