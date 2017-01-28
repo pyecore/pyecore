@@ -520,9 +520,13 @@ You can also use a ``ResourceSet`` to deal with this:
 Installation
 ============
 
-At the moment, the library is not on `pypi`, it will be added when the XMI
-deserialization/serialization will be working. At the moment, the installation
-must be performed manually (better in a virtualenv):
+PyEcore is available on ``pypi``, you can simply install it using ``pip``:
+
+.. code-block:: bash
+
+    $ pip install pyecore
+
+The installation can also be performed manually (better in a virtualenv):
 
 .. code-block:: bash
 
@@ -583,10 +587,12 @@ resources references, not able to resolve file path uris and stuffs.
 
 The things that are in the roadmap:
 
-* documentation,
+* EMF proxies
 * object deletion,
+* documentation,
 * command system (?).
 
+.. include:: CHANGELOG.rst
 
 Existing Projects
 =================
