@@ -600,7 +600,7 @@ class EDataType(EClassifier):
         if from_string:
             self.from_string = from_string
         if to_string:
-            self.to_stringt = to_string
+            self.to_string = to_string
 
     def from_string(self, value):
         return value
@@ -931,6 +931,7 @@ def abstract(cls):
 # meta-meta level
 EString = EDataType('EString', str)
 EBoolean = EDataType('EBoolean', bool, False,
+                     to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
