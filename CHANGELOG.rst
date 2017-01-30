@@ -1,7 +1,22 @@
 Changelog
 ---------
 
-0.1.0
+0.1.2
++++++
+
+**Bugfixes**
+
+- Only the default ``to_string`` method on EDataType was called, even if a new
+  one was passed as parameter. The issue was a simple typo in the ``__init__``
+  method.
+
+- The EBoolean EDataType was missing a dedicated ``to_string`` method. This
+  issue introduced a 'desync' between XMI that EMF Java can read and PyEcore.
+  In cas of EBoolean, the serialized value was either ``True`` or ``False``
+  which is not understood by Java (only ``true`` or ``false``, lower case).
+
+
+0.1.1
 +++++
 
 **Features**
