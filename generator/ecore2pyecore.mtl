@@ -110,7 +110,7 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
     @[d.name/].setter
     def [d.name/](self, value):
         self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
-    def [o.name/](self, [o.eParameters.name->sep(', ')/]):
+    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
         [if (c.getDocumentation() <> '')]
         """
         [c.getDocumentation()/]
