@@ -694,9 +694,9 @@ class EStructuralFeature(ETypedElement):
         name = self.name
         if name not in instance.__dict__.keys():
             if self.many:
-                new_value = ECollection.create(owner, self)
+                new_value = ECollection.create(instance, self)
             else:
-                new_value = EValue(owner, self)
+                new_value = EValue(instance, self)
             instance.__dict__[name] = new_value
         value = instance.__dict__[name]
         if isinstance(value, EValue):
