@@ -753,13 +753,13 @@ class EReference(EStructuralFeature):
 
     @property
     def eOpposite(self):
-        return self._eop
+        return self._eopposite
 
     @eOpposite.setter
     def eOpposite(self, value):
-        self._eop = value
+        self._eopposite = value
         if value:
-            value._eop = self
+            value._eopposite = self
 
 
 class EClass(EClassifier):
