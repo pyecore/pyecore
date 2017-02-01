@@ -535,3 +535,16 @@ def test_create_simple_metamodel():
     pack.eClassifiers.append(ec)
     assert ec in pack.eContents and eat not in pack.eContents
     assert ec in pack.eAllContents() and eat in pack.eAllContents()
+
+
+# This test is a little bit special (not a real unit test)
+def test_update_estructuralfeature_in_eclass():
+    A = EClass('A')
+    a = A()
+
+    with pytest.raises(AttributeError):
+        a.name
+
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    a.name  # We access the name
+    assert a.__dict__['name']._owner is a
