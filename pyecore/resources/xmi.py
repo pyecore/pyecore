@@ -361,8 +361,8 @@ class XMIResource(Resource):
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = ref
                 else:
-                    frag, cref = self._build_path_from(value)
-                    if cref:
+                    frag, is_crossref = self._build_path_from(value)
+                    if is_crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = frag
                     else:

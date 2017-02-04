@@ -265,6 +265,8 @@ class Resource(object):
                         if value is root:
                             uri = reguri
                             break
+                if not uri:
+                    return '', False
             if not uri_fragment.startswith('#'):
                 uri_fragment = '#' + uri_fragment
             if crossref:

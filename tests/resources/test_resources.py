@@ -1,11 +1,13 @@
 import pytest
+import pyecore.ecore as Ecore
 from pyecore.ecore import *
 from pyecore.resources import *
 from pyecore.resources.resource import Global_URI_decoder, File_URI_decoder
 
 
 def test_init_globalregistry():
-    assert not global_registry
+    assert global_registry
+    assert global_registry[Ecore.nsURI]
 
 
 def test_resourceset_defaut_decoders():
