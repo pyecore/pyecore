@@ -106,7 +106,8 @@ class XMIResource(Resource):
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
             if eattribute.many:
-                results = map(eattribute.eType.from_string, value.split())
+                values = value.split()
+                results = [eattribute.eType.from_string(x) for x in values]
                 eobject.__getattribute__(eattribute.name).extend(results)
             val = eattribute.eType.from_string(value)
             eobject.__setattr__(eattribute.name, val)
@@ -213,12 +214,10 @@ class XMIResource(Resource):
                     opposite.append((eobject, ref, value))
                     continue
                 if ref.many:
-                    values = map(Resource.normalize, value.split())
+                    values = [Resource.normalize(x) for x in value.split()]
                 else:
                     values = [value]
                 for value in values:
-                    # decoder = self._get_decoder(value)
-                    # resolved_value = decoder.resolve(value)
                     resolved_value = self._resolve_nonhref(value)
                     if not resolved_value:
                         raise ValueError('EObject for {0} is unknown'
@@ -261,8 +260,8 @@ class XMIResource(Resource):
             self.prefixes[prefix] = uri
             self.reverse_nsmap[uri] = prefix
             return
-        l = filter(lambda x: x.startswith(prefix), self.prefixes.keys())
-        prefix = '{0}_{1}'.format(prefix, len(list(l)))
+        same_prefix = [x for x in self.prefixes.keys() if x.startswith(prefix)]
+        prefix = '{0}_{1}'.format(prefix, len(same_prefix))
         self.prefixes[prefix] = uri
         self.reverse_nsmap[uri] = prefix
 
@@ -346,7 +345,7 @@ class XMIResource(Resource):
                 if not value:
                     continue
                 if feat.many:
-                    results = list(map(self._build_path_from, value))
+                    results = [self._build_path_from(x) for x in value]
                     embedded = []
                     crossref = []
                     for frag, cref in results:

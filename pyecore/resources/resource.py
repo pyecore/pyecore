@@ -296,4 +296,4 @@ class Resource(object):
             eobject._eresource = self
 
     def extend(self, values):
-        map(self.append, values)
+        [self.append(x) for x in values]

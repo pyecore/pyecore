@@ -824,7 +824,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            return tuple(map(lambda x: x._metainstance, eSuperTypes))
+            return tuple(x._metainstance for x in eSuperTypes)
 
     @property
     def python_class(self):
@@ -835,13 +835,13 @@ class EClass(EClassifier):
 
     @property
     def eAttributes(self):
-        return list(filter(lambda x: isinstance(x, EAttribute),
-                           self.eStructuralFeatures))
+        return [x for x in self.eStructuralFeatures
+                if isinstance(x, EAttribute)]
 
     @property
     def eReferences(self):
-        return list(filter(lambda x: isinstance(x, EReference),
-                           self.eStructuralFeatures))
+        return [x for x in self.eStructuralFeatures
+                if isinstance(x, EReference)]
 
     def findEStructuralFeature(self, name):
         struct = next(
