@@ -44,6 +44,8 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
+        elif isinstance(obj, EProxy) and not obj._resolved:
+            return True
         elif _type is EPackage:
             return isinstance(obj, _type) or \
                        inspect.ismodule(obj) and hasattr(obj, 'nsURI')
@@ -921,6 +923,37 @@ class MetaEClass(type):
                 obj.__setattr__(efeat.name, None)
         obj._isready = True
         return obj
+
+
+class EProxy(EObject):
+    def __init__(self, path=None, resource=None, wrapped=None):
+        object.__setattr__(self, '_wrapped', wrapped)
+        object.__setattr__(self, '_proxy_path', path)
+        object.__setattr__(self, '_proxy_resource', resource)
+        object.__setattr__(self, '_resolved', wrapped is not None)
+
+    def __getattribute__(self, name):
+        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved']:
+            return object.__getattribute__(self, name)
+        resolved = object.__getattribute__(self, '_resolved')
+        if not resolved:
+            if name == '__class__':
+                return object.__getattribute__(self, name)
+            decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path)
+        wrapped = self._wrapped
+        return wrapped.__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        if name in ['_wrapped', '_proxy_path', '_resolved', '_proxy_resource']:
+            object.__setattr__(self, name, value)
+            return
+        resolved = self._resolved
+        if not resolved:
+            decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path)
+        wrapped = self._wrapped
+        wrapped.__setattr__(name, value)
 
 
 def abstract(cls):
