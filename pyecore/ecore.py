@@ -941,6 +941,7 @@ class EProxy(EObject):
                 return object.__getattribute__(self, name)
             decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
             self._wrapped = decoders.resolve(self._proxy_path)
+            self._resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)
 
@@ -952,6 +953,7 @@ class EProxy(EObject):
         if not resolved:
             decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
             self._wrapped = decoders.resolve(self._proxy_path)
+            self._resolved = True
         wrapped = self._wrapped
         wrapped.__setattr__(name, value)
 
@@ -1105,4 +1107,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
-           'EInt', 'EFloat', 'ELong']
+           'EInt', 'EFloat', 'ELong', 'EProxy']

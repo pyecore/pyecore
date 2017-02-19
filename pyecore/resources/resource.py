@@ -197,7 +197,7 @@ class Resource(object):
                        None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
-            raise TypeError('Resource cannot be resolved: {0}'.format(uri))
+            raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
         return decoder if decoder else self
 
     def _navigate_from(path, start_obj):
@@ -241,6 +241,9 @@ class Resource(object):
     def _build_path_from(self, obj):
         if isinstance(obj, type):
             obj = obj.eClass
+
+        if isinstance(obj, Ecore.EProxy) and not obj._resolved:
+            return (obj._proxy_path, True)
 
         if obj.eResource != self:
             eclass = obj.eClass
