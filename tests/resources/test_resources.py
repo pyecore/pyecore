@@ -3,6 +3,8 @@ import pyecore.ecore as Ecore
 from pyecore.ecore import *
 from pyecore.resources import *
 from pyecore.resources.resource import Global_URI_decoder, File_URI_decoder
+from pyecore.resources.resource import HttpURI
+from os import path
 
 
 def test_init_globalregistry():
@@ -54,6 +56,31 @@ def test_uri_noprotocol_noextension():
     assert uri.protocol is None
     assert uri.extension is None
     assert uri.plain == 'test'
+
+
+def test_uri_normalize_virtual():
+    uri = URI('http://virtual/1.0')
+    assert uri.normalize() == 'http://virtual/1.0'
+
+
+def test_uri_normalize_fileuri_abs():
+    uri = URI('file:///test.xmi')
+    assert uri.normalize() == '/test.xmi'
+
+
+def test_uri_normalize_fileuri_relative():
+    uri = URI('file://./tests/xmi/xmi-tests/testEMF.xmi')
+    assert path.exists(uri.normalize())
+
+
+def test_uri_normalize_relative():
+    uri = URI('./tests/xmi/xmi-tests/testEMF.xmi')
+    assert path.exists(uri.normalize())
+
+
+def test_uri_normalize_httpuri():
+    uri = HttpURI('http://www.test.org/path/xmi')
+    assert uri.normalize() == 'http://www.test.org/path/xmi'
 
 
 def test_resourceset_default_decoders():

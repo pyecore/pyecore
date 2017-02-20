@@ -1,5 +1,6 @@
 from uuid import uuid4
 import urllib.request
+from os import path
 from .. import ecore as Ecore
 
 global_registry = {}
@@ -47,6 +48,10 @@ class ResourceSet(object):
 
 
 class URI(object):
+    _uri_norm = {'http': lambda x: x,
+                 'https': lambda x: x,
+                 'file': lambda x: path.abspath(x.replace('file://', ''))}
+
     def __init__(self, uri):
         if uri is None:
             raise TypeError('URI cannot be None')
@@ -97,6 +102,13 @@ class URI(object):
     def create_outstream(self):
         self.__stream = open(self.plain, 'wb')
         return self.__stream
+
+    def normalize(self):
+        try:
+            return self._uri_norm[self.protocol](self._uri)
+        except KeyError:
+            uri = self._uri.replace('file', '')
+            return self._uri_norm['file'](uri)
 
 
 class HttpURI(URI):
