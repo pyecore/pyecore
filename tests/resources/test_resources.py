@@ -7,6 +7,23 @@ from pyecore.resources.resource import HttpURI
 from os import path
 
 
+@pytest.fixture(scope='module')
+def simplemm():
+    A = EClass('A')
+    B = EClass('B')
+    Root = EClass('Root')
+    Root.eStructuralFeatures.append(EReference('a', A, containment=True,
+                                               upper=-1))
+    Root.eStructuralFeatures.append(EReference('b', B, containment=True,
+                                               upper=-1))
+
+    A.eStructuralFeatures.append(EReference('tob', B, upper=-1))
+
+    pack = EPackage('pack', nsURI='http://pack/1.0', nsPrefix='pack')
+    pack.eClassifiers.extend([Root, A, B])
+    return pack
+
+
 def test_init_globalregistry():
     assert global_registry
     assert global_registry[Ecore.nsURI]
@@ -134,6 +151,39 @@ def test_globaluridecoder():
     resource = rset.create_resource('http://simple.ecore')
     global_registry['http://simple.ecore'] = resource
     assert Global_URI_decoder.can_resolve('http://simple.ecore#//test') is True
+
+
+def test_resource_load_proxy_missinghref(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    assert isinstance(root.a[0].tob[0], EProxy)
+    with pytest.raises(TypeError):
+        root.a[0].tob[0].eClass
+
+
+def test_resource_load_proxy_href(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    rset.get_resource('tests/xmi/xmi-tests/b1.xmi')
+    assert isinstance(root.a[0].tob[0], EProxy)
+    B = simplemm.getEClassifier('B')
+    root.a[0].tob[0].eClass  # We force the proxy resolution
+    assert isinstance(root.a[0].tob[0], B.python_class)
+    assert EcoreUtils.isinstance(root.a[0].tob[0], B)
+
+
+def test_resource_load_proxy_href_inner(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
+    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    assert isinstance(root.a[0].tob[0], EProxy)
+    B = simplemm.getEClassifier('B')
+    root.a[0].tob[0].eClass  # We force the proxy resolution
+    assert isinstance(root.a[0].tob[0], B.python_class)
+    assert EcoreUtils.isinstance(root.a[0].tob[0], B)
 
 
 # def test_fileuridecoder():

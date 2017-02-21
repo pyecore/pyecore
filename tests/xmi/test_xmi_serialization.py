@@ -4,6 +4,7 @@ import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource
 
+
 @pytest.fixture(scope='module')
 def lib():
     package = Ecore.EPackage('mypackage')

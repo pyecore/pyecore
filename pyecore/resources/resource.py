@@ -225,7 +225,6 @@ class Resource(object):
                         if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
-            uri = URI(uri).normalize()
             raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
         return decoder if decoder else self
 
