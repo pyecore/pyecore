@@ -1,5 +1,6 @@
 from uuid import uuid4
 import urllib.request
+from os import path
 from .. import ecore as Ecore
 
 global_registry = {}
@@ -18,7 +19,8 @@ class ResourceSet(object):
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
             resource = self.resource_factory['*'](uri)
-        self.resources[uri._uri] = resource
+        # self.resources[uri._uri] = resource
+        self.resources[uri.normalize()] = resource
         resource._resourceset = self
         resource._decoders.insert(0, self)
         return resource
@@ -28,25 +30,35 @@ class ResourceSet(object):
         resource.load()
         return resource
 
-    def can_resolve(self, uri_path):
+    def can_resolve(self, uri_path, from_resource=None):
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.split('#')
         if len(fragment) == 2:
-            uri, fragment = fragment
+            uri_str, fragment = fragment
         else:
             return False
-        return uri in self.resources
+        start = from_resource.uri.normalize() if from_resource else '.'
+        apath = path.dirname(start)
+        uri = URI(path.join(apath, uri_str))
+        return uri.normalize() in self.resources
 
-    def resolve(self, uri):
-        path = Resource.normalize(uri)
-        uri, fragment = path.split('#')
-        epackage = self.resources[uri]
+    def resolve(self, uri, from_resource=None):
+        upath = Resource.normalize(uri)
+        uri_str, fragment = upath.split('#')
+        start = from_resource.uri.normalize() if from_resource else '.'
+        apath = path.dirname(start)
+        uri = URI(path.join(apath, uri_str))
+        epackage = self.resources[uri.normalize()]
         if isinstance(epackage, Resource):
             epackage = epackage.contents[0]
         return Resource._navigate_from(fragment, epackage)
 
 
 class URI(object):
+    _uri_norm = {'http': lambda x: x,
+                 'https': lambda x: x,
+                 'file': lambda x: path.abspath(x.replace('file://', ''))}
+
     def __init__(self, uri):
         if uri is None:
             raise TypeError('URI cannot be None')
@@ -98,6 +110,20 @@ class URI(object):
         self.__stream = open(self.plain, 'wb')
         return self.__stream
 
+    def normalize(self):
+        try:
+            return self._uri_norm[self.protocol](self._uri)
+        except KeyError:
+            uri = self._uri.replace('file', '')
+            return self._uri_norm['file'](uri)
+
+    def relative_from_me(self, uri):
+        normalized = path.dirname(self.normalize())
+        other = uri
+        if isinstance(uri, URI):
+            other = uri.normalize()
+        return path.relpath(other, normalized)
+
 
 class HttpURI(URI):
     def __init__(self, uri):
@@ -112,16 +138,16 @@ class HttpURI(URI):
 
 
 # Not yet implementedn will return a kind of proxy
-class File_URI_decoder(object):
-    def can_resolve(path):
-        return path.startswith('file://') or path.startswith('.')
-
-    def resolve(path):
-        pass
+# class File_URI_decoder(object):
+#     def can_resolve(path):
+#         return path.startswith('file://') or path.startswith('.')
+#
+#     def resolve(path):
+#         pass
 
 
 class Global_URI_decoder(object):
-    def can_resolve(path):
+    def can_resolve(path, from_resource=None):
         path = Resource.normalize(path)
         fragment = path.split('#')
         if len(fragment) == 2:
@@ -130,7 +156,7 @@ class Global_URI_decoder(object):
             uri = None
         return uri in global_registry
 
-    def resolve(path):
+    def resolve(path, from_resource=None):
         path = Resource.normalize(path)
         uri, fragment = path.split('#')
         epackage = global_registry[uri]
@@ -138,7 +164,9 @@ class Global_URI_decoder(object):
 
 
 class Resource(object):
-    _decoders = [Global_URI_decoder, File_URI_decoder]
+    _decoders = [Global_URI_decoder,
+                 #  File_URI_decoder,
+                 ]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
@@ -193,11 +221,11 @@ class Resource(object):
         return uri, fragment
 
     def _get_href_decoder(self, path):
-        decoder = next((x for x in self._decoders if x.can_resolve(path)),
-                       None)
+        decoder = next((x for x in self._decoders
+                        if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
-            raise TypeError('Resource cannot be resolved: {0}'.format(uri))
+            raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
         return decoder if decoder else self
 
     def _navigate_from(path, start_obj):
@@ -242,6 +270,9 @@ class Resource(object):
         if isinstance(obj, type):
             obj = obj.eClass
 
+        if isinstance(obj, Ecore.EProxy) and not obj._resolved:
+            return (obj._proxy_path, True)
+
         if obj.eResource != self:
             eclass = obj.eClass
             prefix = eclass.ePackage.nsPrefix
@@ -249,7 +280,7 @@ class Resource(object):
             uri_fragment = obj.eURIFragment()
             crossref = False
             if obj.eResource:
-                uri = obj.eResource.uri.plain
+                uri = self.uri.relative_from_me(obj.eResource.uri)
                 crossref = True
             else:
                 uri = ''

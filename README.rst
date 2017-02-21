@@ -555,7 +555,8 @@ Liberty Regarding the Java EMF Implementation
 
 * There is some meta-property that are not still coded inside PyEcore. More will come with time,
 * ``Resource`` can only contain a single root at the moment,
-* External resources (like ``http://www.eclipse.org/emf/2003/XMLType``) must be create by hand an loaded in the ``global_registry`` or as a ``resource`` of a ``ResourceSet``.
+* External resources (like ``http://www.eclipse.org/emf/2003/XMLType``) must be create by hand an loaded in the ``global_registry`` or as a ``resource`` of a ``ResourceSet``,
+* Proxies are not "removed" once resolved as in the the Java version, instead they acts as transparent proxies and redirect each calls to the 'proxied' object.
 
 State
 =====
@@ -578,14 +579,11 @@ In the current state, the project implements:
 * Eclipse XMI export (partially),
 * simple notification/Event system,
 * EOperations support,
-* code generator for the static part.
-
-The XMI import/export are still in an early stage of developement: no cross
-resources references, not able to resolve file path uris and stuffs.
+* code generator for the static part,
+* EMF proxies.
 
 The things that are in the roadmap:
 
-* EMF proxies
 * object deletion,
 * documentation,
 * command system (?).
@@ -598,6 +596,7 @@ The only projects I found are:
 
 * PyEMOF (http://www.lifl.fr/~marvie/software/pyemof.html)
 * EMF4CPP (https://github.com/catedrasaes-umu/emf4cpp)
+* PyEMOFUC (http://www.istr.unican.es/pyemofuc/index_En.html)
 
 PyEMOF proposes an implementation of the OMG's EMOF in Python. The project
 targets Python2 and supports XMI import/export. The project didn't move since
@@ -606,3 +605,7 @@ targets Python2 and supports XMI import/export. The project didn't move since
 EMF4CPP proposes a C++ implementation of EMF. This implementation also
 introduces Python scripts to call the generated C++ code from a Python
 environment.
+
+PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
+If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
+metamodels. The project does not seems to move a lot.
