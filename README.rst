@@ -596,6 +596,7 @@ The only projects I found are:
 
 * PyEMOF (http://www.lifl.fr/~marvie/software/pyemof.html)
 * EMF4CPP (https://github.com/catedrasaes-umu/emf4cpp)
+* PyEMOFUC (http://www.istr.unican.es/pyemofuc/index_En.html)
 
 PyEMOF proposes an implementation of the OMG's EMOF in Python. The project
 targets Python2 and supports XMI import/export. The project didn't move since
@@ -604,3 +605,7 @@ targets Python2 and supports XMI import/export. The project didn't move since
 EMF4CPP proposes a C++ implementation of EMF. This implementation also
 introduces Python scripts to call the generated C++ code from a Python
 environment.
+
+PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
+If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
+metamodels. The project does not seems to move a lot.
