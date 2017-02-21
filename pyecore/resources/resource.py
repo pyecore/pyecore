@@ -19,7 +19,8 @@ class ResourceSet(object):
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
             resource = self.resource_factory['*'](uri)
-        self.resources[uri._uri] = resource
+        # self.resources[uri._uri] = resource
+        self.resources[uri.normalize()] = resource
         resource._resourceset = self
         resource._decoders.insert(0, self)
         return resource
@@ -33,15 +34,17 @@ class ResourceSet(object):
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.split('#')
         if len(fragment) == 2:
-            uri, fragment = fragment
+            uri_str, fragment = fragment
         else:
             return False
-        return uri in self.resources
+        uri = URI(uri_str)
+        return uri.normalize() in self.resources
 
     def resolve(self, uri):
         path = Resource.normalize(uri)
-        uri, fragment = path.split('#')
-        epackage = self.resources[uri]
+        uri_str, fragment = path.split('#')
+        uri = URI(uri_str)
+        epackage = self.resources[uri.normalize()]
         if isinstance(epackage, Resource):
             epackage = epackage.contents[0]
         return Resource._navigate_from(fragment, epackage)
@@ -110,6 +113,13 @@ class URI(object):
             uri = self._uri.replace('file', '')
             return self._uri_norm['file'](uri)
 
+    def relative_from_me(self, uri):
+        normalized = path.dirname(self.normalize())
+        other = uri
+        if isinstance(uri, URI):
+            other = uri.normalize()
+        return path.relpath(other, normalized)
+
 
 class HttpURI(URI):
     def __init__(self, uri):
@@ -124,12 +134,12 @@ class HttpURI(URI):
 
 
 # Not yet implementedn will return a kind of proxy
-class File_URI_decoder(object):
-    def can_resolve(path):
-        return path.startswith('file://') or path.startswith('.')
-
-    def resolve(path):
-        pass
+# class File_URI_decoder(object):
+#     def can_resolve(path):
+#         return path.startswith('file://') or path.startswith('.')
+#
+#     def resolve(path):
+#         pass
 
 
 class Global_URI_decoder(object):
@@ -150,7 +160,9 @@ class Global_URI_decoder(object):
 
 
 class Resource(object):
-    _decoders = [Global_URI_decoder, File_URI_decoder]
+    _decoders = [Global_URI_decoder,
+                 #  File_URI_decoder,
+                 ]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
@@ -264,7 +276,7 @@ class Resource(object):
             uri_fragment = obj.eURIFragment()
             crossref = False
             if obj.eResource:
-                uri = obj.eResource.uri.plain
+                uri = self.uri.relative_from_me(obj.eResource.uri)
                 crossref = True
             else:
                 uri = ''

@@ -136,8 +136,6 @@ class XMIResource(Resource):
                                      node.sourceline,))
         if node.get('href'):
             ref = node.get('href')
-            # decoder = self._get_href_decoder(ref)
-            # return (feature_container, decoder.resolve(ref), [], [])
             proxy = Ecore.EProxy(path=ref, resource=self)
             return (feature_container, proxy, [], [])
         if self._type_attribute(node):

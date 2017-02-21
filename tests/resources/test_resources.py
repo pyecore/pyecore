@@ -2,7 +2,7 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.ecore import *
 from pyecore.resources import *
-from pyecore.resources.resource import Global_URI_decoder, File_URI_decoder
+from pyecore.resources.resource import Global_URI_decoder
 from pyecore.resources.resource import HttpURI
 from os import path
 
@@ -94,8 +94,9 @@ def test_resourceset_default_decoders():
 def test_resourceset_createresource_simple():
     rset = ResourceSet()
     resource = rset.create_resource(URI('simpleuri'))
-    assert 'simpleuri' in rset.resources
-    assert rset.resources['simpleuri'] is resource
+    rpath = path.abspath('simpleuri')
+    assert rpath in rset.resources
+    assert rset.resources[rpath] is resource
     assert rset in resource._decoders
     assert isinstance(resource, rset.resource_factory['*']('').__class__)
 
@@ -103,8 +104,9 @@ def test_resourceset_createresource_simple():
 def test_resourceset_createresource_ecore():
     rset = ResourceSet()
     resource = rset.create_resource(URI('simple.ecore'))
-    assert 'simple.ecore' in rset.resources
-    assert rset.resources['simple.ecore'] is resource
+    rpath = path.abspath('simple.ecore')
+    assert rpath in rset.resources
+    assert rset.resources[rpath] is resource
     assert rset in resource._decoders
     assert isinstance(resource, rset.resource_factory['ecore']('').__class__)
 
@@ -112,8 +114,9 @@ def test_resourceset_createresource_ecore():
 def test_resourceset_createresource_xmi():
     rset = ResourceSet()
     resource = rset.create_resource(URI('simple.xmi'))
-    assert 'simple.xmi' in rset.resources
-    assert rset.resources['simple.xmi'] is resource
+    rpath = path.abspath('simple.xmi')
+    assert rpath in rset.resources
+    assert rset.resources[rpath] is resource
     assert rset in resource._decoders
     assert isinstance(resource, rset.resource_factory['xmi']('').__class__)
 
@@ -133,5 +136,5 @@ def test_globaluridecoder():
     assert Global_URI_decoder.can_resolve('http://simple.ecore#//test') is True
 
 
-def test_fileuridecoder():
-    assert File_URI_decoder.can_resolve('file://simple.ecore#//test') is True
+# def test_fileuridecoder():
+#     assert File_URI_decoder.can_resolve('file://simple.ecore#//test') is True
