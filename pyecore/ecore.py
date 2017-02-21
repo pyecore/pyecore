@@ -44,6 +44,8 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
+        elif isinstance(obj, EProxy) and not obj._resolved:
+            return True
         elif _type is EPackage:
             return isinstance(obj, _type) or \
                        inspect.ismodule(obj) and hasattr(obj, 'nsURI')
@@ -694,9 +696,9 @@ class EStructuralFeature(ETypedElement):
         name = self.name
         if name not in instance.__dict__.keys():
             if self.many:
-                new_value = ECollection.create(owner, self)
+                new_value = ECollection.create(instance, self)
             else:
-                new_value = EValue(owner, self)
+                new_value = EValue(instance, self)
             instance.__dict__[name] = new_value
         value = instance.__dict__[name]
         if isinstance(value, EValue):
@@ -753,13 +755,13 @@ class EReference(EStructuralFeature):
 
     @property
     def eOpposite(self):
-        return self._eop
+        return self._eopposite
 
     @eOpposite.setter
     def eOpposite(self, value):
-        self._eop = value
+        self._eopposite = value
         if value:
-            value._eop = self
+            value._eopposite = self
 
 
 class EClass(EClassifier):
@@ -824,7 +826,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            return tuple(map(lambda x: x._metainstance, eSuperTypes))
+            return tuple(x._metainstance for x in eSuperTypes)
 
     @property
     def python_class(self):
@@ -835,13 +837,13 @@ class EClass(EClassifier):
 
     @property
     def eAttributes(self):
-        return list(filter(lambda x: isinstance(x, EAttribute),
-                           self.eStructuralFeatures))
+        return [x for x in self.eStructuralFeatures
+                if isinstance(x, EAttribute)]
 
     @property
     def eReferences(self):
-        return list(filter(lambda x: isinstance(x, EReference),
-                           self.eStructuralFeatures))
+        return [x for x in self.eStructuralFeatures
+                if isinstance(x, EReference)]
 
     def findEStructuralFeature(self, name):
         struct = next(
@@ -921,6 +923,41 @@ class MetaEClass(type):
                 obj.__setattr__(efeat.name, None)
         obj._isready = True
         return obj
+
+
+class EProxy(EObject):
+    def __init__(self, path=None, resource=None, wrapped=None):
+        object.__setattr__(self, '_wrapped', wrapped)
+        object.__setattr__(self, '_proxy_path', path)
+        object.__setattr__(self, '_proxy_resource', resource)
+        object.__setattr__(self, '_resolved', wrapped is not None)
+
+    def __getattribute__(self, name):
+        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved']:
+            return object.__getattribute__(self, name)
+        resolved = object.__getattribute__(self, '_resolved')
+        if not resolved:
+            if name == '__class__':
+                return object.__getattribute__(self, name)
+            resource = self._proxy_resource
+            decoders = resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path, resource)
+            self._resolved = True
+        wrapped = self._wrapped
+        return wrapped.__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        if name in ['_wrapped', '_proxy_path', '_resolved', '_proxy_resource']:
+            object.__setattr__(self, name, value)
+            return
+        resolved = self._resolved
+        if not resolved:
+            resource = self._proxy_resource
+            decoders = resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path, resource)
+            self._resolved = True
+        wrapped = self._wrapped
+        wrapped.__setattr__(name, value)
 
 
 def abstract(cls):
@@ -1072,4 +1109,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
-           'EInt', 'EFloat', 'ELong']
+           'EInt', 'EFloat', 'ELong', 'EProxy']
