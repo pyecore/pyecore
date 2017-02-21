@@ -1,6 +1,30 @@
 Changelog
 ---------
 
+0.1.3
++++++
+
+**Features**
+
+- Add support for object proxies. The PyEcore proxy works a little bit differently from the Java EMF proxy, once
+  the proxy is resolved, the proxy is not removed but is used a a transparent
+  proxy (at the moment) and is not an issue anymore for type checking. Proxies are
+  used for cross-document references.
+
+- Remove resource-less objects from XMI serialization. This is a first step
+  towards objects removal. The added behavior allows the user to "remove"
+  elements in a way. If an element is not contained in a resource anymore, the
+  reference towards the object is not serialized. This way, anytime an object is
+  removed from a container and let 'in the void', XMI serialization will get rid
+  of it. However, this new addition requires that the Ecore metamodel is always
+  loaded in the global_registry (in case someone wants to serialize ecore files)
+  as a metamodel can references basic types (EString, EBoolean) which are
+  basically not contained in a resource.
+
+**Bugfixes**
+
+- Fix bug on EStructuralFeature owner assignment when EClass is updated.
+
 0.1.2
 +++++
 
