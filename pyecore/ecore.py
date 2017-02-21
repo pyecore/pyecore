@@ -939,8 +939,9 @@ class EProxy(EObject):
         if not resolved:
             if name == '__class__':
                 return object.__getattribute__(self, name)
-            decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
-            self._wrapped = decoders.resolve(self._proxy_path)
+            resource = self._proxy_resource
+            decoders = resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path, resource)
             self._resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)
@@ -951,8 +952,9 @@ class EProxy(EObject):
             return
         resolved = self._resolved
         if not resolved:
-            decoders = self._proxy_resource._get_href_decoder(self._proxy_path)
-            self._wrapped = decoders.resolve(self._proxy_path)
+            resource = self._proxy_resource
+            decoders = resource._get_href_decoder(self._proxy_path)
+            self._wrapped = decoders.resolve(self._proxy_path, resource)
             self._resolved = True
         wrapped = self._wrapped
         wrapped.__setattr__(name, value)

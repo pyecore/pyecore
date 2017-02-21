@@ -30,20 +30,24 @@ class ResourceSet(object):
         resource.load()
         return resource
 
-    def can_resolve(self, uri_path):
+    def can_resolve(self, uri_path, from_resource=None):
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.split('#')
         if len(fragment) == 2:
             uri_str, fragment = fragment
         else:
             return False
-        uri = URI(uri_str)
+        start = from_resource.uri.normalize() if from_resource else '.'
+        apath = path.dirname(start)
+        uri = URI(path.join(apath, uri_str))
         return uri.normalize() in self.resources
 
-    def resolve(self, uri):
-        path = Resource.normalize(uri)
-        uri_str, fragment = path.split('#')
-        uri = URI(uri_str)
+    def resolve(self, uri, from_resource=None):
+        upath = Resource.normalize(uri)
+        uri_str, fragment = upath.split('#')
+        start = from_resource.uri.normalize() if from_resource else '.'
+        apath = path.dirname(start)
+        uri = URI(path.join(apath, uri_str))
         epackage = self.resources[uri.normalize()]
         if isinstance(epackage, Resource):
             epackage = epackage.contents[0]
@@ -143,7 +147,7 @@ class HttpURI(URI):
 
 
 class Global_URI_decoder(object):
-    def can_resolve(path):
+    def can_resolve(path, from_resource=None):
         path = Resource.normalize(path)
         fragment = path.split('#')
         if len(fragment) == 2:
@@ -152,7 +156,7 @@ class Global_URI_decoder(object):
             uri = None
         return uri in global_registry
 
-    def resolve(path):
+    def resolve(path, from_resource=None):
         path = Resource.normalize(path)
         uri, fragment = path.split('#')
         epackage = global_registry[uri]
@@ -217,10 +221,11 @@ class Resource(object):
         return uri, fragment
 
     def _get_href_decoder(self, path):
-        decoder = next((x for x in self._decoders if x.can_resolve(path)),
-                       None)
+        decoder = next((x for x in self._decoders
+                        if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
+            uri = URI(uri).normalize()
             raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
         return decoder if decoder else self
 
