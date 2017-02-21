@@ -609,3 +609,9 @@ environment.
 PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
 If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
 metamodels. The project does not seems to move a lot.
+
+Additional Resources
+====================
+
+* The article at this address: http://modeling-languages.com/pyecore-python-eclipse-modeling-framework
+  gives more information and implementations details about PyEcore.
