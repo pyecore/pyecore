@@ -198,3 +198,11 @@ def test_resource_mmregistry_isolation():
     assert 'abcd' not in rset2.metamodel_registry
     assert 'cdef' in rset2.metamodel_registry
     assert 'cdef' in rset1.metamodel_registry
+
+
+def test_resource_double_load(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    root2 = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    assert root is root2
