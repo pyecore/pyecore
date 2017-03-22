@@ -188,3 +188,13 @@ def test_resource_load_proxy_href_inner(simplemm):
 
 # def test_fileuridecoder():
 #     assert File_URI_decoder.can_resolve('file://simple.ecore#//test') is True
+
+
+def test_resource_mmregistry_isolation():
+    global_registry['cdef'] = None
+    rset1 = ResourceSet()
+    rset2 = ResourceSet()
+    rset1.metamodel_registry['abcd'] = None
+    assert 'abcd' not in rset2.metamodel_registry
+    assert 'cdef' in rset2.metamodel_registry
+    assert 'cdef' in rset1.metamodel_registry

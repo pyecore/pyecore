@@ -443,7 +443,8 @@ The resource creation should be done by hand first:
     IntObject = Ecore.EDataType('IntObject', int, None,
                                 from_string=int_conversion)
     Boolean = Ecore.EDataType('Boolean', bool, False,
-                              from_string=lambda x: x in ['True', 'true'])
+                              from_string=lambda x: x in ['True', 'true'],
+                              to_string=lambda x: str(x).lower())
     Long = Ecore.EDataType('Long', int, 0, from_string=int_conversion)
     EJavaObject = Ecore.EDataType('EJavaObject', object)
     xmltype = Ecore.EPackage()
@@ -462,6 +463,25 @@ The resource creation should be done by hand first:
     # Then the resource can be loaded (here from an http address)
     resource = rset.get_resource(HttpURI('http://myadress.ecore'))
     root = resource.contents[0]
+
+
+Metamodel References by 'File Path'
+-----------------------------------
+
+If a metamodel references others in a 'file path' manner (for example, a
+metamodel ``A`` had some relationship towards a ``B`` metamodel like this:
+``../metamodelb.ecore`` ), PyEcore requires that the ``B`` metamodel is loaded
+first and registered against the metamodel path URI like (in the example, against
+the ``../metamodelb.ecore`` URI).
+
+.. code-block:: python
+
+    >>> # We suppose that the metamodel A.ecore has references towards B.ecore
+    ... # '../../B.ecore'. Path of A.ecore is 'a/b/A.ecore' and B.ecore is '.'
+    >>> resource = rset.get_resource(URI('B.ecore'))  # We load B.ecore first
+    >>> root = resource.contents[0]
+    >>> rset.metamodel_registry['../../B.ecore'] = root  # We register it against the 'file path' uri
+    >>> resource = rset.get_resource(URI('a/b/A.ecore'))  # A.ecore now loads just fine
 
 
 Adding External resources
@@ -513,6 +533,16 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource = rset.create_resource(URI('my/path.xmi'))
     >>> resource.append(root)
     >>> resource.save()
+
+
+Deleting Elements
+=================
+
+The element deletion is not yet supported by PyEcore, but, you can, in a way,
+removing elements from a model using the XMI serialization. If you want to
+remove an element from a Resource, you have to remove it from its container.
+PyEcore does not serialize elements that are not contained by a ``Resource`` and
+each reference to this 'not-contained' element is not serialized.
 
 
 Installation
@@ -575,8 +605,8 @@ In the current state, the project implements:
 * containment reference,
 * introspection,
 * select/reject on collections,
-* Eclipse XMI import (partially),
-* Eclipse XMI export (partially),
+* Eclipse XMI import (partially, only single root models),
+* Eclipse XMI export (partially, only single root models),
 * simple notification/Event system,
 * EOperations support,
 * code generator for the static part,
@@ -584,6 +614,7 @@ In the current state, the project implements:
 
 The things that are in the roadmap:
 
+* URI mapper
 * object deletion,
 * documentation,
 * command system (?).
