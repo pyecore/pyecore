@@ -248,7 +248,11 @@ class Resource(object):
             key, index = feat if len(feat) > 1 else (feat[0], None)
             if key.startswith('@'):
                 tmp_obj = obj.__getattribute__(key[1:])
-                obj = tmp_obj[int(index)] if index else tmp_obj
+                try:
+                    obj = tmp_obj[int(index)] if index else tmp_obj
+                except IndexError:
+                    raise ValueError('Index in path is not the collection,'
+                                     ' broken proxy?')
             elif key.startswith('%'):
                 key = key[1:-1]
                 obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
