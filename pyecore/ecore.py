@@ -142,6 +142,7 @@ class EObject(ENotifer):
         self._eresource = None
         self.listeners = []
         self._eternal_listener = []
+        self._inverse_rels = []
 
     def __initmetattr__(self, _super=None):
         _super = _super or self.__class__
@@ -291,7 +292,16 @@ class EValue(PyEcoreValue):
         if not isinstance(efeature, EReference) or not update_opposite:
             return
 
-        if efeature.eOpposite and isinstance(value, EObject):
+        if not efeature.eOpposite:
+            if hasattr(value, '_inverse_rels'):
+                value._inverse_rels.append(self)
+                if hasattr(previous_value, '_inverse_rels'):
+                    previous_value._inverse_rels.remove(self)
+            elif value is None and hasattr(previous_value, '_inverse_rels'):
+                previous_value._inverse_rels.remove(self)
+            return
+
+        if isinstance(value, EObject):
             eOpposite = efeature.eOpposite
             previous_value = value.__getattribute__(eOpposite.name)
             notif = Notification(new=owner, feature=eOpposite)
@@ -308,7 +318,7 @@ class EValue(PyEcoreValue):
                 if value._isready and \
                         eOpposite.get_default_value != owner:
                     value._isset.add(eOpposite)
-        elif efeature.eOpposite and value is None:
+        elif value is None:
             eOpposite = efeature.eOpposite
             if previous_value and eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
@@ -341,29 +351,35 @@ class ECollection(PyEcoreValue):
         if not isinstance(self._efeature, EReference):
             return
         eOpposite = self._efeature.eOpposite
-        if eOpposite:
-            if eOpposite.many and not remove:
-                owner.__getattribute__(eOpposite.name)  # force resolve
-                object.__getattribute__(owner, eOpposite.name) \
-                      .append(new_value, False)
-                owner.notify(Notification(new=new_value,
-                                          feature=eOpposite,
-                                          kind=Kind.ADD))
-            elif eOpposite.many and remove:
-                object.__getattribute__(owner, eOpposite.name) \
-                      .remove(new_value, False)
-                owner.notify(Notification(old=new_value,
-                                          feature=eOpposite,
-                                          kind=Kind.REMOVE))
+        if not eOpposite:
+            if remove:
+                owner._inverse_rels.remove(self)
             else:
-                new_value = None if remove else new_value
-                kind = Kind.UNSET if remove else Kind.SET
-                object.__getattribute__(owner, eOpposite.name)  # Force load
-                owner.__dict__[eOpposite.name] \
-                     .__set__(None, new_value, update_opposite=False)
-                owner.notify(Notification(new=new_value,
-                                          feature=eOpposite,
-                                          kind=kind))
+                owner._inverse_rels.append(self)
+            return
+
+        if eOpposite.many and not remove:
+            owner.__getattribute__(eOpposite.name)  # force resolve
+            object.__getattribute__(owner, eOpposite.name) \
+                  .append(new_value, False)
+            owner.notify(Notification(new=new_value,
+                                      feature=eOpposite,
+                                      kind=Kind.ADD))
+        elif eOpposite.many and remove:
+            object.__getattribute__(owner, eOpposite.name) \
+                  .remove(new_value, False)
+            owner.notify(Notification(old=new_value,
+                                      feature=eOpposite,
+                                      kind=Kind.REMOVE))
+        else:
+            new_value = None if remove else new_value
+            kind = Kind.UNSET if remove else Kind.SET
+            object.__getattribute__(owner, eOpposite.name)  # Force load
+            owner.__dict__[eOpposite.name] \
+                 .__set__(None, new_value, update_opposite=False)
+            owner.notify(Notification(new=new_value,
+                                      feature=eOpposite,
+                                      kind=kind))
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -931,17 +947,31 @@ class EProxy(EObject):
         object.__setattr__(self, '_proxy_path', path)
         object.__setattr__(self, '_proxy_resource', resource)
         object.__setattr__(self, '_resolved', wrapped is not None)
+        object.__setattr__(self, '_inverse_rels', [])
+
+    def force_resolve(self):
+        if self._resolved:
+            return
+        resource = self._proxy_resource
+        decoders = resource._get_href_decoder(self._proxy_path)
+        self._wrapped = decoders.resolve(self._proxy_path, resource)
+        self._wrapped._inverse_rels.extend(self._inverse_rels)
+        self._inverse_rels = self._wrapped._inverse_rels
+        self._resolved = True
 
     def __getattribute__(self, name):
-        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved']:
+        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
+                    'force_resolve']:
             return object.__getattribute__(self, name)
         resolved = object.__getattribute__(self, '_resolved')
         if not resolved:
-            if name == '__class__':
+            if name in ['__class__', '_inverse_rels']:
                 return object.__getattribute__(self, name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
             self._wrapped = decoders.resolve(self._proxy_path, resource)
+            self._wrapped._inverse_rels.extend(self._inverse_rels)
+            self._inverse_rels = self._wrapped._inverse_rels
             self._resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)
