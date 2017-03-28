@@ -196,7 +196,7 @@ class EObject(ENotifer):
 
     def delete(self, recursive=True):
         if recursive:
-            [delete(obj) for obj in self.eAllContents()]
+            [obj.delete() for obj in self.eAllContents()]
         seek = set(self._inverse_rels)
         seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
         for owner, feature in seek:
@@ -989,7 +989,7 @@ class EProxy(EObject):
 
     def delete(self, recursive=True):
         if recursive:
-            [delete(obj) for obj in self.eAllContents()]
+            [obj.delete() for obj in self.eAllContents()]
 
         seek = set(self._inverse_rels)
         seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
