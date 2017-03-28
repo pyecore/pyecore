@@ -142,7 +142,7 @@ class EObject(ENotifer):
         self._eresource = None
         self.listeners = []
         self._eternal_listener = []
-        self._inverse_rels = []
+        self._inverse_rels = set()
 
     def __initmetattr__(self, _super=None):
         _super = _super or self.__class__
@@ -193,6 +193,32 @@ class EObject(ENotifer):
         else:
             raise TypeError('Feature must have str or '
                             'EStructuralFeature type')
+
+    def delete(self, recursive=True):
+        if recursive:
+            [delete(obj) for obj in self.eAllContents()]
+        seek = set(self._inverse_rels)
+        seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
+        for owner, feature in seek:
+            fvalue = owner.eGet(feature)
+            if feature.many:
+                if self in fvalue:
+                    fvalue.remove(self)
+                    continue
+                value = next((val for val in fvalue
+                              if hasattr(val, '_wrapped')
+                              and val._wrapped is self),
+                             None)
+                if value:
+                    fvalue.remove(value)
+            else:
+                if self is fvalue:
+                    owner.eSet(feature, None)
+                    continue
+                value = fvalue if (hasattr(fvalue, '_wrapped')
+                                   and fvalue._wrapped is self) else None
+                if value:
+                    owner.eSet(feature, None)
 
     @property
     def eContents(self):
@@ -293,12 +319,13 @@ class EValue(PyEcoreValue):
             return
 
         if not efeature.eOpposite:
+            couple = (owner, efeature)
             if hasattr(value, '_inverse_rels'):
-                value._inverse_rels.append(self)
+                value._inverse_rels.add(couple)
                 if hasattr(previous_value, '_inverse_rels'):
-                    previous_value._inverse_rels.remove(self)
+                    previous_value._inverse_rels.remove(couple)
             elif value is None and hasattr(previous_value, '_inverse_rels'):
-                previous_value._inverse_rels.remove(self)
+                previous_value._inverse_rels.remove(couple)
             return
 
         if isinstance(value, EObject):
@@ -352,10 +379,11 @@ class ECollection(PyEcoreValue):
             return
         eOpposite = self._efeature.eOpposite
         if not eOpposite:
+            couple = (new_value, self._efeature)
             if remove:
-                owner._inverse_rels.remove(self)
+                owner._inverse_rels.remove(couple)
             else:
-                owner._inverse_rels.append(self)
+                owner._inverse_rels.add(couple)
             return
 
         if eOpposite.many and not remove:
@@ -947,7 +975,7 @@ class EProxy(EObject):
         object.__setattr__(self, '_proxy_path', path)
         object.__setattr__(self, '_proxy_resource', resource)
         object.__setattr__(self, '_resolved', wrapped is not None)
-        object.__setattr__(self, '_inverse_rels', [])
+        object.__setattr__(self, '_inverse_rels', set())
 
     def force_resolve(self):
         if self._resolved:
@@ -955,13 +983,38 @@ class EProxy(EObject):
         resource = self._proxy_resource
         decoders = resource._get_href_decoder(self._proxy_path)
         self._wrapped = decoders.resolve(self._proxy_path, resource)
-        self._wrapped._inverse_rels.extend(self._inverse_rels)
+        self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
         self._resolved = True
 
+    def delete(self):
+        if recursive:
+            [delete(obj) for obj in self.eAllContents()]
+
+        seek = set(self._inverse_rels)
+        seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
+        for owner, feature in seek:
+            fvalue = owner.eGet(feature)
+            if feature.many:
+                if self in fvalue:
+                    fvalue.remove(self)
+                    continue
+                value = next((val for val in fvalue
+                              if self._wrapped is val),
+                             None)
+                if value:
+                    fvalue.remove(value)
+            else:
+                if self is fvalue:
+                    owner.eSet(feature, None)
+                    continue
+                value = fvalue if self._wrapped is fvalue else None
+                if value:
+                    owner.eSet(feature, None)
+
     def __getattribute__(self, name):
         if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
-                    'force_resolve']:
+                    'force_resolve', 'delete']:
             return object.__getattribute__(self, name)
         resolved = object.__getattribute__(self, '_resolved')
         if not resolved:
@@ -970,7 +1023,7 @@ class EProxy(EObject):
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
             self._wrapped = decoders.resolve(self._proxy_path, resource)
-            self._wrapped._inverse_rels.extend(self._inverse_rels)
+            self._wrapped._inverse_rels.update(self._inverse_rels)
             self._inverse_rels = self._wrapped._inverse_rels
             self._resolved = True
         wrapped = self._wrapped
