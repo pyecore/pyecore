@@ -987,7 +987,7 @@ class EProxy(EObject):
         self._inverse_rels = self._wrapped._inverse_rels
         self._resolved = True
 
-    def delete(self):
+    def delete(self, recursive=True):
         if recursive:
             [delete(obj) for obj in self.eAllContents()]
 
