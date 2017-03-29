@@ -737,7 +737,7 @@ class EStructuralFeature(ETypedElement):
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
-        name = self.name
+        name = self._name
         if name not in instance.__dict__.keys():
             if self.many:
                 new_value = ECollection.create(instance, self)
@@ -751,16 +751,17 @@ class EStructuralFeature(ETypedElement):
             return value
 
     def __set__(self, instance, value):
+        name = self._name
         if isinstance(value, ECollection):
-            instance.__dict__[self.name] = value
+            instance.__dict__[name] = value
             return
-        if self.name not in instance.__dict__.keys():
+        if name not in instance.__dict__.keys():
             evalue = EValue(instance, self)
-            instance.__dict__[self.name] = evalue
-        previous_value = instance.__dict__[self.name]
+            instance.__dict__[name] = evalue
+        previous_value = instance.__dict__[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance.__dict__[self.name].__set__(instance, value)
+        instance.__dict__[name].__set__(instance, value)
 
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
