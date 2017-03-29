@@ -290,10 +290,6 @@ class EValue(PyEcoreValue):
         super().__init__(owner, efeature)
         self._value = value
 
-    def check(self, value):
-        if not EcoreUtils.isinstance(value, self._efeature.eType):
-            raise BadValueError(value, self._efeature.eType)
-
     def __get__(self, obj, owner=None):
         return self._value
 
@@ -302,7 +298,8 @@ class EValue(PyEcoreValue):
         previous_value = self._value
         self._value = value
         # This case happend during meta-EReference initialization
-        if not self._owner or not isinstance(self._owner, EObject):
+        if not self._owner or not self._owner._isready \
+                or not isinstance(self._owner, EObject):
             return
         owner = self._owner
         efeature = self._efeature
