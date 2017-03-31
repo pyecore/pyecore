@@ -142,6 +142,7 @@ class EObject(ENotifer):
         self._eresource = None
         self.listeners = []
         self._eternal_listener = []
+        self._inverse_rels = set()
 
     def __initmetattr__(self, _super=None):
         _super = _super or self.__class__
@@ -192,6 +193,36 @@ class EObject(ENotifer):
         else:
             raise TypeError('Feature must have str or '
                             'EStructuralFeature type')
+
+    def delete(self, recursive=True):
+        if recursive:
+            [obj.delete() for obj in self.eAllContents()]
+        seek = set(self._inverse_rels)
+        # we also clean all the object references
+        seek.update((self, ref) for ref in self.eClass.eAllReferences())
+        for owner, feature in seek:
+            fvalue = owner.eGet(feature)
+            if feature.many:
+                if self in fvalue:
+                    fvalue.remove(self)
+                    continue
+                elif self is owner:
+                    fvalue.clear()
+                    continue
+                value = next((val for val in fvalue
+                              if hasattr(val, '_wrapped')
+                              and val._wrapped is self),
+                             None)
+                if value:
+                    fvalue.remove(value)
+            else:
+                if self is fvalue or self is owner:
+                    owner.eSet(feature, None)
+                    continue
+                value = fvalue if (hasattr(fvalue, '_wrapped')
+                                   and fvalue._wrapped is self) else None
+                if value:
+                    owner.eSet(feature, None)
 
     @property
     def eContents(self):
@@ -263,10 +294,6 @@ class EValue(PyEcoreValue):
         super().__init__(owner, efeature)
         self._value = value
 
-    def check(self, value):
-        if not EcoreUtils.isinstance(value, self._efeature.eType):
-            raise BadValueError(value, self._efeature.eType)
-
     def __get__(self, obj, owner=None):
         return self._value
 
@@ -275,7 +302,8 @@ class EValue(PyEcoreValue):
         previous_value = self._value
         self._value = value
         # This case happend during meta-EReference initialization
-        if not self._owner or not isinstance(self._owner, EObject):
+        if not self._owner or not self._owner._isready \
+                or not isinstance(self._owner, EObject):
             return
         owner = self._owner
         efeature = self._efeature
@@ -291,7 +319,17 @@ class EValue(PyEcoreValue):
         if not isinstance(efeature, EReference) or not update_opposite:
             return
 
-        if efeature.eOpposite and isinstance(value, EObject):
+        if not efeature.eOpposite:
+            couple = (owner, efeature)
+            if hasattr(value, '_inverse_rels'):
+                value._inverse_rels.add(couple)
+                if hasattr(previous_value, '_inverse_rels'):
+                    previous_value._inverse_rels.remove(couple)
+            elif value is None and hasattr(previous_value, '_inverse_rels'):
+                previous_value._inverse_rels.remove(couple)
+            return
+
+        if isinstance(value, EObject):
             eOpposite = efeature.eOpposite
             previous_value = value.__getattribute__(eOpposite.name)
             notif = Notification(new=owner, feature=eOpposite)
@@ -308,7 +346,7 @@ class EValue(PyEcoreValue):
                 if value._isready and \
                         eOpposite.get_default_value != owner:
                     value._isset.add(eOpposite)
-        elif efeature.eOpposite and value is None:
+        elif value is None:
             eOpposite = efeature.eOpposite
             if previous_value and eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
@@ -341,29 +379,36 @@ class ECollection(PyEcoreValue):
         if not isinstance(self._efeature, EReference):
             return
         eOpposite = self._efeature.eOpposite
-        if eOpposite:
-            if eOpposite.many and not remove:
-                owner.__getattribute__(eOpposite.name)  # force resolve
-                object.__getattribute__(owner, eOpposite.name) \
-                      .append(new_value, False)
-                owner.notify(Notification(new=new_value,
-                                          feature=eOpposite,
-                                          kind=Kind.ADD))
-            elif eOpposite.many and remove:
-                object.__getattribute__(owner, eOpposite.name) \
-                      .remove(new_value, False)
-                owner.notify(Notification(old=new_value,
-                                          feature=eOpposite,
-                                          kind=Kind.REMOVE))
+        if not eOpposite:
+            couple = (new_value, self._efeature)
+            if remove:
+                owner._inverse_rels.remove(couple)
             else:
-                new_value = None if remove else new_value
-                kind = Kind.UNSET if remove else Kind.SET
-                object.__getattribute__(owner, eOpposite.name)  # Force load
-                owner.__dict__[eOpposite.name] \
-                     .__set__(None, new_value, update_opposite=False)
-                owner.notify(Notification(new=new_value,
-                                          feature=eOpposite,
-                                          kind=kind))
+                owner._inverse_rels.add(couple)
+            return
+
+        if eOpposite.many and not remove:
+            owner.__getattribute__(eOpposite.name)  # force resolve
+            object.__getattribute__(owner, eOpposite.name) \
+                  .append(new_value, False)
+            owner.notify(Notification(new=new_value,
+                                      feature=eOpposite,
+                                      kind=Kind.ADD))
+        elif eOpposite.many and remove:
+            object.__getattribute__(owner, eOpposite.name) \
+                  .remove(new_value, False)
+            owner.notify(Notification(old=new_value,
+                                      feature=eOpposite,
+                                      kind=Kind.REMOVE))
+        else:
+            new_value = None if remove else new_value
+            kind = Kind.UNSET if remove else Kind.SET
+            object.__getattribute__(owner, eOpposite.name)  # Force load
+            owner.__dict__[eOpposite.name] \
+                 .__set__(None, new_value, update_opposite=False)
+            owner.notify(Notification(new=new_value,
+                                      feature=eOpposite,
+                                      kind=kind))
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -373,6 +418,9 @@ class ECollection(PyEcoreValue):
         self._owner.notify(Notification(old=value,
                                         feature=self._efeature,
                                         kind=Kind.REMOVE))
+
+    def clear(self):
+        [self.remove(x) for x in self]
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -693,7 +741,7 @@ class EStructuralFeature(ETypedElement):
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
-        name = self.name
+        name = self._name
         if name not in instance.__dict__.keys():
             if self.many:
                 new_value = ECollection.create(instance, self)
@@ -707,16 +755,17 @@ class EStructuralFeature(ETypedElement):
             return value
 
     def __set__(self, instance, value):
+        name = self._name
         if isinstance(value, ECollection):
-            instance.__dict__[self.name] = value
+            instance.__dict__[name] = value
             return
-        if self.name not in instance.__dict__.keys():
+        if name not in instance.__dict__.keys():
             evalue = EValue(instance, self)
-            instance.__dict__[self.name] = evalue
-        previous_value = instance.__dict__[self.name]
+            instance.__dict__[name] = evalue
+        previous_value = instance.__dict__[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance.__dict__[self.name].__set__(instance, value)
+        instance.__dict__[name].__set__(instance, value)
 
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
@@ -877,6 +926,10 @@ class EClass(EClassifier):
             feats.update(x.eStructuralFeatures)
         return feats
 
+    def eAllReferences(self):
+        return set((x for x in self.eAllStructuralFeatures()
+                    if isinstance(x, EReference)))
+
     def eAllOperations(self):
         ops = set(self.eOperations)
         for x in self.eAllSuperTypes():
@@ -931,17 +984,60 @@ class EProxy(EObject):
         object.__setattr__(self, '_proxy_path', path)
         object.__setattr__(self, '_proxy_resource', resource)
         object.__setattr__(self, '_resolved', wrapped is not None)
+        object.__setattr__(self, '_inverse_rels', set())
+
+    def force_resolve(self):
+        if self._resolved:
+            return
+        resource = self._proxy_resource
+        decoders = resource._get_href_decoder(self._proxy_path)
+        self._wrapped = decoders.resolve(self._proxy_path, resource)
+        self._wrapped._inverse_rels.update(self._inverse_rels)
+        self._inverse_rels = self._wrapped._inverse_rels
+        self._resolved = True
+
+    def delete(self, recursive=True):
+        if recursive and self._resolved:
+            [obj.delete() for obj in self.eAllContents()]
+
+        seek = set(self._inverse_rels)
+        if self._resolved:
+            seek.update((self, ref) for ref in self.eClass.eAllReferences())
+        for owner, feature in seek:
+            fvalue = owner.eGet(feature)
+            if feature.many:
+                if self in fvalue:
+                    fvalue.remove(self)
+                    continue
+                if owner is self:
+                    fvalue.clear()
+                    continue
+                value = next((val for val in fvalue
+                              if self._wrapped is val),
+                             None)
+                if value:
+                    fvalue.remove(value)
+            else:
+                if self is fvalue or owner is self:
+                    owner.eSet(feature, None)
+                    continue
+                value = fvalue if self._wrapped is fvalue else None
+                if value:
+                    owner.eSet(feature, None)
 
     def __getattribute__(self, name):
-        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved']:
+        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
+                    'force_resolve', 'delete']:
             return object.__getattribute__(self, name)
         resolved = object.__getattribute__(self, '_resolved')
         if not resolved:
-            if name == '__class__':
+            if name in ['__class__', '_inverse_rels']:
                 return object.__getattribute__(self, name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
             self._wrapped = decoders.resolve(self._proxy_path, resource)
+            self._wrapped._inverse_rels.update(self._inverse_rels)
+            self._inverse_rels = self._wrapped._inverse_rels
             self._resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)

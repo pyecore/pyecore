@@ -20,13 +20,18 @@ class ResourceSet(object):
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
             resource = self.resource_factory['*'](uri)
-        # self.resources[uri._uri] = resource
         self.resources[uri.normalize()] = resource
         resource._resourceset = self
         resource._decoders.insert(0, self)
         return resource
 
     def get_resource(self, uri):
+        if isinstance(uri, str):
+            uri = URI(uri)
+        # We check first if the resource already exists in the ResourceSet
+        if uri.normalize() in self.resources:
+            return self.resources[uri.normalize()]
+        # If not, we create a new resource
         resource = self.create_resource(uri)
         resource.load()
         return resource
@@ -243,7 +248,11 @@ class Resource(object):
             key, index = feat if len(feat) > 1 else (feat[0], None)
             if key.startswith('@'):
                 tmp_obj = obj.__getattribute__(key[1:])
-                obj = tmp_obj[int(index)] if index else tmp_obj
+                try:
+                    obj = tmp_obj[int(index)] if index else tmp_obj
+                except IndexError:
+                    raise ValueError('Index in path is not the collection,'
+                                     ' broken proxy?')
             elif key.startswith('%'):
                 key = key[1:-1]
                 obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
