@@ -1,6 +1,7 @@
 from uuid import uuid4
 import urllib.request
 from os import path
+from collections import ChainMap
 from .. import ecore as Ecore
 
 global_registry = {}
@@ -9,7 +10,7 @@ global_registry = {}
 class ResourceSet(object):
     def __init__(self):
         self.resources = {}
-        self.metamodel_registry = {}
+        self.metamodel_registry = ChainMap({}, global_registry)
         self.resource_factory = dict(ResourceSet.resource_factory)
 
     def create_resource(self, uri):
@@ -19,13 +20,18 @@ class ResourceSet(object):
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
             resource = self.resource_factory['*'](uri)
-        # self.resources[uri._uri] = resource
         self.resources[uri.normalize()] = resource
         resource._resourceset = self
         resource._decoders.insert(0, self)
         return resource
 
     def get_resource(self, uri):
+        if isinstance(uri, str):
+            uri = URI(uri)
+        # We check first if the resource already exists in the ResourceSet
+        if uri.normalize() in self.resources:
+            return self.resources[uri.normalize()]
+        # If not, we create a new resource
         resource = self.create_resource(uri)
         resource.load()
         return resource
@@ -193,22 +199,25 @@ class Resource(object):
         raise NotImplementedError('resolve method must be implemented')
 
     def prefix2epackage(self, prefix):
+        nsURI = None
         try:
-            return self.resource_set.metamodel_registry[self.prefixes[prefix]]
+            nsURI = self.prefixes[prefix]
+        except KeyError:
+            return None
+        try:
+            return self.resource_set.metamodel_registry[nsURI]
         except Exception:
             try:
-                return global_registry[self.prefixes[prefix]]
+                return global_registry[nsURI]
             except Exception:
                 return None
 
     def get_metamodel(self, nsuri):
-        if self.resource_set:
-            try:
-                return self.resource_set.metamodel_registry[nsuri]
-            except KeyError:
-                pass
         try:
-            return global_registry[nsuri]
+            if self.resource_set:
+                return self.resource_set.metamodel_registry[nsuri]
+            else:
+                return global_registry[nsuri]
         except KeyError:
             raise KeyError('Unknown metamodel with uri: {0}'.format(nsuri))
 
@@ -239,7 +248,11 @@ class Resource(object):
             key, index = feat if len(feat) > 1 else (feat[0], None)
             if key.startswith('@'):
                 tmp_obj = obj.__getattribute__(key[1:])
-                obj = tmp_obj[int(index)] if index else tmp_obj
+                try:
+                    obj = tmp_obj[int(index)] if index else tmp_obj
+                except IndexError:
+                    raise ValueError('Index in path is not the collection,'
+                                     ' broken proxy?')
             elif key.startswith('%'):
                 key = key[1:-1]
                 obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
@@ -285,17 +298,15 @@ class Resource(object):
             else:
                 uri = ''
                 root = obj.eRoot()
+                mm_registry = None
                 if self.resource_set:
-                    local_mm_registry = self.resource_set.metamodel_registry
-                    for reguri, value in local_mm_registry.items():
-                        if value is root:
-                            uri = reguri
-                            break
-                if not uri:
-                    for reguri, value in global_registry.items():
-                        if value is root:
-                            uri = reguri
-                            break
+                    mm_registry = self.resource_set.metamodel_registry
+                else:
+                    mm_registry = global_registry
+                for reguri, value in mm_registry.items():
+                    if value is root:
+                        uri = reguri
+                        break
                 if not uri:
                     return '', False
             if not uri_fragment.startswith('#'):

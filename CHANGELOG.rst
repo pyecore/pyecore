@@ -1,6 +1,36 @@
 Changelog
 ---------
 
+0.1.4
++++++
+
+**Features**
+
+- Add support for object deletion in PyEcore. The delete feature allows the user
+  to remove parts of the model. Those parts can be a simple element or a sub-graph
+  if a container object is deleted. The delete tries to keep up to date a special
+  list that gathers the non-inverse navigable relation. When called, the method
+  gathers all the EReferences of the object to delete and these special relations.
+  It then update the pointed references. There is a special behavior if the object
+  to delete is a proxy. If unresolved, the proxy can only be removed from the
+  main location, but not from the remote one. If resolved, the proxy keep the
+  classical behavior. This behavior tries to match the EMF-Java one: https://www.eclipse.org/forums/index.php/t/127567/
+
+**Bugfixes**
+
+- Fix double resources loading in same ``ResourceSet``. When two ``get_resource(...)``
+  call with the same URI as parameter were done in the same ``ResourceSet``,
+  two different resources were returned. The new behavior ensure that once the
+  resource had been loaded, a second call to ``get_resource(...)`` with the
+  same URI will return the resource created in the first place.
+
+**Miscellaneous**
+
+- Make use of ``ChainMap`` for ``global_registry`` management (simplify code).
+- Raise a better exception when a 'broken' proxy is resolved.
+- Add small performances improvement.
+
+
 0.1.3
 +++++
 

@@ -11,8 +11,8 @@ if sys.version_info < (3, 0):
 setup(
     name="pyecore",
     version=pyecore.__version__,
-    description=("A Pythonic Implementation of the Eclipse Modeling "
-                 "Framework"),
+    description=("A Python(ic) Implementation of the Eclipse Modeling "
+                 "Framework (EMF/Ecore)"),
     long_description=open('README.rst').read(),
     keywords="model metamodel EMF Ecore",
     url="https://github.com/aranega/pyecore",

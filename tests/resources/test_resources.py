@@ -186,5 +186,47 @@ def test_resource_load_proxy_href_inner(simplemm):
     assert EcoreUtils.isinstance(root.a[0].tob[0], B)
 
 
+def test_resource_load_proxy_href_force_resolve(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
+    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    assert isinstance(root.a[0].tob[0], EProxy)
+    B = simplemm.getEClassifier('B')
+    root.a[0].tob[0].force_resolve()  # We force the proxy resolution
+    assert isinstance(root.a[0].tob[0], B.python_class)
+    assert EcoreUtils.isinstance(root.a[0].tob[0], B)
+
+
+def test_resource_load_proxy_href_force_resolve_idempotent(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
+    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    x = root.a[0].tob[0]
+    x.force_resolve()
+    wrapped = x._wrapped
+    x.force_resolve()
+    assert wrapped is x._wrapped
+
+
 # def test_fileuridecoder():
 #     assert File_URI_decoder.can_resolve('file://simple.ecore#//test') is True
+
+
+def test_resource_mmregistry_isolation():
+    global_registry['cdef'] = None
+    rset1 = ResourceSet()
+    rset2 = ResourceSet()
+    rset1.metamodel_registry['abcd'] = None
+    assert 'abcd' not in rset2.metamodel_registry
+    assert 'cdef' in rset2.metamodel_registry
+    assert 'cdef' in rset1.metamodel_registry
+
+
+def test_resource_double_load(simplemm):
+    rset = ResourceSet()
+    rset.metamodel_registry[simplemm.nsURI] = simplemm
+    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    root2 = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    assert root is root2
