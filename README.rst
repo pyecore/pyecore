@@ -538,11 +538,43 @@ You can also use a ``ResourceSet`` to deal with this:
 Deleting Elements
 =================
 
-The element deletion is not yet supported by PyEcore, but, you can, in a way,
-removing elements from a model using the XMI serialization. If you want to
-remove an element from a Resource, you have to remove it from its container.
-PyEcore does not serialize elements that are not contained by a ``Resource`` and
-each reference to this 'not-contained' element is not serialized.
+Deleting elements in EMF is still a sensible point because of all the special
+model "shape" that can impact the deletion algorithm. PyEcore supports two main
+way of deleting elements: one is a real kind of deletion, while the other is
+more less direct.
+
+The ``delete()`` method
+-----------------------
+
+The first way of deleting element is to use the ``delete()`` method which is
+owned by every ``EObject/EProxy``:
+
+.. code-block:: python
+
+    >>> # we suppose we have an already existing element in 'elem'
+    >>> elem.delete()
+
+This call is also recursive by default: every sub-object of the deleted element
+is also deleted. This behavior is the one by default as a "containment"
+reference is a strong constraint.
+
+The behavior of the ``delete()`` method can be confusing when there is many
+``EProxy`` in the game. As the ``EProxy`` only gives a partial view of the
+object while it is not resolved, the ``delete()`` can only correctly remove
+resolved proxies. If a resource or many elements that are referenced in many
+other resources must be destroyed, in order to be sure to not introduce broken
+proxies, the best solution is to resolve all the proxies first, then to delete
+them.
+
+
+Removing an element from it's container
+---------------------------------------
+
+You can also, in a way, removing elements from a model using the XMI
+serialization. If you want to remove an element from a Resource, you have to
+remove it from its container. PyEcore does not serialize elements that are not
+contained by a ``Resource`` and each reference to this 'not-contained' element
+is not serialized.
 
 
 Installation
@@ -610,14 +642,14 @@ In the current state, the project implements:
 * simple notification/Event system,
 * EOperations support,
 * code generator for the static part,
-* EMF proxies.
+* EMF proxies (first version),
+* object deletion (first version).
 
 The things that are in the roadmap:
 
 * URI mapper
-* object deletion,
 * documentation,
-* command system (?).
+* EMF commands (?).
 
 Existing Projects
 =================
