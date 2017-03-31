@@ -198,12 +198,16 @@ class EObject(ENotifer):
         if recursive:
             [obj.delete() for obj in self.eAllContents()]
         seek = set(self._inverse_rels)
-        seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
+        # we also clean all the object references
+        seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
             if feature.many:
                 if self in fvalue:
                     fvalue.remove(self)
+                    continue
+                elif self is owner:
+                    fvalue.clear()
                     continue
                 value = next((val for val in fvalue
                               if hasattr(val, '_wrapped')
@@ -212,7 +216,7 @@ class EObject(ENotifer):
                 if value:
                     fvalue.remove(value)
             else:
-                if self is fvalue:
+                if self is fvalue or self is owner:
                     owner.eSet(feature, None)
                     continue
                 value = fvalue if (hasattr(fvalue, '_wrapped')
@@ -414,6 +418,9 @@ class ECollection(PyEcoreValue):
         self._owner.notify(Notification(old=value,
                                         feature=self._efeature,
                                         kind=Kind.REMOVE))
+
+    def clear(self):
+        [self.remove(x) for x in self]
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -919,6 +926,10 @@ class EClass(EClassifier):
             feats.update(x.eStructuralFeatures)
         return feats
 
+    def eAllReferences(self):
+        return set((x for x in self.eAllStructuralFeatures()
+                    if isinstance(x, EReference)))
+
     def eAllOperations(self):
         ops = set(self.eOperations)
         for x in self.eAllSuperTypes():
@@ -986,16 +997,20 @@ class EProxy(EObject):
         self._resolved = True
 
     def delete(self, recursive=True):
-        if recursive:
+        if recursive and self._resolved:
             [obj.delete() for obj in self.eAllContents()]
 
         seek = set(self._inverse_rels)
-        seek.update([ref for ref in self.eClass.eReferences if ref.eOpposite])
+        if self._resolved:
+            seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
             if feature.many:
                 if self in fvalue:
                     fvalue.remove(self)
+                    continue
+                if owner is self:
+                    fvalue.clear()
                     continue
                 value = next((val for val in fvalue
                               if self._wrapped is val),
@@ -1003,7 +1018,7 @@ class EProxy(EObject):
                 if value:
                     fvalue.remove(value)
             else:
-                if self is fvalue:
+                if self is fvalue or owner is self:
                     owner.eSet(feature, None)
                     continue
                 value = fvalue if self._wrapped is fvalue else None
