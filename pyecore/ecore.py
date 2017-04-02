@@ -1,9 +1,9 @@
 from functools import partial
-from ordered_set import OrderedSet
-from .notification import ENotifer, Notification, Kind, EObserver
 import sys
 import keyword
 import inspect
+from ordered_set import OrderedSet
+from .notification import ENotifer, Notification, Kind, EObserver
 
 
 name = 'ecore'
@@ -82,28 +82,28 @@ class Core(object):
             if _cls is not EObject:
                 cls.eClass.eSuperTypes.append(_cls.eClass)
         # init eclass by reflection
-        for k, v in cls.__dict__.items():
-            if isinstance(v, EStructuralFeature):
-                if not v.name:
-                    v.name = k
-                cls.eClass.eStructuralFeatures.append(v)
-            elif inspect.isfunction(v):
+        for k, feature in cls.__dict__.items():
+            if isinstance(feature, EStructuralFeature):
+                if not feature.name:
+                    feature.name = k
+                cls.eClass.eStructuralFeatures.append(feature)
+            elif inspect.isfunction(feature):
                 if k == '__init__':
                     continue
-                argspect = inspect.getargspec(v)
+                argspect = inspect.getargspec(feature)
                 args = argspect.args
                 if len(args) < 1 or args[0] != 'self':
                     continue
-                op = EOperation(v.__name__)
+                operation = EOperation(feature.__name__)
                 defaults = argspect.defaults
                 len_defaults = len(defaults) if defaults else 0
                 nb_required = len(args) - len_defaults
-                for i, p in enumerate(args):
-                    parameter = EParameter(p, eType=ENativeType)
+                for i, parameter_name in enumerate(args):
+                    parameter = EParameter(parameter_name, eType=ENativeType)
                     if i < nb_required:
                         parameter.required = True
-                    op.eParameters.append(parameter)
-                cls.eClass.eOperations.append(op)
+                    operation.eParameters.append(parameter)
+                cls.eClass.eOperations.append(operation)
 
     def register_classifier(cls, abstract=False, promote=False):
         if promote:
@@ -446,9 +446,9 @@ class EList(ECollection, list):
 
     def extend(self, sublist):
         all(self.check(x) for x in sublist)
-        for x in sublist:
-            self._update_container(x)
-            self._update_opposite(x, self._owner)
+        for value in sublist:
+            self._update_container(value)
+            self._update_opposite(value, self._owner)
         super().extend(sublist)
         self._owner.notify(Notification(new=sublist,
                                         feature=self._efeature,
@@ -491,9 +491,9 @@ class EAbstractSet(ECollection):
 
     def update(self, *others):
         all(self.check(x) for x in others)
-        for x in others:
-            self._update_container(x)
-            self._update_opposite(x, self._owner)
+        for value in others:
+            self._update_container(value)
+            self._update_opposite(value, self._owner)
         super().update(others)
         self._owner.notify(Notification(new=others,
                                         feature=self._efeature,
@@ -829,8 +829,8 @@ class EClass(EClassifier):
             self._metainstance = type(self.name,
                                       self.__compute_supertypes(),
                                       {
-                                        'eClass': self,
-                                        '_staticEClass': self._staticEClass,
+                                          'eClass': self,
+                                          '_staticEClass': self._staticEClass,
                                       })
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
@@ -865,10 +865,10 @@ class EClass(EClassifier):
 
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()
-        ns = {}
+        namespace = {}
         code = compile(eoperation.to_code(), "<str>", "exec")
-        exec(code, ns)
-        setattr(self.python_class, name, ns[name])
+        exec(code, namespace)
+        setattr(self.python_class, name, namespace[name])
 
     def __compute_supertypes(self):
         if not self.eSuperTypes:
@@ -896,8 +896,8 @@ class EClass(EClassifier):
 
     def findEStructuralFeature(self, name):
         struct = next(
-                  (f for f in self.eStructuralFeatures if f.name == name),
-                  None)
+            (f for f in self.eStructuralFeatures if f.name == name),
+            None)
         if struct:
             return struct
         if not self.eSuperTypes:
@@ -921,32 +921,32 @@ class EClass(EClassifier):
         return result
 
     def eAllStructuralFeatures(self):
-        feats = set(self.eStructuralFeatures)
-        for x in self.eAllSuperTypes():
-            feats.update(x.eStructuralFeatures)
-        return feats
+        features = set(self.eStructuralFeatures)
+        for feature in self.eAllSuperTypes():
+            features.update(feature.eStructuralFeatures)
+        return features
 
     def eAllReferences(self):
         return set((x for x in self.eAllStructuralFeatures()
                     if isinstance(x, EReference)))
 
     def eAllOperations(self):
-        ops = set(self.eOperations)
-        for x in self.eAllSuperTypes():
-            ops.update(x.eOperations)
-        return ops
+        operations = set(self.eOperations)
+        for superclass in self.eAllSuperTypes():
+            operations.update(superclass.eOperations)
+        return operations
 
     def findEOperation(self, name):
-        op = next((f for f in self.eOperations if f.name == name), None)
-        if op:
-            return op
+        operation = next((f for f in self.eOperations if f.name == name), None)
+        if operation:
+            return operation
         if not self.eSuperTypes:
             return None
         for stype in self.eSuperTypes:
-            op = stype.findEOperation(name)
-            if op:
+            operation = stype.findEOperation(name)
+            if operation:
                 break
-        return op
+        return operation
 
 
 # Meta methods for static EClass
