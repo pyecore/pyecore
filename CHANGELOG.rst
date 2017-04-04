@@ -1,6 +1,18 @@
 Changelog
 ---------
 
+0.1.5
++++++
+
+**Bugfixes**
+
+- Fix missing types from Ecore (@moltob contribution, thanks!). These types are
+  the `E*Object` types for numbers. The modification had been done in the
+  ``ecore.py`` file as these are default Ecore types and not XML types (or
+  coming from another EMF lib). This commit increases the compatibility with
+  existing ``.ecore`` files.
+
+
 0.1.4
 +++++
 
