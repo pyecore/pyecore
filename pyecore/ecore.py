@@ -1069,8 +1069,12 @@ EBoolean = EDataType('EBoolean', bool, False,
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
 ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
+EIntegerObject = EDataType('EIntegerObject', int, from_string=lambda x: int(x))
+EBigInteger = EDataType('EBigInteger', int, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
+EDoubleObject = EDataType('EDoubleObject', float, 0.0, from_string=lambda x: float(x))
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
+EFloatObject = EDataType('EFloatObject', float, 0.0, from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
@@ -1205,4 +1209,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EStringToStringMapEntry', 'EDiagnosticChain', 'ENativeType',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
-           'EInt', 'EFloat', 'ELong', 'EProxy']
+           'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
+           'EFloatObject', 'ELong', 'EProxy']
