@@ -1,3 +1,4 @@
+from enum import Enum, unique
 
 
 class ENotifer(object):
@@ -7,27 +8,15 @@ class ENotifer(object):
             listener.notifyChanged(notification)
 
 
-def enum(enumName, *listValueNames):
-    """Clever implementation of an enum like in python
-
-    Shameless copy from: http://sametmax.com/faire-des-enums-en-python/
-    """
-    listValueNumbers = range(len(listValueNames))
-    dictAttrib = dict(zip(listValueNames, listValueNumbers))
-    dictReverse = dict(zip(listValueNumbers, listValueNames))
-    dictAttrib["dictReverse"] = dictReverse
-    mainType = type(enumName, (), dictAttrib)
-    return mainType
-
-
-Kind = enum('Kind',
-            'ADD',
-            'ADD_MANY',
-            'MOVE',
-            'REMOVE',
-            'REMOVE_MANY',
-            'SET',
-            'UNSET')
+@unique
+class Kind(Enum):
+    ADD = 0
+    ADD_MANY = 1
+    MOVE = 2
+    REMOVE = 3
+    REMOVE_MANY = 4
+    SET = 5
+    UNSET = 6
 
 
 class Notification(object):
@@ -41,7 +30,7 @@ class Notification(object):
 
     def __repr__(self):
         return ('[{0}] old={1} new={2} obj={3} #{4}'
-                .format(Kind.dictReverse[self.kind],
+                .format(self.kind.name,
                         self.old,
                         self.new,
                         self.notifier,
