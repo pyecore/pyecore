@@ -6,8 +6,7 @@
 
 [comment generate __init__/]
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
-import pyecore.ecore as Ecore
-from .[p.name/] import getEClassifier, eClassifiers
+from pyecore.ecore import eClassifiers
 from .[p.name/] import name, nsURI, nsPrefix, eClass
 from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
 [if (p.eSuperPackage = null)]
@@ -60,7 +59,6 @@ for subpack in eSubpackages:
 [comment generate module /]
 [file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
 from pyecore.ecore import *
-import pyecore.ecore as Ecore
 [for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
 from [c.ePackage.qualifiedName()/] import [c.name/]
 [/for]
@@ -70,7 +68,7 @@ name = '[p.name/]'
 nsURI = '[p.nsURI/]'
 nsPrefix = '[p.nsPrefix/]'
 
-eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 
 
 [for (c : EClassifier | p.eClassifiers->filter(EEnum))]
