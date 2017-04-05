@@ -1,3 +1,8 @@
+"""
+The resource proposes all the concepts that are related to Resource handling.
+A Resource represents a model resource and many of them can be contained in a
+ResourceSet.
+"""
 from uuid import uuid4
 import urllib.request
 from os import path
@@ -170,9 +175,7 @@ class Global_URI_decoder(object):
 
 
 class Resource(object):
-    _decoders = [Global_URI_decoder,
-                 #  File_URI_decoder,
-                 ]
+    _decoders = [Global_URI_decoder]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}

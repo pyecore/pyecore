@@ -1,11 +1,14 @@
+"""
+The xmi module introduces XMI resource and XMI parsing.
+"""
 from lxml import etree
 from .resource import Resource
 from .. import ecore as Ecore
 
-xsi = 'xsi'
-xsi_url = 'http://www.w3.org/2001/XMLSchema-instance'
-xmi = 'xmi'
-xmi_url = 'http://www.omg.org/XMI'
+XSI = 'xsi'
+XSI_URL = 'http://www.w3.org/2001/XMLSchema-instance'
+XMI = 'xmi'
+XMI_URL = 'http://www.omg.org/XMI'
 
 
 class XMIResource(Resource):
@@ -18,8 +21,8 @@ class XMIResource(Resource):
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
-        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes[xsi])
-        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[xmi])
+        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes[XSI])
+        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[XMI])
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
         if not self.contents:
@@ -300,23 +303,23 @@ class XMIResource(Resource):
             prefix = epackage.nsPrefix
             nsURI = epackage.nsURI
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
-            nsmap = {xmi: xmi_url,
-                     xsi: xsi_url}
+            nsmap = {XMI: XMI_URL,
+                     XSI: XSI_URL}
             nsmap.update(self.prefixes)
             node = etree.Element(tag, nsmap=nsmap)
-            xmi_version = etree.QName(xmi_url, 'version')
+            xmi_version = etree.QName(XMI_URL, 'version')
             node.attrib[xmi_version] = '2.0'
         else:
             node = etree.Element(obj.eContainmentFeature().name)
             if obj.eContainmentFeature().eType != eclass:
-                xsi_type = etree.QName(xsi_url, 'type')
+                xsi_type = etree.QName(XSI_URL, 'type')
                 uri = eclass.ePackage.nsURI
                 prefix = self.reverse_nsmap[uri]
                 node.attrib[xsi_type] = '{0}:{1}' \
                                         .format(prefix, eclass.name)
         if self._use_uuid:
             self._assign_uuid(obj)
-            xmi_id = '{{{0}}}id'.format(xmi_url)
+            xmi_id = '{{{0}}}id'.format(XMI_URL)
             node.attrib[xmi_id] = obj._xmiid
 
         for feat in obj._isset:

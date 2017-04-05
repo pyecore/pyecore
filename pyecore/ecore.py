@@ -1,3 +1,10 @@
+"""
+This module is the heart of PyEcore. It defines all the basic concepts that
+are common to EMF-Java and PyEcore (EObject/EClass...).
+
+These concepts are enough if dynamic metamodel instance are handled (code
+generation is not required).
+"""
 from functools import partial
 import sys
 import keyword
@@ -1072,9 +1079,11 @@ ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
 EIntegerObject = EDataType('EIntegerObject', int, from_string=lambda x: int(x))
 EBigInteger = EDataType('EBigInteger', int, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
-EDoubleObject = EDataType('EDoubleObject', float, 0.0, from_string=lambda x: float(x))
+EDoubleObject = EDataType('EDoubleObject', float, 0.0,
+                          from_string=lambda x: float(x))
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
-EFloatObject = EDataType('EFloatObject', float, 0.0, from_string=lambda x: float(x))
+EFloatObject = EDataType('EFloatObject', float, 0.0,
+                         from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
