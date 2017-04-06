@@ -93,14 +93,13 @@ eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 [if (c.abstract)]@abstract
 [/if]
 [c.classHeader()/]
-    [for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
+    [if (c.eAttributes->size() + c.eReferences->size() + c.eAllAttributes->select(derived)->size() + c.eOperations->size() = 0)]
+    pass[/if][for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
     [a.generate()/]
     [/for]
     [for (r : EReference | c.eReferences) after('\n')]
     [r.name/] = EReference([r.referenceQualifiers()/])
-    [/for]
-    def __init__(self):
-        super().__init__()[for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
+    [/for][for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
     @property
     def [d.name/](self):
         return self._[d.name/]
