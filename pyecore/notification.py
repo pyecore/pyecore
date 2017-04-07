@@ -1,4 +1,8 @@
-from enum import Enum, unique
+"""
+This module gives the "listener" classes for the PyEcore notification layer.
+The main class to create a new listener is "EObserver" which is triggered
+each time a modification is perfomed on an observed element.
+"""
 
 
 class ENotifer(object):

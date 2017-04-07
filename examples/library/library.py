@@ -1,45 +1,40 @@
-from pyecore.ecore import *
+from functools import partial
 import pyecore.ecore as Ecore
+from pyecore.ecore import *
 
-BookCategory = EEnum('BookCategory', literals=['ScienceFiction','Biographie','Mistery',])
+name = 'library'
+nsURI = 'http://emf.wikipedia.org/2011/Library'
+nsPrefix = 'lib'
+
+eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eClassifiers = {}
+getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
+
+
+BookCategory = EEnum('BookCategory', literals=['ScienceFiction', 'Biographie', 'Mistery'])  # noqa
 
 
 class Employee(EObject, metaclass=MetaEClass):
-
     name = EAttribute(eType=EString)
-    age = EAttribute(eType=EInteger)
-
-    def __init__(self):
-        super().__init__()
+    age = EAttribute(eType=EInt)
 
 
 class Library(EObject, metaclass=MetaEClass):
-
     name = EAttribute(eType=EString)
     address = EAttribute(eType=EString)
     employees = EReference(upper=-1, containment=True)
     writers = EReference(upper=-1, containment=True)
     books = EReference(upper=-1, containment=True)
 
-    def __init__(self):
-        super().__init__()
-
 
 class Writer(EObject, metaclass=MetaEClass):
-
     name = EAttribute(eType=EString)
     books = EReference(upper=-1)
 
-    def __init__(self):
-        super().__init__()
-
 
 class Book(EObject, metaclass=MetaEClass):
-
     title = EAttribute(eType=EString)
-    pages = EAttribute(eType=EInteger)
+    pages = EAttribute(eType=EInt)
     category = EAttribute(eType=BookCategory)
     authors = EReference(upper=-1)
-
-    def __init__(self):
-        super().__init__()
