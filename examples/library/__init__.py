@@ -1,19 +1,12 @@
-import pyecore.ecore as Ecore
 from .library import getEClassifier, eClassifiers
+from .library import name, nsURI, nsPrefix, eClass
 from .library import Employee, Library, Writer, Book, BookCategory
 from . import library
 
 __all__ = ['Employee', 'Library', 'Writer', 'Book', 'BookCategory']
 
-name = 'library'
-nsURI = 'http://emf.wikipedia.org/2011/Library'
-nsPrefix = 'lib'
-
-eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
-
 eSubpackages = []
 eSuperPackage = None
-
 
 # Non opposite EReferences
 Library.employees.eType = Employee

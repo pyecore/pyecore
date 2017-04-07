@@ -1,11 +1,12 @@
-import pyecore.ecore as Ecore
 from .library import getEClassifier, eClassifiers
-from .library import name, nsURI, nsPrefix, eClass, eSubpackages, eSuperPackage
-
+from .library import name, nsURI, nsPrefix, eClass
 from .library import Employee, Library, Writer, Book, BookCategory
 from . import library
 
 __all__ = ['Employee', 'Library', 'Writer', 'Book', 'BookCategory']
+
+eSubpackages = []
+eSuperPackage = None
 
 # Non opposite EReferences
 Library.employees.eType = Employee
