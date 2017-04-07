@@ -79,6 +79,8 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 [c.generate()/]
 [/for]
 [for (c : EClassifier | p.eClassifiers->filter(EClass)->sortedBy(nbSuperTypes()))]
+
+
 [c.generate()/]
 [/for]
 [/file]
@@ -87,36 +89,47 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 
 [template public generate(c : EClassifier)/]
 [template public generate(e : EEnum)]
-[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals)]'[l.name/]',[/for]])
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals) separator(', ')]'[l.name/]'[/for]])  # noqa
 [/template]
 
 
-[template public generate(c : EClass)]
-
-
+[template public generate(c : EClass) ? (eAttributes->size() + eReferences->size() + eOperations->size() = 0) post(trim())]
 [if (c.abstract)]@abstract
 [/if]
 [c.classHeader()/]
-    [if (c.eAttributes->size() + c.eReferences->size() + c.eAllAttributes->select(derived)->size() + c.eOperations->size() = 0)]
-    pass[/if][for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
+    pass
+[/template]
+
+
+[template public generate(c : EClass) ? (eAttributes->size() + eReferences->size() + eOperations->size() <> 0) post(trim())]
+[if (c.abstract)]@abstract
+[/if]
+[c.classHeader()/]
+    [for (a : EAttribute | c.eAttributes)]
     [a.generate()/]
     [/for]
-    [for (r : EReference | c.eReferences) after('\n')]
+    [for (r : EReference | c.eReferences)]
     [r.name/] = EReference([r.referenceQualifiers()/])
-    [/for][for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
+    [/for]
+    [for (d : EAttribute | c.eAttributes->select(derived))]
+
     @property
     def [d.name/](self):
         return self._[d.name/]
 
     @[d.name/].setter
     def [d.name/](self, value):
-        self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
+        self._[d.name/] = value
+    [/for]
+    [for (o : EOperation | c.eOperations)]
+
     def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
         [if (c.getDocumentation() <> '')]
         """
         [c.getDocumentation()/]
         """[/if]
-        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
+        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')
+    [/for]
 [/template]
 
 
