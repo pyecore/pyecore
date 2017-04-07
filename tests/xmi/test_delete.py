@@ -2,6 +2,7 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.ecore import *
 from pyecore.resources import global_registry, ResourceSet
+from os import path
 
 
 @pytest.fixture(scope='module')
@@ -158,7 +159,8 @@ def test_delete_simpledelete_multi_opposite(model1, lib):
 
 def test_delete_unresolved_proxy(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].tob[0]
     b.delete()
     assert len(root.a[0].tob) == 0
@@ -166,8 +168,11 @@ def test_delete_unresolved_proxy(lib):
 
 def test_delete_unresolved_proxy_2_models_loaded(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].tob[0]
     b.delete()
     assert len(root.a[0].tob) == 0
@@ -176,8 +181,11 @@ def test_delete_unresolved_proxy_2_models_loaded(lib):
 
 def test_delete_resolved_proxy_2_models_loaded(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].tob[0]
     b.force_resolve()
     b.delete()
@@ -188,8 +196,11 @@ def test_delete_resolved_proxy_2_models_loaded(lib):
 
 def test_delete_unresolved_proxy_loaded_models_from_pointed(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root2.b[0]
     b.delete()
     assert len(root.a[0].tob) == 1  # the element is still in the collection
@@ -199,8 +210,11 @@ def test_delete_unresolved_proxy_loaded_models_from_pointed(lib):
 
 def test_delete_resolved_proxy_loaded_models_from_pointed(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     root.a[0].tob[0].force_resolve()
     b = root2.b[0]
     b.delete()
@@ -211,7 +225,8 @@ def test_delete_resolved_proxy_loaded_models_from_pointed(lib):
 
 def test_delete_unresolved_proxy_simple_relation(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].simpleb
     b.delete()
     assert len(root.a[0].tob) == 0
@@ -219,8 +234,11 @@ def test_delete_unresolved_proxy_simple_relation(lib):
 
 def test_delete_resolved_proxy_simple_relation(lib):
     rset = ResourceSet()
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].simpleb
     b.force_resolve()
     b.delete()
@@ -230,8 +248,11 @@ def test_delete_resolved_proxy_simple_relation(lib):
 
 def test_delete_unresolved_proxy_2_models_loaded_simple_relation(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].simpleb
     b.delete()
     assert root.a[0].simpleb is None
@@ -240,8 +261,11 @@ def test_delete_unresolved_proxy_2_models_loaded_simple_relation(lib):
 
 def test_delete_resolved_proxy_2_models_loaded_simple_relation(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root.a[0].simpleb
     b.force_resolve()
     b.delete()
@@ -251,8 +275,11 @@ def test_delete_resolved_proxy_2_models_loaded_simple_relation(lib):
 
 def test_delete_unresolved_proxy_loaded_models_from_pointed_simple_rel(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     b = root2.b[0]
     b.delete()
     assert root.a[0].simpleb is not None  # the element is still in the col.
@@ -262,8 +289,11 @@ def test_delete_unresolved_proxy_loaded_models_from_pointed_simple_rel(lib):
 
 def test_delete_resolved_proxy_loaded_models_from_pointed_simple_rel(lib):
     rset = ResourceSet()
-    root = rset.get_resource('tests/xmi/xmi-tests/a3.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/b1.xmi').contents[0]
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'a3.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi')
+    root2 = rset.get_resource(xmi_file).contents[0]
     root.a[0].simpleb.force_resolve()
     b = root2.b[0]
     b.delete()

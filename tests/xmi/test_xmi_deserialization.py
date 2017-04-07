@@ -3,6 +3,7 @@ import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource
 from pyecore.resources.resource import HttpURI
+from os import path
 
 def test_uri_http():
     uri = HttpURI('https://api.genmymodel.com/projects/_L0eC8P1oEeW9zv77lynsJg/xmi')
@@ -28,7 +29,8 @@ def test_uri_simple():
 
 def test_xmiresource_load_ecore_testEMF():
     global_registry[Ecore.nsURI] = Ecore
-    resource = XMIResource(URI('tests/xmi/xmi-tests/testEMF.xmi'))
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
+    resource = XMIResource(URI(xmi_file))
     resource.load()
     assert resource.contents != []
     root = resource.contents[0]
@@ -54,7 +56,8 @@ def test_xmiresource_load_ecore_testEMF():
 def test_resourceset_getresource_ecore_My():
     global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/My.ecore'))
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
+    resource = rset.get_resource(URI(ecore_file))
     assert resource.contents != []
     root = resource.contents[0]
     A = root.getEClassifier('A')
@@ -72,11 +75,13 @@ def test_resourceset_getresource_instance_MyRoot():
     global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     # register the My.ecore metamodel in the resource set (could be in the global_registry)
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/My.ecore'))
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
+    resource = rset.get_resource(URI(ecore_file))
     root = resource.contents[0]
     rset.metamodel_registry[root.nsURI] = root
     # load the instance model
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/MyRoot.xmi'))
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'MyRoot.xmi')
+    resource = rset.get_resource(URI(xmi_file))
     root = resource.contents[0]
     assert len(root.aContainer) == 2
     assert len(root.bContainer) == 1
@@ -90,7 +95,8 @@ def test_resourceset_getresource_ecore_Ecore():
      # load the ecore metamodel first
     global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/Ecore.ecore'))
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'Ecore.ecore')
+    resource = rset.get_resource(URI(ecore_file))
     root = resource.contents[0]
     assert root
     assert root.getEClassifier('EClass')
@@ -116,7 +122,8 @@ def test_resourceset_getresource_ecore_UML():
     resource = rset.get_resource(URI('tests/xmi/xmi-tests/Ecore.ecore'))
     rset.metamodel_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
     # Load the UML metamodel
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/UML.ecore'))
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
+    resource = rset.get_resource(URI(ecore_file))
     root = resource.contents[0]
     assert root.getEClassifier('Class')
     assert root.getEClassifier('Interface')
