@@ -20,8 +20,9 @@ def test_uri_http():
 
 
 def test_uri_simple():
-    uri = URI('a/b/c.ecore')
-    assert uri.plain == 'a/b/c.ecore'
+    ecore_file = path.join('a', 'b', 'c.ecore')
+    uri = URI(ecore_file)
+    assert uri.plain == ecore_file
     assert uri.protocol is None
     assert uri.last_segment == 'c.ecore'
     assert uri.extension == 'ecore'
