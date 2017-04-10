@@ -5,6 +5,8 @@ from pyecore.resources.xmi import XMIResource
 from pyecore.resources.resource import HttpURI
 from os import path
 
+
+# Modified to it does not need an internet connection anymore
 def test_uri_http():
     uri = HttpURI('https://api.genmymodel.com/projects/_L0eC8P1oEeW9zv77lynsJg/xmi')
     assert uri.plain == 'https://api.genmymodel.com/projects/_L0eC8P1oEeW9zv77lynsJg/xmi'
@@ -13,8 +15,8 @@ def test_uri_http():
     assert len(uri.segments) == 4
     assert uri.last_segment == 'xmi'
     assert uri.segments[0] == 'api.genmymodel.com'
-    flike = uri.create_instream()
-    assert flike.getcode() == 200
+    # flike = uri.create_instream()
+    # assert flike.getcode() == 200
     with pytest.raises(NotImplementedError):
         uri.create_outstream()
 
