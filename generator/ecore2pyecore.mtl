@@ -93,15 +93,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 [/template]
 
 
-[template public generate(c : EClass) ? (eAttributes->size() + eReferences->size() + eOperations->size() = 0) post(trim())]
-[if (c.abstract)]@abstract
-[/if]
-[c.classHeader()/]
-    pass
-[/template]
-
-
-[template public generate(c : EClass) ? (eAttributes->size() + eReferences->size() + eOperations->size() <> 0) post(trim())]
+[template public generate(c : EClass) post(trim())]
 [if (c.abstract)]@abstract
 [/if]
 [c.classHeader()/]
@@ -121,8 +113,28 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
     def [d.name/](self, value):
         self._[d.name/] = value
     [/for]
-    [for (o : EOperation | c.eOperations)]
 
+    def __init__(self[c.initListAttributes()/][c.initListReferences()/], **kwargs):
+        [if (eSuperTypes->isEmpty())]
+        if kwargs:
+            raise AttributeError('unexpected arguments: {}'.format(kwargs))
+
+        [/if]
+        super().__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
+        [for (a : EAttribute | c.eAttributes)]
+        if [a.name/]_ is not None:
+            self.[a.name/] = [a.name/]_
+        [/for]
+        [for (r : EReference | c.eReferences)]
+        if [r.name/]_ is not None:
+            [if (r.upperBound = 1)]
+            self.[r.name/] = [r.name/]_
+            [else]
+            for element in [r.name/]_:
+                self.[r.name/].append(element)
+            [/if]
+        [/for]
+    [for (o : EOperation | c.eOperations)]
     def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
         [if (c.getDocumentation() <> '')]
         """
@@ -137,6 +149,16 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '')]
 
     """[c.getDocumentation()/]"""[/if]
+[/template]
+
+
+[template public initListAttributes(c : EClass)]
+[for (a : EAttribute | c.eAttributes) before(', ') separator(', ')][a.name/]_=None[/for]
+[/template]
+
+
+[template public initListReferences(c : EClass)]
+[for (r : EReference | c.eReferences) before(', ') separator(', ')][r.name/]_=None[/for]
 [/template]
 
 
