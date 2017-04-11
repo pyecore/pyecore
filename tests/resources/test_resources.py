@@ -82,16 +82,17 @@ def test_uri_normalize_virtual():
 
 def test_uri_normalize_fileuri_abs():
     uri = URI('file:///test.xmi')
-    assert uri.normalize() == '/test.xmi'
+    assert path.isabs(uri.normalize())
 
 
 def test_uri_normalize_fileuri_relative():
-    uri = URI('file://./tests/xmi/xmi-tests/testEMF.xmi')
+    xmi_path = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
+    uri = URI('file://' + xmi_path)
     assert path.exists(uri.normalize())
 
 
 def test_uri_normalize_relative():
-    uri = URI('./tests/xmi/xmi-tests/testEMF.xmi')
+    uri = URI(path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi'))
     assert path.exists(uri.normalize())
 
 
@@ -156,7 +157,7 @@ def test_globaluridecoder():
 def test_resource_load_proxy_missinghref(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')).contents[0]
     assert isinstance(root.a[0].tob[0], EProxy)
     with pytest.raises(TypeError):
         root.a[0].tob[0].eClass
@@ -165,8 +166,8 @@ def test_resource_load_proxy_missinghref(simplemm):
 def test_resource_load_proxy_href(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    rset.get_resource('tests/xmi/xmi-tests/b1.xmi')
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')).contents[0]
+    rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'b1.xmi'))
     assert isinstance(root.a[0].tob[0], EProxy)
     B = simplemm.getEClassifier('B')
     root.a[0].tob[0].eClass  # We force the proxy resolution
@@ -177,8 +178,8 @@ def test_resource_load_proxy_href(simplemm):
 def test_resource_load_proxy_href_inner(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
-    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a2.xmi')).contents[0]
+    rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'inner', 'b2.xmi'))
     assert isinstance(root.a[0].tob[0], EProxy)
     B = simplemm.getEClassifier('B')
     root.a[0].tob[0].eClass  # We force the proxy resolution
@@ -189,8 +190,8 @@ def test_resource_load_proxy_href_inner(simplemm):
 def test_resource_load_proxy_href_force_resolve(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
-    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a2.xmi')).contents[0]
+    rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'inner', 'b2.xmi'))
     assert isinstance(root.a[0].tob[0], EProxy)
     B = simplemm.getEClassifier('B')
     root.a[0].tob[0].force_resolve()  # We force the proxy resolution
@@ -201,8 +202,8 @@ def test_resource_load_proxy_href_force_resolve(simplemm):
 def test_resource_load_proxy_href_force_resolve_idempotent(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a2.xmi').contents[0]
-    rset.get_resource('tests/xmi/xmi-tests/inner/b2.xmi')
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a2.xmi')).contents[0]
+    rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'inner', 'b2.xmi'))
     x = root.a[0].tob[0]
     x.force_resolve()
     wrapped = x._wrapped
@@ -227,6 +228,6 @@ def test_resource_mmregistry_isolation():
 def test_resource_double_load(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
-    root = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
-    root2 = rset.get_resource('tests/xmi/xmi-tests/a1.xmi').contents[0]
+    root = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')).contents[0]
+    root2 = rset.get_resource(path.join('tests', 'xmi', 'xmi-tests', 'a1.xmi')).contents[0]
     assert root is root2
