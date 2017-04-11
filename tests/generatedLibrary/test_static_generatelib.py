@@ -4,6 +4,25 @@ import library
 import pyecore.ecore as Ecore
 
 
+def test_meta_attribute_access():
+    assert isinstance(library.Book.category, Ecore.EAttribute)
+    attribute = library.Book.category
+    assert attribute.name == 'category'
+    assert attribute.upperBound == 1
+    assert attribute.lowerBound == 0
+    assert isinstance(attribute.eType, Ecore.EDataType)
+    assert attribute.eType is library.BookCategory
+
+
+def test_meta_reference_access():
+    assert isinstance(library.Book.authors, Ecore.EReference)
+    reference = library.Book.authors
+    assert reference.name == 'authors'
+    assert reference.upperBound == -1
+    assert reference.lowerBound == 0
+    assert reference.eType is library.Writer
+
+
 def test_get_existing_EClassifier_generated():
     assert library.getEClassifier('Book')
     assert library.getEClassifier('BookCategory')
