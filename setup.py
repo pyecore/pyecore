@@ -4,8 +4,12 @@ import sys
 from setuptools import setup, find_packages
 import pyecore
 
-if sys.version_info < (3, 0):
+if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.0 is not supported')
+
+requires = ['ordered-set', 'lxml']
+if sys.version_info < (3, 4):
+    requires.append('enum34')
 
 
 setup(
@@ -23,7 +27,7 @@ setup(
     package_data={'': ['LICENSE',
                        'README.rst']},
     include_package_data=True,
-    install_requires=['ordered-set', 'lxml'],
+    install_requires=requires,
     extras_require={'testing': ['pytest']},
 
     license='BSD 3-Clause',
