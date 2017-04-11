@@ -1,6 +1,7 @@
 import sys
 import pytest
 import library
+from pyecore.ecore import BadValueError
 import pyecore.ecore as Ecore
 
 
@@ -121,3 +122,27 @@ def test_static_eclass_class_generated():
     lib = library.Library()
     assert lib.eClass.python_class is library.Library
     assert library.Library.eClass.python_class.eClass is library.Library.eClass
+
+
+def test_static_init_single_attribute():
+    smith = library.Writer(name_='Smith')
+    assert smith.name == 'Smith'
+    assert smith.eIsSet('name')
+
+
+def test_static_init_many_attributes():
+    book = library.Book(pages_=10, title_='Python Roxx')
+    assert book.title == 'Python Roxx'
+    assert book.pages == 10
+
+
+def test_static_init_single_reference():
+    smith = library.Writer(name_='Smith')
+    book = library.Book(title_='Python Roxx', pages_=10, authors_=[smith])
+    assert smith in book.authors
+    assert book in smith.books
+
+
+def test_static_init_single_attribute_bad_type():
+    with pytest.raises(BadValueError):
+        library.Writer(name_=4)
