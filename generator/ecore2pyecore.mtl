@@ -93,7 +93,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 [/template]
 
 
-[template public generate(c : EClass)]
+[template public generate(c : EClass) post(trim())]
 [if (c.abstract)]@abstract
 [/if]
 [c.classHeader()/]
