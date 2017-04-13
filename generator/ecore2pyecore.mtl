@@ -126,7 +126,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
         if [feature.name/] is not None:
             self.[feature.name/] = [feature.name/]
         [else]
-        if [feature.name/]_:
+        if [feature.name/]:
             self.[feature.name/].extend([feature.name/])
         [/if]
         [/for]
