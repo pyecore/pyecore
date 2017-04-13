@@ -125,27 +125,27 @@ def test_static_eclass_class_generated():
 
 
 def test_static_init_single_attribute():
-    smith = library.Writer(name_='Smith')
+    smith = library.Writer(name='Smith')
     assert smith.name == 'Smith'
     assert smith.eIsSet('name')
 
 
 def test_static_init_many_attributes():
-    book = library.Book(pages_=10, title_='Python Roxx')
+    book = library.Book(pages=10, title='Python Roxx')
     assert book.title == 'Python Roxx'
     assert book.pages == 10
 
 
 def test_static_init_single_reference():
-    smith = library.Writer(name_='Smith')
-    book = library.Book(title_='Python Roxx', pages_=10, authors_=[smith])
+    smith = library.Writer(name='Smith')
+    book = library.Book(title='Python Roxx', pages=10, authors=[smith])
     assert smith in book.authors
     assert book in smith.books
 
 
 def test_static_init_single_attribute_bad_type():
     with pytest.raises(BadValueError):
-        library.Writer(name_=4)
+        library.Writer(name=4)
 
 
 def test_static_init_bad_argument():

@@ -19,15 +19,15 @@ class Employee(EObject, metaclass=MetaEClass):
     name = EAttribute(eType=EString)
     age = EAttribute(eType=EInt)
 
-    def __init__(self, name_=None, age_=None, **kwargs):
+    def __init__(self, name=None, age=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         super().__init__()
-        if name_ is not None:
-            self.name = name_
-        if age_ is not None:
-            self.age = age_
+        if name is not None:
+            self.name = name
+        if age is not None:
+            self.age = age
 
 
 class Library(EObject, metaclass=MetaEClass):
@@ -37,36 +37,36 @@ class Library(EObject, metaclass=MetaEClass):
     writers = EReference(upper=-1, containment=True)
     books = EReference(upper=-1, containment=True)
 
-    def __init__(self, name_=None, address_=None, employees_=None, writers_=None, books_=None, **kwargs):
+    def __init__(self, name=None, address=None, employees=None, writers=None, books=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         super().__init__()
-        if name_ is not None:
-            self.name = name_
-        if address_ is not None:
-            self.address = address_
-        if employees_:
-            self.employees.extend(employees_)
-        if writers_:
-            self.writers.extend(writers_)
-        if books_:
-            self.books.extend(books_)
+        if name is not None:
+            self.name = name
+        if address is not None:
+            self.address = address
+        if employees:
+            self.employees.extend(employees)
+        if writers:
+            self.writers.extend(writers)
+        if books:
+            self.books.extend(books)
 
 
 class Writer(EObject, metaclass=MetaEClass):
     name = EAttribute(eType=EString)
     books = EReference(upper=-1)
 
-    def __init__(self, name_=None, books_=None, **kwargs):
+    def __init__(self, name=None, books=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         super().__init__()
-        if name_ is not None:
-            self.name = name_
-        if books_:
-            self.books.extend(books_)
+        if name is not None:
+            self.name = name
+        if books:
+            self.books.extend(books)
 
 
 class Book(EObject, metaclass=MetaEClass):
@@ -75,16 +75,16 @@ class Book(EObject, metaclass=MetaEClass):
     category = EAttribute(eType=BookCategory)
     authors = EReference(upper=-1)
 
-    def __init__(self, title_=None, pages_=None, category_=None, authors_=None, **kwargs):
+    def __init__(self, title=None, pages=None, category=None, authors=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         super().__init__()
-        if title_ is not None:
-            self.title = title_
-        if pages_ is not None:
-            self.pages = pages_
-        if category_ is not None:
-            self.category = category_
-        if authors_:
-            self.authors.extend(authors_)
+        if title is not None:
+            self.title = title
+        if pages is not None:
+            self.pages = pages
+        if category is not None:
+            self.category = category
+        if authors:
+            self.authors.extend(authors)
