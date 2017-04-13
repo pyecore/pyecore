@@ -114,7 +114,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
         self._[d.name/] = value
     [/for]
 
-    def __init__(self[c.initListAttributes()/][c.initListReferences()/], **kwargs):
+    def __init__(self[c.initListParameters()/], **kwargs):
         [if (eSuperTypes->isEmpty())]
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
@@ -123,11 +123,11 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
         super().__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
         [for (feature : EStructuralFeature | c.eStructuralFeatures->sortedBy(oclIsTypeOf(EReference)))]
         [if (feature.upperBound = 1)]
-        if [feature.name/]_ is not None:
-            self.[feature.name/] = [feature.name/]_
+        if [feature.name/] is not None:
+            self.[feature.name/] = [feature.name/]
         [else]
         if [feature.name/]_:
-            self.[feature.name/].extend([feature.name/]_)
+            self.[feature.name/].extend([feature.name/])
         [/if]
         [/for]
     [for (o : EOperation | c.eOperations)]
@@ -148,13 +148,8 @@ class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '
 [/template]
 
 
-[template public initListAttributes(c : EClass)]
-[for (a : EAttribute | c.eAttributes) before(', ') separator(', ')][a.name/]_=None[/for]
-[/template]
-
-
-[template public initListReferences(c : EClass)]
-[for (r : EReference | c.eReferences) before(', ') separator(', ')][r.name/]_=None[/for]
+[template public initListParameters(c : EClass)]
+[for (feature : EStructuralFeature | c.eStructuralFeatures) before(', ') separator(', ')][feature.name/]=None[/for]
 [/template]
 
 
