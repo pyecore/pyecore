@@ -61,12 +61,13 @@ class EcoreUtils(object):
                         hasattr(obj, '_staticEClass') and obj._staticEClass
         elif isinstance(_type, EEnum):
             return obj in _type
-        elif isinstance(_type, EDataType) or isinstance(_type, EAttribute):
+        elif isinstance(_type, (EDataType, EAttribute)):
             return isinstance(obj, _type.eType)
         elif isinstance(_type, EClass):
             if isinstance(obj, EObject):
-                return obj.eClass is _type \
-                       or _type in obj.eClass.eAllSuperTypes()
+                return isinstance(obj, _type.python_class)
+                # return obj.eClass is _type \
+                #        or _type in obj.eClass.eAllSuperTypes()
             return False
         return isinstance(obj, _type) or obj is _type.eClass
 
