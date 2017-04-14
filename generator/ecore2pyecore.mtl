@@ -6,7 +6,6 @@
 
 [comment generate __init__/]
 [file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
-import pyecore.ecore as Ecore
 from .[p.name/] import getEClassifier, eClassifiers
 from .[p.name/] import name, nsURI, nsPrefix, eClass
 from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
@@ -54,13 +53,13 @@ for classif in eClassifiers.values():
 
 for subpack in eSubpackages:
     eClass.eSubpackages.append(subpack.eClass)
-
 [/file]
 
 [comment generate module /]
 [file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
-from pyecore.ecore import *
+from functools import partial
 import pyecore.ecore as Ecore
+from pyecore.ecore import *
 [for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
 from [c.ePackage.qualifiedName()/] import [c.name/]
 [/for]
@@ -70,13 +69,18 @@ name = '[p.name/]'
 nsURI = '[p.nsURI/]'
 nsPrefix = '[p.nsPrefix/]'
 
-eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eClassifiers = {}
+getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 
 
 [for (c : EClassifier | p.eClassifiers->filter(EEnum))]
 [c.generate()/]
 [/for]
 [for (c : EClassifier | p.eClassifiers->filter(EClass)->sortedBy(nbSuperTypes()))]
+
+
 [c.generate()/]
 [/for]
 [/file]
@@ -85,37 +89,55 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 
 [template public generate(c : EClassifier)/]
 [template public generate(e : EEnum)]
-[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals)]'[l.name/]',[/for]])
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals) separator(', ')]'[l.name/]'[/for]])  # noqa
 [/template]
 
 
-[template public generate(c : EClass)]
-
-
+[template public generate(c : EClass) post(trim())]
 [if (c.abstract)]@abstract
 [/if]
 [c.classHeader()/]
-    [for (a : EAttribute | c.eAttributes) after(if (c.eReferences->isEmpty()) then '\n' else '' endif)]
+    [for (a : EAttribute | c.eAttributes)]
     [a.generate()/]
     [/for]
-    [for (r : EReference | c.eReferences) after('\n')]
+    [for (r : EReference | c.eReferences)]
     [r.name/] = EReference([r.referenceQualifiers()/])
     [/for]
-    def __init__(self):
-        super().__init__()[for (d : EAttribute | c.eAllAttributes->select(derived)) before('\n\n') separator('\n\n')]
+    [for (d : EAttribute | c.eAttributes->select(derived))]
+
     @property
     def [d.name/](self):
         return self._[d.name/]
 
     @[d.name/].setter
     def [d.name/](self, value):
-        self._[d.name/] = value[/for][for (o : EOperation | c.eOperations) before('\n\n') separator('\n\n')]
+        self._[d.name/] = value
+    [/for]
+
+    def __init__(self[c.initListParameters()/], **kwargs):
+        [if (eSuperTypes->isEmpty())]
+        if kwargs:
+            raise AttributeError('unexpected arguments: {}'.format(kwargs))
+
+        [/if]
+        super().__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
+        [for (feature : EStructuralFeature | c.eStructuralFeatures->sortedBy(oclIsTypeOf(EReference)))]
+        [if (feature.upperBound = 1)]
+        if [feature.name/] is not None:
+            self.[feature.name/] = [feature.name/]
+        [else]
+        if [feature.name/]:
+            self.[feature.name/].extend([feature.name/])
+        [/if]
+        [/for]
+    [for (o : EOperation | c.eOperations)]
     def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
         [if (c.getDocumentation() <> '')]
         """
         [c.getDocumentation()/]
         """[/if]
-        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')[/for]
+        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')
+    [/for]
 [/template]
 
 
@@ -123,6 +145,11 @@ eClass = Ecore.EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '')]
 
     """[c.getDocumentation()/]"""[/if]
+[/template]
+
+
+[template public initListParameters(c : EClass)]
+[for (feature : EStructuralFeature | c.eStructuralFeatures) before(', ') separator(', ')][feature.name/]=None[/for]
 [/template]
 
 

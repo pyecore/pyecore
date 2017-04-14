@@ -1,3 +1,8 @@
+"""
+The resource proposes all the concepts that are related to Resource handling.
+A Resource represents a model resource and many of them can be contained in a
+ResourceSet.
+"""
 from uuid import uuid4
 import urllib.request
 from os import path
@@ -65,6 +70,10 @@ class URI(object):
                  'https': lambda x: x,
                  'file': lambda x: path.abspath(x.replace('file://', ''))}
 
+    _uri_split = {'http': '/',
+                  'https': '/',
+                  'file': path.sep}
+
     def __init__(self, uri):
         if uri is None:
             raise TypeError('URI cannot be None')
@@ -77,7 +86,8 @@ class URI(object):
             self._protocol, rest = self._uri.split('://')
         else:
             self._protocol, rest = None, self._uri
-        self._segments = rest.split('/')
+        uri_sep = self._uri_split.get(self._protocol, path.sep)
+        self._segments = rest.split(uri_sep)
         self._last_segment = self._segments[-1:][0]
         if '.' in self._last_segment:
             self._extension = self._last_segment.split('.')[-1:][0]
@@ -117,11 +127,7 @@ class URI(object):
         return self.__stream
 
     def normalize(self):
-        try:
-            return self._uri_norm[self.protocol](self._uri)
-        except KeyError:
-            uri = self._uri.replace('file', '')
-            return self._uri_norm['file'](uri)
+        return self._uri_norm.get(self.protocol, path.abspath)(self._uri)
 
     def relative_from_me(self, uri):
         normalized = path.dirname(self.normalize())
@@ -170,9 +176,7 @@ class Global_URI_decoder(object):
 
 
 class Resource(object):
-    _decoders = [Global_URI_decoder,
-                 #  File_URI_decoder,
-                 ]
+    _decoders = [Global_URI_decoder]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}

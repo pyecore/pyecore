@@ -1,7 +1,27 @@
 import sys
 import pytest
 import library
+from pyecore.ecore import BadValueError
 import pyecore.ecore as Ecore
+
+
+def test_meta_attribute_access():
+    assert isinstance(library.Book.category, Ecore.EAttribute)
+    attribute = library.Book.category
+    assert attribute.name == 'category'
+    assert attribute.upperBound == 1
+    assert attribute.lowerBound == 0
+    assert isinstance(attribute.eType, Ecore.EDataType)
+    assert attribute.eType is library.BookCategory
+
+
+def test_meta_reference_access():
+    assert isinstance(library.Book.authors, Ecore.EReference)
+    reference = library.Book.authors
+    assert reference.name == 'authors'
+    assert reference.upperBound == -1
+    assert reference.lowerBound == 0
+    assert reference.eType is library.Writer
 
 
 def test_get_existing_EClassifier_generated():
@@ -102,3 +122,32 @@ def test_static_eclass_class_generated():
     lib = library.Library()
     assert lib.eClass.python_class is library.Library
     assert library.Library.eClass.python_class.eClass is library.Library.eClass
+
+
+def test_static_init_single_attribute():
+    smith = library.Writer(name='Smith')
+    assert smith.name == 'Smith'
+    assert smith.eIsSet('name')
+
+
+def test_static_init_many_attributes():
+    book = library.Book(pages=10, title='Python Roxx')
+    assert book.title == 'Python Roxx'
+    assert book.pages == 10
+
+
+def test_static_init_single_reference():
+    smith = library.Writer(name='Smith')
+    book = library.Book(title='Python Roxx', pages=10, authors=[smith])
+    assert smith in book.authors
+    assert book in smith.books
+
+
+def test_static_init_single_attribute_bad_type():
+    with pytest.raises(BadValueError):
+        library.Writer(name=4)
+
+
+def test_static_init_bad_argument():
+    with pytest.raises(AttributeError):
+        library.Book(unknown=None)

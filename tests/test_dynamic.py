@@ -2,6 +2,22 @@ import pytest
 from pyecore.ecore import *
 
 
+def test_eclass_meta_attribute_access():
+    assert isinstance(EClass.name, EAttribute)
+    assert EClass.name.eType is EString
+
+
+def test_eclass_meta_reference_access():
+    assert isinstance(EClass.eStructuralFeatures, EReference)
+    assert EClass.eStructuralFeatures.eType is EStructuralFeature
+
+
+def test_eclass_meta_eopposite_reference_access():
+    assert isinstance(EReference._eOpposite, EReference)
+    assert EReference._eOpposite.eType is EReference
+    assert EReference._eOpposite.name == 'eOpposite'
+
+
 def test_create_dynamic_eclass():
     A = EClass('A')
     assert isinstance(A, EObject) and isinstance(A, EClass)

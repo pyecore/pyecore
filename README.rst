@@ -160,52 +160,52 @@ Static Metamodels
 =================
 
 The static definition of a metamodel using PyEcore mostly relies on the
-classical classes definitions in Python. The following example is more related
-to a 'by hand' static metamodel definition. This way of producing metamodels is
-kinda deprecated as a MTL generator (in ``/generator``) automatically produces a
-static metamodel from the ``.ecore`` definition.
+classical classes definitions in Python. Each Python class is linked to an
+``EClass`` instance and has a special metaclass. The static code for metamodel
+also provides a model layer and the ability to easily refer/navigate inside the
+defined meta-layer. The static code is generated from a MTL generator (in
+``/generator``) that automatically produces the static code from a ``.ecore``
+file.
 
 .. code-block:: python
 
-    $ cat example.py
-    """
-    static metamodel example
-    """
-    from pyecore.ecore import EObject, EAttribute, EReference, EString, MetaEClass
+    $ ls library
+    __init__.py library.py
 
-    nsURI = 'http://example/1.0'
-
-
-    class B(EObject, metaclass=MetaEClass):
-        def __init__(self):
-            pass
-
-
-    class C(EObject, metaclass=MetaEClass):
-        def __init__(self):
-            pass
-
-
-    class MyMetaclass(EObject, metaclass=MetaEClass):
+    $ cat library/library.py
+    # ... stuffs here
+    class Writer(EObject, metaclass=MetaEClass):
         name = EAttribute(eType=EString)
-        toB = EReference(eType=B, containment=True)
-        toCs = EReference(eType=C, upper=-1)
+        books = EReference(upper=-1)
 
-        def __init__(self):
-            pass
+        def __init__(self, name=None, books=None, **kwargs):
+            if kwargs:
+                raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
-    # We need to update C in order to add the opposite meta-reference
-    # At the moment, the information need to be added in two places
-    C.toMy = EReference('toMy', MyMetaclass, eOpposite=MyMetaclass.toCs)
-    C.eClass.eStructuralFeatures.append(C.toMy)
+            super().__init__()
+            if name is not None:
+                self.name = name
+            if books:
+                self.books.extend(books)
+    # ... Other stuffs here
 
     $ python
     ...
-    >>> import example
-    >>> instance1 = example.MyMetaclass()
-    >>> c1 = C()
-    >>> c1.toMy = instance1
-    >>> assert c1 is instance1.toCs[0] and c1.toMy is instance1
+    >>> import library
+    >>> # we can create elements and handle the model level
+    >>> smith = library.Writer(name='smith')
+    >>> book1 = library.Book(title='Ye Old Book1')
+    >>> book1.pages = 100
+    >>> smith.books.append(book1)
+    >>> assert book1 in smith.books
+    >>> assert smith in book1.authors
+    >>> # ...
+    >>> # We can also navigate the meta-level
+    >>> import pyecore.ecore as Ecore  # We import the Ecore metamodel only for tests
+    >>> assert isinstance(library.Book.authors, Ecore.EReference)
+    >>> library.Book.authors.upperBound
+    -1
+    >>> assert isinstance(library.Writer.name, Ecore.EAttribute)
 
 
 The automatic code generator defines a Python package hierarchie instead of

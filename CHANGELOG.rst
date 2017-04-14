@@ -1,6 +1,24 @@
 Changelog
 ---------
 
+0.2.0
++++++
+
+**Features**
+
+- Add new static metamodel code generator (@moltob contribution, thanks!). The
+  new generator gives more flexibility to the user as it allows the direct
+  assignment of attributes/references values from the constructor. The feature
+  reduces the amount of LOC required to create a fully initialized instance and
+  also helps for the instance creation as IDE smart-completion feature can
+  propose the attributes/references to the user.
+
+**Miscellaneous**
+
+- Fix some PEP8/Pylint refactoring and docstrings.
+- Small performance improvement in the ``EcoreUtils.isinstance``.
+
+
 0.1.5
 +++++
 
