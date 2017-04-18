@@ -358,15 +358,9 @@ class EValue(PyEcoreValue):
             eOpposite = efeature.eOpposite
             if previous_value and eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
-                      .remove(owner)
-                previous_value.notify(Notification(old=owner,
-                                                   feature=eOpposite,
-                                                   kind=Kind.REMOVE))
+                      .remove(owner, update_opposite=False)
             elif previous_value:
                 object.__setattr__(previous_value, eOpposite.name, None)
-                previous_value.notify(Notification(old=owner,
-                                                   feature=eOpposite,
-                                                   kind=Kind.UNSET))
 
 
 class ECollection(PyEcoreValue):
@@ -399,24 +393,14 @@ class ECollection(PyEcoreValue):
             owner.__getattribute__(eOpposite.name)  # force resolve
             object.__getattribute__(owner, eOpposite.name) \
                   .append(new_value, False)
-            owner.notify(Notification(new=new_value,
-                                      feature=eOpposite,
-                                      kind=Kind.ADD))
         elif eOpposite.many and remove:
             object.__getattribute__(owner, eOpposite.name) \
                   .remove(new_value, False)
-            owner.notify(Notification(old=new_value,
-                                      feature=eOpposite,
-                                      kind=Kind.REMOVE))
         else:
             new_value = None if remove else new_value
-            kind = Kind.UNSET if remove else Kind.SET
             object.__getattribute__(owner, eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
                  .__set__(None, new_value, update_opposite=False)
-            owner.notify(Notification(new=new_value,
-                                      feature=eOpposite,
-                                      kind=kind))
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
