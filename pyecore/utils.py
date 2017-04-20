@@ -41,8 +41,8 @@ class DynamicEPackage(EObserver):
                 for new in notification.new:
                     setattr(self, new.name, new)
             elif kind == Kind.REMOVE and notification.old.eResource is None:
-                try:
-                    delattr(self, notification.old.name)
-                except AttributeError:
-                    pass
-            # REMOVE_MANY is not yet well supported
+                delattr(self, notification.old.name)
+            elif kind == Kind.REMOVE_MANY:
+                for element in notification.old:
+                    if element.eResource is None:
+                        delattr(self, element.name)
