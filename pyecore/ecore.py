@@ -767,9 +767,11 @@ class EStructuralFeature(ETypedElement):
 
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None,
-                 lower=0, upper=1, changeable=True, derived=False):
+                 lower=0, upper=1, changeable=True, derived=False,
+                 unique=True):
         super().__init__(name, eType, lower=lower, upper=upper,
-                         derived=derived, changeable=changeable)
+                         derived=derived, changeable=changeable,
+                         unique=unique)
         self.default_value = default_value
         if not self.default_value and isinstance(eType, EDataType):
             self.default_value = eType.default_value
