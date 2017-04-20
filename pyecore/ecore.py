@@ -383,7 +383,7 @@ class ECollection(PyEcoreValue):
         eOpposite = self._efeature.eOpposite
         if not eOpposite:
             couple = (new_value, self._efeature)
-            if remove:
+            if remove and couple in owner._inverse_rels:
                 owner._inverse_rels.remove(couple)
             else:
                 owner._inverse_rels.add(couple)
@@ -448,10 +448,46 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
+        is_collection = hasattr(y, '__iter__') and not isinstance(y, str)
+        if isinstance(i, slice) and is_collection:
+            sliced_elements = self.__getitem__(i)
+            all(self.check(x) for x in y)
+            for element in y:
+                self._update_container(element)
+                self._update_opposite(element, self._owner)
+            # We remove (not really) all element from the slice
+            for element in sliced_elements:
+                self._update_container(None, previous_value=element)
+                self._update_opposite(element, self._owner, remove=True)
+            if sliced_elements and len(sliced_elements) > 1:
+                self._owner.notify(Notification(old=sliced_elements,
+                                                feature=self._efeature,
+                                                kind=Kind.REMOVE_MANY))
+            elif sliced_elements:
+                self._owner.notify(Notification(old=sliced_elements[0],
+                                                feature=self._efeature,
+                                                kind=Kind.REMOVE))
+
+        else:
+            self.check(y)
+            self._update_container(y)
+            self._update_opposite(y, self._owner)
+        super().__setitem__(i, y)
+        kind = Kind.ADD
+        if is_collection and len(y) > 1:
+            kind = Kind.ADD_MANY
+        elif is_collection:
+            y = y[0] if y else y
+        self._owner.notify(Notification(new=y,
+                                        feature=self._efeature,
+                                        kind=kind))
+        self._owner._isset.add(self._efeature)
+
+    def insert(self, i, y):
         self.check(y)
         self._update_container(y)
         self._update_opposite(y, self._owner)
-        super().__setitem__(i, y)
+        super().insert(i, y)
         self._owner.notify(Notification(new=y,
                                         feature=self._efeature,
                                         kind=Kind.ADD))
