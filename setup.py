@@ -5,9 +5,9 @@ from setuptools import setup, find_packages
 import pyecore
 
 if sys.version_info < (3, 3):
-    sys.exit('Sorry, Python < 3.0 is not supported')
+    sys.exit('Sorry, Python < 3.3 is not supported')
 
-requires = ['ordered-set', 'lxml']
+requires = ['ordered-set', 'lxml', 'jinja2']
 if sys.version_info < (3, 4):
     requires.append('enum34')
 
