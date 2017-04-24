@@ -54,6 +54,7 @@ class Task:
         """Apply this task to all corresponding elements in model."""
 
         for element in self.elements(context):
+            context.element = element
             self.apply_to(element, context)
 
     def apply_to(self, element: EModelElement, context):

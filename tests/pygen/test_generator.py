@@ -39,14 +39,18 @@ def test__generator__generate__tasks():
     assert context2.generator == generator
     assert context2.outfolder == os.path.abspath('.')
     assert context2.model is mock.sentinel.MODEL
-    assert context2.new_attribute == mock.sentinel.NEW_ATTRIBUTE
+    assert context2.new_attribute is mock.sentinel.NEW_ATTRIBUTE
 
 
 def test__task__executed_in_order():
     task = Task()
 
     task.elements = mock.Mock(return_value=iter((mock.sentinel.ELEM1, mock.sentinel.ELEM2,)))
-    task.apply_to = mock.Mock()
+
+    def apply_to(element, context):
+        assert context.element is element, 'element not added to context'
+
+    task.apply_to = mock.Mock(side_effect=apply_to)
 
     task.execute(mock.sentinel.CONTEXT)
 
