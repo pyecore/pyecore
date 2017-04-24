@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from pygen.generator import Generator
+from pygen.generator import Generator, Task
 
 
 def test__generator__generate__no_tasks():
@@ -10,8 +10,8 @@ def test__generator__generate__no_tasks():
 
 
 def test__generator__generate__tasks():
-    mock_task1 = mock.MagicMock()
-    mock_task2 = mock.MagicMock()
+    mock_task1 = mock.Mock()
+    mock_task2 = mock.Mock()
 
     mock_manager = mock.Mock()
     mock_manager.attach_mock(mock_task1, 'task1')
@@ -21,10 +21,10 @@ def test__generator__generate__tasks():
     def execute(context):
         context.new_attribute = mock.sentinel.NEW_ATTRIBUTE
 
-    mock_task1.execute = mock.MagicMock(side_effect=execute)
+    mock_task1.execute = mock.Mock(side_effect=execute)
 
-    g = Generator(tasks=(mock_task1, mock_task2))
-    g.generate(mock.sentinel.MODEL, '.')
+    generator = Generator(tasks=(mock_task1, mock_task2))
+    generator.generate(mock.sentinel.MODEL, '.')
 
     # tasks are called in correct order:
     assert mock_manager.mock_calls == [
@@ -36,7 +36,21 @@ def test__generator__generate__tasks():
     context1 = mock_task1.execute.call_args[0][0]
     context2 = mock_task2.execute.call_args[0][0]
     assert context1 is context2, 'second context differrent'
-    assert context2.generator == g
+    assert context2.generator == generator
     assert context2.outfolder == os.path.abspath('.')
     assert context2.model is mock.sentinel.MODEL
     assert context2.new_attribute == mock.sentinel.NEW_ATTRIBUTE
+
+
+def test__task__executed_in_order():
+    task = Task()
+
+    task.elements = mock.Mock(return_value=iter((mock.sentinel.ELEM1, mock.sentinel.ELEM2,)))
+    task.apply_to = mock.Mock()
+
+    task.execute(mock.sentinel.CONTEXT)
+
+    assert task.apply_to.mock_calls == [
+        mock.call(mock.sentinel.ELEM1, mock.sentinel.CONTEXT),
+        mock.call(mock.sentinel.ELEM2, mock.sentinel.CONTEXT),
+    ]
