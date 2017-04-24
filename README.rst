@@ -427,6 +427,38 @@ The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
 
 
+Dynamic Metamodels Helper
+-------------------------
+
+Once a metamodel is loaded from an XMI metamodel (from a ``.ecore`` file), the
+metamodel root that is gathered is an ``EPackage`` instance. To access each
+``EClass`` from the loaded resource, a ``getEClassifier(...)`` call must be
+performed:
+
+.. code-block:: python
+
+    >>> #...
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> A = mm_root.getEClassifier('A')
+    >>> a_instance = A()
+
+When a big metamodel is loaded, this operation can be cumbersome. To ease this
+operation, PyEcore proposes an helper that gives a quick access to each
+``EClass`` contained in the ``EPackage`` and its subpackages. This helper is the
+``DynamicEPackage`` class. Its creation is performed like so:
+
+.. code-block:: python
+
+    >>> #...
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> from pyecore.utils import DynamicEPackage
+    >>> MyMetamodel = DynamicEPackage(mm_root)  # We create a DynamicEPackage for the loaded root
+    >>> a_instance = MyMetamodel.A()
+    >>> b_instance = MyMetamodel.B()
+
+
 Adding External Metamodel Resources
 -----------------------------------
 
