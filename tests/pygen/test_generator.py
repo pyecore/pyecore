@@ -1,6 +1,7 @@
 import os
 from unittest import mock
 
+from pyecore.ecore import EModelElement
 from pygen.generator import Generator, Task
 
 
@@ -46,3 +47,5 @@ def test__generator__generate__tasks():
         mock.call.task2.filtered_elements(mock.sentinel.MODEL),
     ]
 
+def test__file_task():
+    element = EModelElement()
