@@ -3,6 +3,7 @@ import os
 
 import pathlib
 import types
+import typing
 
 from typing import Iterator, Iterable
 
@@ -32,14 +33,15 @@ class Generator:
         outfolder = os.path.abspath(outfolder)
         _logger.info('Generating code to {!r}.'.format(outfolder))
 
-        context = types.SimpleNamespace(
-            generator=self,
-            model=model,
-            outfolder=outfolder,
-        )
-
         for task in self.tasks:
-            task.execute(context)
+            for element in task.filtered_elements(model):
+                context = task.get_context(
+                    generator=self,
+                    outfolder=outfolder,
+                    model=model,
+                    element=element
+                )
+                task.execute(context)
 
 
 class Task:
@@ -53,27 +55,25 @@ class Task:
     def execute(self, context):
         """Apply this task to all corresponding elements in model."""
 
-        for element in self.elements(context):
-            context.element = element
-            self.apply_to(element, context)
+    def get_context(self, **kwargs):
+        """Return context dictionary built from keyword arguments."""
+        kwargs['task'] = self
+        return kwargs
 
-    def apply_to(self, element: EModelElement, context):
-        """
-        Application of this generation step to given model element.
-        
-        Args:
-            element: Model element for which to generate code.
-            context: Container with information useful during generation.
-        """
-
-    def elements(self, context) -> Iterator[EModelElement]:
-        """
-        Iterator over model elements to execute this task for.
-        
-        Args:
-            context: Container with information useful during generation.
-
-        Returns:
-            Iterator over processable elements.
-        """
+    def filtered_elements(self, model: EPackage) -> Iterator[EModelElement]:
+        """Iterator over model elements to execute this task for."""
         yield from ()
+
+
+class FileTask(Task):
+    """Generator task creating a file."""
+
+    def get_context(self, **kwargs):
+        filepath = self.get_filepath(**kwargs)
+        return super().get_context(filepath=filepath, **kwargs)
+
+    def get_filepath(self, element: EModelElement, **kwargs):
+        """
+        Output file path, relative to root folder.
+        """
+        return '{}.py'.format(element.eURIFragment())
