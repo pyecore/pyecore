@@ -7,7 +7,7 @@ from pygen.generator import Generator, Task
 
 def test__generator__generate__no_tasks():
     # calling empty generator not raising anything:
-    Generator(mock.sentinel.MODEL, mock.sentinel.FOLDERPATH).generate()
+    Generator().generate(mock.sentinel.MODEL, mock.sentinel.OUTFOLDER)
 
 
 def test__generator__generate__tasks():
@@ -16,34 +16,22 @@ def test__generator__generate__tasks():
 
     elements = mock.sentinel.ELEM1, mock.sentinel.ELEM2
     mock_task1.filtered_elements = mock.Mock(return_value=iter(elements))
-    mock_task1.get_context = mock.Mock(return_value=mock.sentinel.CONTEXT1)
+
+    # no matching elements for this task:
     mock_task2.filtered_elements = mock.Mock(return_value=iter(tuple()))
-    mock_task2.get_context = mock.Mock(return_value=mock.sentinel.CONTEXT2)
 
     mock_manager = mock.Mock()
     mock_manager.attach_mock(mock_task1, 'task1')
     mock_manager.attach_mock(mock_task2, 'task2')
 
-    generator = Generator(mock.sentinel.MODEL, mock.sentinel.FOLDERPATH)
+    generator = Generator()
     generator.tasks = (mock_task1, mock_task2)
-    generator.generate()
+    generator.generate(mock.sentinel.MODEL, mock.sentinel.FOLDERPATH)
 
     assert mock_manager.mock_calls == [
         mock.call.task1.filtered_elements(mock.sentinel.MODEL),
-        mock.call.task1.get_context(
-            generator=generator,
-            outfolder=mock.sentinel.FOLDERPATH,
-            model=mock.sentinel.MODEL,
-            element=elements[0]
-        ),
-        mock.call.task1.run(mock.sentinel.CONTEXT1),
-        mock.call.task1.get_context(
-            generator=generator,
-            outfolder=mock.sentinel.FOLDERPATH,
-            model=mock.sentinel.MODEL,
-            element=elements[1]
-        ),
-        mock.call.task1.run(mock.sentinel.CONTEXT1),
+        mock.call.task1.run(mock.sentinel.ELEM1, mock.sentinel.FOLDERPATH),
+        mock.call.task1.run(mock.sentinel.ELEM2, mock.sentinel.FOLDERPATH),
         mock.call.task2.filtered_elements(mock.sentinel.MODEL),
     ]
 
