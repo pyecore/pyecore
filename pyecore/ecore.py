@@ -9,7 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
-from ordered_set import OrderedSet
+from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
 
 
@@ -448,7 +448,7 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
-        is_collection = hasattr(y, '__iter__') and not isinstance(y, str)
+        is_collection = is_iterable(y)
         if isinstance(i, slice) and is_collection:
             sliced_elements = self.__getitem__(i)
             all(self.check(x) for x in y)
