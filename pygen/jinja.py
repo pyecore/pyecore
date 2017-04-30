@@ -1,3 +1,4 @@
+"""Jinja2 support for multifile generation."""
 import jinja2
 
 from pygen.generator import TemplateGenerator, TemplateFileTask

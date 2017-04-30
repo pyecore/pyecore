@@ -1,3 +1,4 @@
+"""Small framework for multifile generation on top of another template code generator."""
 import logging
 import os
 
