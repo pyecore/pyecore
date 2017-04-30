@@ -1,5 +1,6 @@
 import os
 import shutil
+from unittest import mock
 
 import pytest
 
@@ -70,3 +71,23 @@ def test__jinja_generator__integration(outfolder):
     with open(os.path.join(outfolder, 'B.py')) as file:
         generated_text = file.read()
     assert generated_text == 'print(\'This is a test template for element B.\')'
+
+
+@mock.patch.object(JinjaTask, 'create_template_context', side_effect=lambda **kwargs: kwargs)
+def test__jinja_task__generate_file(mock_create_template_context):
+    mock_template = mock.MagicMock()
+    mock_template.render = mock.MagicMock(return_value='rendered text')
+    mock_environment = mock.MagicMock()
+    mock_environment.get_template = mock.MagicMock(return_value=mock_template)
+
+    task = JinjaTask()
+    task.environment = mock_environment
+    task.template_name = mock.sentinel.TEMPLATE_NAME
+
+    mock_open = mock.mock_open()
+    with mock.patch('pygen.jinja.open', mock_open):
+        task.generate_file(mock.sentinel.ELEMENT, 'filepath.ext')
+
+    mock_template.render.assert_called_once_with(element=mock.sentinel.ELEMENT)
+    mock_open.assert_called_once_with('filepath.ext', 'wt')
+    mock_open().write.assert_called_once_with('rendered text')

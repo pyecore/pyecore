@@ -1,8 +1,7 @@
 import os
 from unittest import mock
 
-from pyecore.ecore import EModelElement
-from pygen.generator import Generator, Task
+from pygen.generator import Generator, Task, TemplateFileTask
 
 
 def test__generator__generate__no_tasks():
@@ -11,8 +10,8 @@ def test__generator__generate__no_tasks():
 
 
 def test__generator__generate__tasks():
-    mock_task1 = mock.Mock()
-    mock_task2 = mock.Mock()
+    mock_task1 = mock.MagicMock()
+    mock_task2 = mock.MagicMock()
 
     elements = mock.sentinel.ELEM1, mock.sentinel.ELEM2
     mock_task1.filtered_elements = mock.Mock(return_value=iter(elements))
@@ -20,7 +19,7 @@ def test__generator__generate__tasks():
     # no matching elements for this task:
     mock_task2.filtered_elements = mock.Mock(return_value=iter(tuple()))
 
-    mock_manager = mock.Mock()
+    mock_manager = mock.MagicMock()
     mock_manager.attach_mock(mock_task1, 'task1')
     mock_manager.attach_mock(mock_task2, 'task2')
 
@@ -47,3 +46,14 @@ def test__task__run(mock_generate_file, mock_relative_path_for_element, mock_ens
     mock_relative_path_for_element.assert_called_once_with(mock.sentinel.ELEMENT)
     mock_ensure_folder.assert_called_once_with(outfile)
     mock_generate_file.assert_called_once_with(mock.sentinel.ELEMENT, outfile)
+
+
+def test__template_task__create_context():
+    task = TemplateFileTask()
+    context = task.create_template_context(
+        element=mock.sentinel.ELEMENT,
+        test_key=mock.sentinel.TEST_VALUE
+    )
+
+    assert context['element'] is mock.sentinel.ELEMENT
+    assert context['test_key'] is mock.sentinel.TEST_VALUE
