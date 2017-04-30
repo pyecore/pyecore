@@ -48,6 +48,7 @@ class BadValueError(TypeError):
 
 
 class EcoreUtils(object):
+    @staticmethod
     def isinstance(obj, _type):
         if obj is None:
             return True
@@ -71,6 +72,7 @@ class EcoreUtils(object):
             return False
         return isinstance(obj, _type) or obj is _type.eClass
 
+    @staticmethod
     def getRoot(obj):
         if not obj:
             return None
