@@ -370,9 +370,9 @@ class ECollection(PyEcoreValue):
         elif feature.ordered and not feature.unique:
             return EList(owner, efeature=feature)
         elif feature.unique:
-            return EOrderedSet(owner, efeature=feature)
+            return ESet(owner, efeature=feature)
         else:
-            return EList(owner, efeature=feature)  # see for better implem
+            return EBag(owner, efeature=feature)  # see for better implem
 
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
@@ -494,6 +494,10 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
 
+class EBag(EList):
+    pass
+
+
 class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
@@ -529,11 +533,6 @@ class EAbstractSet(ECollection):
         self._owner._isset.add(self._efeature)
 
 
-class ESet(EAbstractSet, set):
-    def __init__(self, owner, efeature=None):
-        super().__init__(owner, efeature)
-
-
 class EOrderedSet(EAbstractSet, OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
@@ -547,6 +546,10 @@ class EOrderedSet(EAbstractSet, OrderedSet):
                                         kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
         self._orderedset_update = False
+
+
+class ESet(EOrderedSet):
+    pass
 
 
 class EModelElement(EObject):
