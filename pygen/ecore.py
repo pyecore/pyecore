@@ -17,7 +17,9 @@ class EcoreTask(JinjaTask):
 
     def filtered_elements(self, model):
         """Return iterator based on `element_type`."""
-        return (e for e in model.eAllContents() if isinstance(e, self.element_type))
+        if isinstance(model, self.element_type):
+            yield model
+        yield from (e for e in model.eAllContents() if isinstance(e, self.element_type))
 
     @classmethod
     def folder_path_for_package(cls, package: EPackage):
@@ -64,8 +66,8 @@ class EcoreGenerator(JinjaGenerator):
     """Generation of static ecore model classes."""
 
     tasks = [
-        EcorePackageInitTask,
-        EcorePackageModuleTask,
+        EcorePackageInitTask(),
+        EcorePackageModuleTask(),
     ]
 
     templates_path = 'templates'
