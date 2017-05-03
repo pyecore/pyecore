@@ -78,7 +78,7 @@ class Task:
 
 
 class TemplateGenerator(Generator):
-    templates_path = None
+    templates_path = 'templates'
 
 
 class TemplateFileTask(Task):

@@ -1,10 +1,19 @@
 import os
+import shutil
 
 import pytest
 
 from pyecore.ecore import EPackage, EClass, EEnum
 from pyecore.resources import ResourceSet, URI
 from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask, EcoreGenerator
+
+
+@pytest.fixture
+def pygen_output_dir():
+    path = os.path.join('output', 'pygen')
+    shutil.rmtree(path, ignore_errors=True)
+    yield path
+    #shutil.rmtree(path, ignore_errors=False)
 
 
 @pytest.fixture('module', autouse=True)
@@ -69,10 +78,12 @@ def test__ecore_package_module_task__path_for_element(package_in_hierarchy):
     assert path == os.path.join('pkg1', 'pkg2', 'pkg3', 'pkg3.py')
 
 
-def test__integration__library():
+def test__integration__library(pygen_output_dir):
     rset = ResourceSet()
     resource = rset.get_resource(URI('../../examples/library.ecore'))
     library_model = resource.contents[0]
     rset.metamodel_registry[library_model.nsURI] = library_model
     generator = EcoreGenerator()
-    generator.generate(library_model, os.path.join('output', 'library'))
+    generator.generate(library_model, pygen_output_dir)
+
+    from .output.pygen import library as library_gen

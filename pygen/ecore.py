@@ -1,6 +1,8 @@
 """Support for generation for models based on pyecore."""
 import os
 
+import jinja2
+
 from pyecore.ecore import EPackage
 from pygen.jinja import JinjaTask, JinjaGenerator
 
@@ -43,7 +45,7 @@ class EcoreTask(JinjaTask):
 class EcorePackageInitTask(EcoreTask):
     """Generation of package init file from Ecore model with Jinja2."""
 
-    template_name = 'package.py'
+    template_name = 'package.py.tpl'
     element_type = EPackage
 
     @staticmethod
@@ -54,7 +56,7 @@ class EcorePackageInitTask(EcoreTask):
 class EcorePackageModuleTask(EcoreTask):
     """Generation of package model from Ecore model with Jinja2."""
 
-    template_name = 'module.py'
+    template_name = 'module.py.tpl'
     element_type = EPackage
 
     @staticmethod
@@ -70,4 +72,14 @@ class EcoreGenerator(JinjaGenerator):
         EcorePackageModuleTask(),
     ]
 
-    templates_path = 'templates'
+    def create_environment(self, **kwargs):
+        """
+        Return a new Jinja environment.
+
+        Derived classes may override method to pass additional parameters or to change the template
+        loader type.
+        """
+        return jinja2.Environment(
+            loader=jinja2.PackageLoader('pygen', self.templates_path),
+            **kwargs
+        )

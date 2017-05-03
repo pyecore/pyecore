@@ -20,7 +20,7 @@ def cwd_module_dir():
 
 @pytest.fixture
 def outfolder():
-    path = 'output'
+    path = os.path.join('output', 'jinja')
     shutil.rmtree(path, ignore_errors=True)
     yield path
     shutil.rmtree(path, ignore_errors=False)
