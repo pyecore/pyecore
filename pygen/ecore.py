@@ -21,10 +21,21 @@ class EcoreTask(JinjaTask):
 
     @classmethod
     def folder_path_for_package(cls, package: EPackage):
+        """Returns path to folder holding generated artifact for given element."""
         parent = package.eContainer()
         if parent:
             return os.path.join(cls.folder_path_for_package(parent), package.name)
         return package.name
+
+    @staticmethod
+    def filename_for_element(package: EPackage):
+        """Returns generated file name."""
+        raise NotImplementedError
+
+    def relative_path_for_element(self, element: EPackage):
+        path = os.path.join(self.folder_path_for_package(element),
+                            self.filename_for_element(element))
+        return path
 
 
 class EcorePackageInitTask(EcoreTask):
@@ -33,10 +44,9 @@ class EcorePackageInitTask(EcoreTask):
     template_name = 'package.py'
     element_type = EPackage
 
-    def relative_path_for_element(self, element: EPackage):
-        folder = self.folder_path_for_package(element)
-        path = os.path.join(folder, '__init__.py')
-        return path
+    @staticmethod
+    def filename_for_element(package: EPackage):
+        return '__init__.py'
 
 
 class EcorePackageModuleTask(EcoreTask):
@@ -45,10 +55,9 @@ class EcorePackageModuleTask(EcoreTask):
     template_name = 'module.py'
     element_type = EPackage
 
-    def relative_path_for_element(self, element: EPackage):
-        folder = self.folder_path_for_package(element)
-        path = os.path.join(folder, '{}.py'.format(element.name))
-        return path
+    @staticmethod
+    def filename_for_element(package: EPackage):
+        return '{}.py'.format(package.name)
 
 
 class EcoreGenerator(JinjaGenerator):
