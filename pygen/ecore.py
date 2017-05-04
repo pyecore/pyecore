@@ -1,9 +1,10 @@
 """Support for generation for models based on pyecore."""
 import os
 
+import itertools
 import jinja2
 
-from pyecore.ecore import EPackage
+from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum
 from pygen.jinja import JinjaTask, JinjaGenerator
 
 
@@ -60,8 +61,30 @@ class EcorePackageModuleTask(EcoreTask):
     element_type = EPackage
 
     @staticmethod
+    def imported_classifiers(p: EPackage):
+        """Determines which classifiers have to be imported into given package."""
+        classes = {c for c in p.eClassifiers if isinstance(c, EClass)}
+
+        supertypes = itertools.chain(*(c.eAllSuperTypes() for c in classes))
+        imported = {c for c in supertypes if c.ePackage is not p}
+
+        attributes = itertools.chain(*(c.eAttributes for c in classes))
+        attributes_types = (a.eType for a in attributes)
+        enum_types = (t for t in attributes_types if isinstance(t, EEnum))
+        imported |= {t for t in enum_types if t.ePackage is not p}
+
+        # sort by owner package name:
+        return sorted(imported, key=lambda c: c.ePackage.name)
+
+    @staticmethod
     def filename_for_element(package: EPackage):
         return '{}.py'.format(package.name)
+
+    def create_template_context(self, element, **kwargs):
+        return super().create_template_context(
+            element=element,
+            imported_classifiers=self.imported_classifiers(element)
+        )
 
 
 class EcoreGenerator(JinjaGenerator):
@@ -72,6 +95,11 @@ class EcoreGenerator(JinjaGenerator):
         EcorePackageModuleTask(),
     ]
 
+    @staticmethod
+    def test_type(value, type_):
+        """Jinja test to check object type."""
+        return isinstance(value, type_)
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -79,7 +107,11 @@ class EcoreGenerator(JinjaGenerator):
         Derived classes may override method to pass additional parameters or to change the template
         loader type.
         """
-        return jinja2.Environment(
+        environment = jinja2.Environment(
             loader=jinja2.PackageLoader('pygen', self.templates_path),
             **kwargs
         )
+        environment.tests.update({'type': self.test_type})
+        from pyecore import ecore
+        environment.globals.update({'ecore': ecore})
+        return environment
