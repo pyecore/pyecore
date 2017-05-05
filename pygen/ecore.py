@@ -77,12 +77,19 @@ class EcorePackageModuleTask(EcoreTask):
         return sorted(imported, key=lambda c: c.ePackage.name)
 
     @staticmethod
+    def classes(p: EPackage):
+        """Returns classes in package in ordered by number of bases."""
+        classes = (c for c in p.eClassifiers if isinstance(c, EClass))
+        return sorted(classes, key=lambda c: len(set(c.eAllSuperTypes())))
+
+    @staticmethod
     def filename_for_element(package: EPackage):
         return '{}.py'.format(package.name)
 
     def create_template_context(self, element, **kwargs):
         return super().create_template_context(
             element=element,
+            classes=self.classes(element),
             imported_classifiers=self.imported_classifiers(element)
         )
 

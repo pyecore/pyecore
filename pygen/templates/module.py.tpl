@@ -15,7 +15,16 @@ eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 eClassifiers = {}
 getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 
-{% for c in element.eClassifiers if c is type(ecore.EEnum) %}
-c.generate()
-{% endfor %}
+{%- macro generate_class(c) %}
 
+# TODO: Code for class {{ c.name }}
+# TODO: Code for class {{ c.name }}
+{% endmacro %}
+
+{%- for c in element.eClassifiers if c is type(ecore.EEnum) %}
+{{ generate_class(c) }}
+{%- endfor %}
+
+{%- for c in classes -%}
+{{ generate_class(c) }}
+{%- endfor %}
