@@ -495,7 +495,10 @@ class EList(ECollection, list):
 
 
 class EBag(EList):
-    pass
+    def __repr__(self):
+        if not self:
+            return '{}()'.format(self.__class__.__name__)
+        return '{}({})'.format(self.__class__.__name__, self)
 
 
 class EAbstractSet(ECollection):
