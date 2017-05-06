@@ -87,6 +87,16 @@ class AbstractCommand(object):
         self.do_execute()
         self.__executed = True
 
+    def __repr__(self):
+        if not isinstance(feature, str):
+            feature = self.feature.name
+        else:
+            feature = self.feature
+        return '{} {}.{} <- {}'.format(self.__class__.__name__,
+                                       self.owner,
+                                       feature,
+                                       self.value)
+
 
 class Set(AbstractCommand):
     def __init__(self, owner=None, feature=None, value=None):
