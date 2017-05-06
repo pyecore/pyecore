@@ -156,6 +156,31 @@ Opposite and 'collection' meta-references are also managed:
     [<pyecore.ecore.C object at 0x7f7da7053390>]
 
 
+Enhance the Dynamic metamodel
+-----------------------------
+
+Even if you define or use a dynamic metamodel, you can add dedicated methods
+(e.g: ``__repr__``) to the equivalent Python class. Each ``EClass`` instance is
+linked to a Python class which can be reached using the ``python_class`` field:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> A.python_class
+    pyecore.ecore.A
+
+You can directly add new "non-metamodel" related method to this class:
+
+.. code-block:: python
+
+    >>> a = A()
+    >>> a
+    <pyecore.ecore.A at 0x7f4f0839b7b8>
+    >>> A.python_class.__repr__ = lambda self: 'My repr for real'
+    >>> a
+    My repr for real
+
+
 Static Metamodels
 =================
 
