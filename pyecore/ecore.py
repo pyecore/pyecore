@@ -570,6 +570,13 @@ class EModelElement(EObject):
         else:
             return super().eURIFragment()
 
+    def getEAnnotation(self, source):
+        """Return the annotation with a matching source attribute."""
+        for annotation in self.eAnnotations:
+            if annotation.source == source:
+                return annotation
+        return None
+
 
 class EAnnotation(EModelElement):
     def __init__(self, source=None):
