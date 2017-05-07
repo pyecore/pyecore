@@ -3,6 +3,7 @@ import pytest
 import library
 from pyecore.ecore import BadValueError
 import pyecore.ecore as Ecore
+from pyecore.utils import DynamicEPackage
 
 
 def test_meta_attribute_access():
@@ -151,3 +152,8 @@ def test_static_init_single_attribute_bad_type():
 def test_static_init_bad_argument():
     with pytest.raises(AttributeError):
         library.Book(unknown=None)
+
+
+def test_static_init_dynamicEPackage_bad_value():
+    with pytest.raises(BadValueError):
+        DynamicEPackage(library)

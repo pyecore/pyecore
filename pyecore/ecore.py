@@ -9,7 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
-from ordered_set import OrderedSet
+from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
 
 
@@ -358,15 +358,9 @@ class EValue(PyEcoreValue):
             eOpposite = efeature.eOpposite
             if previous_value and eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
-                      .remove(owner)
-                previous_value.notify(Notification(old=owner,
-                                                   feature=eOpposite,
-                                                   kind=Kind.REMOVE))
+                      .remove(owner, update_opposite=False)
             elif previous_value:
                 object.__setattr__(previous_value, eOpposite.name, None)
-                previous_value.notify(Notification(old=owner,
-                                                   feature=eOpposite,
-                                                   kind=Kind.UNSET))
 
 
 class ECollection(PyEcoreValue):
@@ -376,9 +370,9 @@ class ECollection(PyEcoreValue):
         elif feature.ordered and not feature.unique:
             return EList(owner, efeature=feature)
         elif feature.unique:
-            return EOrderedSet(owner, efeature=feature)
+            return ESet(owner, efeature=feature)
         else:
-            return EList(owner, efeature=feature)  # see for better implem
+            return EBag(owner, efeature=feature)  # see for better implem
 
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
@@ -389,7 +383,7 @@ class ECollection(PyEcoreValue):
         eOpposite = self._efeature.eOpposite
         if not eOpposite:
             couple = (new_value, self._efeature)
-            if remove:
+            if remove and couple in owner._inverse_rels:
                 owner._inverse_rels.remove(couple)
             else:
                 owner._inverse_rels.add(couple)
@@ -399,24 +393,14 @@ class ECollection(PyEcoreValue):
             owner.__getattribute__(eOpposite.name)  # force resolve
             object.__getattribute__(owner, eOpposite.name) \
                   .append(new_value, False)
-            owner.notify(Notification(new=new_value,
-                                      feature=eOpposite,
-                                      kind=Kind.ADD))
         elif eOpposite.many and remove:
             object.__getattribute__(owner, eOpposite.name) \
                   .remove(new_value, False)
-            owner.notify(Notification(old=new_value,
-                                      feature=eOpposite,
-                                      kind=Kind.REMOVE))
         else:
             new_value = None if remove else new_value
-            kind = Kind.UNSET if remove else Kind.SET
             object.__getattribute__(owner, eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
                  .__set__(None, new_value, update_opposite=False)
-            owner.notify(Notification(new=new_value,
-                                      feature=eOpposite,
-                                      kind=kind))
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -464,14 +448,57 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
+        is_collection = is_iterable(y)
+        if isinstance(i, slice) and is_collection:
+            sliced_elements = self.__getitem__(i)
+            all(self.check(x) for x in y)
+            for element in y:
+                self._update_container(element)
+                self._update_opposite(element, self._owner)
+            # We remove (not really) all element from the slice
+            for element in sliced_elements:
+                self._update_container(None, previous_value=element)
+                self._update_opposite(element, self._owner, remove=True)
+            if sliced_elements and len(sliced_elements) > 1:
+                self._owner.notify(Notification(old=sliced_elements,
+                                                feature=self._efeature,
+                                                kind=Kind.REMOVE_MANY))
+            elif sliced_elements:
+                self._owner.notify(Notification(old=sliced_elements[0],
+                                                feature=self._efeature,
+                                                kind=Kind.REMOVE))
+
+        else:
+            self.check(y)
+            self._update_container(y)
+            self._update_opposite(y, self._owner)
+        super().__setitem__(i, y)
+        kind = Kind.ADD
+        if is_collection and len(y) > 1:
+            kind = Kind.ADD_MANY
+        elif is_collection:
+            y = y[0] if y else y
+        self._owner.notify(Notification(new=y,
+                                        feature=self._efeature,
+                                        kind=kind))
+        self._owner._isset.add(self._efeature)
+
+    def insert(self, i, y):
         self.check(y)
         self._update_container(y)
         self._update_opposite(y, self._owner)
-        super().__setitem__(i, y)
+        super().insert(i, y)
         self._owner.notify(Notification(new=y,
                                         feature=self._efeature,
                                         kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
+
+
+class EBag(EList):
+    def __repr__(self):
+        if not self:
+            return '{}()'.format(self.__class__.__name__)
+        return '{}({})'.format(self.__class__.__name__, self)
 
 
 class EAbstractSet(ECollection):
@@ -509,11 +536,6 @@ class EAbstractSet(ECollection):
         self._owner._isset.add(self._efeature)
 
 
-class ESet(EAbstractSet, set):
-    def __init__(self, owner, efeature=None):
-        super().__init__(owner, efeature)
-
-
 class EOrderedSet(EAbstractSet, OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
@@ -527,6 +549,10 @@ class EOrderedSet(EAbstractSet, OrderedSet):
                                         kind=Kind.ADD_MANY))
         self._owner._isset.add(self._efeature)
         self._orderedset_update = False
+
+
+class ESet(EOrderedSet):
+    pass
 
 
 class EModelElement(EObject):
@@ -783,9 +809,11 @@ class EStructuralFeature(ETypedElement):
 
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None,
-                 lower=0, upper=1, changeable=True, derived=False):
+                 lower=0, upper=1, changeable=True, derived=False,
+                 unique=True, ordered=True):
         super().__init__(name, eType, lower=lower, upper=upper,
-                         derived=derived, changeable=changeable)
+                         derived=derived, changeable=changeable,
+                         unique=unique, ordered=ordered)
         self.default_value = default_value
         if not self.default_value and isinstance(eType, EDataType):
             self.default_value = eType.default_value
@@ -1205,6 +1233,13 @@ Core.register_classifier(EReference, promote=True)
 Core.register_classifier(EString)
 Core.register_classifier(EBoolean)
 Core.register_classifier(EInteger)
+Core.register_classifier(EInt)
+Core.register_classifier(EBigInteger)
+Core.register_classifier(EIntegerObject)
+Core.register_classifier(EFloat)
+Core.register_classifier(EFloatObject)
+Core.register_classifier(EDouble)
+Core.register_classifier(EDoubleObject)
 Core.register_classifier(EStringToStringMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)

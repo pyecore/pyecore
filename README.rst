@@ -156,6 +156,31 @@ Opposite and 'collection' meta-references are also managed:
     [<pyecore.ecore.C object at 0x7f7da7053390>]
 
 
+Enhance the Dynamic metamodel
+-----------------------------
+
+Even if you define or use a dynamic metamodel, you can add dedicated methods
+(e.g: ``__repr__``) to the equivalent Python class. Each ``EClass`` instance is
+linked to a Python class which can be reached using the ``python_class`` field:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> A.python_class
+    pyecore.ecore.A
+
+You can directly add new "non-metamodel" related method to this class:
+
+.. code-block:: python
+
+    >>> a = A()
+    >>> a
+    <pyecore.ecore.A at 0x7f4f0839b7b8>
+    >>> A.python_class.__repr__ = lambda self: 'My repr for real'
+    >>> a
+    My repr for real
+
+
 Static Metamodels
 =================
 
@@ -427,6 +452,38 @@ The ``ResourceSet/Resource/URI`` will evolve in the future. At the moment, only
 basic operations are enabled: ``create_resource/get_resource/load/save...``.
 
 
+Dynamic Metamodels Helper
+-------------------------
+
+Once a metamodel is loaded from an XMI metamodel (from a ``.ecore`` file), the
+metamodel root that is gathered is an ``EPackage`` instance. To access each
+``EClass`` from the loaded resource, a ``getEClassifier(...)`` call must be
+performed:
+
+.. code-block:: python
+
+    >>> #...
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> A = mm_root.getEClassifier('A')
+    >>> a_instance = A()
+
+When a big metamodel is loaded, this operation can be cumbersome. To ease this
+operation, PyEcore proposes an helper that gives a quick access to each
+``EClass`` contained in the ``EPackage`` and its subpackages. This helper is the
+``DynamicEPackage`` class. Its creation is performed like so:
+
+.. code-block:: python
+
+    >>> #...
+    >>> resource = rset.get_resource(URI('path/to/mm.ecore'))
+    >>> mm_root = resource.contents[0]
+    >>> from pyecore.utils import DynamicEPackage
+    >>> MyMetamodel = DynamicEPackage(mm_root)  # We create a DynamicEPackage for the loaded root
+    >>> a_instance = MyMetamodel.A()
+    >>> b_instance = MyMetamodel.B()
+
+
 Adding External Metamodel Resources
 -----------------------------------
 
@@ -662,16 +719,19 @@ The only projects I found are:
 * PyEMOFUC (http://www.istr.unican.es/pyemofuc/index_En.html)
 
 PyEMOF proposes an implementation of the OMG's EMOF in Python. The project
-targets Python2 and supports XMI import/export. The project didn't move since
-2005, but seems quite complete.
+targets Python2, only supports Class/Primitive Types (no Enumeration), XMI
+import/export and does not provide a reflexion layer. The project didn't move
+since 2005.
 
 EMF4CPP proposes a C++ implementation of EMF. This implementation also
 introduces Python scripts to call the generated C++ code from a Python
-environment.
+environment. It seems that the EMF4CPP does not provide a reflexive layer
+either.
 
 PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
 If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
-metamodels. The project does not seems to move a lot.
+metamodels and seems to provide a reflexive layer. The project does not appear
+seems to have moved since a while.
 
 Additional Resources
 ====================
