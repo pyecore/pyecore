@@ -2,6 +2,8 @@
 that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
 """
+# from abc import ABC,
+from collections import MutableSequence
 from pyecore.ecore import EObject
 import ordered_set
 
@@ -52,6 +54,9 @@ ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 
 
+# class BasicCommand(object, metaclass=ABC)
+
+
 class AbstractCommand(object):
     def __init__(self, owner=None, feature=None, value=None, label=None):
         if owner and not isinstance(owner, EObject):
@@ -81,14 +86,14 @@ class AbstractCommand(object):
         return execute
 
     def can_undo(self):
-        return self.__executed
+        return self._executed
 
     def execute(self):
         self.do_execute()
-        self.__executed = True
+        self._executed = True
 
     def __repr__(self):
-        if not isinstance(feature, str):
+        if not isinstance(self.feature, str):
             feature = self.feature.name
         else:
             feature = self.feature
@@ -185,6 +190,11 @@ class Remove(AbstractCommand):
         self._collection.pop(self.index)
 
 
+class Compound(AbstractCommand, MutableSequence):
+    def __init__(self):
+        super()
+
+
 class CommandStack(object):
     def __init__(self):
         self.stack = []
@@ -204,7 +214,8 @@ class CommandStack(object):
         self.stack[index:index] = [command]
         self.stack_index = index
 
-    def decrease_top(self):
+    @top.deleter
+    def top(self):
         self.stack_index -= 1
 
     def execute(self, *commands):
@@ -220,7 +231,7 @@ class CommandStack(object):
             raise ValueError('Command stack is empty')
         if self.top.can_undo:
             self.top.undo()
-            self.decrease_top()
+            del self.top
 
     def redo(self):
         self.peek_next_top.redo()
