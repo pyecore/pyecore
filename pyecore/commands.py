@@ -104,9 +104,6 @@ class AbstractCommand(Command):
         else:
             actual = eclass.findEStructuralFeature(self.feature.name)
             execute = self.feature is actual
-        # if self.value is not None:
-        #     same_type = EcoreUtils.isinstance(self.value, actual.eType)
-        #     execute = execute and same_type
         return execute
 
     @property
@@ -211,10 +208,51 @@ class Remove(AbstractCommand):
         self._collection.pop(self.index)
 
     def do_execute(self):
-        object = self.owner
         if self.index is None:
             self.index = self._collection.index(self.value)
         self._collection.pop(self.index)
+
+
+class Move(AbstractCommand):
+    def __init__(self, owner=None, feature=None, from_index=None,
+                 to_index=None, value=None):
+        super().__init__(owner, feature, value=value)
+        self.from_index = from_index
+        self.to_index = to_index
+        if bool(self.from_index is not None) == bool(self.value is not None):
+            raise ValueError('Move command cannot have from_index and value '
+                             'set together.')
+
+    @property
+    def can_execute(self):
+        can = super().can_execute
+        self._collection = self.owner.eGet(self.feature)
+        in_bounds = self.to_index >= 0 and self.to_index >= 0
+        if self.value is None:
+            self.value = self._collection[self.from_index]
+        if self.from_index is None:
+            self.from_index = self._collection.index(self.value)
+        in_bounds = in_bounds and self.from_index < len(self._collection)
+        in_bounds = in_bounds and self.from_index >= 0
+        return can and in_bounds and self.value in self._collection
+
+    @property
+    def can_undo(self):
+        can = super().can_undo
+        obj = self._collection[to_index]
+        return obj is self.value
+
+    def undo(self):
+        object = self.owner
+        self.value = self._collection.pop(self.to_index)
+        self._collection.insert(self.from_index, self.value)
+
+    def redo(self):
+        self.do_execute()
+
+    def do_execute(self):
+        self.value = self._collection.pop(self.from_index)
+        self._collection.insert(self.to_index, self.value)
 
 
 class Compound(Command, MutableSequence):
