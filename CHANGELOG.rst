@@ -1,6 +1,37 @@
 Changelog
 ---------
 
+0.3.0
++++++
+
+**Features**
+
+- Add new class to ease dynamic metamodel handling. The dynamic metamodel
+  manipulation is a little bit cumbersome when it comes to extract all the
+  existing EClass from a loaded EPackage. A new class is provided:
+  'DynamicEPackage' which constructs, using reflection, an object that has
+  direct references to each EClass/sub-EPackage by name. This greatly helps the
+  user to easily call and get EClass from a freshly loaded dynamic EPackage.
+
+
+**Bugfixes**
+
+- Fix missing double notification raised for eopposite references. When an
+  eopposite reference were set, the notification system were called three times:
+  one for the main feature (the feature on which the add/remove/set/unset have
+  been made by the user) and two for the eopposite. The first eopposite
+  notification were normal, but the second one was a residual notification sent
+  by the algorithm. This new commit simply removes the extra-notifications and
+  adds new tests to detect these issues.
+
+
+**Miscellaneous**
+
+- Add better semantic differentiation for ``EBag`` and ``ESet`` collections.
+- Add slicing support for ``EList``.
+- Add missing ``ordered`` and ``unique`` parameters for ``EAttribute``.
+
+
 0.2.0
 +++++
 
