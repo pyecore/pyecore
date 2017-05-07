@@ -4,7 +4,7 @@ import os
 import itertools
 import jinja2
 
-from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum, EModelElement
+from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum, EModelElement, EReference
 from pygen.jinja import JinjaTask, JinjaGenerator
 
 
@@ -125,6 +125,18 @@ class EcoreGenerator(JinjaGenerator):
     def filter_pyquotetriple(value: str):
         return '"""{}"""'.format(value) if value is not None else ''
 
+    @staticmethod
+    def filter_refqualifiers(value: EReference):
+        qualifiers = dict(
+            ordered=value.ordered,
+            unique=value.unique,
+            containment=value.containment,
+        )
+        if value.many:
+            qualifiers.update(upper=-1)
+
+        return ', '.join('{}={}'.format(k, v) for k, v in qualifiers.items())
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -143,6 +155,7 @@ class EcoreGenerator(JinjaGenerator):
             'documentation': self.filter_documentation,
             'pyquotesingle': self.filter_pyquotesingle,
             'pyquotetriple': self.filter_pyquotetriple,
+            'refqualifiers': self.filter_refqualifiers,
             'supertypes': self.filter_supertypes,
         })
 
