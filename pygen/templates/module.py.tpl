@@ -34,10 +34,19 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {#- --------------------------------------------------------------------------------------------- #}
 
+{%- macro generate_attribute(a) -%}
+    _{{ a.name }} = EAttribute({% if a.derived %}name='{{ a.name }}', {% endif %}eType={{ a.eType.name }}{% if a.many %}, upper=-1{% endif %}{% if a.derived %}, derived=True{% endif %}{% if not a.changeable %}, changeable=False{% endif %})
+{%- endmacro %}
+
+{#- --------------------------------------------------------------------------------------------- #}
+
 {%- macro generate_class(c) %}
 
 {% if c.abstract %}@abstract{% endif %}
-{{ generate_class_header(c) }}
+{{ generate_class_header(c) -}}
+{% for a in c.eAttributes %}
+    {{ generate_attribute(a) -}}
+{% endfor %}
     # TODO OTHER CLASS CONTENT
 {% endmacro %}
 
