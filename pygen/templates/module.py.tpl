@@ -53,6 +53,18 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {#- -------------------------------------------------------------------------------------------- -#}
 
+{%- macro generate_derived_attribute(d) -%}
+    @property
+    def {{ d.name }}(self):
+        return self._{{ d.name }}
+
+    @{{ d.name }}.setter
+    def {{ d.name }}(self, value):
+        self._{{ d.name }} = value
+{%- endmacro %}
+
+{#- -------------------------------------------------------------------------------------------- -#}
+
 {%- macro generate_class(c) %}
 
 {% if c.abstract %}@abstract
@@ -63,6 +75,9 @@ class {{ c.name }}({{ c | supertypes }}):
 {% endfor %}
 {%- for r in c.eReferences %}
     {{ generate_reference(r) -}}
+{% endfor %}
+{% for d in c.eAttributes | selectattr('derived')  %}
+    {{ generate_derived_attribute(d) }}
 {% endfor %}
     # TODO OTHER CLASS CONTENT
 {% endmacro %}
