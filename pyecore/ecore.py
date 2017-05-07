@@ -876,7 +876,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self._metainstance()
+        obj = self._metainstance(*args, **kwargs)
         obj._isready = True
         return obj
 
