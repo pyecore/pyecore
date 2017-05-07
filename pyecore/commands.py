@@ -239,7 +239,7 @@ class Move(AbstractCommand):
     @property
     def can_undo(self):
         can = super().can_undo
-        obj = self._collection[to_index]
+        obj = self._collection[self.to_index]
         return obj is self.value
 
     def undo(self):
