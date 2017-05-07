@@ -15,10 +15,20 @@ eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 eClassifiers = {}
 getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 
+{%- macro generate_class_header(c) %}
+class {{ c.name }}(EObject, metaclass=MetaEClass):
+    {%- with doc = c | documentation -%}
+        {% if doc %}
+    """{{ doc }}"""
+        {%- endif %}
+    {%- endwith %}
+    # TODO OTHER CLASS CONTENT
+{% endmacro %}
+
 {%- macro generate_class(c) %}
 
-# TODO: Code for class {{ c.name }}
-# TODO: Code for class {{ c.name }}
+{% if c.abstract %}@abstract{% endif %}
+{{ generate_class_header(c) }}
 {% endmacro %}
 
 {%- for c in element.eClassifiers if c is type(ecore.EEnum) %}

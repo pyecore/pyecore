@@ -21,6 +21,9 @@
     </eStructuralFeatures>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" xmi:id="_cPfS7R9KEeeOINGRvT6ccg" name="Library">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Top-level object for library management."/>
+    </eAnnotations>
     <eAnnotations xmi:id="_cPfS7h9KEeeOINGRvT6ccg" source="genmymodel">
       <details xmi:id="_cPfS7x9KEeeOINGRvT6ccg" key="uuid" value="_5AMH4MSREDSrHKQOAiwNVw"/>
     </eAnnotations>

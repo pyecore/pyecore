@@ -4,7 +4,7 @@ import os
 import itertools
 import jinja2
 
-from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum
+from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum, EModelElement
 from pygen.jinja import JinjaTask, JinjaGenerator
 
 
@@ -107,6 +107,11 @@ class EcoreGenerator(JinjaGenerator):
         """Jinja test to check object type."""
         return isinstance(value, type_)
 
+    @staticmethod
+    def filter_documentation(value: EModelElement) -> str:
+        annotation = value.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
+        return annotation.details.get('documentation', '') if annotation else ''
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -119,6 +124,9 @@ class EcoreGenerator(JinjaGenerator):
             **kwargs
         )
         environment.tests.update({'type': self.test_type})
+        environment.filters.update({'documentation': self.filter_documentation})
+
         from pyecore import ecore
         environment.globals.update({'ecore': ecore})
+
         return environment
