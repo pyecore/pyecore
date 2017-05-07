@@ -2,7 +2,7 @@
 that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
 """
-# from abc import ABC,
+from abc import ABC, abstractmethod
 from collections import MutableSequence
 from pyecore.ecore import EObject
 import ordered_set
@@ -24,7 +24,6 @@ def insert(self, index, key):
             self.map[k] = v + 1
 
 
-# monkey patching the OrderedSet implementation
 def pop(self, index=None):
     """Removes an element at the tail of the OrderedSet or at a dedicated
     position.
@@ -54,10 +53,35 @@ ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 
 
-# class BasicCommand(object, metaclass=ABC)
+class Command(ABC):
+    """Provides the basic elements that must be implemented by a custom command.
+    The methods/properties that need to be implemented are:
+    * can_execute (@property)
+    * can_undo (@property)
+    * execute (method)
+    * undo (method)
+    * redo (method)
+    """
+    @property
+    @abstractmethod
+    def can_execute(self):
+        pass
+
+    @abstractmethod
+    def execute(self):
+        pass
+
+    @property
+    @abstractmethod
+    def can_undo(self):
+        pass
+
+    @abstractmethod
+    def undo(self):
+        pass
 
 
-class AbstractCommand(object):
+class AbstractCommand(Command):
     def __init__(self, owner=None, feature=None, value=None, label=None):
         if owner and not isinstance(owner, EObject):
             raise BadValueError(got=owner, expected=EObject)
@@ -85,6 +109,7 @@ class AbstractCommand(object):
         #     execute = execute and same_type
         return execute
 
+    @property
     def can_undo(self):
         return self._executed
 
@@ -139,8 +164,9 @@ class Add(AbstractCommand):
             executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
+    @property
     def can_undo(self):
-        can = super().can_undo()
+        can = super().can_undo
         return can and self.value in self._collection
 
     def undo(self):
@@ -173,8 +199,9 @@ class Remove(AbstractCommand):
             executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
+    @property
     def can_undo(self):
-        can = super().can_undo()
+        can = super().can_undo
         return can
 
     def undo(self):
@@ -190,9 +217,50 @@ class Remove(AbstractCommand):
         self._collection.pop(self.index)
 
 
-class Compound(AbstractCommand, MutableSequence):
-    def __init__(self):
-        super()
+class Compound(Command, MutableSequence):
+    def __init__(self, *commands):
+        super().__init__()
+        self.items = commands
+
+    @property
+    def can_execute(self):
+        return all(command.can_execute for command in self.items)
+
+    def execute(self):
+        for command in self:
+            command.execute()
+
+    @property
+    def can_undo(self):
+        return all(command.can_undo for command in self.items)
+
+    def undo(self):
+        for command in reversed(self):
+            command.undo()
+
+    def unwrap(self):
+        return self[0] if len(self) == 1 else self
+
+    def __delitem__(self, index):
+        self.items.__delitem__(index)
+
+    def __getitem__(self, index):
+        return self.items.__getitem__(index)
+
+    def __len__(self):
+        return len(self.items)
+
+    def __setitem__(self, index, item):
+        return self.items.__setitem__(index, item)
+
+    def insert(self, index, item):
+        self.items.insert(index, item)
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.items)
 
 
 class CommandStack(object):
