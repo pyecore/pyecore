@@ -112,6 +112,19 @@ class EcoreGenerator(JinjaGenerator):
         annotation = value.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
         return annotation.details.get('documentation', '') if annotation else ''
 
+    @staticmethod
+    def filter_supertypes(value: EClass):
+        supertypes = ', '.join(t.name for t in value.eSuperTypes)
+        return supertypes if supertypes else 'EObject, metaclass=MetaEClass'
+
+    @staticmethod
+    def filter_pyquotesingle(value: str):
+        return '\'{}\''.format(value) if value is not None else ''
+
+    @staticmethod
+    def filter_pyquotetriple(value: str):
+        return '"""{}"""'.format(value) if value is not None else ''
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -123,8 +136,15 @@ class EcoreGenerator(JinjaGenerator):
             loader=jinja2.PackageLoader('pygen', self.templates_path),
             **kwargs
         )
-        environment.tests.update({'type': self.test_type})
-        environment.filters.update({'documentation': self.filter_documentation})
+        environment.tests.update({
+            'type': self.test_type
+        })
+        environment.filters.update({
+            'documentation': self.filter_documentation,
+            'pyquotesingle': self.filter_pyquotesingle,
+            'pyquotetriple': self.filter_pyquotetriple,
+            'supertypes': self.filter_supertypes,
+        })
 
         from pyecore import ecore
         environment.globals.update({'ecore': ecore})
