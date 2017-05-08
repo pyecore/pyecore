@@ -84,6 +84,24 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {#- -------------------------------------------------------------------------------------------- -#}
 
+{%- macro generate_class_init(c) %}
+    def __init__(self{{ generate_class_init_args(c) }}, **kwargs):
+    {%- if not c.eSuperTypes %}
+        if kwargs:
+            raise AttributeError('unexpected arguments: {}'.format(kwargs))
+    {%- endif %}
+
+        super().__init__({% if c.eSuperTypes %}**kwargs{% endif %})
+    {%- for feature in c.eStructuralFeatures | reject('type', ecore.EReference) %}
+    {{ generate_feature_init(feature) }}
+    {%- endfor %}
+    {%- for feature in c.eStructuralFeatures | select('type', ecore.EReference) %}
+    {{ generate_feature_init(feature) }}
+    {%- endfor %}
+{%- endmacro %}
+
+{#- -------------------------------------------------------------------------------------------- -#}
+
 {%- macro generate_class(c) %}
 
 {% if c.abstract %}@abstract
@@ -98,21 +116,7 @@ class {{ c.name }}({{ c | supertypes }}):
 {% for d in c.eAttributes | selectattr('derived')  %}
     {{ generate_derived_attribute(d) }}
 {% endfor %}
-    def __init__(self{{ generate_class_init_args(c) }}, **kwargs):
-        {% if not c.eSuperTypes -%}
-        if kwargs:
-            raise AttributeError('unexpected arguments: {}'.format(kwargs))
-        {%- endif %}
-
-        super().__init__({% if c.eSuperTypes %}**kwargs{% endif %})
-        {%- for feature in c.eStructuralFeatures | reject('type', ecore.EReference) %}
-        {{ generate_feature_init(feature) }}
-        {%- endfor %}
-        {%- for feature in c.eStructuralFeatures | select('type', ecore.EReference) %}
-        {{ generate_feature_init(feature) }}
-        {%- endfor %}
-
-    # TODO OTHER CLASS CONTENT
+{{- generate_class_init(c) }}
 {% endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}
