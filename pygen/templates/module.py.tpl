@@ -25,12 +25,8 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 
 {%- macro generate_class_header(c) -%}
 class {{ c.name }}({{ c | supertypes }}):
-    {%- with doc = c | documentation -%}
-        {% if doc %}
-    """{{ doc }}"""
-        {%- endif %}
-    {%- endwith -%}
-{% endmacro %}
+    {{ c | docstringline -}}
+{% endmacro -%}
 
 {#- -------------------------------------------------------------------------------------------- -#}
 
@@ -102,6 +98,21 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {#- -------------------------------------------------------------------------------------------- -#}
 
+{%- macro generate_operation_args(o) -%}
+    {% if o.eParameters %}, {% endif -%}
+    {{ o.eParameters | join(', ', attribute='name') }}
+{%- endmacro  %}
+
+{#- -------------------------------------------------------------------------------------------- -#}
+
+{%- macro generate_operation(o) %}
+    def {{ o.name }}(self{{ generate_operation_args(o) }}):
+        {{ o | docstringline -}}
+        raise NotImplementedError('operation {{ o.name }}(...) not yet implemented')
+{%- endmacro %}
+
+{#- -------------------------------------------------------------------------------------------- -#}
+
 {%- macro generate_class(c) %}
 
 {% if c.abstract %}@abstract
@@ -117,7 +128,10 @@ class {{ c.name }}({{ c | supertypes }}):
     {{ generate_derived_attribute(d) }}
 {% endfor %}
 {{- generate_class_init(c) }}
-{% endmacro %}
+{% for o in c.eOperations %}
+    {{ generate_operation(o) }}
+{% endfor %}
+{%- endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}
 

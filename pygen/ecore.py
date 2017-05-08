@@ -108,9 +108,10 @@ class EcoreGenerator(JinjaGenerator):
         return isinstance(value, type_)
 
     @staticmethod
-    def filter_documentation(value: EModelElement) -> str:
+    def filter_docstringline(value: EModelElement) -> str:
         annotation = value.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
-        return annotation.details.get('documentation', '') if annotation else ''
+        doc = annotation.details.get('documentation', '') if annotation else None
+        return '"""{}"""\n'.format(doc) if doc else ''
 
     @staticmethod
     def filter_supertypes(value: EClass):
@@ -152,9 +153,8 @@ class EcoreGenerator(JinjaGenerator):
             'type': self.test_type
         })
         environment.filters.update({
-            'documentation': self.filter_documentation,
+            'docstringline': self.filter_docstringline,
             'pyquotesingle': self.filter_pyquotesingle,
-            'pyquotetriple': self.filter_pyquotetriple,
             'refqualifiers': self.filter_refqualifiers,
             'supertypes': self.filter_supertypes,
         })
