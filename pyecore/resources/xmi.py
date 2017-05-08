@@ -35,7 +35,7 @@ class XMIResource(Resource):
         self.uri.close_stream()
 
     def resolve(self, fragment):
-        fragment = Resource.normalize(fragment)
+        fragment = self.normalize(fragment)
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if self._use_uuid:
@@ -48,11 +48,12 @@ class XMIResource(Resource):
                 pass
         result = None
         for root in self._contents:
-            result = Resource._navigate_from(fragment, root)
+            result = self._navigate_from(fragment, root)
             if result:
                 self._resolve_mem[fragment] = result
                 return result
 
+    @staticmethod
     def extract_namespace(tag):
         qname = etree.QName(tag)
         return qname.namespace, qname.localname
@@ -70,7 +71,7 @@ class XMIResource(Resource):
         return node.get(XMIResource.xsitype)
 
     def _init_modelroot(self, xmlroot):
-        nsURI, eclass_name = XMIResource.extract_namespace(xmlroot.tag)
+        nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name)
         if not eobject:
             raise TypeError({'{0} EClass does not exists'}.format(eclass_name))
@@ -81,7 +82,7 @@ class XMIResource(Resource):
         self._later = []
         self._resolve_mem = {}
         for key, value in xmlroot.attrib.items():
-            namespace, att_name = XMIResource.extract_namespace(key)
+            namespace, att_name = self.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
             if prefix == 'xmi' and att_name == 'id':
                 modelroot._xmiid = value
@@ -189,7 +190,7 @@ class XMIResource(Resource):
         return (feature_container, eobject, eatts, erefs)
 
     def _decode_attribute(self, owner, key, value):
-        namespace, att_name = XMIResource.extract_namespace(key)
+        namespace, att_name = self.extract_namespace(key)
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
         if prefix == 'xmi' and att_name == 'id':
@@ -217,7 +218,7 @@ class XMIResource(Resource):
                     opposite.append((eobject, ref, value))
                     continue
                 if ref.many:
-                    values = [Resource.normalize(x) for x in value.split()]
+                    values = [self.normalize(x) for x in value.split()]
                 else:
                     values = [value]
                 for value in values:
@@ -247,7 +248,7 @@ class XMIResource(Resource):
             epackage = self.get_metamodel(uri)
             if not epackage:
                 raise TypeError('Cannot resolve metamodel: {0}'.format(uri))
-            val = Resource._navigate_from(fragment, epackage)
+            val = self._navigate_from(fragment, epackage)
             self._resolve_mem[uri] = val
             return val
         return self.resolve(fragment)
