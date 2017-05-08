@@ -2,11 +2,6 @@
 import logging
 import os
 
-try:
-    import jinja2
-except ImportError:
-    jinja2 = None
-
 _logger = logging.getLogger(__name__)
 
 
