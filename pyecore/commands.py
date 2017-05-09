@@ -80,6 +80,10 @@ class Command(ABC):
     def undo(self):
         pass
 
+    @abstractmethod
+    def redo(self):
+        pass
+
 
 class AbstractCommand(Command):
     def __init__(self, owner=None, feature=None, value=None, label=None):
