@@ -21,3 +21,5 @@ from .. import {{ element.eSuperPackage.name }}
 {%- for sub in element.eSubpackages %}
 from . import {{ sub.name }}
 {% endfor %}
+
+__all__ = [{{ element.eClassifiers | map(attribute='name') | map('pyquotesingle') | join(', ') }}]
