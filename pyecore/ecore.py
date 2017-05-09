@@ -876,7 +876,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self._metainstance()
+        obj = self._metainstance(*args, **kwargs)
         obj._isready = True
         return obj
 
@@ -892,12 +892,12 @@ class EClass(EClassifier):
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
             elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.new.name)
+                delattr(self.python_class, notif.old.name)
         elif notif.feature is EClass.eStructuralFeatures:
             if notif.kind is Kind.ADD:
                 setattr(self.python_class, notif.new.name, notif.new)
             elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.new.name)
+                delattr(self.python_class, notif.old.name)
 
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()

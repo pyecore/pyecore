@@ -225,11 +225,12 @@ class Resource(object):
         except KeyError:
             raise KeyError('Unknown metamodel with uri: {0}'.format(nsuri))
 
+    @staticmethod
     def normalize(fragment):
         return fragment.split()[-1:][0] if ' ' in fragment else fragment
 
     def _is_external(self, path):
-        path = Resource.normalize(path)
+        path = self.normalize(path)
         uri, fragment = path.split('#') if '#' in path else (None, path)
         return uri, fragment
 
@@ -241,10 +242,11 @@ class Resource(object):
             raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
         return decoder if decoder else self
 
+    @staticmethod
     def _navigate_from(path, start_obj):
         if '#' in path[:1]:
             path = path[1:]
-        features = list(filter(None, path.split('/')))
+        features = [x for x in path.split('/') if x]
         feat_info = [x.split('.') for x in features]
         obj = start_obj
         annot_content = False
