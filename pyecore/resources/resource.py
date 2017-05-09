@@ -246,7 +246,7 @@ class Resource(object):
     def _navigate_from(path, start_obj):
         if '#' in path[:1]:
             path = path[1:]
-        features = list(filter(None, path.split('/')))
+        features = [x for x in path.split('/') if x]
         feat_info = [x.split('.') for x in features]
         obj = start_obj
         annot_content = False
