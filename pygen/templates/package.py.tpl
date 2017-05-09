@@ -26,3 +26,16 @@ __all__ = [{{ element.eClassifiers | map(attribute='name') | map('pyquotesingle'
 
 eSubpackages = [{{ element.eSubpackages | map(attribute='name') | join(', ') }}]
 eSuperPackage = {{ element.eSuperPackage.name | default('None') }}
+{% if not element.eSuperPackage %}
+    {%- for e in element | all_contents(ecore.EReference) | rejectattr('eOpposite') %}
+{{ e.eContainingClass.name }}.{{ e.name }}.eType = {{ e.eType.name }}
+    {%- endfor %}
+    {%- with opposites = element | all_contents(ecore.EReference) | selectattr('eOpposite') | list %}
+        {%- for e in opposites %}
+{{ e.eContainingClass.name }}.{{ e.name }}.eType = {{ e.eType.name }}
+            {%- if e is opposite_before_self(opposites) %}
+{{ e.eContainingClass.name }}.{{ e.name }}.eOpposite = {{ e.eOpposite.eContainingClass.name }}.{{ e.eOpposite.name }}
+            {%- endif %}
+        {%- endfor %}
+    {%- endwith %}
+{%- endif %}

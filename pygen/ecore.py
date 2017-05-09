@@ -2,6 +2,8 @@
 import os
 
 import itertools
+import typing
+
 import jinja2
 
 from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum, EModelElement, EReference
@@ -108,6 +110,10 @@ class EcoreGenerator(JinjaGenerator):
         return isinstance(value, type_)
 
     @staticmethod
+    def test_opposite_before_self(value: EReference, references: typing.List[EReference]):
+        return references.index(value.eOpposite) < references.index(value)
+
+    @staticmethod
     def filter_docstringline(value: EModelElement) -> str:
         annotation = value.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
         doc = annotation.details.get('documentation', '') if annotation else None
@@ -164,7 +170,8 @@ class EcoreGenerator(JinjaGenerator):
             **kwargs
         )
         environment.tests.update({
-            'type': self.test_type
+            'type': self.test_type,
+            'opposite_before_self': self.test_opposite_before_self,
         })
         environment.filters.update({
             'docstringline': self.filter_docstringline,
