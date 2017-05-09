@@ -23,3 +23,6 @@ from . import {{ sub.name }}
 {% endfor %}
 
 __all__ = [{{ element.eClassifiers | map(attribute='name') | map('pyquotesingle') | join(', ') }}]
+
+eSubpackages = [{{ element.eSubpackages | map(attribute='name') | join(', ') }}]
+eSuperPackage = {{ element.eSuperPackage.name | default('None') }}
