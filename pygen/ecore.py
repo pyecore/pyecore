@@ -138,6 +138,20 @@ class EcoreGenerator(JinjaGenerator):
 
         return ', '.join('{}={}'.format(k, v) for k, v in qualifiers.items())
 
+    @staticmethod
+    def filter_all_contents(value: EPackage, type_):
+        """Returns `eAllContents(type_)`."""
+        return [c for c in value.eAllContents() if isinstance(c, type_)]
+
+    @classmethod
+    def filter_pyfqn(cls, value):
+        """Returns Python form of fully qualified name."""
+        # TODO Original MTL contains a replacement of replaceAll('^[^.]+', ''). Why?
+        if value.eContainer:
+            return '{}.{}'.format(cls.filter_pyfqn(value.eContainer), value.name)
+        else:
+            return value.name
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -157,6 +171,8 @@ class EcoreGenerator(JinjaGenerator):
             'pyquotesingle': self.filter_pyquotesingle,
             'refqualifiers': self.filter_refqualifiers,
             'supertypes': self.filter_supertypes,
+            'all_contents': self.filter_all_contents,
+            'pyfqn': self.filter_pyfqn,
         })
 
         from pyecore import ecore
