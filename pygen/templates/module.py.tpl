@@ -63,7 +63,7 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {%- macro generate_class_init_args(c) -%}
     {% if c.eStructuralFeatures %}, *, {% endif -%}
-    {{ c.eStructuralFeatures | join(', ', attribute='name') }}
+    {{ c.eStructuralFeatures | map(attribute='name') | map('re_sub', '$', '=None') | join(', ') }}
 {%- endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}

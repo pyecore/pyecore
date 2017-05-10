@@ -2,6 +2,7 @@
 import os
 
 import itertools
+import re
 import typing
 
 import jinja2
@@ -180,6 +181,7 @@ class EcoreGenerator(JinjaGenerator):
             'supertypes': self.filter_supertypes,
             'all_contents': self.filter_all_contents,
             'pyfqn': self.filter_pyfqn,
+            're_sub': lambda v, p, r: re.sub(p, r, v),
         })
 
         from pyecore import ecore

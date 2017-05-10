@@ -17,7 +17,7 @@ def pygen_output_dir():
     sys.path.append(path)
     yield path
     sys.path.remove(path)
-    #shutil.rmtree(path, ignore_errors=False)
+    shutil.rmtree(path, ignore_errors=False)
 
 
 @pytest.fixture('module', autouse=True)
