@@ -9,17 +9,6 @@ from pyecore.resources import ResourceSet, URI
 from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask, EcoreGenerator
 
 
-@pytest.fixture
-def pygen_output_dir():
-    path = os.path.join('output', 'pygen')
-    shutil.rmtree(path, ignore_errors=True)
-    original_sys_path = sys.path
-    sys.path.append(path)
-    yield path
-    sys.path.remove(path)
-    shutil.rmtree(path, ignore_errors=False)
-
-
 @pytest.fixture('module', autouse=True)
 def cwd_module_dir():
     # change cwd to this module's directory:
@@ -80,14 +69,3 @@ def test__ecore_package_init_task__path_for_element(package_in_hierarchy):
 def test__ecore_package_module_task__path_for_element(package_in_hierarchy):
     path = EcorePackageModuleTask().relative_path_for_element(package_in_hierarchy)
     assert path == os.path.join('pkg1', 'pkg2', 'pkg3', 'pkg3.py')
-
-
-
-def test__integration__library(pygen_output_dir):
-    rset = ResourceSet()
-    resource = rset.get_resource(URI('../../examples/library.ecore'))
-    library_model = resource.contents[0]
-    rset.metamodel_registry[library_model.nsURI] = library_model
-    generator = EcoreGenerator()
-    generator.generate(library_model, pygen_output_dir)
-    import library as library_gen
