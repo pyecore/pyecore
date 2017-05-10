@@ -39,3 +39,15 @@ eSuperPackage = {{ element.eSuperPackage.name | default('None') }}
         {%- endfor %}
     {%- endwith %}
 {%- endif %}
+
+otherClassifiers = [{{ element.eClassifiers | select('type', ecore.EEnum) | map(attribute='name') | join(', ') }}]
+
+for classif in otherClassifiers:
+    eClassifiers[classif.name] = classif
+    classif._container = {{ element.name }}
+
+for classif in eClassifiers.values():
+    eClass.eClassifiers.append(classif.eClass)
+
+for subpack in eSubpackages:
+    eClass.eSubpackages.append(subpack.eClass)
