@@ -2,6 +2,7 @@ import os
 import shutil
 
 import pytest
+import sys
 
 from pyecore.ecore import EPackage, EClass, EEnum
 from pyecore.resources import ResourceSet, URI
@@ -12,7 +13,10 @@ from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask,
 def pygen_output_dir():
     path = os.path.join('output', 'pygen')
     shutil.rmtree(path, ignore_errors=True)
+    original_sys_path = sys.path
+    sys.path.append(path)
     yield path
+    sys.path.remove(path)
     #shutil.rmtree(path, ignore_errors=False)
 
 
@@ -78,6 +82,7 @@ def test__ecore_package_module_task__path_for_element(package_in_hierarchy):
     assert path == os.path.join('pkg1', 'pkg2', 'pkg3', 'pkg3.py')
 
 
+
 def test__integration__library(pygen_output_dir):
     rset = ResourceSet()
     resource = rset.get_resource(URI('../../examples/library.ecore'))
@@ -85,5 +90,4 @@ def test__integration__library(pygen_output_dir):
     rset.metamodel_registry[library_model.nsURI] = library_model
     generator = EcoreGenerator()
     generator.generate(library_model, pygen_output_dir)
-
-    from .output.pygen import library as library_gen
+    import library as library_gen
