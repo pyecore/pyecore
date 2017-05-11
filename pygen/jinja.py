@@ -1,5 +1,4 @@
 """Jinja2 support for multifile generation."""
-import functools
 
 import jinja2
 
@@ -33,12 +32,8 @@ class JinjaGenerator(TemplateGenerator):
 class JinjaTask(TemplateFileTask):
     """Base class for Jinja2 based code generator tasks."""
 
-    def __init__(self, formatter=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if not formatter:
-            import autopep8
-            formatter = functools.partial(autopep8.fix_code, options={'max_line_length': 100})
-        self.formatter = formatter
         self.environment = None
 
     def generate_file(self, element, filepath):

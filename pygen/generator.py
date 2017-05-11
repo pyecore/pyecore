@@ -2,6 +2,8 @@
 import logging
 import os
 
+from pygen.formatter import format_autopep8
+
 _logger = logging.getLogger(__name__)
 
 
@@ -12,10 +14,6 @@ class Generator:
     Attributes:
         tasks:
             List of generator tasks to be processed as part of this generator.
-        model:
-            Model for which to generate code.
-        outfolder: 
-            Folder where code files are created.
     """
 
     tasks = []
@@ -25,8 +23,15 @@ class Generator:
             raise AttributeError('Unexpected arguments: {!r}'.format(kwargs))
 
     def generate(self, model, outfolder):
-        """Generate artifacts for given model."""
-
+        """
+        Generate artifacts for given model.
+        
+        Attributes:
+            model:
+                Model for which to generate code.
+            outfolder: 
+                Folder where code files are created.
+        """
         _logger.info('Generating code to {!r}.'.format(outfolder))
 
         for task in self.tasks:
@@ -37,10 +42,10 @@ class Generator:
 class Task:
     """File generation task applied to a set of model elements."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, formatter=format_autopep8, **kwargs):
         if kwargs:
             raise AttributeError('Unexpected arguments: {!r}'.format(kwargs))
-        self._generator = None
+        self.formatter = formatter
 
     def run(self, element, outfolder):
         """Apply this task to model element."""
