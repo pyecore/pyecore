@@ -2,7 +2,6 @@
 import itertools
 import os
 import re
-import typing
 
 import jinja2
 
@@ -111,7 +110,7 @@ class EcoreGenerator(JinjaGenerator):
         return isinstance(value, type_)
 
     @staticmethod
-    def test_opposite_before_self(value: EReference, references: typing.List[EReference]):
+    def test_opposite_before_self(value: EReference, references):
         return references.index(value.eOpposite) < references.index(value)
 
     @staticmethod
