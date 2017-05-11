@@ -2,7 +2,7 @@
 import logging
 import os
 
-from pygen.formatter import format_autopep8
+from pygen.formatter import format_raw
 
 _logger = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ class Generator:
 class Task:
     """File generation task applied to a set of model elements."""
 
-    def __init__(self, formatter=format_autopep8, **kwargs):
+    def __init__(self, formatter=None, **kwargs):
         if kwargs:
             raise AttributeError('Unexpected arguments: {!r}'.format(kwargs))
-        self.formatter = formatter
+        self.formatter = formatter or format_raw
 
     def run(self, element, outfolder):
         """Apply this task to model element."""

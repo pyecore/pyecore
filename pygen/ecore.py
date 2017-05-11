@@ -1,13 +1,13 @@
 """Support for generation for models based on pyecore."""
-import os
-
 import itertools
+import os
 import re
 import typing
 
 import jinja2
 
-from pyecore.ecore import EPackage, EOrderedSet, EClass, EEnum, EModelElement, EReference
+from pyecore.ecore import EPackage, EClass, EEnum, EModelElement, EReference
+from pygen.formatter import format_autopep8
 from pygen.jinja import JinjaTask, JinjaGenerator
 
 
@@ -101,8 +101,8 @@ class EcoreGenerator(JinjaGenerator):
     """Generation of static ecore model classes."""
 
     tasks = [
-        EcorePackageInitTask(),
-        EcorePackageModuleTask(),
+        EcorePackageInitTask(formatter=format_autopep8),
+        EcorePackageModuleTask(formatter=format_autopep8),
     ]
 
     @staticmethod
