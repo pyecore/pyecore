@@ -30,11 +30,14 @@ class JinjaGenerator(TemplateGenerator):
 
 
 class JinjaTask(TemplateFileTask):
-    """Base class for Jinja2 based code generator tasks."""
+    """
+    Base class for Jinja2 based code generator tasks.
+    
+    Attributes:
+        environment: Jinja2 environment, to be set by generator.
+    """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.environment = None
+    environment = None
 
     def generate_file(self, element, filepath):
         template = self.environment.get_template(self.template_name)

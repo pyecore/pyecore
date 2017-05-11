@@ -40,7 +40,13 @@ class Generator:
 
 
 class Task:
-    """File generation task applied to a set of model elements."""
+    """
+    File generation task applied to a set of model elements.
+    
+    Attributes:
+        formatter: Callable converting this generator tasks raw output into a nicely formatted
+                   string.
+    """
 
     def __init__(self, formatter=None, **kwargs):
         if kwargs:

@@ -41,7 +41,7 @@ class MyGenerator(JinjaGenerator):
     templates_path = 'input'
 
     tasks = [
-        MyTemplateTask(formatter=lambda s: s)
+        MyTemplateTask()
     ]
 
 
