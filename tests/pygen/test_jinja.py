@@ -85,7 +85,7 @@ def test__jinja_task__generate_file(mock_create_template_context):
     task.template_name = mock.sentinel.TEMPLATE_NAME
 
     mock_open = mock.mock_open()
-    with mock.patch('pygen.jinja.open', mock_open):
+    with mock.patch('pygen.jinja.open', mock_open, create=True):
         task.generate_file(mock.sentinel.ELEMENT, 'filepath.ext')
 
     mock_template.render.assert_called_once_with(element=mock.sentinel.ELEMENT)
