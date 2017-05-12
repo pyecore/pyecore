@@ -1,6 +1,8 @@
 from .{{ element.name }} import getEClassifier, eClassifiers
 from .{{ element.name }} import name, nsURI, nsPrefix, eClass
-from .{{ element.name }} import {{ element.eClassifiers | join(', ', attribute='name') }}
+{% if element.eClassifiers -%}
+    from .{{ element.name }} import {{ element.eClassifiers | join(', ', attribute='name') }}
+{%- endif %}
 
 {%- if not element.eSuperPackage %}
     {%- with %}

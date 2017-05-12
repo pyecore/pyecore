@@ -7,8 +7,8 @@ from pyecore.ecore import *
 {% endfor %}
 
 name = '{{ element.name }}'
-nsURI = '{{ element.nsURI }}'
-nsPrefix = '{{ element.nsPrefix }}'
+nsURI = '{{ element.nsURI | default(boolean=True) }}'
+nsPrefix = '{{ element.nsPrefix | default(boolean=True) }}'
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 

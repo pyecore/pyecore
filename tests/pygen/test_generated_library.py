@@ -1,4 +1,5 @@
 """Copy of the original static library module tests."""
+import importlib
 import os
 import shutil
 import sys
@@ -41,8 +42,7 @@ def generated_library(pygen_output_dir):
     rset.metamodel_registry[library_model.nsURI] = library_model
     generator = EcoreGenerator()
     generator.generate(library_model, pygen_output_dir)
-    import library as library_gen
-    return library_gen
+    return importlib.import_module('library')
 
 
 def test_meta_attribute_access(generated_library):

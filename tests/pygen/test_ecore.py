@@ -39,16 +39,16 @@ def test__ecore_task__filtered_elements():
     package.eClassifiers.append(class1)
     subpackage.eClassifiers.extend([class2, enum])
 
-    mixin = EcoreTask()
+    task = EcoreTask()
 
-    mixin.element_type = EPackage
-    assert set(mixin.filtered_elements(package)) == {package, subpackage}
+    task.element_type = EPackage
+    assert set(task.filtered_elements(package)) == {package, subpackage}
 
-    mixin.element_type = EClass
-    assert set(mixin.filtered_elements(package)) == {class1, class2}
+    task.element_type = EClass
+    assert set(task.filtered_elements(package)) == {class1, class2}
 
-    mixin.element_type = EEnum
-    assert set(mixin.filtered_elements(package)) == {enum}
+    task.element_type = EEnum
+    assert set(task.filtered_elements(package)) == {enum}
 
 
 @pytest.fixture
