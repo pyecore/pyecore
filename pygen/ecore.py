@@ -104,6 +104,11 @@ class EcoreGenerator(JinjaGenerator):
         EcorePackageModuleTask(formatter=format_autopep8),
     ]
 
+    templates_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'templates'
+    )
+
     @staticmethod
     def test_type(value, type_):
         """Jinja test to check object type."""
@@ -165,10 +170,7 @@ class EcoreGenerator(JinjaGenerator):
         Derived classes may override method to pass additional parameters or to change the template
         loader type.
         """
-        environment = jinja2.Environment(
-            loader=jinja2.PackageLoader('pygen', self.templates_path),
-            **kwargs
-        )
+        environment = super().create_environment(**kwargs)
         environment.tests.update({
             'type': self.test_type,
             'opposite_before_self': self.test_opposite_before_self,
