@@ -48,3 +48,10 @@ def test_empty_package(pygen_output_dir):
     assert not mm.nsURI
     assert not mm.nsPrefix
     assert not mm.eClassifiers
+
+    package.name = 'empty2'
+    package.nsURI = 'http://xyz.org'
+    package.nsPrefix = 'p'
+    mm = generate_meta_model(package, pygen_output_dir)
+    assert mm.nsURI == 'http://xyz.org'
+    assert mm.nsPrefix == 'p'
