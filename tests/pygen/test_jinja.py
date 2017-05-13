@@ -1,29 +1,7 @@
 import os
-import shutil
 from unittest import mock
 
-import pytest
-
 from pygen.jinja import JinjaGenerator, JinjaTask
-
-
-@pytest.fixture('module', autouse=True)
-def cwd_module_dir():
-    # change cwd to this module's directory:
-    cwd = os.getcwd()
-    os.chdir(os.path.dirname(__file__))
-    yield
-
-    # reset after module goes out of scope:
-    os.chdir(cwd)
-
-
-@pytest.fixture
-def outfolder():
-    path = os.path.join('output', 'jinja')
-    shutil.rmtree(path, ignore_errors=True)
-    yield path
-    shutil.rmtree(path, ignore_errors=False)
 
 
 class MyTemplateTask(JinjaTask):
@@ -55,20 +33,20 @@ class MyElement:
         self.name = name
 
 
-def test__jinja_generator__integration(outfolder):
+def test__jinja_generator__integration(pygen_output_dir):
     model = MyModel([
         MyElement('A'),
         MyElement('B'),
     ])
 
     generator = MyGenerator()
-    generator.generate(model, outfolder)
+    generator.generate(model, pygen_output_dir)
 
-    with open(os.path.join(outfolder, 'A.py')) as file:
+    with open(os.path.join(pygen_output_dir, 'A.py')) as file:
         generated_text = file.read()
     assert generated_text == 'print(\'This is a test template for element A.\')'
 
-    with open(os.path.join(outfolder, 'B.py')) as file:
+    with open(os.path.join(pygen_output_dir, 'B.py')) as file:
         generated_text = file.read()
     assert generated_text == 'print(\'This is a test template for element B.\')'
 

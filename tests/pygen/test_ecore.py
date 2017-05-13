@@ -1,23 +1,9 @@
 import os
-import shutil
 
 import pytest
-import sys
 
 from pyecore.ecore import EPackage, EClass, EEnum
-from pyecore.resources import ResourceSet, URI
-from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask, EcoreGenerator
-
-
-@pytest.fixture('module', autouse=True)
-def cwd_module_dir():
-    # change cwd to this module's directory:
-    cwd = os.getcwd()
-    os.chdir(os.path.dirname(__file__))
-    yield
-
-    # reset after module goes out of scope:
-    os.chdir(cwd)
+from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask
 
 
 def test__ecore_task__filtered_elements():

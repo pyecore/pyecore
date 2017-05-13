@@ -1,8 +1,5 @@
 """Copy of the original static library module tests."""
 import importlib
-import os
-import shutil
-import sys
 
 import pytest
 
@@ -10,28 +7,6 @@ import pyecore.ecore as Ecore
 from pyecore.resources import ResourceSet, URI
 from pyecore.utils import DynamicEPackage
 from pygen.ecore import EcoreGenerator
-
-
-@pytest.fixture('module', autouse=True)
-def cwd_module_dir():
-    # change cwd to this module's directory:
-    cwd = os.getcwd()
-    os.chdir(os.path.dirname(__file__))
-    yield
-
-    # reset after module goes out of scope:
-    os.chdir(cwd)
-
-
-@pytest.fixture(scope='module')
-def pygen_output_dir():
-    path = os.path.join('output', 'pygen2')
-    shutil.rmtree(path, ignore_errors=True)
-    original_sys_path = sys.path
-    sys.path.append(path)
-    yield path
-    sys.path.remove(path)
-    shutil.rmtree(path, ignore_errors=False)
 
 
 @pytest.fixture(scope='module')
