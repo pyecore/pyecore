@@ -87,7 +87,7 @@ class Core(object):
         cls._staticEClass = True
         # init super types
         for _cls in cls.__bases__:
-            if _cls is not EObject:
+            if _cls is not EObject and _cls is not ENotifer:
                 cls.eClass.eSuperTypes.append(_cls.eClass)
         # init eclass by reflection
         for k, feature in cls.__dict__.items():
@@ -122,14 +122,16 @@ class Core(object):
             epackage.eClassifiers = eclassifs
             epackage.getEClassifier = partial(getEClassifier,
                                               searchspace=eclassifs)
-        object.__setattr__(cls.eClass, 'ePackage', epackage)
+        # object.__setattr__(cls.eClass, 'ePackage', epackage)
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if hasattr(epackage, 'eResource'):
             cls._eresource = epackage.eResource
         if isinstance(cls, EDataType):
+            epackage.eClass.eClassifiers.append(cls)
             cls._container = epackage
         else:
+            epackage.eClass.eClassifiers.append(cls.eClass)
             cls.eClass._container = epackage
 
 
@@ -1071,7 +1073,11 @@ class EProxy(EObject):
                 return object.__getattribute__(self, name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
-            self._wrapped = decoders.resolve(self._proxy_path, resource)
+            decoded = decoders.resolve(self._proxy_path, resource)
+            if not hasattr(decoded, '_inverse_rels'):
+                self._wrapped = decoded.eClass
+            else:
+                self._wrapped = decoded
             self._wrapped._inverse_rels.update(self._inverse_rels)
             self._inverse_rels = self._wrapped._inverse_rels
             self._resolved = True
@@ -1086,7 +1092,11 @@ class EProxy(EObject):
         if not resolved:
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
-            self._wrapped = decoders.resolve(self._proxy_path, resource)
+            decoded = decoders.resolve(self._proxy_path, resource)
+            if not hasattr(decoded, '_inverse_rels'):
+                self._wrapped = decoded.eClass
+            else:
+                self._wrapped = decoded
             self._resolved = True
         wrapped = self._wrapped
         wrapped.__setattr__(name, value)
@@ -1213,6 +1223,7 @@ ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+Core.register_classifier(EObject, promote=True)
 Core.register_classifier(EModelElement, promote=True)
 Core.register_classifier(ENamedElement, promote=True)
 Core.register_classifier(EAnnotation, promote=True)

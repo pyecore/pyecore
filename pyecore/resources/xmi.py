@@ -156,10 +156,11 @@ class XMIResource(Resource):
             etype = feature_container.eType
 
         # we create the instance
-        if etype is Ecore.EClass:
+        if etype is Ecore.EClass or etype is Ecore.EClass.eClass:
             name = node.get('name')
             eobject = etype(name)
-        elif etype is Ecore.EStringToStringMapEntry \
+        elif (etype is Ecore.EStringToStringMapEntry or
+              etype is Ecore.EStringToStringMapEntry.eClass) \
                 and feature_container is Ecore.EAnnotation.details:
             annotation_key = node.get('key')
             annotation_value = node.get('value')
@@ -226,6 +227,8 @@ class XMIResource(Resource):
                     if not resolved_value:
                         raise ValueError('EObject for {0} is unknown'
                                          .format(value))
+                    if not hasattr(resolved_value, '_inverse_rels'):
+                        resolved_value = resolved_value.eClass
                     if ref.many:
                         eobject.__getattribute__(ref.name) \
                                .append(resolved_value)

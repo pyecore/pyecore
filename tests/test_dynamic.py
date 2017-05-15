@@ -586,3 +586,10 @@ def test_get_ereferences():
     assert A.eReferences
     assert len(A.eReferences) == 1
     assert eref in A.eReferences
+
+
+def test_eclass_emodelemenent_supertype():
+    A = EClass('A', superclass=(EModelElement.eClass,))
+    assert EModelElement.eAnnotations in A.eAllStructuralFeatures()
+    a = A()
+    assert a.eAnnotations == {}

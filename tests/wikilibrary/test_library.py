@@ -86,7 +86,7 @@ def test_instance_urifragment():
 def test_wikilib_epackage():
     assert wikilib.Book.eClass.ePackage is wikilib.eClass
     assert sys.modules[wikilib.Book.__module__] is wikilib.eModule
-    assert wikilib.BookCategory.eContainer() is wikilib.eModule
+    assert wikilib.BookCategory.eContainer() is wikilib.eClass
 
 
 def test_wikilib_eroot():
