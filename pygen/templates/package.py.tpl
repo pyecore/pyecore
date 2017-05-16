@@ -6,22 +6,27 @@ from .{{ element.name }} import name, nsURI, nsPrefix, eClass
 
 {%- if not element.eSuperPackage %}
     {%- with %}
-        {%- set containing_types = element | all_contents(ecore.EClassifier) | map(attribute='eContainingClass') | list %}
-        {%- set referenced_types = element | all_contents(ecore.EReference) | map(attribute='eType') | list %}
-        {%- set types = containing_types + referenced_types %}
-        {%- for sub in element | all_contents(ecore.EPackage) %}
-from {{ sub | pyfqn }} import {{ types | selectattr('ePackage', sub) | join(', ') }}
+        {%- set all_references = element | all_contents(ecore.EReference) | list %}
+# all_references = {{ all_references | join(', ') }}
+        {%- set containing_types = all_references | map(attribute='eContainingClass') | list %}
+        {%- set referenced_types = all_references | map(attribute='eType') | list %}
+        {%- set types = containing_types + referenced_types | list %}
+        {%- for sub in element | all_contents(ecore.EPackage) -%}
+            {% set types_in_sub = types | selectattr('ePackage', 'sameas', sub) | list %}
+            {%- if types_in_sub %}
+from {{ sub | pyfqn }} import {{ types_in_sub | map(attribute='name') | join(', ') }}  # A
+            {%- endif -%}
         {% endfor -%}
     {% endwith -%}
 {% endif %}
-from . import {{ element.name }}
+from . import {{ element.name }}  # B
 
 {%- if element.eSuperPackage %}
-from .. import {{ element.eSuperPackage.name }}
+from .. import {{ element.eSuperPackage.name }}  # C
 {% endif %}
 
 {%- for sub in element.eSubpackages %}
-from . import {{ sub.name }}
+from . import {{ sub.name }}  # D
 {% endfor %}
 
 __all__ = [{{ element.eClassifiers | map(attribute='name') | map('pyquotesingle') | join(', ') }}]
