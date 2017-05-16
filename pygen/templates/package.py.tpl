@@ -7,19 +7,18 @@ from .{{ element.name }} import name, nsURI, nsPrefix, eClass
 {%- if not element.eSuperPackage %}
     {%- with %}
         {%- set all_references = element | all_contents(ecore.EReference) | list %}
-# all_references = {{ all_references | join(', ') }}
         {%- set containing_types = all_references | map(attribute='eContainingClass') | list %}
         {%- set referenced_types = all_references | map(attribute='eType') | list %}
         {%- set types = containing_types + referenced_types | list %}
         {%- for sub in element | all_contents(ecore.EPackage) -%}
-            {% set types_in_sub = types | selectattr('ePackage', 'sameas', sub) | list %}
+            {% set types_in_sub = types | selectattr('ePackage', 'sameas', sub) | set %}
             {%- if types_in_sub %}
-from {{ sub | pyfqn }} import {{ types_in_sub | map(attribute='name') | join(', ') }}  # A
+from {{ sub | pyfqn }} import {{ types_in_sub | map(attribute='name') | join(', ') }}
             {%- endif -%}
         {% endfor -%}
     {% endwith -%}
 {% endif %}
-from . import {{ element.name }}  # B
+from . import {{ element.name }}
 
 {%- if element.eSuperPackage %}
 from .. import {{ element.eSuperPackage.name }}  # C

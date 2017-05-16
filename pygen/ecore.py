@@ -164,6 +164,11 @@ class EcoreGenerator(JinjaGenerator):
         else:
             return value.name
 
+    @staticmethod
+    def filter_set(value):
+        """Returns set of passed iterable."""
+        return set(value)
+
     def create_environment(self, **kwargs):
         """
         Return a new Jinja environment.
@@ -184,6 +189,7 @@ class EcoreGenerator(JinjaGenerator):
             'all_contents': self.filter_all_contents,
             'pyfqn': self.filter_pyfqn,
             're_sub': lambda v, p, r: re.sub(p, r, v),
+            'set': self.filter_set,
         })
 
         from pyecore import ecore
