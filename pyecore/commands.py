@@ -4,7 +4,7 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 """
 from abc import ABC, abstractmethod
 from collections import MutableSequence
-from pyecore.ecore import EObject
+from pyecore.ecore import EObject, BadValueError
 from pyecore.notification import Notification, Kind
 import ordered_set
 
@@ -23,11 +23,12 @@ def insert(self, index, key):
     self._update_container(key)
     self._update_opposite(key, self._owner)
     # insert the value
+    index = index if index <= len(self.items) else len(self.items)
     self.items.insert(index, key)
-    self.map[key] = index
     for k, v in self.map.items():
         if v >= index:
             self.map[k] = v + 1
+    self.map[key] = index
     # send the ADD notification
     self._owner.notify(Notification(new=key,
                                     feature=self._efeature,
@@ -162,8 +163,8 @@ class Set(AbstractCommand):
 
     def do_execute(self):
         object = self.owner
-        self.previous_value = self.owner.eGet(self.feature)
-        self.owner.eSet(self.feature, self.value)
+        self.previous_value = object.eGet(self.feature)
+        object.eSet(self.feature, self.value)
 
 
 class Add(AbstractCommand):
@@ -177,7 +178,8 @@ class Add(AbstractCommand):
         executable = super().can_execute
         executable = executable and self.value is not None
         self._collection = self.owner.eGet(self.feature)
-        if self.index is not None:
+        i = self.index
+        if i is not None:
             executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
@@ -193,7 +195,6 @@ class Add(AbstractCommand):
         self._collection.insert(self.index, self.value)
 
     def do_execute(self):
-        object = self.owner
         if self.index is not None:
             self._collection.insert(self.index, self.value)
         else:
@@ -212,7 +213,8 @@ class Remove(AbstractCommand):
         executable = super().can_execute
         executable = executable and self.value is not None
         self._collection = self.owner.eGet(self.feature)
-        if self.index is not None:
+        i = self.index
+        if i is not None:
             executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
@@ -260,10 +262,9 @@ class Move(AbstractCommand):
     def can_undo(self):
         can = super().can_undo
         obj = self._collection[self.to_index]
-        return obj is self.value
+        return can and obj is self.value
 
     def undo(self):
-        object = self.owner
         self.value = self._collection.pop(self.to_index)
         self._collection.insert(self.from_index, self.value)
 
