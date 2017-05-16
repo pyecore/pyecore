@@ -116,7 +116,10 @@ class EcoreGenerator(JinjaGenerator):
 
     @staticmethod
     def test_opposite_before_self(value: EReference, references):
-        return references.index(value.eOpposite) < references.index(value)
+        try:
+            return references.index(value.eOpposite) < references.index(value)
+        except ValueError:
+            return False
 
     @staticmethod
     def filter_docstringline(value: EModelElement) -> str:

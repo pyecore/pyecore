@@ -34,8 +34,28 @@ def test_top_level_package_with_subpackages(pygen_output_dir):
     subpkg = EPackage('subpkg')
     cls1 = EClass('A')
     cls2 = EClass('B')
-    cls2.eStructuralFeatures.append(EReference('b', cls2))
-    subpkg.eClassifiers.extend((cls1, cls2))
+    cls1.eStructuralFeatures.append(EReference('b', cls2))
+    cls2.eStructuralFeatures.append(EReference('a', cls1, eOpposite=cls1.findEStructuralFeature('b')))
+    rootpkg.eClassifiers.append(cls1)
     rootpkg.eSubpackages.append(subpkg)
+    subpkg.eClassifiers.append(cls2)
 
     mm = generate_meta_model(rootpkg, pygen_output_dir)
+
+    assert mm.name == rootpkg.name
+
+    generated_A = mm.getEClassifier('A')
+    assert generated_A
+
+    generated_subpkg = mm.eSubpackages[0]
+    assert generated_subpkg
+    assert generated_subpkg.name == 'subpkg'
+
+    generated_B = generated_subpkg.getEClassifier('B')
+    assert generated_B
+
+    a = generated_A()
+    b = generated_B()
+    a.b = b
+
+    assert b.a is a
