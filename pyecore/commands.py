@@ -35,7 +35,6 @@ def insert(self, index, key):
     self._owner._isset.add(self._efeature)
 
 
-
 def pop(self, index=None):
     """Removes an element at the tail of the OrderedSet or at a dedicated
     position.
@@ -48,8 +47,13 @@ def pop(self, index=None):
 
     def remove_index(i):
         elem = self.items[i]
+        self._update_container(None, previous_value=elem)
+        self._update_opposite(elem, self._owner, remove=True)
         del self.items[i]
         del self.map[elem]
+        self._owner.notify(Notification(old=elem,
+                                        feature=self._efeature,
+                                        kind=Kind.REMOVE))
         return elem
     if index is None:
         elem = remove_index(-1)
@@ -278,18 +282,18 @@ class Delete(AbstractCommand):
     @property
     def can_execute(self):
         self.feature = self.owner.eContainmentFeature()
-        self.rels = {}
+        self.references = {}
         for element in {self.owner, *self.owner.eAllContents()}:
             rels_tuple = {(ref, element.eGet(ref))
                           for ref in element.eClass.eAllReferences()}
-            self.rels[element] = rels_tuple
-        self.inverse_rels = {}
-        for element, rel in self.owner._inverse_rels:
-            if rel.many:
-                index = element.eGet(rel).index(self.owner)
+            self.references[element] = rels_tuple
+        self.inverse_references = {}
+        for element, reference in self.owner._inverse_rels:
+            if reference.many:
+                index = element.eGet(reference).index(self.owner)
             else:
                 index = 0
-            self.inverse_rels[self.owner] = (index, element, rel)
+            self.inverse_references[self.owner] = (index, element, reference)
         return True
 
     @property
@@ -297,19 +301,19 @@ class Delete(AbstractCommand):
         return True
 
     def undo(self):
-        for k, v in self.rels.items():
-            for ref, content in v:
-                if ref.many:
-                    k.eGet(ref).extend(content)
+        for element, v in self.references.items():
+            for reference, content in v:
+                if reference.many:
+                    element.eGet(reference).extend(content)
                 else:
-                    k.eSet(ref, content)
+                    element.eSet(reference, content)
 
-        for k, v in self.inverse_rels.items():
-            i, obj, ref = v
-            if ref.many:
-                obj.eGet(ref).insert(i, k)
+        for element, v in self.inverse_references.items():
+            i, obj, reference = v
+            if reference.many:
+                obj.eGet(reference).insert(i, element)
             else:
-                obj.eSet(ref, k)
+                obj.eSet(reference, element)
 
     def redo(self):
         self.do_execute()
