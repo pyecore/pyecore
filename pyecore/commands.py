@@ -5,6 +5,7 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 from abc import ABC, abstractmethod
 from collections import MutableSequence
 from pyecore.ecore import EObject
+from pyecore.notification import Notification, Kind
 import ordered_set
 
 
@@ -17,11 +18,22 @@ def insert(self, index, key):
     """
     if key in self.map:
         return
+    # perform check and container/opposite update
+    self.check(key)
+    self._update_container(key)
+    self._update_opposite(key, self._owner)
+    # insert the value
     self.items.insert(index, key)
     self.map[key] = index
     for k, v in self.map.items():
         if v >= index:
             self.map[k] = v + 1
+    # send the ADD notification
+    self._owner.notify(Notification(new=key,
+                                    feature=self._efeature,
+                                    kind=Kind.ADD))
+    self._owner._isset.add(self._efeature)
+
 
 
 def pop(self, index=None):
@@ -257,6 +269,53 @@ class Move(AbstractCommand):
     def do_execute(self):
         self.value = self._collection.pop(self.from_index)
         self._collection.insert(self.to_index, self.value)
+
+
+class Delete(AbstractCommand):
+    def __init__(self, owner=None):
+        super().__init__(owner=owner)
+
+    @property
+    def can_execute(self):
+        self.feature = self.owner.eContainmentFeature()
+        self.rels = {}
+        for element in {self.owner, *self.owner.eAllContents()}:
+            rels_tuple = {(ref, element.eGet(ref))
+                          for ref in element.eClass.eAllReferences()}
+            self.rels[element] = rels_tuple
+        self.inverse_rels = {}
+        for element, rel in self.owner._inverse_rels:
+            if rel.many:
+                index = element.eGet(rel).index(self.owner)
+            else:
+                index = 0
+            self.inverse_rels[self.owner] = (index, element, rel)
+        return True
+
+    @property
+    def can_undo(self):
+        return True
+
+    def undo(self):
+        for k, v in self.rels.items():
+            for ref, content in v:
+                if ref.many:
+                    k.eGet(ref).extend(content)
+                else:
+                    k.eSet(ref, content)
+
+        for k, v in self.inverse_rels.items():
+            i, obj, ref = v
+            if ref.many:
+                obj.eGet(ref).insert(i, k)
+            else:
+                obj.eSet(ref, k)
+
+    def redo(self):
+        self.do_execute()
+
+    def do_execute(self):
+        self.owner.delete()
 
 
 class Compound(Command, MutableSequence):
