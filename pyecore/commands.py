@@ -281,7 +281,8 @@ class Delete(AbstractCommand):
     def can_execute(self):
         self.feature = self.owner.eContainmentFeature()
         self.references = {}
-        elements = {self.owner, *self.owner.eAllContents()}
+        elements = {self.owner}
+        elements.update(self.owner.eAllContents())
         for element in elements:
             rels_tuple = [(ref, element.eGet(ref))
                           for ref in element.eClass.eAllReferences()]
