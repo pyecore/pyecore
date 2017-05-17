@@ -24,7 +24,7 @@ def insert(self, index, key):
     self._update_opposite(key, self._owner)
     # insert the value
     size = len(self.items)
-    index = index % size if size != 0 and index <= size else size
+    index = index % size if size != 0 and index < size else size
     self.items.insert(index, key)
     for k, v in self.map.items():
         if v >= index:
@@ -62,7 +62,7 @@ def pop(self, index=None):
     else:
         elem = remove_index(index)
         size = len(self.items)
-        index = index % size if size != 0 and index <= size else size
+        index = index % size if size != 0 and index < size else size
         for k, v in self.map.items():
             if v >= index and v > 0:
                 self.map[k] = v - 1
@@ -208,6 +208,9 @@ class Remove(AbstractCommand):
         super().__init__(owner, feature, value)
         self.index = index
         self._collection = None
+        if bool(self.index is not None) == bool(self.value is not None):
+            raise ValueError('Remove command cannot have index and value set '
+                             'together.')
 
     @property
     def can_execute(self):
@@ -245,14 +248,11 @@ class Move(AbstractCommand):
     def can_execute(self):
         can = super().can_execute
         self._collection = self.owner.eGet(self.feature)
-        in_bounds = self.to_index >= 0 and self.to_index >= 0
         if self.value is None:
             self.value = self._collection[self.from_index]
         if self.from_index is None:
             self.from_index = self._collection.index(self.value)
-        in_bounds = in_bounds and self.from_index < len(self._collection)
-        in_bounds = in_bounds and self.from_index >= 0
-        return can and in_bounds and self.value in self._collection
+        return can and self.value in self._collection
 
     @property
     def can_undo(self):
@@ -269,7 +269,10 @@ class Move(AbstractCommand):
 
     def do_execute(self):
         self.value = self._collection.pop(self.from_index)
+        print('val', self.value)
+        print('col', self.to_index)
         self._collection.insert(self.to_index, self.value)
+        print(self._collection)
 
 
 class Delete(AbstractCommand):
@@ -280,17 +283,19 @@ class Delete(AbstractCommand):
     def can_execute(self):
         self.feature = self.owner.eContainmentFeature()
         self.references = {}
-        for element in {self.owner, *self.owner.eAllContents()}:
-            rels_tuple = {(ref, element.eGet(ref))
-                          for ref in element.eClass.eAllReferences()}
+        elements = {self.owner, *self.owner.eAllContents()}
+        for element in elements:
+            rels_tuple = [(ref, element.eGet(ref))
+                          for ref in element.eClass.eAllReferences()]
             self.references[element] = rels_tuple
         self.inverse_references = {}
-        for element, reference in self.owner._inverse_rels:
-            if reference.many:
-                index = element.eGet(reference).index(self.owner)
-            else:
-                index = 0
-            self.inverse_references[self.owner] = (index, element, reference)
+        for element in elements:
+            for obj, reference in element._inverse_rels:
+                if reference.many:
+                    index = obj.eGet(reference).index(element)
+                else:
+                    index = 0
+                self.inverse_references[element] = (index, obj, reference)
         return True
 
     def undo(self):
