@@ -290,12 +290,14 @@ class Delete(AbstractCommand):
             self.references[element] = rels_tuple
         self.inverse_references = {}
         for element in elements:
+            rels_tuple = []
             for obj, reference in element._inverse_rels:
                 if reference.many:
                     index = obj.eGet(reference).index(element)
                 else:
                     index = 0
-                self.inverse_references[element] = (index, obj, reference)
+                rels_tuple.append((index, obj, reference))
+            self.inverse_references[element] = rels_tuple
         return True
 
     def undo(self):
@@ -305,13 +307,12 @@ class Delete(AbstractCommand):
                     element.eGet(reference).extend(content)
                 else:
                     element.eSet(reference, content)
-
         for element, v in self.inverse_references.items():
-            i, obj, reference = v
-            if reference.many:
-                obj.eGet(reference).insert(i, element)
-            else:
-                obj.eSet(reference, element)
+            for i, obj, reference in v:
+                if reference.many:
+                    obj.eGet(reference).insert(i, element)
+                else:
+                    obj.eSet(reference, element)
 
     def redo(self):
         self.do_execute()
@@ -319,11 +320,14 @@ class Delete(AbstractCommand):
     def do_execute(self):
         self.owner.delete()
 
+    def __repr__(self):
+        return '{} {}'.format(self.__class__.__name__, self.owner)
+
 
 class Compound(Command, MutableSequence):
     def __init__(self, *commands):
         super().__init__()
-        self.items = commands
+        self.items = list(commands)
 
     @property
     def can_execute(self):
@@ -341,20 +345,24 @@ class Compound(Command, MutableSequence):
         for command in reversed(self):
             command.undo()
 
+    def redo(self):
+        for command in self:
+            command.redo()
+
     def unwrap(self):
         return self[0] if len(self) == 1 else self
 
     def __delitem__(self, index):
-        self.items.__delitem__(index)
+        del self.items[index]
 
     def __getitem__(self, index):
-        return self.items.__getitem__(index)
+        return self.items[index]
 
     def __len__(self):
         return len(self.items)
 
     def __setitem__(self, index, item):
-        return self.items.__setitem__(index, item)
+        self.items[index] = item
 
     def insert(self, index, item):
         self.items.insert(index, item)
