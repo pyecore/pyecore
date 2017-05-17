@@ -2,8 +2,8 @@
 from functools import partial
 import pyecore.ecore as Ecore
 from pyecore.ecore import *
-{% for c in imported_classifiers %}
-    from {{ c.ePackage.qualifiedName }} import {{ c.name }}
+{% for c in imported_classifiers -%}
+    from {{ c.ePackage | pyfqn }} import {{ c.name }}
 {% endfor %}
 
 name = '{{ element.name }}'

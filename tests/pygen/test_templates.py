@@ -1,7 +1,7 @@
 """Tests for the various features from the code generation templates."""
 import importlib
 
-from pyecore.ecore import EPackage, EClass, EReference, EEnum
+from pyecore.ecore import EPackage, EClass, EReference, EEnum, EAttribute
 from pygen.ecore import EcoreGenerator
 
 
@@ -73,3 +73,22 @@ def test_package_with_enum(pygen_output_dir):
     generated_enum = mm.eClassifiers['MyEnum']
     assert isinstance(generated_enum, EEnum)
     assert set(l.name for l in generated_enum.eLiterals) == {'X', 'Y', 'Z'}
+
+
+def test_classifier_imports(pygen_output_dir):
+    # super types and enums from another package have to be imported in using module:
+    rootpkg = EPackage('import_test')
+    ppkg = EPackage('provider')
+    upkg = EPackage('user')
+    rootpkg.eSubpackages.extend([ppkg, upkg])
+
+    super_class = EClass('SuperClass')
+    enum = EEnum('AnEnum', literals=('A', 'B'))
+    ppkg.eClassifiers.extend((super_class, enum))
+    derived_class = EClass('DerivedClass', superclass=super_class)
+    derived_class.eStructuralFeatures.append(EAttribute('kind', enum))
+    upkg.eClassifiers.append(derived_class)
+
+    # simply importing successully shows the imports have made the types visible
+    mm = generate_meta_model(rootpkg, pygen_output_dir)
+    assert mm
