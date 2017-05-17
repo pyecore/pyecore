@@ -221,11 +221,6 @@ class Remove(AbstractCommand):
             executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
-    @property
-    def can_undo(self):
-        can = super().can_undo
-        return can
-
     def undo(self):
         self._collection.insert(self.index, self.value)
 
@@ -298,10 +293,6 @@ class Delete(AbstractCommand):
             else:
                 index = 0
             self.inverse_references[self.owner] = (index, element, reference)
-        return True
-
-    @property
-    def can_undo(self):
         return True
 
     def undo(self):

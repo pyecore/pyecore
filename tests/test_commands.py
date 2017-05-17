@@ -76,16 +76,68 @@ def test_orderedset_pop(mm):
     assert b not in a.many_tob and b2 in a.many_tob
     assert a.many_tob.index(b2) == 0
 
+    a.many_tob.pop(-1)
+    assert len(a.many_tob) == 0
+
+
+def test_command_abs():
+    class A(Command):
+        def can_execute(self):
+            super().can_execute
+
+        def can_undo(self):
+            super().can_undo
+
+        def execute(self):
+            super().execute()
+
+        def undo(self):
+            super().undo()
+
+        def redo(self):
+            super().redo()
+
+    a = A()
+    a.can_execute()
+    a.execute()
+    a.can_undo()
+    a.undo()
+    a.redo()
+
 
 def test_command_set_name(mm):
     root = mm.Root()
     a = mm.A()
 
-    stack = CommandStack()
+    with pytest.raises(BadValueError):
+        Set(owner='R', feature='name', value='testValue')
+
     set = Set(owner=a, feature='name', value='testValue')
+    assert set.__repr__()
+
+    assert set.can_execute
+    set.execute()
+    assert a.name == 'testValue'
+    assert set.can_undo
+    set.undo()
+    assert a.name is None
+    set.redo()
+    assert a.name == 'testValue'
+
+
+def test_command_set_name_stack(mm):
+    root = mm.Root()
+    a = mm.A()
+    name_feature = mm.A.findEStructuralFeature('name')
+
+    stack = CommandStack()
+    set = Set(owner=a, feature=name_feature, value='testValue')
+    assert set.__repr__()
+
     stack.execute(set)
     assert a.name == 'testValue'
     stack.undo()
     assert a.name is None
     stack.redo()
     assert a.name == 'testValue'
+    assert set.__repr__()
