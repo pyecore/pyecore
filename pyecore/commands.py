@@ -2,7 +2,7 @@
 that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
 """
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections import MutableSequence
 from pyecore.ecore import EObject, BadValueError
 from pyecore.notification import Notification, Kind
@@ -73,7 +73,7 @@ ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 
 
-class Command(ABC):
+class Command(metaclass=ABCMeta):
     """Provides the basic elements that must be implemented by a custom command.
     The methods/properties that need to be implemented are:
     * can_execute (@property)
