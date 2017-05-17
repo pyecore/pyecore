@@ -93,8 +93,9 @@ class {{ c.name }}({{ c | supertypes }}):
 {#- -------------------------------------------------------------------------------------------- -#}
 
 {%- macro generate_operation_args(o) -%}
-    {% if o.eParameters %}, {% endif -%}
-    {{ o.eParameters | join(', ', attribute='name') }}
+    {% for p in o.eParameters -%}
+        , {{ p.name }}{% if not p.required %}=None{% endif -%}
+    {% endfor -%}
 {%- endmacro  %}
 
 {#- -------------------------------------------------------------------------------------------- -#}

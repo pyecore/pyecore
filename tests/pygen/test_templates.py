@@ -1,7 +1,10 @@
 """Tests for the various features from the code generation templates."""
 import importlib
 
-from pyecore.ecore import EPackage, EClass, EReference, EEnum, EAttribute, EInt
+import pytest
+
+from pyecore.ecore import EPackage, EClass, EReference, EEnum, EAttribute, EInt, EOperation, \
+    EParameter
 from pygen.ecore import EcoreGenerator
 
 
@@ -110,3 +113,33 @@ def test_class_with_features(pygen_output_dir):
 
     instance.ref = instance
     assert instance.ref is instance
+
+
+def test_operation(pygen_output_dir):
+    rootpkg = EPackage('operation')
+    class_ = EClass('MyClass')
+    rootpkg.eClassifiers.append(class_)
+    class_.eOperations.append(EOperation(
+        'do_it',
+        EInt,
+        params=(EParameter('p1', EInt, required=True), EParameter('p2', EInt)),
+    ))
+
+    mm = generate_meta_model(rootpkg, pygen_output_dir)
+
+    instance = mm.eClassifiers['MyClass']()
+
+    with pytest.raises(NotImplementedError):
+        instance.do_it(1, 2)
+
+    # missing non-required argument
+    with pytest.raises(NotImplementedError):
+        instance.do_it(1)
+
+    # missing non-required argument
+    with pytest.raises(NotImplementedError):
+        instance.do_it(p1=1)
+
+    # missing required argument:
+    with pytest.raises(TypeError):
+        instance.do_it(p2=2)
