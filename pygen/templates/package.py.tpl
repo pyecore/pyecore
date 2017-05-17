@@ -13,7 +13,7 @@ from .{{ element.name }} import name, nsURI, nsPrefix, eClass
         {%- for sub in element | all_contents(ecore.EPackage) -%}
             {% set types_in_sub = types | selectattr('ePackage', 'sameas', sub) | set %}
             {%- if types_in_sub %}
-from {{ sub | pyfqn }} import {{ types_in_sub | map(attribute='name') | join(', ') }}
+from {{ sub | pyfqn(relative_to=1) }} import {{ types_in_sub | map(attribute='name') | join(', ') }}
             {%- endif -%}
         {% endfor -%}
     {% endwith -%}
@@ -21,11 +21,11 @@ from {{ sub | pyfqn }} import {{ types_in_sub | map(attribute='name') | join(', 
 from . import {{ element.name }}
 
 {%- if element.eSuperPackage %}
-from .. import {{ element.eSuperPackage.name }}  # C
+from .. import {{ element.eSuperPackage.name }}
 {% endif %}
 
 {%- for sub in element.eSubpackages %}
-from . import {{ sub.name }}  # D
+from . import {{ sub.name }}
 {% endfor %}
 
 __all__ = [{{ element.eClassifiers | map(attribute='name') | map('pyquotesingle') | join(', ') }}]

@@ -158,14 +158,32 @@ class EcoreGenerator(JinjaGenerator):
         return (c for c in value.eAllContents() if isinstance(c, type_))
 
     @classmethod
-    def filter_pyfqn(cls, value):
-        """Returns Python form of fully qualified name."""
-        # TODO Original MTL contains a replacement of replaceAll('^[^.]+', ''). Why?
-        parent = value.eContainer()
-        if parent:
-            return '{}.{}'.format(cls.filter_pyfqn(parent), value.name)
-        else:
-            return value.name
+    def filter_pyfqn(cls, value, relative_to=0):
+        """
+        Returns Python form of fully qualified name.
+        
+        Args:
+            relative_to: If greater 0, the returned path is relative to the first n directories.
+        """
+
+        def collect_packages(element, packages):
+            parent = element.eContainer()
+            if parent:
+                collect_packages(parent, packages)
+            packages.append(element.name)
+
+        packages = []
+        collect_packages(value, packages)
+
+        if relative_to < 0 or relative_to > len(packages):
+            raise ValueError('relative_to not in range of number of packages')
+
+        fqn = '.'.join(packages[relative_to:])
+
+        if relative_to:
+            fqn = '.' + fqn
+
+        return fqn
 
     @staticmethod
     def filter_set(value):

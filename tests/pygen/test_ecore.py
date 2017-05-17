@@ -3,7 +3,7 @@ import os
 import pytest
 
 from pyecore.ecore import EPackage, EClass, EEnum
-from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask
+from pygen.ecore import EcoreTask, EcorePackageInitTask, EcorePackageModuleTask, EcoreGenerator
 
 
 def test__ecore_task__filtered_elements():
@@ -55,3 +55,13 @@ def test__ecore_package_init_task__path_for_element(package_in_hierarchy):
 def test__ecore_package_module_task__path_for_element(package_in_hierarchy):
     path = EcorePackageModuleTask().relative_path_for_element(package_in_hierarchy)
     assert path == os.path.join('pkg1', 'pkg2', 'pkg3', 'pkg3.py')
+
+
+def test__ecore_generator__filter_pyfqn(package_in_hierarchy):
+    assert EcoreGenerator.filter_pyfqn(package_in_hierarchy) == 'pkg1.pkg2.pkg3'
+    assert EcoreGenerator.filter_pyfqn(package_in_hierarchy, relative_to=1) == '.pkg2.pkg3'
+    assert EcoreGenerator.filter_pyfqn(package_in_hierarchy, relative_to=2) == '.pkg3'
+    assert EcoreGenerator.filter_pyfqn(package_in_hierarchy, relative_to=3) == '.'
+
+    with pytest.raises(ValueError):
+        assert EcoreGenerator.filter_pyfqn(package_in_hierarchy, relative_to=4) == '.'
