@@ -43,6 +43,7 @@ def test_top_level_package_with_subpackages(pygen_output_dir):
     mm = generate_meta_model(rootpkg, pygen_output_dir)
 
     assert mm.name == rootpkg.name
+    assert mm.eSubpackages[0].eSuperPackage.name == rootpkg.name
 
     generated_A = mm.getEClassifier('A')
     assert generated_A
