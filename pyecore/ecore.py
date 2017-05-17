@@ -862,13 +862,13 @@ class EClass(EClassifier):
         elif isinstance(superclass, EClass):
             self.eSuperTypes.append(superclass)
         if metainstance:
-            self._metainstance = metainstance
+            self.python_class = metainstance
         else:
-            self._metainstance = type(self.name,
-                                      self.__compute_supertypes(),
-                                      {
-                                          'eClass': self,
-                                          '_staticEClass': self._staticEClass,
+            self.python_class = type(self.name,
+                                     self.__compute_supertypes(),
+                                     {
+                                         'eClass': self,
+                                         '_staticEClass': self._staticEClass,
                                       })
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
@@ -878,7 +878,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self._metainstance(*args, **kwargs)
+        obj = self.python_class(*args, **kwargs)
         obj._isready = True
         return obj
 
@@ -889,7 +889,7 @@ class EClass(EClassifier):
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
-            self._metainstance.__bases__ = new_supers
+            self.python_class.__bases__ = new_supers
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
@@ -913,11 +913,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            return tuple(x._metainstance for x in eSuperTypes)
-
-    @property
-    def python_class(self):
-        return self._metainstance
+            return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
         return '<EClass name="{0}">'.format(self.name)
