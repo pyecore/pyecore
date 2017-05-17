@@ -212,11 +212,11 @@ class Remove(AbstractCommand):
     @property
     def can_execute(self):
         executable = super().can_execute
-        executable = executable and self.value is not None
         self._collection = self.owner.eGet(self.feature)
-        i = self.index
-        if i is not None:
-            executable = executable and i >= 0 and i <= len(self._collection)
+        if self.index is None:
+            executable = executable and self.value is not None
+        else:
+            self.value = self._collection[self.index]
         return executable
 
     def undo(self):
