@@ -18,7 +18,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
 {#- -------------------------------------------------------------------------------------------- -#}
 
 {%- macro generate_enum(e) %}
-{{ e.name }} = EEnum('{{ e.name }}', literals=[{{ e.eLiterals | map(attribute='name') | map('pyquotesingle') | join(', ') }}])  # noqa
+{{ e.name }} = EEnum('{{ e.name }}', literals=[{{ e.eLiterals | map(attribute='name') | map('pyquotesingle') | join(', ') }}])
 {% endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}
