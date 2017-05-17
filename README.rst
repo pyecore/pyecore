@@ -80,9 +80,7 @@ metamodel:
 PyEcore does support dynamic metamodel and static ones (see details in next
 sections).
 
-*The project is at an early stage and still requires more love.*
-
-.. contents:: :depth: 2
+*The project slowly grows and it still requires more love.*
 
 Installation
 ============
@@ -98,6 +96,10 @@ The installation can also be performed manually (better in a virtualenv):
 .. code-block:: bash
 
     $ python setup.py install
+
+
+.. contents:: :depth: 2
+
 
 Dynamic Metamodels
 ==================
