@@ -32,13 +32,7 @@ class {{ c.name }}({{ c | supertypes }}):
 
 {%- macro generate_attribute(a) -%}
     {% if a.derived %}_{% endif -%}
-    {{ a.name }} = EAttribute(
-        {%- if a.derived %}name='{{ a.name }}', {% endif -%}
-        eType={{ a.eType.name }}
-        {%- if a.many %}, upper=-1{% endif %}
-        {%- if a.derived %}, derived=True{% endif %}
-        {%- if not a.changeable %}, changeable=False{% endif -%}
-    )
+    {{ a.name }} = EAttribute({{ a | attrqualifiers }})
 {%- endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}

@@ -5,7 +5,7 @@ import re
 
 import jinja2
 
-from pyecore.ecore import EPackage, EClass, EEnum, EModelElement, EReference
+from pyecore.ecore import EPackage, EClass, EEnum, EModelElement, EReference, EAttribute
 from pygen.formatter import format_autopep8
 from pygen.jinja import JinjaTask, JinjaGenerator
 
@@ -153,6 +153,20 @@ class EcoreGenerator(JinjaGenerator):
         return ', '.join('{}={}'.format(k, v) for k, v in qualifiers.items())
 
     @staticmethod
+    def filter_attrqualifiers(value: EAttribute):
+        qualifiers = dict(
+            eType=value.eType.name,
+            derived=value.derived,
+            changeable=value.changeable,
+        )
+        if value.many:
+            qualifiers.update(upper=-1)
+        if value.derived:
+            qualifiers.update(name=value.name)
+
+        return ', '.join('{}={}'.format(k, v) for k, v in qualifiers.items())
+
+    @staticmethod
     def filter_all_contents(value: EPackage, type_):
         """Returns `eAllContents(type_)`."""
         return (c for c in value.eAllContents() if isinstance(c, type_))
@@ -206,6 +220,7 @@ class EcoreGenerator(JinjaGenerator):
             'docstringline': self.filter_docstringline,
             'pyquotesingle': self.filter_pyquotesingle,
             'refqualifiers': self.filter_refqualifiers,
+            'attrqualifiers': self.filter_attrqualifiers,
             'supertypes': self.filter_supertypes,
             'all_contents': self.filter_all_contents,
             'pyfqn': self.filter_pyfqn,
