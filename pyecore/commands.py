@@ -139,7 +139,9 @@ class AbstractCommand(Command):
         self._executed = True
 
     def __repr__(self):
-        if not isinstance(self.feature, str):
+        if self.feature is None:
+            feature = 'NO_FEATURE'
+        elif not isinstance(self.feature, str):
             feature = self.feature.name
         else:
             feature = self.feature
@@ -167,7 +169,6 @@ class Set(AbstractCommand):
     def do_execute(self):
         object = self.owner
         self.previous_value = object.eGet(self.feature)
-        print(self.value)
         object.eSet(self.feature, self.value)
 
 
@@ -269,10 +270,7 @@ class Move(AbstractCommand):
 
     def do_execute(self):
         self.value = self._collection.pop(self.from_index)
-        print('val', self.value)
-        print('col', self.to_index)
         self._collection.insert(self.to_index, self.value)
-        print(self._collection)
 
 
 class Delete(AbstractCommand):
@@ -397,6 +395,9 @@ class CommandStack(object):
     def top(self):
         self.stack_index -= 1
 
+    def __bool__(self):
+        return self.stack_index > -1
+
     def execute(self, *commands):
         for command in commands:
             if command.can_execute:
@@ -406,7 +407,7 @@ class CommandStack(object):
                 raise ValueError('Cannot execute command {}'.format(command))
 
     def undo(self):
-        if not self.stack:
+        if not self:
             raise ValueError('Command stack is empty')
         if self.top.can_undo:
             self.top.undo()
