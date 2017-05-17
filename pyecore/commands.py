@@ -23,7 +23,8 @@ def insert(self, index, key):
     self._update_container(key)
     self._update_opposite(key, self._owner)
     # insert the value
-    index = index if index <= len(self.items) else len(self.items)
+    size = len(self.items)
+    index = index % size if size != 0 and index <= size else size
     self.items.insert(index, key)
     for k, v in self.map.items():
         if v >= index:
@@ -60,8 +61,10 @@ def pop(self, index=None):
         elem = remove_index(-1)
     else:
         elem = remove_index(index)
+        size = len(self.items)
+        index = index % size if size != 0 and index <= size else size
         for k, v in self.map.items():
-            if v >= index:
+            if v >= index and v > 0:
                 self.map[k] = v - 1
     return elem
 
