@@ -1,7 +1,7 @@
 """Tests for the various features from the code generation templates."""
 import importlib
 
-from pyecore.ecore import EPackage, EClass, EReference, EEnum, EAttribute
+from pyecore.ecore import EPackage, EClass, EReference, EEnum, EAttribute, EInt
 from pygen.ecore import EcoreGenerator
 
 
@@ -92,3 +92,21 @@ def test_classifier_imports(pygen_output_dir):
     # simply importing successully shows the imports have made the types visible
     mm = generate_meta_model(rootpkg, pygen_output_dir)
     assert mm
+
+
+def test_class_with_features(pygen_output_dir):
+    rootpkg = EPackage('class_features')
+    class_ = EClass('MyClass')
+    rootpkg.eClassifiers.append(class_)
+    class_.eStructuralFeatures.append(EAttribute('number', EInt, changeable=False))
+    class_.eStructuralFeatures.append(EReference('ref', class_))
+
+    mm = generate_meta_model(rootpkg, pygen_output_dir)
+
+    generated_class = mm.eClassifiers['MyClass']
+    instance = generated_class(number=7)
+    assert instance.number == 7
+    assert not instance.ref
+
+    instance.ref = instance
+    assert instance.ref is instance
