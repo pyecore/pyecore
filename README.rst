@@ -724,16 +724,9 @@ can be used:
 Here is a quick review of each command:
 
 * ``Set`` --> sets a ``feature`` to a ``value`` for an ``owner``
-* ``Add`` --> adds a ``value`` object to a ``feature`` collection from an ``owner``
-  object (``Add(owner=a, feature='collection', value=b)``). This command can
-  also add a ``value`` at a dedicated ``index`` (``Add(owner=a, feature='collection', value=b, index=0)``)
-* ``Remove`` --> removes a ``value`` object from a ``feature`` collection from an ``owner``
-  (``Remove(owner=a, feature='collection', value=b)``). This command can also remove an object located at
-  an ``index`` (``Remove(owner=a, feature='collection', index=0)``)
-* ``Move`` --> moves a ``value`` to a ``to_index`` position inside a ``feature``
-   collection (``Move(owner=a, feature='collection', value=b, to_index=1)``). This
-   command can also move an element from a ``from_index`` to a ``to_index`` in a
-   collection (``Move(owner=a, feature='collection', from_index=0, to_index=1)``)
+* ``Add`` --> adds a ``value`` object to a ``feature`` collection from an ``owner`` object (``Add(owner=a, feature='collection', value=b)``). This command can also add a ``value`` at a dedicated ``index`` (``Add(owner=a, feature='collection', value=b, index=0)``)
+* ``Remove`` --> removes a ``value`` object from a ``feature`` collection from an ``owner`` (``Remove(owner=a, feature='collection', value=b)``). This command can also remove an object located at an ``index`` (``Remove(owner=a, feature='collection', index=0)``)
+* ``Move`` --> moves a ``value`` to a ``to_index`` position inside a ``feature`` collection (``Move(owner=a, feature='collection', value=b, to_index=1)``). This command can also move an element from a ``from_index`` to a ``to_index`` in a collection (``Move(owner=a, feature='collection', from_index=0, to_index=1)``)
 * ``Delete`` --> deletes an elements and its contained elements (``Delete(owner=a)``)
 
 Dependencies
