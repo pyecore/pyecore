@@ -167,6 +167,7 @@ class Set(AbstractCommand):
     def do_execute(self):
         object = self.owner
         self.previous_value = object.eGet(self.feature)
+        print(self.value)
         object.eSet(self.feature, self.value)
 
 
@@ -181,9 +182,6 @@ class Add(AbstractCommand):
         executable = super().can_execute
         executable = executable and self.value is not None
         self._collection = self.owner.eGet(self.feature)
-        i = self.index
-        if i is not None:
-            executable = executable and i >= 0 and i <= len(self._collection)
         return executable
 
     @property

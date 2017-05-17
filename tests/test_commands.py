@@ -24,11 +24,13 @@ def mm():
     Root.eStructuralFeatures.append(EReference('bs', B, upper=-1,
                                                containment=True))
     A.eStructuralFeatures.append(EAttribute('name', EString))
-    A.eStructuralFeatures.append(EReference('simple_tob', eType=B,
-                                            containment=True))
+    simple_tob = EReference('simple_tob', eType=B, containment=True)
+    A.eStructuralFeatures.append(simple_tob)
     A.eStructuralFeatures.append(EReference('many_tob', eType=B,
                                             containment=True, upper=-1))
     B.eStructuralFeatures.append(EReference('toa', A))
+    B.eStructuralFeatures.append(EReference('inverseA', A,
+                                            eOpposite=simple_tob))
     package = EPackage(name='package')
     package.eClassifiers.extend([Root, A, B])
     return DynamicEPackage(package)
@@ -106,7 +108,6 @@ def test_command_abs():
 
 
 def test_command_set_name(mm):
-    root = mm.Root()
     a = mm.A()
 
     with pytest.raises(BadValueError):
@@ -123,6 +124,62 @@ def test_command_set_name(mm):
     assert a.name is None
     set.redo()
     assert a.name == 'testValue'
+
+
+def test_command_set_b(mm):
+    a = mm.A()
+    b = mm.B()
+
+    set = Set(owner=a, feature='simple_tob', value=b)
+
+    assert set.can_execute
+    set.execute()
+    assert a.simple_tob is b
+    assert b.inverseA is a
+    assert set.can_undo
+    set.undo()
+    assert a.simple_tob is None
+    assert b.inverseA is None
+    set.redo()
+    assert a.simple_tob is b
+    assert b.inverseA is a
+
+
+def test_command_add_b(mm):
+    a = mm.A()
+    b = mm.B()
+
+    add = Add(owner=a, feature='many_tob', value=b)
+
+    assert add.can_execute
+    add.execute()
+    assert b in a.many_tob
+    assert add.can_undo
+    add.undo()
+    assert b not in a.many_tob
+    add.redo()
+    assert b in a.many_tob
+
+
+def test_command_add_b_index(mm):
+    a = mm.A()
+    b = mm.B()
+    a.many_tob.append(b)
+
+    b2 = mm.B()
+    add = Add(owner=a, feature='many_tob', index=0, value=b2)
+
+    assert add.can_execute
+    add.execute()
+    assert b2 in a.many_tob and b in a.many_tob
+    assert a.many_tob.index(b2) == 0 and a.many_tob.index(b) == 1
+    assert add.can_undo
+    add.undo()
+    assert b2 not in a.many_tob and b in a.many_tob
+    assert a.many_tob.index(b) == 0
+    add.redo()
+    assert b2 in a.many_tob
+    assert a.many_tob.index(b2) == 0 and a.many_tob.index(b) == 1
 
 
 def test_command_set_name_stack(mm):
