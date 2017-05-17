@@ -84,6 +84,21 @@ sections).
 
 .. contents:: :depth: 2
 
+Installation
+============
+
+PyEcore is available on ``pypi``, you can simply install it using ``pip``:
+
+.. code-block:: bash
+
+    $ pip install pyecore
+
+The installation can also be performed manually (better in a virtualenv):
+
+.. code-block:: bash
+
+    $ python setup.py install
+
 Dynamic Metamodels
 ==================
 
@@ -633,21 +648,91 @@ remove it from its container. PyEcore does not serialize elements that are not
 contained by a ``Resource`` and each reference to this 'not-contained' element
 is not serialized.
 
+Modifying Elements Using commands
+=================================
 
-Installation
-============
+PyEcore objects can be modified as shown previously, using basic Python
+operators, but these mofifications cannot be undone. To do so, it is required to
+use ``Command`` and a ``CommandStack``. Each command represent a basic action
+that can be performed on an element (set/add/remove/move/delete):
 
-PyEcore is available on ``pypi``, you can simply install it using ``pip``:
+.. code-block:: python
 
-.. code-block:: bash
+    >>> from pyecore.commands import Set
+    >>> # we assume have a metamodel with an A EClass that owns a 'name' feature
+    >>> a = A()
+    >>> set = Set(owner=a, feature='name', value='myname')
+    >>> if set.can_execute:
+    ...     set.execute()
+    >>> a.name
+    myname
 
-    $ pip install pyecore
+If you use a simple command withtout ``CommandStack``, the ``can_execute`` call
+is mandatory! It performs some prior computation before the actual command
+execution. Each executed command also supports 'undo' and 'redo':
 
-The installation can also be performed manually (better in a virtualenv):
+.. code-block:: python
 
-.. code-block:: bash
+    >>> if set.can_undo:
+    ...     set.undo()
+    >>> assert a.name is None
+    >>> set.redo()
+    >>> assert a.name == 'myname'
 
-    $ python setup.py install
+As for the ``execute()`` method, the ``can_undo`` call must be done before
+calling the ``undo()`` method. However, there is no ``can_redo``, the ``redo()``
+call can be mad right away after an undo.
+
+To compose all of these commands, a ``Compound`` can be used. Basically, a
+``Compound`` acts as a list with extra methods (``execute``, ``undo``,
+``redo``...):
+
+.. code-block:: python
+
+    >>> from pyecore.commands import Compound
+    >>> a = A()  # we use a new A instance
+    >>> c = Compound(Set(owner=a, feature='name', value='myname'),
+    ...              Set(owner=a, feature='name', value='myname2'))
+    >>> len(c)
+    2
+    >>> if c.can_execute:
+    ...     c.execute()
+    >>> a.name
+    myname2
+    >>> if c.can_undo:
+    ...     c.undo()
+    >>> assert a.name is None
+
+In order to organize and keep a stack of each played command, a ``CommandStack``
+can be used:
+
+.. code-block:: python
+
+    >>> from pyecore.commands import CommandStack
+    >>> a = A()
+    >>> stack = CommandStack()
+    >>> stack.execute(Set(owner=a, feature='name', value='myname'))
+    >>> stack.execute(Set(owner=a, feature='name', value='myname2'))
+    >>> stack.undo()
+    >>> assert a.name == 'myname'
+    >>> stack.redo()
+    >>> assert a.name == 'myname2'
+
+
+Here is a quick review of each command:
+
+* ``Set`` --> sets a ``feature`` to a ``value`` for an ``owner``
+* ``Add`` --> adds a ``value`` object to a ``feature`` collection from an ``owner``
+  object (``Add(owner=a, feature='collection', value=b)``). This command can
+  also add a ``value`` at a dedicated ``index`` (``Add(owner=a, feature='collection', value=b, index=0)``)
+* ``Remove`` --> removes a ``value`` object from a ``feature`` collection from an ``owner``
+  (``Remove(owner=a, feature='collection', value=b)``). This command can also remove an object located at
+  an ``index`` (``Remove(owner=a, feature='collection', index=0)``)
+* ``Move`` --> moves a ``value`` to a ``to_index`` position inside a ``feature``
+   collection (``Move(owner=a, feature='collection', value=b, to_index=1)``). This
+   command can also move an element from a ``from_index`` to a ``to_index`` in a
+   collection (``Move(owner=a, feature='collection', from_index=0, to_index=1)``)
+* ``Delete`` --> deletes an elements and its contained elements (``Delete(owner=a)``)
 
 Dependencies
 ============
@@ -656,6 +741,8 @@ The dependencies required by pyecore are:
 
 * ordered-set which is used for the ``ordered`` and ``unique`` collections expressed in the metamodel,
 * lxml which is used for the XMI parsing.
+
+These dependencies are directly installed if you choose to use ``pip``.
 
 
 Run the Tests
@@ -700,13 +787,15 @@ In the current state, the project implements:
 * EOperations support,
 * code generator for the static part,
 * EMF proxies (first version),
-* object deletion (first version).
+* object deletion (first version),
+* EMF commands (first version).
 
 The things that are in the roadmap:
 
 * URI mapper
 * documentation,
-* EMF commands (?).
+* EMF Editing Domain,
+* copy/paste (?).
 
 Existing Projects
 =================
