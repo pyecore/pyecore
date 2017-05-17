@@ -1,7 +1,7 @@
 """Tests for the various features from the code generation templates."""
 import importlib
 
-from pyecore.ecore import EPackage, EClass, EReference
+from pyecore.ecore import EPackage, EClass, EReference, EEnum
 from pygen.ecore import EcoreGenerator
 
 
@@ -35,7 +35,8 @@ def test_top_level_package_with_subpackages(pygen_output_dir):
     cls1 = EClass('A')
     cls2 = EClass('B')
     cls1.eStructuralFeatures.append(EReference('b', cls2))
-    cls2.eStructuralFeatures.append(EReference('a', cls1, eOpposite=cls1.findEStructuralFeature('b')))
+    cls2.eStructuralFeatures.append(
+        EReference('a', cls1, eOpposite=cls1.findEStructuralFeature('b')))
     rootpkg.eClassifiers.append(cls1)
     rootpkg.eSubpackages.append(subpkg)
     subpkg.eClassifiers.append(cls2)
@@ -60,3 +61,15 @@ def test_top_level_package_with_subpackages(pygen_output_dir):
     a.b = b
 
     assert b.a is a
+
+
+def test_package_with_enum(pygen_output_dir):
+    enumpkg = EPackage('enumpkg')
+    enum = EEnum('MyEnum', literals=('X', 'Y', 'Z'))
+    enumpkg.eClassifiers.append(enum)
+
+    mm = generate_meta_model(enumpkg, pygen_output_dir)
+
+    generated_enum = mm.eClassifiers['MyEnum']
+    assert isinstance(generated_enum, EEnum)
+    assert set(l.name for l in generated_enum.eLiterals) == {'X', 'Y', 'Z'}
