@@ -332,9 +332,9 @@ class EValue(PyEcoreValue):
         if not efeature.eOpposite:
             couple = (owner, efeature)
             if hasattr(value, '_inverse_rels'):
-                value._inverse_rels.add(couple)
                 if hasattr(previous_value, '_inverse_rels'):
                     previous_value._inverse_rels.remove(couple)
+                value._inverse_rels.add(couple)
             elif value is None and hasattr(previous_value, '_inverse_rels'):
                 previous_value._inverse_rels.remove(couple)
             return
