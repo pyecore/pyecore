@@ -131,7 +131,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
         [/if]
         [/for]
     [for (o : EOperation | c.eOperations)]
-    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
+    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][if (not p.required)]=None[/if][/for]):
         [if (c.getDocumentation() <> '')]
         """
         [c.getDocumentation()/]
