@@ -303,8 +303,8 @@ EClass:
 .. code-block:: python
 
     >>> def myoperation(self, param1):
-    ...:    print(self, param1)
-    ...:
+    ...     print(self, param1)
+    ...
     >>> A.python_class.myoperation = myoperation
 
 To be able to propose a dynamic empty implementation of the operation, PyEcore
@@ -333,8 +333,8 @@ previous example, using a regular function or by class inheritance:
 .. code-block:: python
 
     >>> def print_notif(notification):
-    ...:    print(notification)
-    ...:
+    ...     print(notification)
+    ...
     >>> observer = EObserver()
     >>> observer.observe(b1)
     >>> observer.notifyChanged = print_notif
@@ -345,13 +345,13 @@ Using inheritance:
 .. code-block:: python
 
     >>> class PrintNotification(EObserver):
-    ...:    def __init__(self, notifier=None):
-    ...:        super().__init__(notifier=notifier)
-    ...:
-    ...:    def notifyChanged(self, notification):
-    ...:        print(notification)
-    ...:
-    ...:
+    ...     def __init__(self, notifier=None):
+    ...         super().__init__(notifier=notifier)
+    ...
+    ...     def notifyChanged(self, notification):
+    ...         print(notification)
+    ...
+    ...
     >>> observer = PrintNotification(b1)
     >>> b1.authors.append(smith)  # observer receive the notification from b1
 
@@ -650,7 +650,7 @@ remove it from its container. PyEcore does not serialize elements that are not
 contained by a ``Resource`` and each reference to this 'not-contained' element
 is not serialized.
 
-Modifying Elements Using commands
+Modifying Elements Using Commands
 =================================
 
 PyEcore objects can be modified as shown previously, using basic Python
@@ -783,7 +783,8 @@ In the current state, the project implements:
 * code generator for the static part,
 * EMF proxies (first version),
 * object deletion (first version),
-* EMF commands (first version).
+* EMF commands (first version),
+* EMF basic command stack.
 
 The things that are in the roadmap:
 
@@ -816,6 +817,13 @@ PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
 If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
 metamodels and seems to provide a reflexive layer. The project does not appear
 seems to have moved since a while.
+
+Contributors
+============
+
+Thanks for making PyEcore better!
+
+* Mike Pagel (`@moltob <https://github.com/moltob>`_)
 
 Additional Resources
 ====================

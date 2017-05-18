@@ -19,7 +19,7 @@ setup(
                  "Framework (EMF/Ecore)"),
     long_description=open('README.rst').read(),
     keywords="model metamodel EMF Ecore",
-    url="https://github.com/aranega/pyecore",
+    url="https://github.com/pyecore/pyecore",
     author="Vincent Aranega",
     author_email="vincent.aranega@gmail.com",
 
