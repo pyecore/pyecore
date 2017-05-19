@@ -511,10 +511,7 @@ class EList(ECollection, list):
 
 
 class EBag(EList):
-    def __repr__(self):
-        if not self:
-            return '{}()'.format(self.__class__.__name__)
-        return '{}({})'.format(self.__class__.__name__, self)
+    pass
 
 
 class EAbstractSet(ECollection):
@@ -670,8 +667,7 @@ class ETypeParameter(ENamedElement):
 
 
 class EGenericType(EObject):
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 class EClassifier(ENamedElement):
@@ -718,10 +714,7 @@ class EDataType(EClassifier):
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        try:
-            self.eType = self.javaTransMap[name]
-        except KeyError:
-            pass
+        self.eType = self.javaTransMap.get(name)
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -1279,4 +1272,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
-           'EFloatObject', 'ELong', 'EProxy']
+           'EFloatObject', 'ELong', 'EProxy', 'EBag']

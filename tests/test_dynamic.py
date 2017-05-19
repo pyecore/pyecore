@@ -152,7 +152,10 @@ def test_create_dynamic_many_ereference():
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
-    assert a1.tob and b1 in a1.tob and len(a1.tob) == 1
+    assert a1.tob
+    assert b1 in a1.tob
+    assert len(a1.tob) == 1
+    assert a1.tob.__repr__()
 
 
 def test_create_dynamic_many_ereference_urifragment():
@@ -491,7 +494,7 @@ def test_create_dynamic_ereference_nonord_uni():
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
-    # assert isinstance(a1.tob, ESet)
+    assert isinstance(a1.tob, ESet)
     assert isinstance(a1.tob, EOrderedSet)
     assert b1 in a1.tob
 
@@ -503,8 +506,10 @@ def test_create_dynamic_ereference_nonord_nonuni():
     a1 = A()
     b1 = B()
     a1.tob.append(b1)
+    assert isinstance(a1.tob, EBag)
     assert isinstance(a1.tob, EList)
     assert b1 in a1.tob
+    assert a1.tob.__repr__()
 
 
 def test_create_dynamic_ereference_elist_extend():
@@ -593,3 +598,49 @@ def test_eclass_emodelemenent_supertype():
     assert EModelElement.eAnnotations in A.eAllStructuralFeatures()
     a = A()
     assert a.eAnnotations == {}
+
+
+def test_eclass_remove_estructuralfeature():
+    A = EClass('A')
+    name_feature = EAttribute('name', EString)
+    A.eStructuralFeatures.append(name_feature)
+    assert name_feature in A.eStructuralFeatures
+    assert A.python_class.name is name_feature
+    A.eStructuralFeatures.clear()
+    assert name_feature not in A.eStructuralFeatures
+    with pytest.raises(AttributeError):
+        A.python_class.name
+
+
+def test_eclass_remove_eoperation():
+    A = EClass('A')
+    operation = EOperation('testOperation')
+    A.eOperations.append(operation)
+    assert operation in A.eOperations
+    assert A.python_class.testOperation is not None
+    A.eOperations.clear()
+    assert operation not in A.eOperations
+    with pytest.raises(AttributeError):
+        A.python_class.testOperation
+
+
+def test_eclass_operations_methods():
+    A = EClass('A')
+    op1 = EOperation('operation1')
+    A.eOperations.append(op1)
+    B = EClass('B', superclass=(A,))
+    op2 = EOperation('operation2')
+    B.eOperations.append(op2)
+    assert B.eAllOperations() == {op1, op2}
+
+    assert B.findEOperation('operation1') is op1
+    assert B.findEOperation('operation2') is op2
+    assert A.findEOperation('operation2') is None
+
+
+def test_eclass_simple_reference():
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EReference('tob', B, upper=1))
+    a = A()
+    assert a.tob is None

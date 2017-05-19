@@ -77,7 +77,7 @@ def test_eenum_geteenum():
 
 def test_eenum_geteenum_print():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
-    print(MyEnum)
+    assert MyEnum.__repr__()
 
 
 def test_eattribute_etype():
