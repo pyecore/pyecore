@@ -1,6 +1,7 @@
 import pytest
 from pyecore.ecore import *
 from pyecore.utils import DynamicEPackage
+from pyecore.notification import *
 
 
 @pytest.fixture(scope='module')
@@ -13,12 +14,22 @@ def simplemm():
     A.eStructuralFeatures.append(EReference('cols', B, upper=-1, unique=False))
     pack = EPackage('pack', nsURI='http://pack/1.0', nsPrefix='pack')
     pack.eClassifiers.extend([A, B])
-    return pack
+    return DynamicEPackage(pack)
+
+
+class ObserverCounter(EObserver):
+    def __init__(self, notifier=None):
+        super().__init__(notifier=notifier)
+        self.calls = 0
+
+    def notifyChanged(self, notification):
+        self.calls += 1
+        self.kind = notification.kind
+        self.feature = notification.feature
 
 
 def test_slicing_int_list(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
+    a = simplemm.A()
     a.ints.extend([1, 2, 3, 4])
     a.ints[0:0] = [0]
     assert a.ints == [0, 1, 2, 3, 4]
@@ -37,8 +48,7 @@ def test_slicing_int_list(simplemm):
 
 
 def test_slicing_str_list(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
+    a = simplemm.A()
     a.names.extend(['a', 'b', 'c', 'd'])
     a.names[0:0] = ['z']
     assert a.names == ['z', 'a', 'b', 'c', 'd']
@@ -57,9 +67,8 @@ def test_slicing_str_list(simplemm):
 
 
 def test_slicing_obj_noncontainment_list(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
-    b1 = smm.B()
+    a = simplemm.A()
+    b1 = simplemm.B()
     b2 = b1.eClass()
     b3 = b1.eClass()
     a.cols.extend([b1, b2, b3])
@@ -83,9 +92,8 @@ def test_slicing_obj_noncontainment_list(simplemm):
 
 
 def test_slicing_obj_containment_list(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
-    b1 = smm.B()
+    a = simplemm.A()
+    b1 = simplemm.B()
     a.inners.append(b1)
     assert b1.eContainer() is a
 
@@ -107,22 +115,35 @@ def test_slicing_obj_containment_list(simplemm):
 
 
 def test_slicing_int_list_bad_obj(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
+    a = simplemm.A()
     a.ints.extend([1, 2, 3, 4])
     with pytest.raises(BadValueError):
         a.ints[1:] = ['r']
 
 
 def test_slicing_obj_list_bad_obj(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
+    a = simplemm.A()
     with pytest.raises(BadValueError):
-        a.cols[:] = [smm.A()]
+        a.cols[:] = [simplemm.A()]
 
 
 def test_slicing_insert_ints(simplemm):
-    smm = DynamicEPackage(simplemm)
-    a = smm.A()
+    a = simplemm.A()
     a.ints.insert(0, 1)
     assert a.ints == [1]
+
+
+def test_slicing_pop_b(simplemm):
+    a = simplemm.A()
+    b1 = simplemm.B()
+    b2 = simplemm.B()
+    a.cols.extend([b1, b2])
+    o = ObserverCounter(a)
+    e = a.cols.pop(1)
+    assert e is b2
+    assert o.calls == 1
+    assert o.kind == Kind.REMOVE
+
+    e = a.cols.pop()
+    assert o.calls == 2
+    assert o.kind == Kind.REMOVE

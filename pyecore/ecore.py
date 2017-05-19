@@ -497,6 +497,18 @@ class EList(ECollection, list):
                                         kind=Kind.ADD))
         self._owner._isset.add(self._efeature)
 
+    def pop(self, index=None):
+        if index is None:
+            value = super().pop()
+        else:
+            value = super().pop(index)
+        self._update_container(None, previous_value=value)
+        self._update_opposite(value, self._owner, remove=True)
+        self._owner.notify(Notification(old=value,
+                                        feature=self._efeature,
+                                        kind=Kind.REMOVE))
+        return value
+
 
 class EBag(EList):
     def __repr__(self):
@@ -526,9 +538,9 @@ class EAbstractSet(ECollection):
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
-        self.update(*sublist)
+        self.update(sublist)
 
-    def update(self, *others):
+    def update(self, others):
         all(self.check(x) for x in others)
         for value in others:
             self._update_container(value)
@@ -545,13 +557,9 @@ class EOrderedSet(EAbstractSet, OrderedSet):
         super().__init__(owner, efeature)
         OrderedSet.__init__(self)
 
-    def update(self, *others):
+    def update(self, others):
         self._orderedset_update = True
-        OrderedSet.update(self, others)
-        self._owner.notify(Notification(new=others,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD_MANY))
-        self._owner._isset.add(self._efeature)
+        super().update(others)
         self._orderedset_update = False
 
 
