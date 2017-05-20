@@ -239,14 +239,14 @@ class EObject(ENotifer):
     @property
     def eContents(self):
         children = []
-        for feature in self.eClass.eAllStructuralFeatures():
-            if isinstance(feature, EAttribute):
+        for feature in self.eClass.eAllReferences():
+            if not feature.containment:
                 continue
-            if feature.containment:
-                values = self.__getattribute__(feature.name) \
-                         if feature.many \
-                         else [self.__getattribute__(feature.name)]
-                children.extend(filter(None, values))
+            if feature.many:
+                values = self.__getattribute__(feature.name)
+            else:
+                values = [self.__getattribute__(feature.name)]
+            children.extend((x for x in values if x))
         return children
 
     def eAllContents(self):

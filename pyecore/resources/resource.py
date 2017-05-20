@@ -211,10 +211,7 @@ class Resource(object):
         try:
             return self.resource_set.metamodel_registry[nsURI]
         except Exception:
-            try:
-                return global_registry[nsURI]
-            except Exception:
-                return None
+            return global_registry.get(nsURI)
 
     def get_metamodel(self, nsuri):
         try:
