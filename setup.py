@@ -18,17 +18,17 @@ setup(
     description=("A Python(ic) Implementation of the Eclipse Modeling "
                  "Framework (EMF/Ecore)"),
     long_description=open('README.rst').read(),
-    keywords="model metamodel EMF Ecore",
+    keywords="model metamodel EMF Ecore MDE",
     url="https://github.com/pyecore/pyecore",
     author="Vincent Aranega",
     author_email="vincent.aranega@gmail.com",
 
-    packages=find_packages(exclude=['examples']),
+    packages=find_packages(exclude=['examples', 'tests']),
     package_data={'': ['LICENSE',
                        'README.rst']},
     include_package_data=True,
     install_requires=requires,
-    extras_require={'testing': ['pytest']},
+    tests_require={'pytest'},
 
     license='BSD 3-Clause',
     classifiers=[
