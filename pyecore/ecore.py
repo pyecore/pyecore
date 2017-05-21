@@ -158,7 +158,8 @@ class EObject(ENotifer):
         self._inverse_rels = set()
 
     def __initmetattr__(self):
-        def initattr(cls):
+        super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
+        for cls in reversed(list(super_cls)):
             for key, feature in cls.__dict__.items():
                 if not isinstance(feature, EStructuralFeature):
                     continue
@@ -171,10 +172,6 @@ class EObject(ENotifer):
                     if isinstance(feature, EAttribute):
                         default_value = feature.eType.default_value
                     object.__setattr__(self, key, default_value)
-
-        super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
-        for cls in reversed(list(super_cls)):
-            initattr(cls)
 
     def eContainer(self):
         return self._container
