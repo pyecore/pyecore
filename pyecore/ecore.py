@@ -325,9 +325,9 @@ class EValue(PyEcoreValue):
         if owner._isready and value != efeature.get_default_value:
             owner._isset.add(efeature)
 
-        self._update_container(value, previous_value)
         if not isinstance(efeature, EReference) or not update_opposite:
             return
+        self._update_container(value, previous_value)
 
         if not efeature.eOpposite:
             couple = (owner, efeature)
@@ -940,10 +940,8 @@ class EClass(EClassifier):
         struct = next(
             (f for f in self.eStructuralFeatures if f.name == name),
             None)
-        if struct:
+        if struct or not self.eSuperTypes:
             return struct
-        if not self.eSuperTypes:
-            return None
         for stype in self.eSuperTypes:
             struct = stype.findEStructuralFeature(name)
             if struct:
@@ -954,16 +952,13 @@ class EClass(EClassifier):
         # if isinstance(self, type):
         #     return (x.eClass for x in self.mro() if x is not object and
         #             x is not self)
-        if not self.eSuperTypes:
-            return iter(set())
-        result = set()
+        result = OrderedSet(self.eSuperTypes)
         for stype in self.eSuperTypes:
-            result.add(stype)
-            result |= frozenset(stype.eAllSuperTypes())
+            result.update(stype.eAllSuperTypes())
         return result
 
     def eAllStructuralFeatures(self):
-        features = set(self.eStructuralFeatures)
+        features = OrderedSet(self.eStructuralFeatures)
         for feature in self.eAllSuperTypes():
             features.update(feature.eStructuralFeatures)
         return features
@@ -973,17 +968,15 @@ class EClass(EClassifier):
                     if isinstance(x, EReference)))
 
     def eAllOperations(self):
-        operations = set(self.eOperations)
+        operations = OrderedSet(self.eOperations)
         for superclass in self.eAllSuperTypes():
             operations.update(superclass.eOperations)
         return operations
 
     def findEOperation(self, name):
         operation = next((f for f in self.eOperations if f.name == name), None)
-        if operation:
+        if operation or not self.eSuperTypes:
             return operation
-        if not self.eSuperTypes:
-            return None
         for stype in self.eSuperTypes:
             operation = stype.findEOperation(name)
             if operation:
@@ -1007,7 +1000,7 @@ class MetaEClass(type):
         if not hasattr(obj, '_isready'):
             EObject.__subinit__(obj)
         # required for 'at runtime' added features
-        for efeat in reversed(list(obj.eClass.eAllStructuralFeatures())):
+        for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
             if efeat.name in obj.__dict__:
                 continue
             if isinstance(efeat, EAttribute):
