@@ -9,6 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
+from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
 
@@ -156,24 +157,24 @@ class EObject(ENotifer):
         self._eternal_listener = []
         self._inverse_rels = set()
 
-    def __initmetattr__(self, _super=None):
-        _super = _super or self.__class__
-        if _super is EObject:
-            return
-        for super_class in _super.__bases__:
-            super_class.__initmetattr__(self, super_class)
-        for key, feature in _super.__dict__.items():
-            if not isinstance(feature, EStructuralFeature):
-                continue
-            if feature.many:
-                object.__setattr__(self,
-                                   key,
-                                   ECollection.create(self, feature))
-            else:
-                default_value = None
-                if isinstance(feature, EAttribute):
-                    default_value = feature.eType.default_value
-                object.__setattr__(self, key, default_value)
+    def __initmetattr__(self):
+        def initattr(cls):
+            for key, feature in cls.__dict__.items():
+                if not isinstance(feature, EStructuralFeature):
+                    continue
+                if feature.many:
+                    object.__setattr__(self,
+                                       key,
+                                       ECollection.create(self, feature))
+                else:
+                    default_value = None
+                    if isinstance(feature, EAttribute):
+                        default_value = feature.eType.default_value
+                    object.__setattr__(self, key, default_value)
+
+        super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
+        for cls in reversed(list(super_cls)):
+            initattr(cls)
 
     def eContainer(self):
         return self._container
