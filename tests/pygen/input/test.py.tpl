@@ -1,1 +1,0 @@
-print('This is a test template for element {{ element.name }}.')
