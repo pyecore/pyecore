@@ -1,6 +1,69 @@
 Changelog
 ---------
 
+x.x.x
++++++
+
+**Features**
+
+- Add new static metamodel generator (`@moltob <https://github.com/moltob>`_
+  contribution, thanks!). The generator, named `pyecoregen <https://github.com/pyecore/pyecoregen>`_,
+  is written in full Python/Jinja2 using `pymultigen <https://github.com/moltob/pymultigen>`_ a
+  framework for multiple files generation. The generator usage is prefered over
+  the MTL/Acceleo one as it can be launched from the command line directly and
+  does not requires Java or Java-dependencies to run. The generated code is
+  also automatically formatted using the ``autopep8`` project.
+
+- Add EMF command support. The EMF command support gives the ability to represent
+  actions that modify the model as single or composed modification command. There
+  is 5 existing commands:
+  * Set,
+  * Add,
+  * Remove,
+  * Delete,
+  * Compound.
+
+  Each command affects the model in a certain way. The main advantage of using
+  commands over direct modification is the fact that each of these commands can
+  be undo/redo.
+
+- Add Command Stack support. The Command stack gives the ability to easily schedule
+  the execution of each commands. It also gives a simpler access to the undo/redo
+  function of each commands and ensure that they are played/re-played in the
+  right order.
+
+
+**Bugfixes**
+
+- Fix handling of 'non-required' parameters for ``EOperations``. When a
+  parameter is set as 'non-required', the Python translation must consider that
+  the parameter is defined as an optional named parameter.
+
+- Fix issue with the computation of some internal properties for the ``delete()``
+  method (the ``_inverse_rels`` set). The current algorithm keep track of each
+  inverse relationships, and when an element is removed, the old record is
+  deleted while a new one is added to the record set. The bug was affecting the
+  registration of the new record during the deletion of the old one.
+
+- Fix ``__update()`` method in ``EClass`` when an object deletion occurs. The
+  update method deals with notifications to add/remove elements on the fly from
+  the listened notification. When a REMOVE was notified, the wrong notification
+  property was accessed resulting in a ``NoneTypeError`` exception.
+
+
+**Miscellaneous**
+
+- Change 'getargspec' by 'getfullargspec' as it seems that 'getargspec' is
+  deprecated since Python 3.0 and replaced by 'getfullargspec'.
+- Add some performance improvements.
+- Add missing ``pop()`` operation for ``EList/EBag``.
+- Monkey patch ``insert()/pop()`` methods in ``OrderedSet``.
+- Add missing ``@staticmethod`` when required.
+- Add missing ``*args`` and ``**kwargs`` to the meta-instance creation in
+  ``EClass``. This addition allows the user to create it's own '__init__' method
+  for dynamic metaclasses using some trickery.
+
+
 0.3.0
 +++++
 
