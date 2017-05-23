@@ -101,7 +101,7 @@ class Core(object):
             elif inspect.isfunction(feature):
                 if k == '__init__':
                     continue
-                argspect = inspect.getargspec(feature)
+                argspect = inspect.getfullargspec(feature)
                 args = argspect.args
                 if len(args) < 1 or args[0] != 'self':
                     continue
