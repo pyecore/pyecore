@@ -4,10 +4,10 @@ PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
 
 |master-build| |license|
 
-.. |master-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=master
+.. |master-build| image:: https://travis-ci.org/pyecore/pyecore.svg?branch=master
     :target: https://travis-ci.org/aranega/pyecore
 
-.. |develop-build| image:: https://travis-ci.org/aranega/pyecore.svg?branch=develop
+.. |develop-build| image:: https://travis-ci.org/pyecore/pyecore.svg?branch=develop
     :target: https://travis-ci.org/aranega/pyecore
 
 .. |license| image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
