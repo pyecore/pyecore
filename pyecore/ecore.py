@@ -325,10 +325,13 @@ class EValue(PyEcoreValue):
         if owner._isready and value != efeature.get_default_value:
             owner._isset.add(efeature)
 
-        if not isinstance(efeature, EReference) or not update_opposite:
+        if not isinstance(efeature, EReference):
             return
         self._update_container(value, previous_value)
+        if not update_opposite:
+            return
 
+        # if there is no opposite, we set inverse relation and return
         if not efeature.eOpposite:
             couple = (owner, efeature)
             if hasattr(value, '_inverse_rels'):
@@ -339,30 +342,32 @@ class EValue(PyEcoreValue):
                 previous_value._inverse_rels.remove(couple)
             return
 
-        if isinstance(value, EObject):
-            eOpposite = efeature.eOpposite
-            previous_value = value.__getattribute__(eOpposite.name)
-            notif = Notification(new=owner, feature=eOpposite)
-            if eOpposite.many:
-                value.__getattribute__(eOpposite.name).append(owner)
-                notif.kind = Kind.ADD
-                value.notify(notif)
-            else:
-                # We disable the eOpposite update
-                value.__dict__[eOpposite.name]. \
-                      __set__(None, owner, update_opposite=False)
-                notif.kind = Kind.SET
-                value.notify(notif)
-                if value._isready and \
-                        eOpposite.get_default_value != owner:
-                    value._isset.add(eOpposite)
-        elif value is None:
+        # if we are in an 'unset' context
+        if value is None:
             eOpposite = efeature.eOpposite
             if previous_value and eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
                       .remove(owner, update_opposite=False)
             elif previous_value:
                 object.__setattr__(previous_value, eOpposite.name, None)
+            return
+
+        eOpposite = efeature.eOpposite
+        previous_value = value.__getattribute__(eOpposite.name)
+        notif = Notification(new=owner, feature=eOpposite)
+        if eOpposite.many:
+            value.__getattribute__(eOpposite.name).append(owner)
+            notif.kind = Kind.ADD
+            value.notify(notif)
+        else:
+            # We disable the eOpposite update
+            value.__dict__[eOpposite.name]. \
+                  __set__(None, owner, update_opposite=False)
+            notif.kind = Kind.SET
+            value.notify(notif)
+            if value._isready and \
+                    eOpposite.get_default_value != owner:
+                value._isset.add(eOpposite)
 
 
 class ECollection(PyEcoreValue):
