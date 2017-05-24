@@ -13,17 +13,10 @@ branches:
     - develop
     - master
 deploy:
-  - provider: pypi
-    user: $PYPI_USER
-    password: $PYPI_PASSWORD
-    distributions: "bdist_wheel"
-    on:
-      branch: master
-      python: 3.3
-  - provider: pypi
-    user: $PYPI_USER
-    password: $PYPI_PASSWORD
-    distributions: "sdist bdist_wheel"
-    on:
-      branch: master
-      python: 3.6
+  provider: pypi
+  user: $PYPI_USER
+  password: $PYPI_PASSWORD
+  distributions: "sdist bdist_wheel"
+  on:
+    branch: master
+    python: 3.6
