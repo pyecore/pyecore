@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-x.x.x
+0.5.0
 +++++
 
 **Features**
