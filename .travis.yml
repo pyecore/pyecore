@@ -12,3 +12,11 @@ branches:
   only:
     - develop
     - master
+deploy:
+  provider: pypi
+  user: $PYPI_USER
+  password: $PYPI_PASSWORD
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    python: 3.6
