@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
-requires = ['ordered-set', 'lxml', 'jinja2', 'autopep8']
+requires = ['ordered-set', 'lxml']
 if sys.version_info < (3, 4):
     requires.append('enum34')
 
