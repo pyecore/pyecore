@@ -53,6 +53,7 @@ x.x.x
 
 **Miscellaneous**
 
+- Add ``getEAnnotation()`` method on ``EModelElement``.
 - Change 'getargspec' by 'getfullargspec' as it seems that 'getargspec' is
   deprecated since Python 3.0 and replaced by 'getfullargspec'.
 - Add some performance improvements.
