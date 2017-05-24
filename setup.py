@@ -13,7 +13,7 @@ if sys.version_info < (3, 4):
 
 setup(
     name='pyecore',
-    version='0.3.1-dev',
+    version='0.5.0',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
