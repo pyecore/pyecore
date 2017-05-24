@@ -7,7 +7,7 @@ python:
     - "3.6"
 install: pip install tox-travis coveralls
 script: tox
-after-success: coveralls
+after_success: coveralls
 branches:
   only:
     - develop
