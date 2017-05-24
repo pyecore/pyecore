@@ -3,6 +3,7 @@ import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource
 from pyecore.resources.resource import HttpURI
+from pyecore.utils import DynamicEPackage
 from os import path
 
 
@@ -122,8 +123,7 @@ def test_resourceset_getresource_ecore_UML():
     umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
     rset.metamodel_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
     # Register Ecore metamodel instance
-    resource = rset.get_resource(URI('tests/xmi/xmi-tests/Ecore.ecore'))
-    rset.metamodel_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = resource.contents[0]
+    rset.metamodel_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = Ecore
     # Load the UML metamodel
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -132,3 +132,18 @@ def test_resourceset_getresource_ecore_UML():
     assert root.getEClassifier('Interface')
     assert root.getEClassifier('State')
     assert root.eResource is resource
+
+
+def test_ecoreinheritance_loading():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'EcoreInheritance.ecore')
+    resource = rset.get_resource(URI(ecore_file))
+    root = DynamicEPackage(resource.contents[0])
+    assert Ecore.EModelElement.eAnnotations in root.A.eAllStructuralFeatures()
+    a = root.A()
+    assert isinstance(a, Ecore.EModelElement)
+    assert Ecore.EModelElement.eAnnotations in root.B.eAllStructuralFeatures()
+    b = root.B()
+    assert isinstance(b, Ecore.EModelElement)
+    assert a.eAnnotations == {}
+    assert b.eAnnotations == {}

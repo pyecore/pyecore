@@ -5,9 +5,18 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
-install: pip install tox-travis
+install: pip install tox-travis coveralls
 script: tox
+after_success: coveralls
 branches:
   only:
     - develop
     - master
+deploy:
+  provider: pypi
+  user: $PYPI_USER
+  password: $PYPI_PASSWORD
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    python: 3.6

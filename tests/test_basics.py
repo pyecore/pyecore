@@ -77,7 +77,7 @@ def test_eenum_geteenum():
 
 def test_eenum_geteenum_print():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
-    print(MyEnum)
+    assert MyEnum.__repr__()
 
 
 def test_eattribute_etype():
@@ -138,3 +138,16 @@ def test_urifragment_static_ecore():
     assert EClass.eClass.eURIFragment() == '#//EClass'
     assert EPackage.eClass.eURIFragment() == '#//EPackage'
     assert EDataType.eClass.eURIFragment() == '#//EDataType'
+
+
+def test_modelelement_annotation():
+    annotation1 = EAnnotation('SOURCE1')
+    annotation2 = EAnnotation('SOURCE2')
+
+    m = EModelElement()
+    m.eAnnotations.extend((annotation1, annotation2))
+
+    assert not m.getEAnnotation(None)
+    assert m.getEAnnotation('SOURCE1') is annotation1
+    assert m.getEAnnotation('SOURCE2') is annotation2
+    assert not m.getEAnnotation('SOURCE3')

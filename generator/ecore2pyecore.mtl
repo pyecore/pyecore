@@ -131,7 +131,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
         [/if]
         [/for]
     [for (o : EOperation | c.eOperations)]
-    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][/for]):
+    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][if (not p.required)]=None[/if][/for]):
         [if (c.getDocumentation() <> '')]
         """
         [c.getDocumentation()/]
@@ -161,7 +161,7 @@ class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
 
 
 [template public generate(a : EAttribute) ? (not derived)]
-[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
