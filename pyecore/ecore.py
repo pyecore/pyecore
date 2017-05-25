@@ -89,15 +89,17 @@ class Core(object):
         cls.eClass.abstract = abstract
         cls._staticEClass = True
         # init super types
+        eSuperTypes_add = cls.eClass.eSuperTypes.append
         for _cls in cls.__bases__:
             if _cls is not EObject and _cls is not ENotifer:
-                cls.eClass.eSuperTypes.append(_cls.eClass)
+                eSuperTypes_add(_cls.eClass)
         # init eclass by reflection
+        eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
         for k, feature in cls.__dict__.items():
             if isinstance(feature, EStructuralFeature):
                 if not feature.name:
                     feature.name = k
-                cls.eClass.eStructuralFeatures.append(feature)
+                eStructuralFeatures_add(feature)
             elif inspect.isfunction(feature):
                 if k == '__init__':
                     continue
@@ -159,19 +161,18 @@ class EObject(ENotifer):
 
     def __initmetattr__(self):
         super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
+        self_setter = self.__setattr__
         for cls in reversed(list(super_cls)):
             for key, feature in cls.__dict__.items():
                 if not isinstance(feature, EStructuralFeature):
                     continue
                 if feature.many:
-                    object.__setattr__(self,
-                                       key,
-                                       ECollection.create(self, feature))
+                    self_setter(key, ECollection.create(self, feature))
                 else:
                     default_value = None
                     if isinstance(feature, EAttribute):
                         default_value = feature.eType.default_value
-                    object.__setattr__(self, key, default_value)
+                    self_setter(key, default_value)
 
     def eContainer(self):
         return self._container
@@ -248,10 +249,11 @@ class EObject(ENotifer):
         return children
 
     def eAllContents(self):
-        objs = list(self.eContents)
-        for obj in list(objs):
-            objs.extend(list(obj.eAllContents()))
-        return iter(objs)
+        contents = self.eContents
+        for x in contents:
+            yield x
+        for x in contents:
+            yield from x.eAllContents()
 
     def eURIFragment(self):
         if not self.eContainer():
@@ -942,51 +944,45 @@ class EClass(EClassifier):
                 if isinstance(x, EReference)]
 
     def findEStructuralFeature(self, name):
-        struct = next(
-            (f for f in self.eStructuralFeatures if f.name == name),
-            None)
-        if struct or not self.eSuperTypes:
-            return struct
-        for stype in self.eSuperTypes:
-            struct = stype.findEStructuralFeature(name)
-            if struct:
-                break
-        return struct
+        return next((f for f in self._eAllStructuralFeatures_gen()
+                     if f.name == name),
+                    None)
+
+    def _eAllSuperTypes_gen(self):
+        super_types = self.eSuperTypes
+        for x in super_types:
+            yield x
+        for x in super_types:
+            yield from x._eAllSuperTypes_gen()
 
     def eAllSuperTypes(self):
-        # if isinstance(self, type):
-        #     return (x.eClass for x in self.mro() if x is not object and
-        #             x is not self)
-        result = OrderedSet(self.eSuperTypes)
-        for stype in self.eSuperTypes:
-            result.update(stype.eAllSuperTypes())
-        return result
+        return OrderedSet(self._eAllSuperTypes_gen())
+
+    def _eAllStructuralFeatures_gen(self):
+        for x in self.eStructuralFeatures:
+            yield x
+        for parent in self.eSuperTypes:
+            yield from parent._eAllStructuralFeatures_gen()
 
     def eAllStructuralFeatures(self):
-        features = OrderedSet(self.eStructuralFeatures)
-        for feature in self.eAllSuperTypes():
-            features.update(feature.eStructuralFeatures)
-        return features
+        return OrderedSet(self._eAllStructuralFeatures_gen())
 
     def eAllReferences(self):
-        return set((x for x in self.eAllStructuralFeatures()
+        return set((x for x in self._eAllStructuralFeatures_gen()
                     if isinstance(x, EReference)))
 
+    def _eAllOperations_gen(self):
+        for x in self.eOperations:
+            yield x
+        for parent in self.eSuperTypes:
+            yield from parent._eAllOperations_gen()
+
     def eAllOperations(self):
-        operations = OrderedSet(self.eOperations)
-        for superclass in self.eAllSuperTypes():
-            operations.update(superclass.eOperations)
-        return operations
+        return OrderedSet(self._eAllOperations_gen())
 
     def findEOperation(self, name):
-        operation = next((f for f in self.eOperations if f.name == name), None)
-        if operation or not self.eSuperTypes:
-            return operation
-        for stype in self.eSuperTypes:
-            operation = stype.findEOperation(name)
-            if operation:
-                break
-        return operation
+        return next((f for f in self._eAllOperations_gen() if f.name == name),
+                    None)
 
 
 # Meta methods for static EClass
