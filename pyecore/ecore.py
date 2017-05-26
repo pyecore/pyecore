@@ -9,6 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
+from datetime import date
 from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
@@ -688,15 +689,32 @@ class EDataType(EClassifier):
                     'boolean': (bool, False, False),
                     'java.lang.Boolean': (bool, False, False),
                     'byte': (int, False, 0),
+                    'short': (int, False, 0),
                     'int': (int, False, 0),
+                    'long': (int, False, 0),
+                    'float': (float, False, 0.0),
+                    'java.lang.Short': (int, False, 0),
+                    'java.lang.Long': (int, False, 0),
+                    'java.lang.Float': (float, False, 0.0),
                     'java.lang.Integer': (int, False, 0),
                     'java.lang.Class': (type, False, None),
+                    'java.lang.Object': (object, True, None),
                     'java.util.Map': (dict, True, None),
                     'java.util.Map$Entry': (dict, True, None),
                     'double': (float, False, 0.0),
                     'java.lang.Double': (float, False, 0.0),
                     'char': (str, False, ''),
-                    'java.lang.Character': (str, False, '')}
+                    'java.lang.Character': (str, False, ''),
+                    'byte[]': (bytearray, True, None),
+                    'java.lang.Byte': (int, False, 0),
+                    'java.util.Date': (date, True, None),
+                    'org.eclipse.emf.common.util.EList': (list, True, None),
+                    'org.eclipse.emf.ecore.util.FeatureMap': (dict,
+                                                              True,
+                                                              None),
+                    'org.eclipse.emf.ecore.util.FeatureMap$Entry': (dict,
+                                                                    True,
+                                                                    None)}
 
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None, instanceClassName=None,
@@ -736,8 +754,8 @@ class EDataType(EClassifier):
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        type, type_as_factory, default = self.javaTransMap.get(name, (None,
-                                                                      False,
+        type, type_as_factory, default = self.javaTransMap.get(name, (object,
+                                                                      True,
                                                                       None))
         self.eType = type
         self.type_as_factory = type_as_factory

@@ -677,6 +677,15 @@ def test_edatatype_instanceClass():
     assert Integer.default_value == 0
     assert Integer.instanceClassName == 'java.lang.Integer'
     assert Integer.to_string(45) == '45'
+    Unknown = EDataType('Unknown', instanceClassName='unknown')
+    assert Unknown.eType is object
+    assert Unknown.type_as_factory is True
+    assert Unknown.default_value is not None
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('u', Unknown))
+    a = A()
+    assert a.u is not None
+    assert isinstance(a.u, object)
 
 
 def test_eattribute_dynamicaddition():
