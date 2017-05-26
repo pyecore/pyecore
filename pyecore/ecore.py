@@ -1122,6 +1122,7 @@ EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
 EFloatObject = EDataType('EFloatObject', float, 0.0,
                          from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
+EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, {})
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
@@ -1250,6 +1251,7 @@ Core.register_classifier(EFloatObject)
 Core.register_classifier(EDouble)
 Core.register_classifier(EDoubleObject)
 Core.register_classifier(EStringToStringMapEntry)
+Core.register_classifier(EFeatureMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
@@ -1264,4 +1266,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
-           'EFloatObject', 'ELong', 'EProxy', 'EBag']
+           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry']
