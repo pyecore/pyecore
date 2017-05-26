@@ -734,7 +734,7 @@ class EDataType(EClassifier):
     def instanceClassName(self, name):
         self._instanceClassName = name
         self.eType, self.type_as_factory = self.javaTransMap.get(name,
-                                                                 (None, None))
+                                                                 (None, False))
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
