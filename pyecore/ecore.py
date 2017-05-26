@@ -681,27 +681,29 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
-    javaTransMap = {'java.lang.String': str,
-                    'boolean': bool,
-                    'java.lang.Boolean': bool,
-                    'byte': int,
-                    'int': int,
-                    'java.lang.Integer': int,
-                    'java.lang.Class': type,
-                    'java.util.Map': {},
-                    'java.util.Map$Entry': {},
-                    'double': int,
-                    'java.lang.Double': int,
-                    'char': str,
-                    'java.lang.Character': str}  # Must be completed
+    javaTransMap = {'java.lang.String': (str, False),
+                    'boolean': (bool, False),
+                    'java.lang.Boolean': (bool, False),
+                    'byte': (int, False),
+                    'int': (int, False),
+                    'java.lang.Integer': (int, False),
+                    'java.lang.Class': (type, False),
+                    'java.util.Map': (dict, True),
+                    'java.util.Map$Entry': (dict, True),
+                    'double': (int, False),
+                    'java.lang.Double': (int, False),
+                    'char': (str, False),
+                    'java.lang.Character': (str, False)}  # Must be completed
 
     def __init__(self, name=None, eType=None, default_value=None,
-                 from_string=None, to_string=None, instanceClassName=None):
+                 from_string=None, to_string=None, instanceClassName=None,
+                 type_as_factory=False):
         super().__init__(name)
         self.eType = eType
         if instanceClassName:
             self.instanceClassName = instanceClassName
-        self.default_value = default_value
+        self.type_as_factory = type_as_factory
+        self._default_value = default_value
         if from_string:
             self.from_string = from_string
         if to_string:
@@ -714,13 +716,25 @@ class EDataType(EClassifier):
         return str(value)
 
     @property
+    def default_value(self):
+        if self.type_as_factory:
+            return self.eType()
+        else:
+            return self._default_value
+
+    @default_value.setter
+    def default_value(self, value):
+        self._default_value = value
+
+    @property
     def instanceClassName(self):
         return self._instanceClassName
 
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        self.eType = self.javaTransMap.get(name)
+        self.eType, self.type_as_factory = self.javaTransMap.get(name,
+                                                                 (None, None))
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -1125,8 +1139,10 @@ EDoubleObject = EDataType('EDoubleObject', float, 0.0,
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
 EFloatObject = EDataType('EFloatObject', float, 0.0,
                          from_string=lambda x: float(x))
-EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
-EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, {})
+EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict,
+                                    type_as_factory=True)
+EFeatureMapEntry = EDataType('EFeatureMapEntry', dict,
+                             type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
