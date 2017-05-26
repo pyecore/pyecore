@@ -633,8 +633,7 @@ class EOperation(ETypedElement):
     def __init__(self, name=None, eType=None, params=None, exceptions=None):
         super().__init__(name, eType)
         if params:
-            for param in params:
-                self.eParameters.append(param)
+                self.eParameters.extend(params)
         if exceptions:
             for exception in exceptions:
                 self.eExceptions.append(exception)
@@ -681,29 +680,30 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
-    javaTransMap = {'java.lang.String': (str, False),
-                    'boolean': (bool, False),
-                    'java.lang.Boolean': (bool, False),
-                    'byte': (int, False),
-                    'int': (int, False),
-                    'java.lang.Integer': (int, False),
-                    'java.lang.Class': (type, False),
-                    'java.util.Map': (dict, True),
-                    'java.util.Map$Entry': (dict, True),
-                    'double': (int, False),
-                    'java.lang.Double': (int, False),
-                    'char': (str, False),
-                    'java.lang.Character': (str, False)}  # Must be completed
+    # Must be completed
+    javaTransMap = {'java.lang.String': (str, False, ''),
+                    'boolean': (bool, False, False),
+                    'java.lang.Boolean': (bool, False, False),
+                    'byte': (int, False, 0),
+                    'int': (int, False, 0),
+                    'java.lang.Integer': (int, False, 0),
+                    'java.lang.Class': (type, False, None),
+                    'java.util.Map': (dict, True, None),
+                    'java.util.Map$Entry': (dict, True, None),
+                    'double': (float, False, 0.0),
+                    'java.lang.Double': (float, False, 0.0),
+                    'char': (str, False, ''),
+                    'java.lang.Character': (str, False, '')}
 
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None, instanceClassName=None,
                  type_as_factory=False):
         super().__init__(name)
         self.eType = eType
-        if instanceClassName:
-            self.instanceClassName = instanceClassName
         self.type_as_factory = type_as_factory
         self._default_value = default_value
+        if instanceClassName:
+            self.instanceClassName = instanceClassName
         if from_string:
             self.from_string = from_string
         if to_string:
@@ -733,8 +733,12 @@ class EDataType(EClassifier):
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        self.eType, self.type_as_factory = self.javaTransMap.get(name,
-                                                                 (None, False))
+        type, type_as_factory, default = self.javaTransMap.get(name, (None,
+                                                                      False,
+                                                                      None))
+        self.eType = type
+        self.type_as_factory = type_as_factory
+        self.default_value = default
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -1141,8 +1145,7 @@ EFloatObject = EDataType('EFloatObject', float, 0.0,
                          from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict,
                                     type_as_factory=True)
-EFeatureMapEntry = EDataType('EFeatureMapEntry', dict,
-                             type_as_factory=True)
+EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
