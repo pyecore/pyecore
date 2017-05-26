@@ -696,10 +696,11 @@ class EDataType(EClassifier):
                     'java.lang.Character': str}  # Must be completed
 
     def __init__(self, name=None, eType=None, default_value=None,
-                 from_string=None, to_string=None):
+                 from_string=None, to_string=None, instanceClassName=None):
         super().__init__(name)
         self.eType = eType
-        self._instanceClassName = None
+        if instanceClassName:
+            self.instanceClassName = instanceClassName
         self.default_value = default_value
         if from_string:
             self.from_string = from_string
@@ -913,6 +914,9 @@ class EClass(EClassifier):
         elif notif.feature is EClass.eStructuralFeatures:
             if notif.kind is Kind.ADD:
                 setattr(self.python_class, notif.new.name, notif.new)
+            elif notif.kind is Kind.ADD_MANY:
+                for x in notif.new:
+                    setattr(self.python_class, x.name, x)
             elif notif.kind is Kind.REMOVE:
                 delattr(self.python_class, notif.old.name)
 
