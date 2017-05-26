@@ -18,9 +18,7 @@ setup(
     author_email='vincent.aranega@gmail.com',
 
     packages=find_packages(exclude=['examples', 'tests']),
-    package_data={'': ['LICENSE',
-                       'README.rst']},
-    include_package_data=True,
+    data_files=[('', ['LICENSE', 'README.rst'])],
     install_requires=['enum34;python_version<"3.4"',
                       'ordered-set',
                       'lxml'],
