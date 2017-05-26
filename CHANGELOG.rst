@@ -1,6 +1,30 @@
 Changelog
 ---------
 
+0.5.5
++++++
+
+**Bugfixes**
+
+- Fix ``__update()`` method in ``EClass`` when many elements are added at once.
+  This case occurs when ``append()`` is used on an ``EClass`` in order to add
+  many ``EStructuralFeature``.
+
+- Fix shared content for mutable ``EDataType``. When mutable EDatataypes are
+  defined (e.g: ``EStringToStringMapEntry``), each default value was pointing to
+  the same shared value (exactly the same thing that when ``def x(self, n={})``).
+  The default_value is now computed, if a special attribute is set, the default
+  value is always created as a new empty value.
+
+- Fix default value for property instances accessed after the instance creation.
+
+
+**Miscellaneous**
+
+- Add missing ``EFeatureMapEntry``.
+- Add missing LICENCE file in dist package.
+- Add default value managmeent for 'instanceClass' derived datatypes.
+
 0.5.0
 +++++
 
