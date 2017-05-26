@@ -304,7 +304,10 @@ class PyEcoreValue(object):
 class EValue(PyEcoreValue):
     def __init__(self, owner, efeature=None, value=None):
         super().__init__(owner, efeature)
-        self._value = value
+        if value is not None:
+            self._value = None
+        else:
+            self._value = efeature.get_default_value()
 
     def __get__(self, obj, owner=None):
         return self._value
@@ -812,13 +815,14 @@ class EStructuralFeature(ETypedElement):
         if instance is None:
             return self
         name = self._name
-        if name not in instance.__dict__.keys():
+        instance_dict = instance.__dict__
+        if name not in instance_dict.keys():
             if self.many:
                 new_value = ECollection.create(instance, self)
             else:
                 new_value = EValue(instance, self)
-            instance.__dict__[name] = new_value
-        value = instance.__dict__[name]
+            instance_dict[name] = new_value
+        value = instance_dict[name]
         if isinstance(value, EValue):
             return value.__get__(instance, owner)
         else:
@@ -826,16 +830,17 @@ class EStructuralFeature(ETypedElement):
 
     def __set__(self, instance, value):
         name = self._name
+        instance_dict = instance.__dict__
         if isinstance(value, ECollection):
-            instance.__dict__[name] = value
+            instance_dict[name] = value
             return
-        if name not in instance.__dict__.keys():
+        if name not in instance_dict.keys():
             evalue = EValue(instance, self)
-            instance.__dict__[name] = evalue
-        previous_value = instance.__dict__[name]
+            instance_dict[name] = evalue
+        previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance.__dict__[name].__set__(instance, value)
+        instance_dict[name].__set__(instance, value)
 
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
@@ -851,7 +856,7 @@ class EAttribute(EStructuralFeature):
                          derived=derived, changeable=changeable,
                          unique=unique, ordered=ordered)
         self.default_value = default_value
-        if not self.default_value and isinstance(eType, EDataType):
+        if self.default_value is None and isinstance(eType, EDataType):
             self.default_value = eType.default_value
 
     def get_default_value(self):
