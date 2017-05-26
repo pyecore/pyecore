@@ -14,9 +14,15 @@ XMI_URL = 'http://www.omg.org/XMI'
 class XMIResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
         super().__init__(uri, use_uuid)
+        self._meta_cache = {}
+        self._use_uuid = False
+        self._contents = []
+        self._later = []
+        self._resolve_mem = {}
+        self.prefixes = {}
+        self.reverse_nsmap = {}
 
     def load(self):
-        self._meta_cache = {}
         tree = etree.parse(self.uri.create_instream())
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
@@ -78,9 +84,7 @@ class XMIResource(Resource):
         modelroot = eobject()
         modelroot._eresource = self
         self._use_uuid = xmlroot.get(XMIResource.xmiid) is not None
-        self._contents = [modelroot]
-        self._later = []
-        self._resolve_mem = {}
+        self._contents.append(modelroot)
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
@@ -181,7 +185,7 @@ class XMIResource(Resource):
         for key, value in node.attrib.items():
             feature = self._decode_attribute(eobject, key, value)
             if not feature:
-                continue  # we skipp the unknown feature
+                continue  # we skip the unknown features
             if etype is Ecore.EClass and feature.name == 'name':
                 continue  # we skip the name for metamodel import
             if isinstance(feature, Ecore.EAttribute):
@@ -257,8 +261,8 @@ class XMIResource(Resource):
         return self.resolve(fragment)
 
     def _clean_registers(self):
-        delattr(self, '_later')
-        delattr(self, '_meta_cache')
+        self._later.clear()
+        self._meta_cache.clear()
 
     def register_nsmap(self, prefix, uri):
         if uri in self.reverse_nsmap:
@@ -282,8 +286,8 @@ class XMIResource(Resource):
         output = output.create_outstream() \
                  if output \
                  else self.uri.create_outstream()
-        self.prefixes = {}
-        self.reverse_nsmap = {}
+        self.prefixes.clear()
+        self.reverse_nsmap.clear()
         # Compute required nsmap for subpackages
         if not self.contents:
             tree = etree.ElementTree()

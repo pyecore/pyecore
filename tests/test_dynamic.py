@@ -644,3 +644,49 @@ def test_eclass_simple_reference():
     A.eStructuralFeatures.append(EReference('tob', B, upper=1))
     a = A()
     assert a.tob is None
+
+
+def test_eclass_multi_eattribute_once():
+    A = EClass('A')
+    x = EAttribute('x', EFeatureMapEntry)
+    y = EAttribute('y', EFeatureMapEntry)
+    A.eStructuralFeatures.extend([x, y])
+    a = A()
+    assert a.x == {}
+    assert a.y == {}
+    a.x['key'] = 33
+    assert a.x == {'key': 33}
+    assert a.y == {}
+
+
+def test_eoperation_with_params():
+    A = EClass('A')
+    param1 = EParameter('p1', EString)
+    param2 = EParameter('p2', A)
+    operation = EOperation('op', params=(param1, param2))
+    assert len(operation.eParameters) == 2
+    assert operation.eParameters[0] is param1
+    assert operation.eParameters[1] is param2
+    assert operation.to_code()
+
+
+def test_edatatype_instanceClass():
+    Integer = EDataType('Integer', instanceClassName='java.lang.Integer')
+    assert Integer.eType is int
+    assert Integer.type_as_factory is False
+    assert Integer.default_value == 0
+    assert Integer.instanceClassName == 'java.lang.Integer'
+    assert Integer.to_string(45) == '45'
+
+
+def test_eattribute_dynamicaddition():
+    A = EClass('A')
+    a = A()
+    names = EAttribute('names', EString, upper=-1)
+    age = EAttribute('age', EInt)
+    A.eStructuralFeatures.append(names)
+    A.eStructuralFeatures.append(age)
+    assert a.names == set()
+    assert names.get_default_value() is None
+    assert age.get_default_value() == 0
+    assert a.age == 0

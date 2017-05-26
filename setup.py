@@ -8,7 +8,7 @@ if sys.version_info < (3, 3):
 
 setup(
     name='pyecore',
-    version='0.5.4',
+    version='0.5.5',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
@@ -18,9 +18,7 @@ setup(
     author_email='vincent.aranega@gmail.com',
 
     packages=find_packages(exclude=['examples', 'tests']),
-    package_data={'': ['LICENSE',
-                       'README.rst']},
-    include_package_data=True,
+    data_files=[('', ['LICENSE', 'README.rst'])],
     install_requires=['enum34;python_version<"3.4"',
                       'ordered-set',
                       'lxml'],

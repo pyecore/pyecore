@@ -89,15 +89,17 @@ class Core(object):
         cls.eClass.abstract = abstract
         cls._staticEClass = True
         # init super types
+        eSuperTypes_add = cls.eClass.eSuperTypes.append
         for _cls in cls.__bases__:
             if _cls is not EObject and _cls is not ENotifer:
-                cls.eClass.eSuperTypes.append(_cls.eClass)
+                eSuperTypes_add(_cls.eClass)
         # init eclass by reflection
+        eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
         for k, feature in cls.__dict__.items():
             if isinstance(feature, EStructuralFeature):
                 if not feature.name:
                     feature.name = k
-                cls.eClass.eStructuralFeatures.append(feature)
+                eStructuralFeatures_add(feature)
             elif inspect.isfunction(feature):
                 if k == '__init__':
                     continue
@@ -159,19 +161,18 @@ class EObject(ENotifer):
 
     def __initmetattr__(self):
         super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
+        self_setter = self.__setattr__
         for cls in reversed(list(super_cls)):
             for key, feature in cls.__dict__.items():
                 if not isinstance(feature, EStructuralFeature):
                     continue
                 if feature.many:
-                    object.__setattr__(self,
-                                       key,
-                                       ECollection.create(self, feature))
+                    self_setter(key, ECollection.create(self, feature))
                 else:
                     default_value = None
                     if isinstance(feature, EAttribute):
                         default_value = feature.eType.default_value
-                    object.__setattr__(self, key, default_value)
+                    self_setter(key, default_value)
 
     def eContainer(self):
         return self._container
@@ -248,10 +249,11 @@ class EObject(ENotifer):
         return children
 
     def eAllContents(self):
-        objs = list(self.eContents)
-        for obj in list(objs):
-            objs.extend(list(obj.eAllContents()))
-        return iter(objs)
+        contents = self.eContents
+        for x in contents:
+            yield x
+        for x in contents:
+            yield from x.eAllContents()
 
     def eURIFragment(self):
         if not self.eContainer():
@@ -302,7 +304,10 @@ class PyEcoreValue(object):
 class EValue(PyEcoreValue):
     def __init__(self, owner, efeature=None, value=None):
         super().__init__(owner, efeature)
-        self._value = value
+        if value is not None:
+            self._value = None
+        else:
+            self._value = efeature.get_default_value()
 
     def __get__(self, obj, owner=None):
         return self._value
@@ -631,8 +636,7 @@ class EOperation(ETypedElement):
     def __init__(self, name=None, eType=None, params=None, exceptions=None):
         super().__init__(name, eType)
         if params:
-            for param in params:
-                self.eParameters.append(param)
+                self.eParameters.extend(params)
         if exceptions:
             for exception in exceptions:
                 self.eExceptions.append(exception)
@@ -679,26 +683,30 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
-    javaTransMap = {'java.lang.String': str,
-                    'boolean': bool,
-                    'java.lang.Boolean': bool,
-                    'byte': int,
-                    'int': int,
-                    'java.lang.Integer': int,
-                    'java.lang.Class': type,
-                    'java.util.Map': {},
-                    'java.util.Map$Entry': {},
-                    'double': int,
-                    'java.lang.Double': int,
-                    'char': str,
-                    'java.lang.Character': str}  # Must be completed
+    # Must be completed
+    javaTransMap = {'java.lang.String': (str, False, ''),
+                    'boolean': (bool, False, False),
+                    'java.lang.Boolean': (bool, False, False),
+                    'byte': (int, False, 0),
+                    'int': (int, False, 0),
+                    'java.lang.Integer': (int, False, 0),
+                    'java.lang.Class': (type, False, None),
+                    'java.util.Map': (dict, True, None),
+                    'java.util.Map$Entry': (dict, True, None),
+                    'double': (float, False, 0.0),
+                    'java.lang.Double': (float, False, 0.0),
+                    'char': (str, False, ''),
+                    'java.lang.Character': (str, False, '')}
 
     def __init__(self, name=None, eType=None, default_value=None,
-                 from_string=None, to_string=None):
+                 from_string=None, to_string=None, instanceClassName=None,
+                 type_as_factory=False):
         super().__init__(name)
         self.eType = eType
-        self._instanceClassName = None
-        self.default_value = default_value
+        self.type_as_factory = type_as_factory
+        self._default_value = default_value
+        if instanceClassName:
+            self.instanceClassName = instanceClassName
         if from_string:
             self.from_string = from_string
         if to_string:
@@ -711,13 +719,29 @@ class EDataType(EClassifier):
         return str(value)
 
     @property
+    def default_value(self):
+        if self.type_as_factory:
+            return self.eType()
+        else:
+            return self._default_value
+
+    @default_value.setter
+    def default_value(self, value):
+        self._default_value = value
+
+    @property
     def instanceClassName(self):
         return self._instanceClassName
 
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        self.eType = self.javaTransMap.get(name)
+        type, type_as_factory, default = self.javaTransMap.get(name, (None,
+                                                                      False,
+                                                                      None))
+        self.eType = type
+        self.type_as_factory = type_as_factory
+        self.default_value = default
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
@@ -791,13 +815,14 @@ class EStructuralFeature(ETypedElement):
         if instance is None:
             return self
         name = self._name
-        if name not in instance.__dict__.keys():
+        instance_dict = instance.__dict__
+        if name not in instance_dict.keys():
             if self.many:
                 new_value = ECollection.create(instance, self)
             else:
                 new_value = EValue(instance, self)
-            instance.__dict__[name] = new_value
-        value = instance.__dict__[name]
+            instance_dict[name] = new_value
+        value = instance_dict[name]
         if isinstance(value, EValue):
             return value.__get__(instance, owner)
         else:
@@ -805,16 +830,17 @@ class EStructuralFeature(ETypedElement):
 
     def __set__(self, instance, value):
         name = self._name
+        instance_dict = instance.__dict__
         if isinstance(value, ECollection):
-            instance.__dict__[name] = value
+            instance_dict[name] = value
             return
-        if name not in instance.__dict__.keys():
+        if name not in instance_dict.keys():
             evalue = EValue(instance, self)
-            instance.__dict__[name] = evalue
-        previous_value = instance.__dict__[name]
+            instance_dict[name] = evalue
+        previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance.__dict__[name].__set__(instance, value)
+        instance_dict[name].__set__(instance, value)
 
     def __repr__(self):
         eType = self.eType if hasattr(self, 'eType') else None
@@ -830,7 +856,7 @@ class EAttribute(EStructuralFeature):
                          derived=derived, changeable=changeable,
                          unique=unique, ordered=ordered)
         self.default_value = default_value
-        if not self.default_value and isinstance(eType, EDataType):
+        if self.default_value is None and isinstance(eType, EDataType):
             self.default_value = eType.default_value
 
     def get_default_value(self):
@@ -911,6 +937,9 @@ class EClass(EClassifier):
         elif notif.feature is EClass.eStructuralFeatures:
             if notif.kind is Kind.ADD:
                 setattr(self.python_class, notif.new.name, notif.new)
+            elif notif.kind is Kind.ADD_MANY:
+                for x in notif.new:
+                    setattr(self.python_class, x.name, x)
             elif notif.kind is Kind.REMOVE:
                 delattr(self.python_class, notif.old.name)
 
@@ -942,51 +971,45 @@ class EClass(EClassifier):
                 if isinstance(x, EReference)]
 
     def findEStructuralFeature(self, name):
-        struct = next(
-            (f for f in self.eStructuralFeatures if f.name == name),
-            None)
-        if struct or not self.eSuperTypes:
-            return struct
-        for stype in self.eSuperTypes:
-            struct = stype.findEStructuralFeature(name)
-            if struct:
-                break
-        return struct
+        return next((f for f in self._eAllStructuralFeatures_gen()
+                     if f.name == name),
+                    None)
+
+    def _eAllSuperTypes_gen(self):
+        super_types = self.eSuperTypes
+        for x in super_types:
+            yield x
+        for x in super_types:
+            yield from x._eAllSuperTypes_gen()
 
     def eAllSuperTypes(self):
-        # if isinstance(self, type):
-        #     return (x.eClass for x in self.mro() if x is not object and
-        #             x is not self)
-        result = OrderedSet(self.eSuperTypes)
-        for stype in self.eSuperTypes:
-            result.update(stype.eAllSuperTypes())
-        return result
+        return OrderedSet(self._eAllSuperTypes_gen())
+
+    def _eAllStructuralFeatures_gen(self):
+        for x in self.eStructuralFeatures:
+            yield x
+        for parent in self.eSuperTypes:
+            yield from parent._eAllStructuralFeatures_gen()
 
     def eAllStructuralFeatures(self):
-        features = OrderedSet(self.eStructuralFeatures)
-        for feature in self.eAllSuperTypes():
-            features.update(feature.eStructuralFeatures)
-        return features
+        return OrderedSet(self._eAllStructuralFeatures_gen())
 
     def eAllReferences(self):
-        return set((x for x in self.eAllStructuralFeatures()
+        return set((x for x in self._eAllStructuralFeatures_gen()
                     if isinstance(x, EReference)))
 
+    def _eAllOperations_gen(self):
+        for x in self.eOperations:
+            yield x
+        for parent in self.eSuperTypes:
+            yield from parent._eAllOperations_gen()
+
     def eAllOperations(self):
-        operations = OrderedSet(self.eOperations)
-        for superclass in self.eAllSuperTypes():
-            operations.update(superclass.eOperations)
-        return operations
+        return OrderedSet(self._eAllOperations_gen())
 
     def findEOperation(self, name):
-        operation = next((f for f in self.eOperations if f.name == name), None)
-        if operation or not self.eSuperTypes:
-            return operation
-        for stype in self.eSuperTypes:
-            operation = stype.findEOperation(name)
-            if operation:
-                break
-        return operation
+        return next((f for f in self._eAllOperations_gen() if f.name == name),
+                    None)
 
 
 # Meta methods for static EClass
@@ -1125,7 +1148,9 @@ EDoubleObject = EDataType('EDoubleObject', float, 0.0,
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
 EFloatObject = EDataType('EFloatObject', float, 0.0,
                          from_string=lambda x: float(x))
-EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict, {})
+EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict,
+                                    type_as_factory=True)
+EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
@@ -1254,6 +1279,7 @@ Core.register_classifier(EFloatObject)
 Core.register_classifier(EDouble)
 Core.register_classifier(EDoubleObject)
 Core.register_classifier(EStringToStringMapEntry)
+Core.register_classifier(EFeatureMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
@@ -1268,4 +1294,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
-           'EFloatObject', 'ELong', 'EProxy', 'EBag']
+           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry']
