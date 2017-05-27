@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+0.5.6
++++++
+
+**Features**
+
+- Add missing ``EDataType`` management in the Acceleo generator.
+
+
+**Miscellaneous**
+
+- Add missing data type conversion for ``EDataType``.
+- Fix once and for all the ``setup.py`` (hopefully).
+
 0.5.5
 +++++
 
