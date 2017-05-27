@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
