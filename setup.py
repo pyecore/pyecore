@@ -6,6 +6,9 @@ from setuptools import setup, find_packages
 if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
+packages = ['pyecore',
+            'pyecore.resources']
+
 setup(
     name='pyecore',
     version='0.5.6-dev',
@@ -17,13 +20,13 @@ setup(
     author='Vincent Aranega',
     author_email='vincent.aranega@gmail.com',
 
-    packages=find_packages(exclude=['examples', 'tests']),
-    # data_files=[('', ['LICENSE', 'README.rst'])],
+    packages=packages,
+    package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
+    include_package_data=True,
     install_requires=['enum34;python_version<"3.4"',
                       'ordered-set',
                       'lxml'],
     tests_require={'pytest'},
-
     license='BSD 3-Clause',
     classifiers=[
         'Development Status :: 4 - Beta',
