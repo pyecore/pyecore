@@ -172,7 +172,7 @@ class EObject(ENotifer):
                 else:
                     default_value = None
                     if isinstance(feature, EAttribute):
-                        default_value = feature.eType.default_value
+                        default_value = feature.get_default_value()
                     self_setter(key, default_value)
 
     def eContainer(self):
@@ -1050,7 +1050,7 @@ class MetaEClass(type):
             if efeat.name in obj.__dict__:
                 continue
             if isinstance(efeat, EAttribute):
-                obj.__setattr__(efeat.name, efeat.default_value)
+                obj.__setattr__(efeat.name, efeat.get_default_value())
             elif efeat.many:
                 obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
             else:
