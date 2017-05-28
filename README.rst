@@ -56,12 +56,12 @@ reflexive features:
     >>> a1.eClass.eClass is a1.eClass.eClass.eClass
     True
     >>> a1.eClass.eStructuralFeatures
-    (<pyecore.ecore.EAttribute at 0x7f6bf6cd91d0>,)
+    EOrderedSet([<EStructuralFeature myname: EString(str)>])
     >>> a1.eClass.eStructuralFeatures[0].name
     'myname'
     >>> a1.eClass.eStructuralFeatures[0].eClass
     <EClass name="EAttribute">
-    >>> a1.__getattribute__('name')
+    >>> a1.__getattribute__('myname')
     'a_instance'
     >>> a1.__setattr__('myname', 'reflexive')
     >>> a1.__getattribute__('myname')
