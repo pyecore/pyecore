@@ -1061,11 +1061,11 @@ class MetaEClass(type):
 
 class EProxy(EObject):
     def __init__(self, path=None, resource=None, wrapped=None):
-        object.__setattr__(self, '_wrapped', wrapped)
-        object.__setattr__(self, '_proxy_path', path)
-        object.__setattr__(self, '_proxy_resource', resource)
-        object.__setattr__(self, '_resolved', wrapped is not None)
-        object.__setattr__(self, '_inverse_rels', set())
+        super().__setattr__('_wrapped', wrapped)
+        super().__setattr__('_proxy_path', path)
+        super().__setattr__('_proxy_resource', resource)
+        super().__setattr__('_resolved', wrapped is not None)
+        super().__setattr__('_inverse_rels', set())
 
     def force_resolve(self):
         if self._resolved:
@@ -1109,11 +1109,11 @@ class EProxy(EObject):
     def __getattribute__(self, name):
         if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
                     'force_resolve', 'delete']:
-            return object.__getattribute__(self, name)
-        resolved = object.__getattribute__(self, '_resolved')
+            return super().__getattribute__(name)
+        resolved = super().__getattribute__('_resolved')
         if not resolved:
             if name in ['__class__', '_inverse_rels']:
-                return object.__getattribute__(self, name)
+                return super().__getattribute__(name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
             decoded = decoders.resolve(self._proxy_path, resource)
@@ -1129,7 +1129,7 @@ class EProxy(EObject):
 
     def __setattr__(self, name, value):
         if name in ['_wrapped', '_proxy_path', '_resolved', '_proxy_resource']:
-            object.__setattr__(self, name, value)
+            super().__setattr__(name, value)
             return
         resolved = self._resolved
         if not resolved:
