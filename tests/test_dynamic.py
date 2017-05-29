@@ -699,3 +699,13 @@ def test_eattribute_dynamicaddition():
     assert names.get_default_value() is None
     assert age.get_default_value() == 0
     assert a.age == 0
+
+
+def test_eattribute_defaultvalue():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('name', EString, default_value='test'))
+    a = A()
+    assert a.name == 'test'
+    
+    a.name = 'new_test'
+    assert a.name == 'new_test'

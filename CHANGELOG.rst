@@ -1,6 +1,23 @@
 Changelog
 ---------
 
+0.5.7
++++++
+
+**Bugfixes**
+
+- Fix default value for ``EAttribute``. ``EAttribute`` let the ability to express
+  default values. This value is assigned when an ``EClass`` instance is created.
+  The ``default_value`` is computed as follow: if the ``EAttribute``'s
+  ``default_value`` is set, this ``default_value`` is returned. If the
+  default_value of the ``Eattribute`` is not set, then the ``default_value`` of
+  the ``EAttribute`` associated EDataType is set. This way of computing elements
+  was not properly used during instance initialization.
+
+**Miscellaneous**
+
+- Fix some examples in the ``README.rst``.
+
 0.5.6
 +++++
 
