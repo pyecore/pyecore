@@ -416,3 +416,4 @@ class CommandStack(object):
 
     def redo(self):
         self.peek_next_top.redo()
+        self.stack_index += 1
