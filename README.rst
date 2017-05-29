@@ -211,9 +211,7 @@ The static definition of a metamodel using PyEcore mostly relies on the
 classical classes definitions in Python. Each Python class is linked to an
 ``EClass`` instance and has a special metaclass. The static code for metamodel
 also provides a model layer and the ability to easily refer/navigate inside the
-defined meta-layer. The static code is generated from a MTL generator (in
-``/generator``) that automatically produces the static code from a ``.ecore``
-file.
+defined meta-layer.
 
 .. code-block:: python
 
@@ -259,6 +257,48 @@ file.
 The automatic code generator defines a Python package hierarchie instead of
 only a Python module. This allows more freedom for dedicated operations and
 references between packages.
+
+How to Generate the Static Metamodel Code
+-----------------------------------------
+
+The static code is generated from a ``.ecore`` where your metamodel is defined
+(the EMF ``.genmodel`` files are not yet supported (probably in future version).
+
+There is currently two ways of generating the code for your metamodel. The first
+one is to use a MTL generator (in ``/generator``) and the second one is to use a
+dedicated command line tool written in Python, using Pymultigen, Jinja and PyEcore.
+
+Using the Accelo/MTL Generator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To use this generator, you need Eclipse and the right Acceleo plugins. Once
+Eclipse is installed with the right plugins, you need to create a new Acceleo
+project, copy the  PyEcore generator in it, configure a new Acceleo runner,
+select your ``.ecore`` and your good to go. There is plenty of documentation
+over the Internet for Acceleo/MTL project creation/management...
+
+Using the Dedicated CLI Generator (PyEcoregen)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This generator source can be found at this address:
+https://github.com/pyecore/pyecoregen and is available on Pypi, so you can
+install it quite symply using:
+
+.. code-block:: bash
+
+    $ pip install pyecoregen
+
+This will automatically install all the required dependencies and give you a new
+CLI tool: ``pyecoregen``.
+
+Using this tool, your static code generation is very simple:
+
+.. code-block:: bash
+
+    $ pyecoregen -e your_ecore_file.ecore -o your_output_path
+
+The generated code is automatically formatted using ``autopep8``. Once the code
+is generated, your can import it and use it in your Python code.
 
 
 Static/Dynamic ``EOperation``
