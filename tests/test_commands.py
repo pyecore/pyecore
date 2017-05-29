@@ -466,3 +466,24 @@ def test_stack_complex(mm):
 
     with pytest.raises(ValueError):
         stack.undo()
+
+
+def test_statck_multiple_undo_redo(mm):
+    stack = CommandStack()
+    a = mm.A()
+    b1 = mm.B()
+
+    stack.execute(Set(a, 'name', 'testValue'))
+    stack.execute(Add(a, 'many_tob', b1))
+    assert a.name == 'testValue'
+    assert b1 in a.many_tob
+
+    stack.undo()
+    stack.undo()
+    assert a.name is None
+    assert b1 not in a.many_tob
+
+    stack.redo()
+    stack.redo()
+    assert a.name == 'testValue'
+    assert b1 in a.many_tob

@@ -1,6 +1,18 @@
 Changelog
 ---------
 
+0.5.8
++++++
+
+**Bugfixes**
+
+- Fix issue when multiple undo/redo are performed. Each time an undo is
+  performed, the command stack top pointer is decremented. It only points to the
+  command before the last one. Obviously, each time a redo is performed, the
+  command stack needs to be incremented, and it points to the previously undone
+  command. The 'redo' method was missing the top stack incrementation.
+
+
 0.5.7
 +++++
 
