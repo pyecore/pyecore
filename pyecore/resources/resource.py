@@ -83,7 +83,7 @@ class URI(object):
 
     def _split(self):
         if '://' in self._uri:
-            self._protocol, rest = self._uri.split('://')
+            self._protocol, rest = self._uri.split('://', maxsplit=1)
         else:
             self._protocol, rest = None, self._uri
         uri_sep = self._uri_split.get(self._protocol, path.sep)
