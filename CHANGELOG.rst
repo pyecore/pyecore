@@ -1,6 +1,25 @@
 Changelog
 ---------
 
+0.5.9
++++++
+
+**Bugfixes**
+
+- Fix decoding issue when HttpURI with http-href is used. When a href is used,
+  the ResourceSet resolver tries to concatenate the path built from the main uri
+  resource and the href uri fragment. In the case of HttpURI, the concatenation
+  provided a 'http://abc/http://cde' like uri. The ``normalize()`` method of URI
+  was spliting on '://' and used unpacking to two vars exactly. With this kind
+  of uri, it resulted in an exception. This commit fixes this issue using simply
+  the ``maxsplit`` option from the ``split()`` method.
+
+- Fix issue when ``name`` feature was called as part of descriptor. This error was
+  simple, the ``name`` feature defined as a static meta-attribute of the
+  ``ENamedElement`` metaclass was overriding the property implementation in the
+  ``EStructuralFeature``. This issue was also preventing from properly monkey
+  patching pyecore for ``name`` access.
+
 0.5.8
 +++++
 
