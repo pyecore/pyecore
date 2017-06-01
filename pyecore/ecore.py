@@ -606,14 +606,6 @@ class ENamedElement(EModelElement):
         super().__init__()
         self.name = name
 
-    @property
-    def name(self):
-        return self.__name
-
-    @name.setter
-    def name(self, name):
-        self.__name = name
-
 
 class EPackage(ENamedElement):
     def __init__(self, name=None, nsURI=None, nsPrefix=None):
