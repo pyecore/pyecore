@@ -606,6 +606,14 @@ class ENamedElement(EModelElement):
         super().__init__()
         self.name = name
 
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
 
 class EPackage(ENamedElement):
     def __init__(self, name=None, nsURI=None, nsPrefix=None):
@@ -819,20 +827,11 @@ class EStructuralFeature(ETypedElement):
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
-        self._name = name
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
-        name = self._name
+        name = self.name
         instance_dict = instance.__dict__
         if name not in instance_dict.keys():
             if self.many:
@@ -847,7 +846,7 @@ class EStructuralFeature(ETypedElement):
             return value
 
     def __set__(self, instance, value):
-        name = self._name
+        name = self.name
         instance_dict = instance.__dict__
         if isinstance(value, ECollection):
             instance_dict[name] = value
@@ -1173,7 +1172,7 @@ EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
 
-ENamedElement.name = EAttribute('name', EString)
+ENamedElement.name_ = EAttribute('name', EString)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -1219,16 +1218,16 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
 EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                          upper=-1, containment=True)
 
-EDataType._instanceClassName = EAttribute('instanceClassName', EString)
+EDataType.instanceClassName_ = EAttribute('instanceClassName', EString)
 EDataType.serializable = EAttribute('serializable', EBoolean)
 
 EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
-EClass._eAttributes = EReference('eAttributes', EAttribute,
+EClass.eAttributes_ = EReference('eAttributes', EAttribute,
                                  upper=-1, derived=True)
-EClass._eReferences = EReference('eReferences', EReference,
+EClass.eReferences_ = EReference('eReferences', EReference,
                                  upper=-1, derived=True)
 EClass.eSuperTypes = EReference('eSuperTypes', EClass, upper=-1)
 EClass.eOperations = EReference('eOperations', EOperation,
@@ -1241,7 +1240,7 @@ EStructuralFeature.eContainingClass = \
                               eOpposite=EClass.eStructuralFeatures)
 
 EReference.containment = EAttribute('containment', EBoolean)
-EReference._eOpposite = EReference('eOpposite', EReference)
+EReference.eOpposite_ = EReference('eOpposite', EReference)
 EReference.resolveProxies = EAttribute('resolveProxies', EBoolean)
 
 EEnum.eLiterals = EReference('eLiterals', EEnumLiteral, upper=-1,
@@ -1282,10 +1281,10 @@ Core.register_classifier(EEnum, promote=True)
 Core.register_classifier(EEnumLiteral, promote=True)
 Core.register_classifier(EParameter, promote=True)
 Core.register_classifier(EOperation, promote=True)
-Core.register_classifier(EClass, promote=True)
 Core.register_classifier(EStructuralFeature, promote=True)
 Core.register_classifier(EAttribute, promote=True)
 Core.register_classifier(EReference, promote=True)
+Core.register_classifier(EClass, promote=True)
 Core.register_classifier(EString)
 Core.register_classifier(EBoolean)
 Core.register_classifier(EInteger)

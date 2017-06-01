@@ -3,8 +3,8 @@ from pyecore.ecore import *
 
 
 def test_eclass_meta_attribute_access():
-    assert isinstance(EClass.name, EAttribute)
-    assert EClass.name.eType is EString
+    assert isinstance(EClass.name_, EAttribute)
+    assert EClass.name_.eType is EString
 
 
 def test_eclass_meta_reference_access():
@@ -13,9 +13,9 @@ def test_eclass_meta_reference_access():
 
 
 def test_eclass_meta_eopposite_reference_access():
-    assert isinstance(EReference._eOpposite, EReference)
-    assert EReference._eOpposite.eType is EReference
-    assert EReference._eOpposite.name == 'eOpposite'
+    assert isinstance(EReference.eOpposite_, EReference)
+    assert EReference.eOpposite_.eType is EReference
+    assert EReference.eOpposite_.name == 'eOpposite'
 
 
 def test_create_dynamic_eclass():
@@ -706,6 +706,6 @@ def test_eattribute_defaultvalue():
     A.eStructuralFeatures.append(EAttribute('name', EString, default_value='test'))
     a = A()
     assert a.name == 'test'
-    
+
     a.name = 'new_test'
     assert a.name == 'new_test'
