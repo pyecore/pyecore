@@ -685,6 +685,7 @@ class EClassifier(ENamedElement):
 
 class EDataType(EClassifier):
     # Must be completed
+    # tuple is '(implem_type, use_type_as_factory, default_value)'
     javaTransMap = {'java.lang.String': (str, False, ''),
                     'boolean': (bool, False, False),
                     'java.lang.Boolean': (bool, False, False),
@@ -707,7 +708,7 @@ class EDataType(EClassifier):
                     'java.lang.Character': (str, False, ''),
                     'byte[]': (bytearray, True, None),
                     'java.lang.Byte': (int, False, 0),
-                    'java.util.Date': (datetime, True, None),
+                    'java.util.Date': (datetime, False, None),
                     'org.eclipse.emf.common.util.EList': (list, True, None),
                     'org.eclipse.emf.ecore.util.FeatureMap': (dict,
                                                               True,
