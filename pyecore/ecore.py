@@ -860,10 +860,11 @@ class EStructuralFeature(ETypedElement):
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None,
                  lower=0, upper=1, changeable=True, derived=False,
-                 unique=True, ordered=True):
+                 unique=True, ordered=True, iD=False):
         super().__init__(name, eType, lower=lower, upper=upper,
                          derived=derived, changeable=changeable,
                          unique=unique, ordered=ordered)
+        self.iD = iD
         self.default_value = default_value
         if self.default_value is None and isinstance(eType, EDataType):
             self.default_value = eType.default_value
@@ -1195,6 +1196,7 @@ EStructuralFeature.derived = EAttribute('derived', EBoolean)
 EStructuralFeature.defaultValueLiteral = EAttribute('defaultValueLiteral',
                                                     EString)
 
+EAttribute.iD = EAttribute('iD', EBoolean)
 
 EPackage.nsURI = EAttribute('nsURI', EString)
 EPackage.nsPrefix = EAttribute('nsPrefix', EString)

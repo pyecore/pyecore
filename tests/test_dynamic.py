@@ -709,3 +709,12 @@ def test_eattribute_defaultvalue():
 
     a.name = 'new_test'
     assert a.name == 'new_test'
+
+
+def test_eattribute_id():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('myid', EInt, iD=True))
+    a = A()
+    a.myid = 45
+    assert a.myid == 45
+    assert A.eStructuralFeatures[0].iD
