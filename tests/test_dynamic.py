@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from pyecore.ecore import *
 
 
@@ -718,3 +719,16 @@ def test_eattribute_id():
     a.myid = 45
     assert a.myid == 45
     assert A.eStructuralFeatures[0].iD
+
+
+def test_eattribute_edate():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('date', EDate))
+    a = A()
+    assert a.date is None
+
+    a.date = datetime.now()
+    assert a.date is not None
+
+    with pytest.raises(BadValueError):
+        a.date = 45

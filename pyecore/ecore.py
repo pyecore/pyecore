@@ -9,7 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
-from datetime import date
+from datetime import datetime
 from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
@@ -707,7 +707,7 @@ class EDataType(EClassifier):
                     'java.lang.Character': (str, False, ''),
                     'byte[]': (bytearray, True, None),
                     'java.lang.Byte': (int, False, 0),
-                    'java.util.Date': (date, True, None),
+                    'java.util.Date': (datetime, True, None),
                     'org.eclipse.emf.common.util.EList': (list, True, None),
                     'org.eclipse.emf.ecore.util.FeatureMap': (dict,
                                                               True,
@@ -1164,6 +1164,7 @@ EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
+EDate = EDataType('EDate', datetime)
 
 ENamedElement.name_ = EAttribute('name', EString)
 
@@ -1294,6 +1295,7 @@ Core.register_classifier(EFeatureMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
+Core.register_classifier(EDate)
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
@@ -1305,4 +1307,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
-           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry']
+           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
+           'EDate']
