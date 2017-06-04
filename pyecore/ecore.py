@@ -9,6 +9,7 @@ from functools import partial
 import sys
 import keyword
 import inspect
+from decimal import Decimal
 from datetime import datetime
 from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
@@ -1148,9 +1149,13 @@ EString = EDataType('EString', str)
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
+EBooleanObject = EDataType('EBooleanObject', bool, False,
+                           to_string=lambda x: str(x).lower(),
+                           from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
 ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
+ELongObject = EDataType('ELongObject', int, 0, from_string=lambda x: int(x))
 EIntegerObject = EDataType('EIntegerObject', int, from_string=lambda x: int(x))
 EBigInteger = EDataType('EBigInteger', int, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
@@ -1166,6 +1171,16 @@ EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
 EDate = EDataType('EDate', datetime)
+EBigDecimal = EDataType('EBigDecimal', Decimal,
+                        from_string=lambda x: Decimal(x))
+EByte = EDataType('EByte', bytes)
+EByteObject = EDataType('EByteObject', bytes)
+EByteArray = EDataType('EByteArray', bytearray)
+EChar = EDataType('EChar', str)
+ECharacterObject = EDataType('ECharacterObject', str)
+EShort = EDataType('EShort', int, from_string=lambda x: int(x))
+EJavaClass = EDataType('EJavaClass', type)
+
 
 ENamedElement.name_ = EAttribute('name', EString)
 
@@ -1297,6 +1312,16 @@ Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
 Core.register_classifier(EDate)
+Core.register_classifier(EBigDecimal)
+Core.register_classifier(EBooleanObject)
+Core.register_classifier(ELongObject)
+Core.register_classifier(EByte)
+Core.register_classifier(EByteObject)
+Core.register_classifier(EByteArray)
+Core.register_classifier(EChar)
+Core.register_classifier(ECharacterObject)
+Core.register_classifier(EShort)
+Core.register_classifier(EJavaClass)
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
@@ -1309,4 +1334,6 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
-           'EDate']
+           'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
+           'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
+           'EShort', 'EJavaClass']
