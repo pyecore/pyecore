@@ -1,6 +1,30 @@
 Changelog
 ---------
 
+0.5.11
+++++++
+
+**Bugfixes**
+
+- Add missing ``iD`` feature for ``EAttribute``. In EMF, the ``iD`` feature can
+  be se for ``EAttribute``. This attribute was missing from the pyecore
+  metamodel. This new version also adds the ``iD`` keyword for the
+  ``EAttribute`` constructor.
+
+- Add missing basic ``EDataType``. The added ``EDataTypes`` are:
+    * ``EDate``,
+    * ``EBigDecimal``,
+    * ``EBooleanObject``,
+    * ``ELongObject``,
+    * ``EByte``,
+    * ``EByteObject``,
+    * ``EByteArray``,
+    * ``EChar``,
+    * ``ECharacterObject``,
+    * ``EShort``,
+    * ``EJavaClass``.
+    
+
 0.5.9/0.5.10
 ++++++++++++
 
