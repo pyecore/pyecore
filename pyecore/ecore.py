@@ -9,7 +9,8 @@ from functools import partial
 import sys
 import keyword
 import inspect
-from datetime import date
+from decimal import Decimal
+from datetime import datetime
 from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
@@ -685,6 +686,7 @@ class EClassifier(ENamedElement):
 
 class EDataType(EClassifier):
     # Must be completed
+    # tuple is '(implem_type, use_type_as_factory, default_value)'
     javaTransMap = {'java.lang.String': (str, False, ''),
                     'boolean': (bool, False, False),
                     'java.lang.Boolean': (bool, False, False),
@@ -707,7 +709,7 @@ class EDataType(EClassifier):
                     'java.lang.Character': (str, False, ''),
                     'byte[]': (bytearray, True, None),
                     'java.lang.Byte': (int, False, 0),
-                    'java.util.Date': (date, True, None),
+                    'java.util.Date': (datetime, False, None),
                     'org.eclipse.emf.common.util.EList': (list, True, None),
                     'org.eclipse.emf.ecore.util.FeatureMap': (dict,
                                                               True,
@@ -860,10 +862,11 @@ class EStructuralFeature(ETypedElement):
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None,
                  lower=0, upper=1, changeable=True, derived=False,
-                 unique=True, ordered=True):
+                 unique=True, ordered=True, iD=False):
         super().__init__(name, eType, lower=lower, upper=upper,
                          derived=derived, changeable=changeable,
                          unique=unique, ordered=ordered)
+        self.iD = iD
         self.default_value = default_value
         if self.default_value is None and isinstance(eType, EDataType):
             self.default_value = eType.default_value
@@ -1146,9 +1149,13 @@ EString = EDataType('EString', str)
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
+EBooleanObject = EDataType('EBooleanObject', bool, False,
+                           to_string=lambda x: str(x).lower(),
+                           from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
 ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
+ELongObject = EDataType('ELongObject', int, 0, from_string=lambda x: int(x))
 EIntegerObject = EDataType('EIntegerObject', int, from_string=lambda x: int(x))
 EBigInteger = EDataType('EBigInteger', int, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
@@ -1163,6 +1170,17 @@ EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
+EDate = EDataType('EDate', datetime)
+EBigDecimal = EDataType('EBigDecimal', Decimal,
+                        from_string=lambda x: Decimal(x))
+EByte = EDataType('EByte', bytes)
+EByteObject = EDataType('EByteObject', bytes)
+EByteArray = EDataType('EByteArray', bytearray)
+EChar = EDataType('EChar', str)
+ECharacterObject = EDataType('ECharacterObject', str)
+EShort = EDataType('EShort', int, from_string=lambda x: int(x))
+EJavaClass = EDataType('EJavaClass', type)
+
 
 ENamedElement.name_ = EAttribute('name', EString)
 
@@ -1195,6 +1213,7 @@ EStructuralFeature.derived = EAttribute('derived', EBoolean)
 EStructuralFeature.defaultValueLiteral = EAttribute('defaultValueLiteral',
                                                     EString)
 
+EAttribute.iD = EAttribute('iD', EBoolean)
 
 EPackage.nsURI = EAttribute('nsURI', EString)
 EPackage.nsPrefix = EAttribute('nsPrefix', EString)
@@ -1292,6 +1311,17 @@ Core.register_classifier(EFeatureMapEntry)
 Core.register_classifier(EDiagnosticChain)
 Core.register_classifier(ENativeType)
 Core.register_classifier(EJavaObject)
+Core.register_classifier(EDate)
+Core.register_classifier(EBigDecimal)
+Core.register_classifier(EBooleanObject)
+Core.register_classifier(ELongObject)
+Core.register_classifier(EByte)
+Core.register_classifier(EByteObject)
+Core.register_classifier(EByteArray)
+Core.register_classifier(EChar)
+Core.register_classifier(ECharacterObject)
+Core.register_classifier(EShort)
+Core.register_classifier(EJavaClass)
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
@@ -1303,4 +1333,7 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EJavaObject', 'abstract', 'MetaEClass', 'EList', 'ECollection',
            'EOrderedSet', 'ESet', 'EcoreUtils', 'BadValueError', 'EDouble',
            'EDoubleObject', 'EBigInteger', 'EInt', 'EIntegerObject', 'EFloat',
-           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry']
+           'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
+           'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
+           'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
+           'EShort', 'EJavaClass']

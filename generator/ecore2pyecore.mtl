@@ -166,12 +166,12 @@ class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
 
 
 [template public generate(a : EAttribute) ? (not derived)]
-[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (not a.changeable)], changeable=False[/if])
+[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (iD)], iD=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 
 [template public generate(a : EAttribute) ? (derived)]
-_[a.name/] = EAttribute(name='[a.name/]', eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+_[a.name/] = EAttribute(name='[a.name/]', eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (iD)], iD=True[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
 [/template]
 
 [template public transtype(t : ETypedElement) ? (t.eType.isInOtherResource()) post(trim().replaceAll('\\n',''))]
