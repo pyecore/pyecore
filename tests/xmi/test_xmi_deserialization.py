@@ -121,9 +121,9 @@ def test_resourceset_getresource_ecore_UML():
     UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
     Real = Ecore.EDataType('Real', float, 0.0)
     umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
-    rset.metamodel_registry['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
-    # Register Ecore metamodel instance
-    rset.metamodel_registry['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = Ecore
+    rset.resources['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+    # Register Ecore metamodel as a model
+    rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = Ecore
     # Load the UML metamodel
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
     resource = rset.get_resource(URI(ecore_file))

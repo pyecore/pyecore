@@ -48,6 +48,8 @@ class ResourceSet(object):
             uri_str, fragment = fragment
         else:
             return False
+        if uri_str in self.resources:
+            return True
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
@@ -56,6 +58,8 @@ class ResourceSet(object):
     def resolve(self, uri, from_resource=None):
         upath = Resource.normalize(uri)
         uri_str, fragment = upath.split('#')
+        if uri_str in self.resources:
+            return Resource._navigate_from(fragment, self.resources[uri_str])
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
