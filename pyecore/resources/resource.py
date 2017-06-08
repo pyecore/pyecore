@@ -149,34 +149,49 @@ class HttpURI(URI):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
 
 
-# Not yet implementedn will return a kind of proxy
-# class File_URI_decoder(object):
-#     def can_resolve(path):
-#         return path.startswith('file://') or path.startswith('.')
-#
-#     def resolve(path):
-#         pass
-
-
-class Global_URI_decoder(object):
-    def can_resolve(path, from_resource=None):
+class MetamodelDecoder(object):
+    def split_path(path):
         path = Resource.normalize(path)
         fragment = path.split('#')
         if len(fragment) == 2:
             uri, fragment = fragment
         else:
             uri = None
-        return uri in global_registry
+        return uri, fragment
 
-    def resolve(path, from_resource=None):
+    def can_resolve(path, registry):
+        uri, fragment = MetamodelDecoder.split_path(path)
+        return uri in registry
+
+    def resolve(path, registry):
         path = Resource.normalize(path)
         uri, fragment = path.split('#')
-        epackage = global_registry[uri]
+        epackage = registry[uri]
         return Resource._navigate_from(fragment, epackage)
 
 
+class Global_URI_decoder(object):
+    def can_resolve(path, from_resource=None):
+        return MetamodelDecoder.can_resolve(path, global_registry)
+
+    def resolve(path, from_resource=None):
+        return MetamodelDecoder.resolve(path, global_registry)
+
+
+class LocalMetamodelDecoder(object):
+    def can_resolve(path, from_resource=None):
+        if from_resource is None or from_resource.resource_set is None:
+            return False
+        rset = from_resource.resource_set
+        return MetamodelDecoder.can_resolve(path, rset.metamodel_registry)
+
+    def resolve(path, from_resource=None):
+        rset = from_resource.resource_set
+        return MetamodelDecoder.resolve(path, rset.metamodel_registry)
+
+
 class Resource(object):
-    _decoders = [Global_URI_decoder]
+    _decoders = [LocalMetamodelDecoder, Global_URI_decoder]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
