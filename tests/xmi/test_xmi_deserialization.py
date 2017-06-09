@@ -147,3 +147,18 @@ def test_ecoreinheritance_loading():
     assert isinstance(b, Ecore.EModelElement)
     assert a.eAnnotations == {}
     assert b.eAnnotations == {}
+
+
+def test_ecore_nonhref_external_resources():
+    rset = ResourceSet()
+    c_ecore = path.join('tests', 'xmi', 'xmi-tests', 'inner', 'C.ecore')
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset.get_resource(c_ecore)
+    rset.get_resource(b_ecore)
+    root = rset.get_resource(a_ecore).contents[0]
+    assert root
+
+    A = root.getEClassifier('A')
+    assert A
+    assert len(A.eSuperTypes) == 2
