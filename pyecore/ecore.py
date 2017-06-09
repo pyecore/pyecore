@@ -821,11 +821,17 @@ class EStructuralFeature(ETypedElement):
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
+        self._name = name
+        self._eternal_listener.append(self)
+
+    def notifyChanged(self, notif):
+        if notif.feature is ENamedElement.name:
+            self._name = notif.new
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
-        name = self.name
+        name = self._name
         instance_dict = instance.__dict__
         if name not in instance_dict.keys():
             if self.many:
@@ -840,7 +846,7 @@ class EStructuralFeature(ETypedElement):
             return value
 
     def __set__(self, instance, value):
-        name = self.name
+        name = self._name
         instance_dict = instance.__dict__
         if isinstance(value, ECollection):
             instance_dict[name] = value
@@ -1182,7 +1188,7 @@ EShort = EDataType('EShort', int, from_string=lambda x: int(x))
 EJavaClass = EDataType('EJavaClass', type)
 
 
-ENamedElement.name_ = EAttribute('name', EString)
+ENamedElement.name = EAttribute('name', EString)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)

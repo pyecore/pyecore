@@ -4,8 +4,21 @@ from pyecore.ecore import *
 
 
 def test_eclass_meta_attribute_access():
-    assert isinstance(EClass.name_, EAttribute)
-    assert EClass.name_.eType is EString
+    assert isinstance(EClass.name, EAttribute)
+    assert EClass.name.eType is EString
+
+
+def test_ecore_bad_names():
+    with pytest.raises(BadValueError):
+        EParameter(name=33)
+    with pytest.raises(BadValueError):
+        EOperation(name=33)
+    with pytest.raises(BadValueError):
+        EClass(name=33)
+    with pytest.raises(BadValueError):
+        EAttribute(name=33)
+    with pytest.raises(BadValueError):
+        EReference(name=33)
 
 
 def test_eclass_meta_reference_access():
