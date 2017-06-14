@@ -27,8 +27,9 @@ class XMIResource(Resource):
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
-        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes[XSI])
-        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[XMI])
+
+        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
+        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
         if not self.contents:
