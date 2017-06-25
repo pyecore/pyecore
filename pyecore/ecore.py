@@ -62,7 +62,7 @@ class EcoreUtils(object):
                        inspect.ismodule(obj) and hasattr(obj, 'nsURI')
         elif _type is EClassifier:
             return obj is _type or isinstance(obj, _type) or \
-                        hasattr(obj, '_staticEClass') and obj._staticEClass
+                        getattr(obj, '_staticEClass', False)
         elif isinstance(_type, EEnum):
             return obj in _type
         elif isinstance(_type, (EDataType, EAttribute)):
@@ -223,8 +223,7 @@ class EObject(ENotifer):
                     fvalue.clear()
                     continue
                 value = next((val for val in fvalue
-                              if hasattr(val, '_wrapped')
-                              and val._wrapped is self),
+                              if getattr(val, '_wrapped', None) is self),
                              None)
                 if value:
                     fvalue.remove(value)
@@ -232,8 +231,8 @@ class EObject(ENotifer):
                 if self is fvalue or self is owner:
                     owner.eSet(feature, None)
                     continue
-                value = fvalue if (hasattr(fvalue, '_wrapped')
-                                   and fvalue._wrapped is self) else None
+                value = (fvalue if getattr(fvalue, '_wrapped', None) is self
+                         else None)
                 if value:
                     owner.eSet(feature, None)
 
@@ -582,7 +581,7 @@ class EModelElement(EObject):
         if not self.eContainer():
             return '#/'
         parent = self.eContainer()
-        if hasattr(self, 'name') and self.name:
+        if getattr(self, 'name', None):
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
         else:
             return super().eURIFragment()
@@ -687,7 +686,7 @@ class EClassifier(ENamedElement):
 class EDataType(EClassifier):
     # Must be completed
     # tuple is '(implem_type, use_type_as_factory, default_value)'
-    javaTransMap = {'java.lang.String': (str, False, ''),
+    javaTransMap = {'java.lang.String': (str, False, None),
                     'boolean': (bool, False, False),
                     'java.lang.Boolean': (bool, False, False),
                     'byte': (int, False, 0),
@@ -860,8 +859,8 @@ class EStructuralFeature(ETypedElement):
         instance_dict[name].__set__(instance, value)
 
     def __repr__(self):
-        eType = self.eType if hasattr(self, 'eType') else None
-        name = self.name if hasattr(self, 'name') else None
+        eType = getattr(self, 'eType', None)
+        name = getattr(self, 'name', None)
         return '<EStructuralFeature {0}: {1}>'.format(name, eType)
 
 
@@ -880,6 +879,9 @@ class EAttribute(EStructuralFeature):
     def get_default_value(self):
         if self.default_value is not None:
             return self.default_value
+        elif self.eType is None:
+            self.eType = ENativeType
+            return object()
         return self.eType.default_value
 
 
@@ -941,8 +943,7 @@ class EClass(EClassifier):
 
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
-        if hasattr(self.python_class, '_staticEClass') \
-                and self.python_class._staticEClass:
+        if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
