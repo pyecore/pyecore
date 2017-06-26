@@ -634,8 +634,9 @@ class ETypedElement(ENamedElement):
 
 
 class EOperation(ETypedElement):
-    def __init__(self, name=None, eType=None, params=None, exceptions=None):
-        super().__init__(name, eType)
+    def __init__(self, name=None, eType=None, params=None, exceptions=None,
+                 lower=0, upper=1):
+        super().__init__(name, eType, lower=lower, upper=upper)
         if params:
                 self.eParameters.extend(params)
         if exceptions:
@@ -656,8 +657,10 @@ class EOperation(ETypedElement):
 
 
 class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None, required=False):
-        super().__init__(name, eType, required=required)
+    def __init__(self, name=None, eType=None, required=False, lower=0,
+                 upper=1):
+        super().__init__(name, eType, required=required, lower=lower,
+                         upper=upper)
 
     def to_code(self):
         if self.required:

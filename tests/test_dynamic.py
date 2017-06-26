@@ -745,3 +745,49 @@ def test_eattribute_edate():
 
     with pytest.raises(BadValueError):
         a.date = 45
+
+
+def test_eoperation_multiplicity():
+    A = EClass('A')
+    operation = EOperation('do_it', upper=-1)
+    A.eOperations.append(operation)
+    assert operation.many
+    assert operation.upperBound == -1
+
+    operation.lowerBound = 1
+    assert operation.lowerBound == 1
+    assert operation.upperBound == -1
+    assert operation.many
+
+    operation.upperBound = 1
+    assert operation.lowerBound == 1
+    assert operation.upperBound == 1
+    assert operation.many is False
+
+    a = A()
+    with pytest.raises(NotImplementedError):
+        a.do_it()
+
+
+def test_eparameter_multiplicity():
+    A = EClass('A')
+    parameter = EParameter('param', required=False, lower=0, upper=-1)
+
+    operation = EOperation('do_it', params=(parameter,))
+    A.eOperations.append(operation)
+    assert parameter.many
+    assert parameter.upperBound == -1
+
+    parameter.lowerBound = 1
+    assert parameter.lowerBound == 1
+    assert parameter.upperBound == -1
+    assert parameter.many
+
+    parameter.upperBound = 1
+    assert parameter.lowerBound == 1
+    assert parameter.upperBound == 1
+    assert parameter.many is False
+
+    a = A()
+    with pytest.raises(NotImplementedError):
+        a.do_it(param='test_value')
