@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime
 from pyecore.ecore import *
+import pyecore.ecore as ecore
 
 
 def test_eclass_meta_attribute_access():
@@ -791,3 +792,26 @@ def test_eparameter_multiplicity():
     a = A()
     with pytest.raises(NotImplementedError):
         a.do_it(param='test_value')
+
+
+def test_eoperation_with_exception():
+    E1 = EClass('E1')
+    E2 = EClass('E2')
+    operation = EOperation('operation', exceptions=(E1, E2))
+    assert E1 in operation.eExceptions
+    assert E2 in operation.eExceptions
+
+
+def test_eattribute_notype():
+    att = EAttribute('native')
+    A = EClass('A')
+    A.eStructuralFeatures.append(att)
+    a = A()
+    assert EcoreUtils.isinstance(a.native, ecore.ENativeType)
+    assert isinstance(a.native, object)
+
+
+def test_edatatype_isinstance():
+    String = EDataType('String')
+    assert EDataType.__isinstance__(String)
+    assert EcoreUtils.isinstance(String, EDataType)
