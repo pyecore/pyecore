@@ -11,7 +11,6 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
-from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
 
@@ -57,23 +56,10 @@ class EcoreUtils(object):
             return True
         elif isinstance(obj, EProxy) and not obj._resolved:
             return True
-        elif _type is EPackage:
-            return isinstance(obj, _type) or \
-                       inspect.ismodule(obj) and hasattr(obj, 'nsURI')
-        elif _type is EClassifier:
-            return obj is _type or isinstance(obj, _type) or \
-                        getattr(obj, '_staticEClass', False)
-        elif isinstance(_type, EEnum):
-            return obj in _type
-        elif isinstance(_type, (EDataType, EAttribute)):
-            return isinstance(obj, _type.eType)
-        elif isinstance(_type, EClass):
-            if isinstance(obj, EObject):
-                return isinstance(obj, _type.python_class)
-                # return obj.eClass is _type \
-                #        or _type in obj.eClass.eAllSuperTypes()
-            return False
-        return isinstance(obj, _type) or obj is _type.eClass
+        try:
+            return _type.__isinstance__(obj)
+        except AttributeError:
+            return isinstance(obj, _type) or obj is _type.eClass
 
     @staticmethod
     def getRoot(obj):
@@ -162,11 +148,15 @@ class EObject(ENotifer):
         self._inverse_rels = set()
 
     def __initmetattr__(self):
-        super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
         self_setter = self.__setattr__
-        for cls in reversed(list(super_cls)):
+        self_dict = self.__dict__
+        for cls in self.__class__.__mro__:
+            if cls is EObject:
+                break
             for key, feature in cls.__dict__.items():
                 if not isinstance(feature, EStructuralFeature):
+                    continue
+                if key in self_dict:
                     continue
                 if feature.many:
                     self_setter(key, ECollection.create(self, feature))
@@ -616,6 +606,14 @@ class EPackage(ENamedElement):
     def getEClassifier(self, name):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
+    def __isinstance__(self, instance=None):
+        if instance is None:
+            return (isinstance(self, EPackage) or
+                    inspect.ismodule(self) and
+                    hasattr(self, 'nsURI'))
+        else:
+            return False
+
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
@@ -630,7 +628,7 @@ class ETypedElement(ENamedElement):
 
     @property
     def many(self):
-        return int(self.upperBound) > 1 or int(self.upperBound) < 0
+        return self.upperBound > 1 or self.upperBound < 0
 
 
 class EOperation(ETypedElement):
@@ -684,6 +682,13 @@ class EGenericType(EObject):
 class EClassifier(ENamedElement):
     def __init__(self, name=None):
         super().__init__(name)
+
+    def __isinstance__(self, instance=None):
+        if instance is None:
+            return self is EClassifier or isinstance(self, EClassifier) or \
+                    getattr(self, '_staticEClass', False)
+        else:
+            return False
 
 
 class EDataType(EClassifier):
@@ -740,6 +745,12 @@ class EDataType(EClassifier):
     def to_string(self, value):
         return str(value)
 
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return isinstance(instance, self.eType)
+        else:
+            return isinstance(self, EDataType)
+
     @property
     def default_value(self):
         if self.type_as_factory:
@@ -790,6 +801,12 @@ class EEnum(EDataType):
             return key in self.eLiterals
         return any(lit for lit in self.eLiterals if lit.name == key)
 
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return instance in self
+        else:
+            return isinstance(self, EEnum)
+
     def getEEnumLiteral(self, name=None, value=0):
         try:
             if name:
@@ -835,7 +852,7 @@ class EStructuralFeature(ETypedElement):
             return self
         name = self._name
         instance_dict = instance.__dict__
-        if name not in instance_dict.keys():
+        if name not in instance_dict:
             if self.many:
                 new_value = ECollection.create(instance, self)
             else:
@@ -853,7 +870,7 @@ class EStructuralFeature(ETypedElement):
         if isinstance(value, ECollection):
             instance_dict[name] = value
             return
-        if name not in instance_dict.keys():
+        if name not in instance_dict:
             evalue = EValue(instance, self)
             instance_dict[name] = evalue
         previous_value = instance_dict[name]
@@ -886,6 +903,12 @@ class EAttribute(EStructuralFeature):
             self.eType = ENativeType
             return object()
         return self.eType.default_value
+
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return isinstance(instance, self.eType)
+        else:
+            return isinstance(self, EAttribute)
 
 
 class EReference(EStructuralFeature):
@@ -1032,6 +1055,12 @@ class EClass(EClassifier):
     def findEOperation(self, name):
         return next((f for f in self._eAllOperations_gen() if f.name == name),
                     None)
+
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return isinstance(instance, self.python_class)
+        else:
+            return isinstance(self, EClass)
 
 
 # Meta methods for static EClass
