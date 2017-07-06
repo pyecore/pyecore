@@ -607,12 +607,9 @@ class EPackage(ENamedElement):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
     def __isinstance__(self, instance=None):
-        if instance is None:
-            return (isinstance(self, EPackage) or
-                    inspect.ismodule(self) and
-                    hasattr(self, 'nsURI'))
-        else:
-            return False
+        return (instance is None and
+                (isinstance(self, EPackage) or
+                 inspect.ismodule(self) and hasattr(self, 'nsURI')))
 
 
 class ETypedElement(ENamedElement):
@@ -684,11 +681,10 @@ class EClassifier(ENamedElement):
         super().__init__(name)
 
     def __isinstance__(self, instance=None):
-        if instance is None:
-            return self is EClassifier or isinstance(self, EClassifier) or \
-                    getattr(self, '_staticEClass', False)
-        else:
-            return False
+        return (instance is None and
+                (self is EClassifier or
+                 isinstance(self, EClassifier) or
+                 getattr(self, '_staticEClass', False)))
 
 
 class EDataType(EClassifier):
@@ -903,12 +899,6 @@ class EAttribute(EStructuralFeature):
             self.eType = ENativeType
             return object()
         return self.eType.default_value
-
-    def __isinstance__(self, instance=None):
-        if instance is not None:
-            return isinstance(instance, self.eType)
-        else:
-            return isinstance(self, EAttribute)
 
 
 class EReference(EStructuralFeature):
