@@ -1,11 +1,25 @@
 import pytest
 from datetime import datetime
 from pyecore.ecore import *
+import pyecore.ecore as ecore
 
 
 def test_eclass_meta_attribute_access():
-    assert isinstance(EClass.name_, EAttribute)
-    assert EClass.name_.eType is EString
+    assert isinstance(EClass.name, EAttribute)
+    assert EClass.name.eType is EString
+
+
+def test_ecore_bad_names():
+    with pytest.raises(BadValueError):
+        EParameter(name=33)
+    with pytest.raises(BadValueError):
+        EOperation(name=33)
+    with pytest.raises(BadValueError):
+        EClass(name=33)
+    with pytest.raises(BadValueError):
+        EAttribute(name=33)
+    with pytest.raises(BadValueError):
+        EReference(name=33)
 
 
 def test_eclass_meta_reference_access():
@@ -732,3 +746,93 @@ def test_eattribute_edate():
 
     with pytest.raises(BadValueError):
         a.date = 45
+
+
+def test_eoperation_multiplicity():
+    A = EClass('A')
+    operation = EOperation('do_it', upper=-1)
+    A.eOperations.append(operation)
+    assert operation.many
+    assert operation.upperBound == -1
+
+    operation.lowerBound = 1
+    assert operation.lowerBound == 1
+    assert operation.upperBound == -1
+    assert operation.many
+
+    operation.upperBound = 1
+    assert operation.lowerBound == 1
+    assert operation.upperBound == 1
+    assert operation.many is False
+
+    a = A()
+    with pytest.raises(NotImplementedError):
+        a.do_it()
+
+
+def test_eparameter_multiplicity():
+    A = EClass('A')
+    parameter = EParameter('param', required=False, lower=0, upper=-1)
+
+    operation = EOperation('do_it', params=(parameter,))
+    A.eOperations.append(operation)
+    assert parameter.many
+    assert parameter.upperBound == -1
+
+    parameter.lowerBound = 1
+    assert parameter.lowerBound == 1
+    assert parameter.upperBound == -1
+    assert parameter.many
+
+    parameter.upperBound = 1
+    assert parameter.lowerBound == 1
+    assert parameter.upperBound == 1
+    assert parameter.many is False
+
+    a = A()
+    with pytest.raises(NotImplementedError):
+        a.do_it(param='test_value')
+
+
+def test_eoperation_with_exception():
+    E1 = EClass('E1')
+    E2 = EClass('E2')
+    operation = EOperation('operation', exceptions=(E1, E2))
+    assert E1 in operation.eExceptions
+    assert E2 in operation.eExceptions
+
+
+def test_eattribute_notype():
+    att = EAttribute('native')
+    A = EClass('A')
+    A.eStructuralFeatures.append(att)
+    a = A()
+    assert EcoreUtils.isinstance(a.native, ecore.ENativeType)
+    assert isinstance(a.native, object)
+
+
+def test_edatatype_isinstance():
+    String = EDataType('String')
+    assert EDataType.__isinstance__(String)
+    assert EcoreUtils.isinstance(String, EDataType)
+
+
+testdata = [
+    (EAttribute('att'), EClassifier, False),
+    (EOperation('op'), EClassifier, False),
+    (EPackage('pack'), EClassifier, False),
+    (EClass('e'), EClassifier, True),
+    (EAttribute, EClassifier, True),
+    (EClass, EClassifier, True),
+    (EPackage, EClassifier, True),
+
+    (EAttribute('att'), EPackage, False),
+    (EOperation('op'), EPackage, False),
+    (EPackage('pack'), EPackage, True),
+    (EClass('e'), EPackage, False),
+]
+
+
+@pytest.mark.parametrize("instance, cls, result", testdata)
+def test_epackage_isinstance(instance, cls, result):
+    assert EcoreUtils.isinstance(instance, cls) is result

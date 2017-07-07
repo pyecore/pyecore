@@ -1,6 +1,50 @@
 Changelog
 ---------
 
+0.6.0
+++++++
+
+**Features**
+
+- Add multiplicity parameter for ``EParameter/EOperation`` constructors.
+  Parameter and Operations can express a multiplicity like ``1..*`` if wanted.
+  This attribute can be modified after one of these object had been created,
+  but it wasn't possible to give the multiplicity during the object creation.
+  This commit simply add the missing parameters in the constructors.
+
+ - Add new way of dealing with ``isinstance``. The ``isinstance`` method from
+   the ``EcoreUtils`` class was not very effective and was gathering all cases
+   in a big ``if/elif/else`` block. This commit defers all the ``isinstance``
+   to a method ``__isinstance__``, implemented in each required elements. This
+   commit also introduce a new way of init for each ``EStructuralFeature``
+   attributes when an instance is created.
+
+**Bugfixes**
+
+- Fix intra-document references by proxy. A reference between elements can also
+  be done using a 'full' URI, i.e: specifying the uri/path of the resource to
+  access and the path towards the object. This way of referencing elements is
+  not reserved to metamodel references, but can be done with any kind of
+  references. To deal with this, a proxy is introduced each time such a
+  reference is done. This allows to relies on the same mechanism as the href
+  one and gives a better control over their resolutions.
+
+- Fix ``ResourceSet`` local resource resolving. When a local resource is searched,
+  the path and its uri is split. Once the uri is split, its path is searched in
+  the 'resources' of the ``ResourceSet``. This search was done in a 'file' like only
+  researched, while the uri could be a logical one (for the ``plateform:/``
+  like uri).
+
+- Fix missing ``name`` feature validation. The name feature was only handled as
+  a simple python attribute instead of an EAttribute. This time, the ``name``
+  feature is handled as an ``EAttribute``. As each instance of ``EAttribute``
+  needs to use its own name (which is an ``EAttribute``), it is required to cut
+  the recursive call. To do so, the ``EStructuralFeature`` listen to each
+  changes performed on itself. If a modification occurs on the ``name`` feature,
+  it keeps a simple python attribute version which can be used in the
+  ``EStructuralFeature`` descriptor.
+
+
 0.5.11
 ++++++
 
@@ -23,7 +67,7 @@ Changelog
     * ``ECharacterObject``,
     * ``EShort``,
     * ``EJavaClass``.
-    
+
 
 0.5.9/0.5.10
 ++++++++++++

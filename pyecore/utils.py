@@ -42,7 +42,7 @@ class DynamicEPackage(EObserver):
                     setattr(self, new.name, new)
             elif kind == Kind.REMOVE and notification.old.eResource is None:
                 delattr(self, notification.old.name)
-            elif kind == Kind.REMOVE_MANY:
-                for element in notification.old:
-                    if element.eResource is None:
-                        delattr(self, element.name)
+            # elif kind == Kind.REMOVE_MANY:
+            #     for element in notification.old:
+            #         if element.eResource is None:
+            #             delattr(self, element.name)

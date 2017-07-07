@@ -11,7 +11,6 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
-from itertools import takewhile
 from ordered_set import OrderedSet, is_iterable
 from .notification import ENotifer, Notification, Kind, EObserver
 
@@ -57,23 +56,10 @@ class EcoreUtils(object):
             return True
         elif isinstance(obj, EProxy) and not obj._resolved:
             return True
-        elif _type is EPackage:
-            return isinstance(obj, _type) or \
-                       inspect.ismodule(obj) and hasattr(obj, 'nsURI')
-        elif _type is EClassifier:
-            return obj is _type or isinstance(obj, _type) or \
-                        hasattr(obj, '_staticEClass') and obj._staticEClass
-        elif isinstance(_type, EEnum):
-            return obj in _type
-        elif isinstance(_type, (EDataType, EAttribute)):
-            return isinstance(obj, _type.eType)
-        elif isinstance(_type, EClass):
-            if isinstance(obj, EObject):
-                return isinstance(obj, _type.python_class)
-                # return obj.eClass is _type \
-                #        or _type in obj.eClass.eAllSuperTypes()
-            return False
-        return isinstance(obj, _type) or obj is _type.eClass
+        try:
+            return _type.__isinstance__(obj)
+        except AttributeError:
+            return isinstance(obj, _type) or obj is _type.eClass
 
     @staticmethod
     def getRoot(obj):
@@ -149,6 +135,7 @@ class EObject(ENotifer):
         self.__subinit__()
         self.__initmetattr__()
         self._isready = True
+        self._staticEClass = False
 
     def __subinit__(self):
         self._xmiid = None
@@ -162,11 +149,15 @@ class EObject(ENotifer):
         self._inverse_rels = set()
 
     def __initmetattr__(self):
-        super_cls = takewhile(lambda x: x is not EObject, self.__class__.mro())
         self_setter = self.__setattr__
-        for cls in reversed(list(super_cls)):
+        self_dict = self.__dict__
+        for cls in self.__class__.__mro__:
+            if cls is EObject:
+                break
             for key, feature in cls.__dict__.items():
                 if not isinstance(feature, EStructuralFeature):
+                    continue
+                if key in self_dict:
                     continue
                 if feature.many:
                     self_setter(key, ECollection.create(self, feature))
@@ -223,8 +214,7 @@ class EObject(ENotifer):
                     fvalue.clear()
                     continue
                 value = next((val for val in fvalue
-                              if hasattr(val, '_wrapped')
-                              and val._wrapped is self),
+                              if getattr(val, '_wrapped', None) is self),
                              None)
                 if value:
                     fvalue.remove(value)
@@ -232,8 +222,8 @@ class EObject(ENotifer):
                 if self is fvalue or self is owner:
                     owner.eSet(feature, None)
                     continue
-                value = fvalue if (hasattr(fvalue, '_wrapped')
-                                   and fvalue._wrapped is self) else None
+                value = (fvalue if getattr(fvalue, '_wrapped', None) is self
+                         else None)
                 if value:
                     owner.eSet(feature, None)
 
@@ -582,7 +572,7 @@ class EModelElement(EObject):
         if not self.eContainer():
             return '#/'
         parent = self.eContainer()
-        if hasattr(self, 'name') and self.name:
+        if getattr(self, 'name', None):
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
         else:
             return super().eURIFragment()
@@ -617,6 +607,11 @@ class EPackage(ENamedElement):
     def getEClassifier(self, name):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
+    def __isinstance__(self, instance=None):
+        return (instance is None and
+                (isinstance(self, EPackage) or
+                 inspect.ismodule(self) and hasattr(self, 'nsURI')))
+
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
@@ -631,12 +626,13 @@ class ETypedElement(ENamedElement):
 
     @property
     def many(self):
-        return int(self.upperBound) > 1 or int(self.upperBound) < 0
+        return self.upperBound > 1 or self.upperBound < 0
 
 
 class EOperation(ETypedElement):
-    def __init__(self, name=None, eType=None, params=None, exceptions=None):
-        super().__init__(name, eType)
+    def __init__(self, name=None, eType=None, params=None, exceptions=None,
+                 lower=0, upper=1):
+        super().__init__(name, eType, lower=lower, upper=upper)
         if params:
                 self.eParameters.extend(params)
         if exceptions:
@@ -657,8 +653,10 @@ class EOperation(ETypedElement):
 
 
 class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None, required=False):
-        super().__init__(name, eType, required=required)
+    def __init__(self, name=None, eType=None, required=False, lower=0,
+                 upper=1):
+        super().__init__(name, eType, required=required, lower=lower,
+                         upper=upper)
 
     def to_code(self):
         if self.required:
@@ -683,11 +681,17 @@ class EClassifier(ENamedElement):
     def __init__(self, name=None):
         super().__init__(name)
 
+    def __isinstance__(self, instance=None):
+        return (instance is None and
+                (self is EClassifier or
+                 isinstance(self, EClassifier) or
+                 getattr(self, '_staticEClass', False)))
+
 
 class EDataType(EClassifier):
     # Must be completed
     # tuple is '(implem_type, use_type_as_factory, default_value)'
-    javaTransMap = {'java.lang.String': (str, False, ''),
+    javaTransMap = {'java.lang.String': (str, False, None),
                     'boolean': (bool, False, False),
                     'java.lang.Boolean': (bool, False, False),
                     'byte': (int, False, 0),
@@ -737,6 +741,12 @@ class EDataType(EClassifier):
 
     def to_string(self, value):
         return str(value)
+
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return isinstance(instance, self.eType)
+        else:
+            return isinstance(self, EDataType)
 
     @property
     def default_value(self):
@@ -788,6 +798,12 @@ class EEnum(EDataType):
             return key in self.eLiterals
         return any(lit for lit in self.eLiterals if lit.name == key)
 
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return instance in self
+        else:
+            return isinstance(self, EEnum)
+
     def getEEnumLiteral(self, name=None, value=0):
         try:
             if name:
@@ -821,13 +837,19 @@ class EStructuralFeature(ETypedElement):
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
+        self._name = name
+        self._eternal_listener.append(self)
+
+    def notifyChanged(self, notif):
+        if notif.feature is ENamedElement.name:
+            self._name = notif.new
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
-        name = self.name
+        name = self._name
         instance_dict = instance.__dict__
-        if name not in instance_dict.keys():
+        if name not in instance_dict:
             if self.many:
                 new_value = ECollection.create(instance, self)
             else:
@@ -840,12 +862,12 @@ class EStructuralFeature(ETypedElement):
             return value
 
     def __set__(self, instance, value):
-        name = self.name
+        name = self._name
         instance_dict = instance.__dict__
         if isinstance(value, ECollection):
             instance_dict[name] = value
             return
-        if name not in instance_dict.keys():
+        if name not in instance_dict:
             evalue = EValue(instance, self)
             instance_dict[name] = evalue
         previous_value = instance_dict[name]
@@ -854,8 +876,8 @@ class EStructuralFeature(ETypedElement):
         instance_dict[name].__set__(instance, value)
 
     def __repr__(self):
-        eType = self.eType if hasattr(self, 'eType') else None
-        name = self.name if hasattr(self, 'name') else None
+        eType = getattr(self, 'eType', None)
+        name = getattr(self, 'name', None)
         return '<EStructuralFeature {0}: {1}>'.format(name, eType)
 
 
@@ -874,6 +896,9 @@ class EAttribute(EStructuralFeature):
     def get_default_value(self):
         if self.default_value is not None:
             return self.default_value
+        elif self.eType is None:
+            self.eType = ENativeType
+            return object()
         return self.eType.default_value
 
 
@@ -907,7 +932,6 @@ class EClass(EClassifier):
                  metainstance=None):
         super().__init__(name)
         self.abstract = abstract
-        self._staticEClass = False
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
@@ -935,8 +959,7 @@ class EClass(EClassifier):
 
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
-        if hasattr(self.python_class, '_staticEClass') \
-                and self.python_class._staticEClass:
+        if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
@@ -1022,6 +1045,12 @@ class EClass(EClassifier):
     def findEOperation(self, name):
         return next((f for f in self._eAllOperations_gen() if f.name == name),
                     None)
+
+    def __isinstance__(self, instance=None):
+        if instance is not None:
+            return isinstance(instance, self.python_class)
+        else:
+            return isinstance(self, EClass)
 
 
 # Meta methods for static EClass
@@ -1182,7 +1211,7 @@ EShort = EDataType('EShort', int, from_string=lambda x: int(x))
 EJavaClass = EDataType('EJavaClass', type)
 
 
-ENamedElement.name_ = EAttribute('name', EString)
+ENamedElement.name = EAttribute('name', EString)
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)

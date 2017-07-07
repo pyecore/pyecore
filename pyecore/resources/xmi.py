@@ -27,8 +27,9 @@ class XMIResource(Resource):
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
-        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes[XSI])
-        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes[XMI])
+
+        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
+        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
         if not self.contents:
@@ -240,8 +241,6 @@ class XMIResource(Resource):
                         eobject.__setattr__(ref.name, resolved_value)
 
         for eobject, ref, value in opposite:
-            # decoder = self._get_decoder(value)
-            # resolved_value = decoder.resolve(value)
             resolved_value = self._resolve_nonhref(value)
             if not resolved_value:
                 raise ValueError('EObject for {0} is unknown'.format(value))
@@ -252,12 +251,9 @@ class XMIResource(Resource):
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if uri:
-            epackage = self.get_metamodel(uri)
-            if not epackage:
-                raise TypeError('Cannot resolve metamodel: {0}'.format(uri))
-            val = self._navigate_from(fragment, epackage)
-            self._resolve_mem[uri] = val
-            return val
+            proxy = Ecore.EProxy(path=path, resource=self)
+            self._resolve_mem[fragment] = proxy
+            return proxy
         return self.resolve(fragment)
 
     def _clean_registers(self):
