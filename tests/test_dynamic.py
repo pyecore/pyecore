@@ -815,3 +815,24 @@ def test_edatatype_isinstance():
     String = EDataType('String')
     assert EDataType.__isinstance__(String)
     assert EcoreUtils.isinstance(String, EDataType)
+
+
+testdata = [
+    (EAttribute('att'), EClassifier, False),
+    (EOperation('op'), EClassifier, False),
+    (EPackage('pack'), EClassifier, False),
+    (EClass('e'), EClassifier, True),
+    (EAttribute, EClassifier, True),
+    (EClass, EClassifier, True),
+    (EPackage, EClassifier, True),
+
+    (EAttribute('att'), EPackage, False),
+    (EOperation('op'), EPackage, False),
+    (EPackage('pack'), EPackage, True),
+    (EClass('e'), EPackage, False),
+]
+
+
+@pytest.mark.parametrize("instance, cls, result", testdata)
+def test_epackage_isinstance(instance, cls, result):
+    assert EcoreUtils.isinstance(instance, cls) is result

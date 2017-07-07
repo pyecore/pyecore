@@ -135,6 +135,7 @@ class EObject(ENotifer):
         self.__subinit__()
         self.__initmetattr__()
         self._isready = True
+        self._staticEClass = False
 
     def __subinit__(self):
         self._xmiid = None
@@ -931,7 +932,6 @@ class EClass(EClassifier):
                  metainstance=None):
         super().__init__(name)
         self.abstract = abstract
-        self._staticEClass = False
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
