@@ -12,12 +12,12 @@ Changelog
   but it wasn't possible to give the multiplicity during the object creation.
   This commit simply add the missing parameters in the constructors.
 
- - Add new way of dealing with ``isinstance``. The ``isinstance`` method from
-   the ``EcoreUtils`` class was not very effective and was gathering all cases
-   in a big ``if/elif/else`` block. This commit defers all the ``isinstance``
-   to a method ``__isinstance__``, implemented in each required elements. This
-   commit also introduce a new way of init for each ``EStructuralFeature``
-   attributes when an instance is created.
+- Add new way of dealing with ``isinstance``. The ``isinstance`` method from
+  the ``EcoreUtils`` class was not very effective and was gathering all cases
+  in a big ``if/elif/else`` block. This commit defers all the ``isinstance``
+  to a method ``__isinstance__``, implemented in each required elements. This
+  commit also introduce a new way of init for each ``EStructuralFeature``
+  attributes when an instance is created.
 
 **Bugfixes**
 
