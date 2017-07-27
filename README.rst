@@ -775,6 +775,65 @@ Here is a quick review of each command:
 * ``Move`` --> moves a ``value`` to a ``to_index`` position inside a ``feature`` collection (``Move(owner=a, feature='collection', value=b, to_index=1)``). This command can also move an element from a ``from_index`` to a ``to_index`` in a collection (``Move(owner=a, feature='collection', from_index=0, to_index=1)``)
 * ``Delete`` --> deletes an elements and its contained elements (``Delete(owner=a)``)
 
+
+Dynamically Extending PyEcore Base Classes
+==========================================
+
+PyEcore is extensible and there is two ways of modifying it: either by extending
+the basic concepts (as ``EClass``, ``EStructuralFeature``...), or by directly
+modifying the same concepts.
+
+Extending PyEcore Base Classes
+------------------------------
+
+To extend the PyEcore base classes, the only thing to do is to create new
+``EClass`` instances that have some base classes as ``superclass``.
+The following excerpt shows how you can create an ``EClass`` instance that
+will add support ``EAnnotation`` to each created instance:
+
+.. code-block:: python
+
+    >>> from pyecore.ecore import *
+    >>> A = EClass('A', superclass=(EModelElement.eClass))  # we need to use '.eClass' to stay in the PyEcore EClass instance level
+    >>> a = A()  # we create an instance that has 'eAnnotations' support
+    >>> a.eAnnotations
+    EOrderedSet()
+    >>> annotation = EAnnotation(source='testSource')
+    >>> annotation.details['mykey'] = 33
+    >>> a.eAnnotations.append(annotation)
+    >>> EOrderedSet([<pyecore.ecore.EAnnotation object at 0x7fb860a99f28>])
+
+If you want to extend ``EClass``, the process is mainly the same, but there is a
+twist:
+
+.. code-block:: python
+
+    >>> from pyecore.ecore import *
+    >>> NewEClass = EClass('NewEClass', superclass=(EClass.eClass))  # NewEClass is an EClass instance and an EClass
+    >>> A = NewEClass('A')  # here is the twist, currently, EClass instance MUST be named
+    >>> a = A()  # we can create 'A' instance
+    >>> a
+    <pyecore.ecore.A at 0x7fb85b6c06d8>
+
+
+Modifying PyEcore Base Classes
+------------------------------
+
+PyEcore let you dynamically add new features to the base class and thus
+introduce new feature for base classes instances:
+
+.. code-block:: python
+
+    >>> from pyecore.ecore import *
+    >>> EClass.new_feature = EAttribute('new_feature', EInt)  # EClass has now a new EInt feature
+    >>> A = EClass('A')
+    >>> A.new_feature
+    0
+    >>> A.new_feature = 5
+    >>> A.new_feature
+    5
+
+
 Dependencies
 ============
 
