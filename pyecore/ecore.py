@@ -878,7 +878,7 @@ class EStructuralFeature(ETypedElement):
     def __repr__(self):
         eType = getattr(self, 'eType', None)
         name = getattr(self, 'name', None)
-        return '<EStructuralFeature {0}: {1}>'.format(name, eType)
+        return '<{0} {1}: {2}>'.format(self.__class__.__name__, name, eType)
 
 
 class EAttribute(EStructuralFeature):
@@ -993,7 +993,7 @@ class EClass(EClassifier):
             return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
-        return '<EClass name="{0}">'.format(self.name)
+        return '<{0} name="{1}">'.format(self.__class__.__name__, self.name)
 
     @property
     def eAttributes(self):
