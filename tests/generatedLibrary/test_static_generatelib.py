@@ -157,3 +157,7 @@ def test_static_init_bad_argument():
 def test_static_init_dynamicEPackage_bad_value():
     with pytest.raises(BadValueError):
         DynamicEPackage(library)
+
+
+def test_static_edatatype_epackage():
+    assert library.BookCategory.ePackage is library.Writer.eClass.ePackage
