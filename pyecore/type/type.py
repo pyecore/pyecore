@@ -180,14 +180,19 @@ UnsignedShortObject = EDataType('UnsignedShortObject',
                                 from_string=lambda x: int(x))
 
 
+# mixed, any and anyAttribute should have upper=-1 (but dict this implies)
+# modifications on the EFeatureMapEntry data type which currently considered
+# as dict.
+# As consequence, in the constructor, 'extend' is not called anymore, but
+# 'update' is called instead.
 class AnyType(EObject, metaclass=MetaEClass):
 
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
-                       iD=False, upper=-1)
+                       iD=False, upper=1)
     _any = EAttribute(eType=EFeatureMapEntry, derived=True,
-                      changeable=True, iD=False, upper=-1, name='any')
+                      changeable=True, iD=False, upper=1, name='any')
     anyAttribute = EAttribute(eType=EFeatureMapEntry, derived=False,
-                              changeable=True, iD=False, upper=-1)
+                              changeable=True, iD=False, upper=1)
 
     @property
     def any(self):
@@ -204,13 +209,13 @@ class AnyType(EObject, metaclass=MetaEClass):
         super().__init__()
 
         if mixed:
-            self.mixed.extend(mixed)
+            self.mixed.update(mixed)
 
         if any:
-            self.any.extend(any)
+            self.any.update(any)
 
         if anyAttribute:
-            self.anyAttribute.extend(anyAttribute)
+            self.anyAttribute.update(anyAttribute)
 
 
 class ProcessingInstruction(EObject, metaclass=MetaEClass):
@@ -231,20 +236,24 @@ class ProcessingInstruction(EObject, metaclass=MetaEClass):
             self.target = target
 
 
+# mixed, xMLNSPrefixMap, xSISchemaLocation should have upper=-1 (but dict this
+# implies) modifications on the EFeatureMapEntry data type which currently
+# considered as dict.
+# As consequence, in the constructor, 'extend' is not called anymore, but
+# 'update' is called instead.
+# Also, xMLNSPrefixMap and xSISchemaLocation have been tranformed as EAttribute
 class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
 
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
-                       iD=False, upper=-1)
+                       iD=False, upper=1)
     _cDATA = EAttribute(eType=String, derived=True, changeable=True,
                         iD=False, upper=-1, name='cDATA')
     _comment = EAttribute(eType=String, derived=True, changeable=True,
                           iD=False, upper=-1, name='comment')
     _text = EAttribute(eType=String, derived=True, changeable=True, iD=False,
                        upper=-1, name='text')
-    xMLNSPrefixMap = EReference(ordered=True, unique=True, containment=True,
-                                upper=-1)
-    xSISchemaLocation = EReference(ordered=True, unique=True, containment=True,
-                                   upper=-1)
+    xMLNSPrefixMap = EAttribute(ordered=True, unique=True, upper=1)
+    xSISchemaLocation = EAttribute(ordered=True, unique=True, upper=1)
     processingInstruction = EReference(ordered=True, unique=True,
                                        containment=True, upper=-1)
 
@@ -281,7 +290,7 @@ class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
         super().__init__()
 
         if mixed:
-            self.mixed.extend(mixed)
+            self.mixed.update(mixed)
 
         if cDATA:
             self.cDATA.extend(cDATA)
@@ -293,10 +302,10 @@ class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
             self.text.extend(text)
 
         if xMLNSPrefixMap:
-            self.xMLNSPrefixMap.extend(xMLNSPrefixMap)
+            self.xMLNSPrefixMap.update(xMLNSPrefixMap)
 
         if xSISchemaLocation:
-            self.xSISchemaLocation.extend(xSISchemaLocation)
+            self.xSISchemaLocation.update(xSISchemaLocation)
 
         if processingInstruction:
             self.processingInstruction.extend(processingInstruction)

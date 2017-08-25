@@ -704,7 +704,7 @@ class EDataType(EClassifier):
                     'java.lang.Float': (float, False, 0.0),
                     'java.lang.Integer': (int, False, 0),
                     'java.lang.Class': (type, False, None),
-                    'java.lang.Object': (object, True, None),
+                    'java.lang.Object': (object, False, None),
                     'java.util.Map': (dict, True, None),
                     'java.util.Map$Entry': (dict, True, None),
                     'double': (float, False, 0.0),

@@ -77,5 +77,6 @@ for classif in otherClassifiers:
 for classif in eClassifiers.values():
     eClass.eClassifiers.append(classif.eClass)
 
-for subpack in eSubpackages:
-    eClass.eSubpackages.append(subpack.eClass)
+# We comment this as there is no subpackages for XMLTypes
+# for subpack in eSubpackages:
+#    eClass.eSubpackages.append(subpack.eClass)

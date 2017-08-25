@@ -2,6 +2,7 @@ import pytest
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
 
+
 def test_ecore_URI():
     assert Ecore.nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
 
