@@ -16,8 +16,8 @@ Still missing are a proper translation for Java types:
 """
 
 from ..ecore import EDataType, EStringToStringMapEntry
-from .type import getEClassifier, eClassifiers
-from .type import name, nsURI, nsPrefix, eClass
+from .type import getEClassifier, eClassifiers  # noqa
+from .type import name, nsURI, nsPrefix, eClass  # noqa
 from .type import AnySimpleType, AnyType, AnyURI, Base64Binary, Boolean, \
                   BooleanObject, Byte, ByteObject, Date, DateTime, Decimal, \
                   Double, DoubleObject, Duration, ENTITIES, ENTITIESBase, \

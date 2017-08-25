@@ -1,7 +1,8 @@
 """Definition of meta model 'type' for XMLTypes."""
 from functools import partial
 import pyecore.ecore as Ecore
-from pyecore.ecore import *
+from pyecore.ecore import EPackage, EDataType, EObject, MetaEClass, \
+                          EAttribute, EFeatureMapEntry, EReference
 
 
 name = 'type'
