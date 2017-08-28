@@ -104,10 +104,9 @@ def test_instance_urifragment_generated():
     assert smith.eURIFragment() == '//@writers.0'
 
 
-# def test_library_epackage():
-#     assert library.Book.eClass.ePackage is library.eClass
-#     assert sys.modules[library.Book.__module__] is library.eModule
-#     assert library.BookCategory.eContainer() is library.eModule
+def test_library_epackage():
+    assert library.Book.eClass.ePackage is library.eClass
+    assert library.BookCategory.eContainer() is library.eClass
 
 
 def test_library_eroot_generated():

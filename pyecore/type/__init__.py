@@ -31,7 +31,7 @@ from .type import AnySimpleType, AnyType, AnyURI, Base64Binary, Boolean, \
                   UnsignedByte, UnsignedByteObject, UnsignedInt, \
                   UnsignedIntObject, UnsignedLong, UnsignedShort, \
                   UnsignedShortObject, XMLTypeDocumentRoot
-from . import type
+# from . import type
 
 __all__ = ['AnySimpleType', 'AnyType', 'AnyURI', 'Base64Binary', 'Boolean',
            'BooleanObject', 'Byte', 'ByteObject', 'Date', 'DateTime',
@@ -71,7 +71,6 @@ otherClassifiers = [AnySimpleType, AnyURI, Base64Binary, Boolean,
 
 for classif in otherClassifiers:
     eClassifiers[classif.name] = classif
-    classif._container = type
     classif.ePackage = eClass
 
 for classif in eClassifiers.values():
