@@ -81,7 +81,7 @@ class XMIResource(Resource):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name)
         if not eobject:
-            raise TypeError({'{0} EClass does not exists'}.format(eclass_name))
+            raise TypeError('{0} EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
         self._use_uuid = xmlroot.get(XMIResource.xmiid) is not None
@@ -137,10 +137,11 @@ class XMIResource(Resource):
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
             return (None, None, [], [])
-        feature_container = self._find_in_metacache(parent_eobj, node.tag)
+        _, node_tag = self.extract_namespace(node.tag)
+        feature_container = self._find_in_metacache(parent_eobj, node_tag)
         if not feature_container:
             raise ValueError('Feature {0} is unknown for {1}, line {2}'
-                             .format(node.tag,
+                             .format(node_tag,
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
         if node.get('href'):

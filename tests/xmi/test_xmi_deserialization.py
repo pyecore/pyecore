@@ -185,3 +185,22 @@ def test_resourceset_load_faulty_exception_no_resource():
         rset.get_resource(URI(ecore_file))
 
     assert rset.resources == {}
+
+
+def test_resourceset_load_no_prefix_resource():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My_noprefix.ecore')
+    root = rset.get_resource(URI(ecore_file)).contents[0]
+    rset.metamodel_registry[root.nsURI] = root
+    # load the instance model
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'MyRoot_noprefix.xmi')
+    resource = rset.get_resource(URI(xmi_file))
+    root = resource.contents[0]
+    assert root
+
+
+def test_resourceset_load_faulty_exception_bad_metamodel():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My_faulty2.ecore')
+    with pytest.raises(Exception):
+        rset.get_resource(ecore_file)

@@ -27,6 +27,11 @@ Changelog
    failure the first time, but to a success the next time. This commit fixes
    this behavior and adds more tests to detect possible regressions about this.
 
+ - Fix load error when metamodel prefix is empty. When a metamodel prefix is
+   empty, special tags, with the namespace encoded inside, are created by lxml.
+   This was an issue with the xmi decoding method as each tag's node was not
+   properly decoded.
+
 **Miscellaneous**
 
 - Change ``__repr__`` display for ``EClass`` and ``EStructuralFeature``. The
