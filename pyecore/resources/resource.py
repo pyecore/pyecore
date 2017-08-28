@@ -30,6 +30,13 @@ class ResourceSet(object):
         resource._decoders.insert(0, self)
         return resource
 
+    def remove_resource(self, resource):
+        if not resource:
+            return
+        for key, value in list(self.resources.items()):
+            if value is resource:
+                del self.resources[key]
+
     def get_resource(self, uri):
         if isinstance(uri, str):
             uri = URI(uri)
@@ -38,7 +45,11 @@ class ResourceSet(object):
             return self.resources[uri.normalize()]
         # If not, we create a new resource
         resource = self.create_resource(uri)
-        resource.load()
+        try:
+            resource.load()
+        except Exception as e:
+            self.remove_resource(resource)
+            raise e
         return resource
 
     def can_resolve(self, uri_path, from_resource=None):

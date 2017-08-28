@@ -21,6 +21,12 @@ Changelog
   in their ``EPackage``. The result was a ``None`` value when
   ``datatype.ePackage`` was accessed.
 
+ - Fix resource creation if model loading fails for ResourceSet. Even if the
+   model loading fails, a resource is created in a ResourceSet. This behavior
+   was problematic as two successive loading of the same faulty model lead to a
+   failure the first time, but to a success the next time. This commit fixes
+   this behavior and adds more tests to detect possible regressions about this.
+
 **Miscellaneous**
 
 - Change ``__repr__`` display for ``EClass`` and ``EStructuralFeature``. The

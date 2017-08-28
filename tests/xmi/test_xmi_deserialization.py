@@ -162,3 +162,26 @@ def test_ecore_nonhref_external_resources():
     A = root.getEClassifier('A')
     assert A
     assert len(A.eSuperTypes) == 2
+
+
+def test_resourceset_remove_resource():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
+    resource = rset.get_resource(URI(ecore_file))
+    assert resource in rset.resources.values()
+
+    rset.remove_resource(resource)
+    assert resource not in rset.resources.values()
+
+
+def test_resourceset_load_faulty_exception_no_resource():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My_faulty.ecore')
+    with pytest.raises(Exception):
+        rset.get_resource(URI(ecore_file))
+    assert rset.resources == {}
+
+    with pytest.raises(Exception):
+        rset.get_resource(URI(ecore_file))
+
+    assert rset.resources == {}
