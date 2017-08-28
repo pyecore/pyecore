@@ -104,10 +104,9 @@ def test_instance_urifragment_generated():
     assert smith.eURIFragment() == '//@writers.0'
 
 
-# def test_library_epackage():
-#     assert library.Book.eClass.ePackage is library.eClass
-#     assert sys.modules[library.Book.__module__] is library.eModule
-#     assert library.BookCategory.eContainer() is library.eModule
+def test_library_epackage():
+    assert library.Book.eClass.ePackage is library.eClass
+    assert library.BookCategory.eContainer() is library.eClass
 
 
 def test_library_eroot_generated():
@@ -157,3 +156,7 @@ def test_static_init_bad_argument():
 def test_static_init_dynamicEPackage_bad_value():
     with pytest.raises(BadValueError):
         DynamicEPackage(library)
+
+
+def test_static_edatatype_epackage():
+    assert library.BookCategory.ePackage is library.Writer.eClass.ePackage
