@@ -893,7 +893,11 @@ In the current state, the project implements:
 
 The things that are in the roadmap:
 
-* URI mapper
+* new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
+* new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
+* multiple roots models,
+* derived collections,
+* URI mapper,
 * documentation,
 * EMF Editing Domain,
 * copy/paste (?).
