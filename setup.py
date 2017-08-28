@@ -7,7 +7,8 @@ if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
 packages = ['pyecore',
-            'pyecore.resources']
+            'pyecore.resources',
+            'pyecore.type']
 
 setup(
     name='pyecore',
