@@ -14,6 +14,12 @@ Changelog
   will work as intended, but can give some false information about some types
   when reflection on the xml types metamodel is used.
 
+- Add very basic EMF Editing Domain implementation. This simple implementation
+  allows the user to create/load a resource and to execute/undo/redo commands
+  that implies element from a resource contained in the Editing domain's
+  ``ResourceSet``. This implementation will evolve by probably adding read only
+  resource support and copy/paste functionnality.
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The
@@ -21,7 +27,7 @@ Changelog
   in their ``EPackage``. The result was a ``None`` value when
   ``datatype.ePackage`` was accessed.
 
- - Fix resource creation if model loading fails for ResourceSet. Even if the
+ - Fix resource creation if model loading fails for ``ResourceSet``. Even if the
    model loading fails, a resource is created in a ResourceSet. This behavior
    was problematic as two successive loading of the same faulty model lead to a
    failure the first time, but to a success the next time. This commit fixes

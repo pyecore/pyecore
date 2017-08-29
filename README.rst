@@ -889,7 +889,8 @@ In the current state, the project implements:
 * EMF proxies (first version),
 * object deletion (first version),
 * EMF commands (first version),
-* EMF basic command stack.
+* EMF basic command stack,
+* EMF very basic Editing Domain.
 
 The things that are in the roadmap:
 
@@ -899,7 +900,6 @@ The things that are in the roadmap:
 * derived collections,
 * URI mapper,
 * documentation,
-* EMF Editing Domain,
 * copy/paste (?).
 
 Existing Projects

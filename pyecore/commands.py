@@ -4,9 +4,10 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 """
 from abc import ABCMeta, abstractmethod
 from collections import MutableSequence
-from pyecore.ecore import EObject, BadValueError
-from pyecore.notification import Notification, Kind
+from .ecore import EObject, BadValueError
+from .notification import Notification, Kind
 import ordered_set
+from .resources import ResourceSet
 
 
 # monkey patching the OrderedSet implementation
@@ -110,6 +111,7 @@ class AbstractCommand(Command):
         if owner and not isinstance(owner, EObject):
             raise BadValueError(got=owner, expected=EObject)
         self.owner = owner
+        self.resource = owner.eResource
         self.feature = feature
         self.value = value
         self.previous_value = None
@@ -417,3 +419,29 @@ class CommandStack(object):
     def redo(self):
         self.peek_next_top.redo()
         self.stack_index += 1
+
+
+class EditingDomain(object):
+    def __init__(self, resource_set=None, command_stack_class=CommandStack):
+        self.resource_set = resource_set or ResourceSet()
+        self.__stack = command_stack_class()
+        self.clipboard = []
+
+    def create_resource(self, uri):
+        return self.resource_set.create_resource(uri)
+
+    def load_resource(self, uri):
+        return self.resource_set.get_resource(uri)
+
+    def execute(self, cmd):
+        if cmd.resource not in self.resource_set.resources.values():
+            raise ValueError("Cannot execute command '{}', the resource's "
+                             "command is not contained in the editing domain "
+                             "resource set.".format(cmd))
+        self.__stack.execute(cmd)
+
+    def undo(self):
+        self.__stack.undo()
+
+    def redo(self):
+        self.__stack.redo()
