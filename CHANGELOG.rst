@@ -29,7 +29,7 @@ Changelog
 
  - Fix load error when metamodel prefix is empty. When a metamodel prefix is
    empty, special tags, with the namespace encoded inside, are created by lxml.
-   This was an issue with the xmi decoding method as each tag's node was not
+   This was an issue with the xmi loading method as each tag's node was not
    properly decoded.
 
 **Miscellaneous**
