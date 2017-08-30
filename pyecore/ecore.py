@@ -55,7 +55,7 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
-        elif isinstance(obj, EProxy) and not obj._resolved:
+        elif isinstance(obj, EPlaceHolder) and not obj.resolved:
             return True
         try:
             return _type.__isinstance__(obj)
@@ -1088,30 +1088,36 @@ class MetaEClass(type):
         return obj
 
 
-class EProxy(EObject):
+class EPlaceHolder(EObject):
+    def __init__(self):
+        object.__setattr__(self, 'resolved', True)
+
+
+class EProxy(EPlaceHolder):
     def __init__(self, path=None, resource=None, wrapped=None):
+        super().__init__()
         super().__setattr__('_wrapped', wrapped)
         super().__setattr__('_proxy_path', path)
         super().__setattr__('_proxy_resource', resource)
-        super().__setattr__('_resolved', wrapped is not None)
+        super().__setattr__('resolved', wrapped is not None)
         super().__setattr__('_inverse_rels', set())
 
     def force_resolve(self):
-        if self._resolved:
+        if self.resolved:
             return
         resource = self._proxy_resource
         decoders = resource._get_href_decoder(self._proxy_path)
         self._wrapped = decoders.resolve(self._proxy_path, resource)
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
-        self._resolved = True
+        self.resolved = True
 
     def delete(self, recursive=True):
-        if recursive and self._resolved:
+        if recursive and self.resolved:
             [obj.delete() for obj in self.eAllContents()]
 
         seek = set(self._inverse_rels)
-        if self._resolved:
+        if self.resolved:
             seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
@@ -1136,10 +1142,10 @@ class EProxy(EObject):
                     owner.eSet(feature, None)
 
     def __getattribute__(self, name):
-        if name in ('_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
+        if name in ('_wrapped', '_proxy_path', '_proxy_resource', 'resolved',
                     'force_resolve', 'delete'):
             return super().__getattribute__(name)
-        resolved = super().__getattribute__('_resolved')
+        resolved = super().__getattribute__('resolved')
         if not resolved:
             if name in ('__class__', '_inverse_rels', '__name__'):
                 return super().__getattribute__(name)
@@ -1152,15 +1158,15 @@ class EProxy(EObject):
                 self._wrapped = decoded
             self._wrapped._inverse_rels.update(self._inverse_rels)
             self._inverse_rels = self._wrapped._inverse_rels
-            self._resolved = True
+            self.resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)
 
     def __setattr__(self, name, value):
-        if name in ('_wrapped', '_proxy_path', '_resolved', '_proxy_resource'):
+        if name in ('_wrapped', '_proxy_path', 'resolved', '_proxy_resource'):
             super().__setattr__(name, value)
             return
-        resolved = self._resolved
+        resolved = self.resolved
         if not resolved:
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
@@ -1169,7 +1175,7 @@ class EProxy(EObject):
                 self._wrapped = decoded.eClass
             else:
                 self._wrapped = decoded
-            self._resolved = True
+            self.resolved = True
         wrapped = self._wrapped
         wrapped.__setattr__(name, value)
 
