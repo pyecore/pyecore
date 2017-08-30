@@ -5,73 +5,7 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 from abc import ABCMeta, abstractmethod
 from collections import MutableSequence
 from .ecore import EObject, BadValueError
-from .notification import Notification, Kind
-import ordered_set
 from .resources import ResourceSet
-
-
-# monkey patching the OrderedSet implementation
-def insert(self, index, key):
-    """Adds an element at a dedicated position in an OrderedSet.
-
-    This implementation is meant for the OrderedSet from the ordered_set
-    package only.
-    """
-    if key in self.map:
-        return
-    # perform check and container/opposite update
-    self.check(key)
-    self._update_container(key)
-    self._update_opposite(key, self._owner)
-    # insert the value
-    size = len(self.items)
-    index = index % size if size != 0 and index < size else size
-    self.items.insert(index, key)
-    for k, v in self.map.items():
-        if v >= index:
-            self.map[k] = v + 1
-    self.map[key] = index
-    # send the ADD notification
-    self._owner.notify(Notification(new=key,
-                                    feature=self._efeature,
-                                    kind=Kind.ADD))
-    self._owner._isset.add(self._efeature)
-
-
-def pop(self, index=None):
-    """Removes an element at the tail of the OrderedSet or at a dedicated
-    position.
-
-    This implementation is meant for the OrderedSet from the ordered_set
-    package only.
-    """
-    if not self.items:
-        raise KeyError('Set is empty')
-
-    def remove_index(i):
-        elem = self.items[i]
-        self._update_container(None, previous_value=elem)
-        self._update_opposite(elem, self._owner, remove=True)
-        del self.items[i]
-        del self.map[elem]
-        self._owner.notify(Notification(old=elem,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
-        return elem
-    if index is None:
-        elem = remove_index(-1)
-    else:
-        elem = remove_index(index)
-        size = len(self.items)
-        index = index % size if size != 0 and index < size else size
-        for k, v in self.map.items():
-            if v >= index and v > 0:
-                self.map[k] = v - 1
-    return elem
-
-
-ordered_set.OrderedSet.insert = insert
-ordered_set.OrderedSet.pop = pop
 
 
 class Command(metaclass=ABCMeta):

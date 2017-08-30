@@ -11,7 +11,8 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
-from ordered_set import OrderedSet, is_iterable
+from .ordered_set_patch import ordered_set
+from ordered_set import OrderedSet
 from .notification import ENotifer, Notification, Kind, EObserver
 
 
@@ -415,6 +416,28 @@ class ECollection(PyEcoreValue):
                                         feature=self._efeature,
                                         kind=Kind.REMOVE))
 
+    def insert(self, i, y):
+        self.check(y)
+        self._update_container(y)
+        self._update_opposite(y, self._owner)
+        super().insert(i, y)
+        self._owner.notify(Notification(new=y,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD))
+        self._owner._isset.add(self._efeature)
+
+    def pop(self, index=None):
+        if index is None:
+            value = super().pop()
+        else:
+            value = super().pop(index)
+        self._update_container(None, previous_value=value)
+        self._update_opposite(value, self._owner, remove=True)
+        self._owner.notify(Notification(old=value,
+                                        feature=self._efeature,
+                                        kind=Kind.REMOVE))
+        return value
+
     def clear(self):
         [self.remove(x) for x in self]
 
@@ -452,7 +475,7 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
-        is_collection = is_iterable(y)
+        is_collection = ordered_set.is_iterable(y)
         if isinstance(i, slice) and is_collection:
             sliced_elements = self.__getitem__(i)
             all(self.check(x) for x in y)
@@ -486,28 +509,6 @@ class EList(ECollection, list):
                                         feature=self._efeature,
                                         kind=kind))
         self._owner._isset.add(self._efeature)
-
-    def insert(self, i, y):
-        self.check(y)
-        self._update_container(y)
-        self._update_opposite(y, self._owner)
-        super().insert(i, y)
-        self._owner.notify(Notification(new=y,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD))
-        self._owner._isset.add(self._efeature)
-
-    def pop(self, index=None):
-        if index is None:
-            value = super().pop()
-        else:
-            value = super().pop(index)
-        self._update_container(None, previous_value=value)
-        self._update_opposite(value, self._owner, remove=True)
-        self._owner.notify(Notification(old=value,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
-        return value
 
 
 class EBag(EList):
@@ -549,10 +550,10 @@ class EAbstractSet(ECollection):
         self._owner._isset.add(self._efeature)
 
 
-class EOrderedSet(EAbstractSet, OrderedSet):
+class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
-        OrderedSet.__init__(self)
+        ordered_set.OrderedSet.__init__(self)
 
     def update(self, others):
         self._orderedset_update = True
@@ -939,11 +940,12 @@ class EClass(EClassifier):
         if metainstance:
             self.python_class = metainstance
         else:
-            self.python_class = type(self.name,
+            self.python_class = type(name,
                                      self.__compute_supertypes(),
                                      {
                                          'eClass': self,
                                          '_staticEClass': self._staticEClass,
+                                         '__name__': name
                                       })
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
