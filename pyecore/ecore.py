@@ -939,14 +939,15 @@ class EClass(EClassifier):
             self.eSuperTypes.append(superclass)
         if metainstance:
             self.python_class = metainstance
+            self.__name__ = self.python_class.__name__
         else:
             self.python_class = type(name,
                                      self.__compute_supertypes(),
                                      {
                                          'eClass': self,
-                                         '_staticEClass': self._staticEClass,
-                                         '__name__': name
+                                         '_staticEClass': self._staticEClass
                                       })
+            self.__name__ = name
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
         self._eternal_listener.append(self.supertypes_updater)
@@ -979,6 +980,9 @@ class EClass(EClassifier):
                     setattr(self.python_class, x.name, x)
             elif notif.kind is Kind.REMOVE:
                 delattr(self.python_class, notif.old.name)
+        elif notif.feature is EClass.name and notif.kind is Kind.SET:
+            self.python_class.__name__ = notif.new
+            self.__name__ = notif.new
 
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()
@@ -1132,12 +1136,12 @@ class EProxy(EObject):
                     owner.eSet(feature, None)
 
     def __getattribute__(self, name):
-        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
-                    'force_resolve', 'delete']:
+        if name in ('_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
+                    'force_resolve', 'delete'):
             return super().__getattribute__(name)
         resolved = super().__getattribute__('_resolved')
         if not resolved:
-            if name in ['__class__', '_inverse_rels']:
+            if name in ('__class__', '_inverse_rels', '__name__'):
                 return super().__getattribute__(name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
@@ -1153,7 +1157,7 @@ class EProxy(EObject):
         return wrapped.__getattribute__(name)
 
     def __setattr__(self, name, value):
-        if name in ['_wrapped', '_proxy_path', '_resolved', '_proxy_resource']:
+        if name in ('_wrapped', '_proxy_path', '_resolved', '_proxy_resource'):
             super().__setattr__(name, value)
             return
         resolved = self._resolved

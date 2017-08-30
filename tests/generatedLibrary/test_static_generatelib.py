@@ -160,3 +160,7 @@ def test_static_init_dynamicEPackage_bad_value():
 
 def test_static_edatatype_epackage():
     assert library.BookCategory.ePackage is library.Writer.eClass.ePackage
+
+
+def test_static_eclass_name():
+    assert library.Book.eClass.__name__ == 'Book'

@@ -836,3 +836,15 @@ testdata = [
 @pytest.mark.parametrize("instance, cls, result", testdata)
 def test_epackage_isinstance(instance, cls, result):
     assert EcoreUtils.isinstance(instance, cls) is result
+
+
+def test_eclass__name__():
+    A = EClass('A')
+    assert A.name == 'A'
+    assert A.python_class.__name__ == 'A'
+    assert A.__name__ == 'A'
+
+    A.name = 'B'
+    assert A.name == 'B'
+    assert A.python_class.__name__ == 'B'
+    assert A.__name__ == 'B'
