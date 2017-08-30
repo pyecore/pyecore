@@ -20,6 +20,10 @@ Changelog
   ``ResourceSet``. This implementation will evolve by probably adding read only
   resource support and copy/paste functionnality.
 
+- Add basic support for ``OrderedSet``'s' ``__setitem__`` method. This very
+  simple implementation relies on ``insert`` and ``pop`` and currently does
+  not support ``slices``.
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The
@@ -38,11 +42,20 @@ Changelog
    This was an issue with the xmi loading method as each tag's node was not
    properly decoded.
 
+ - Improve OrderedSet ``insert/pop`` methods. The default ``OrderedSet``
+   implementation does not provide methods for ``insert`` and ``pop``. The
+   current code provided by PyEcore, monkey patching the library, was mixed
+   with internal PyEcore code. This new implementation split the two concerns
+   and proposes a better way of dealing with these two methods.
+
 **Miscellaneous**
 
 - Change ``__repr__`` display for ``EClass`` and ``EStructuralFeature``. The
   fact that PyEcore is extensible and the basic ``EClass/EStructural``
   metaclasses can  be extended requires a better representation.
+
+- Add ``__name__`` attribute on instances of ``EClass`` so they look a little
+  bit more like a python class.
 
 0.6.0
 +++++
