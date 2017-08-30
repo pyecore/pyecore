@@ -1090,7 +1090,7 @@ class MetaEClass(type):
 
 class EPlaceHolder(EObject):
     def __init__(self):
-        object.__setattr__(self, 'resolved', True)
+        object.__setattr__(self, 'resolved', False)
 
 
 class EProxy(EPlaceHolder):
