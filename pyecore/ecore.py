@@ -451,6 +451,13 @@ class ECollection(PyEcoreValue):
     def reject(self, f):
         return [x for x in self if not f(x)]
 
+    def __iadd__(self, items):
+        if ordered_set.is_iterable(items):
+            self.extend(items)
+        else:
+            self.append(items)
+        return self
+
 
 class EList(ECollection, list):
     def __init__(self, owner, efeature=None):
@@ -468,7 +475,8 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
-        all(self.check(x) for x in sublist)
+        for x in sublist:
+            self.check(x)
         for value in sublist:
             self._update_container(value)
             self._update_opposite(value, self._owner)
@@ -482,8 +490,8 @@ class EList(ECollection, list):
         is_collection = ordered_set.is_iterable(y)
         if isinstance(i, slice) and is_collection:
             sliced_elements = self.__getitem__(i)
-            all(self.check(x) for x in y)
             for element in y:
+                self.check(element)
                 self._update_container(element)
                 self._update_opposite(element, self._owner)
             # We remove (not really) all element from the slice
@@ -543,7 +551,8 @@ class EAbstractSet(ECollection):
         self.update(sublist)
 
     def update(self, others):
-        all(self.check(x) for x in others)
+        for x in others:
+            self.check(x)
         for value in others:
             self._update_container(value)
             self._update_opposite(value, self._owner)

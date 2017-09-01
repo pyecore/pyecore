@@ -24,6 +24,10 @@ Changelog
   simple implementation relies on ``insert`` and ``pop`` and currently does
   not support ``slices``.
 
+- Add ``__iadd__`` support for collections. This little addition allows you to
+  add elements to PyEcore collections using ``+=``. This operator also works
+  for single element as right operand.
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The

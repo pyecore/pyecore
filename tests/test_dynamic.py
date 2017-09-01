@@ -848,3 +848,20 @@ def test_eclass__name__():
     assert A.name == 'B'
     assert A.python_class.__name__ == 'B'
     assert A.__name__ == 'B'
+
+
+def test_ecollection_iadd():
+    A = EClass('A')
+    A.eStructuralFeatures += EReference('a', A, upper=-1)
+
+    assert len(A.eStructuralFeatures) == 1
+
+    a = A()
+    a.a += [A(), A()]
+    assert len(a.a) == 2
+
+    with pytest.raises(BadValueError):
+        a.a += 'test'
+
+    with pytest.raises(BadValueError):
+        a.a += [A(), 'test']
