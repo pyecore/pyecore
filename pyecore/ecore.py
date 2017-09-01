@@ -302,10 +302,10 @@ class EValue(PyEcoreValue):
         else:
             self._value = efeature.get_default_value()
 
-    def __get__(self, obj, owner=None):
+    def _get(self):
         return self._value
 
-    def __set__(self, instance, value, update_opposite=True):
+    def _set(self, instance, value, update_opposite=True):
         self.check(value)
         previous_value = self._value
         self._value = value
@@ -360,7 +360,7 @@ class EValue(PyEcoreValue):
         else:
             # We disable the eOpposite update
             value.__dict__[eOpposite.name]. \
-                  __set__(None, owner, update_opposite=False)
+                  _set(None, owner, update_opposite=False)
             notif.kind = Kind.SET
             value.notify(notif)
             if value._isready and \
@@ -369,6 +369,7 @@ class EValue(PyEcoreValue):
 
 
 class ECollection(PyEcoreValue):
+    @staticmethod
     def create(owner, feature):
         if feature.ordered and feature.unique:
             return EOrderedSet(owner, efeature=feature)
@@ -381,6 +382,9 @@ class ECollection(PyEcoreValue):
 
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
+
+    def _get(self):
+        return self
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
@@ -405,7 +409,7 @@ class ECollection(PyEcoreValue):
             new_value = None if remove else new_value
             object.__getattribute__(owner, eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
-                 .__set__(None, new_value, update_opposite=False)
+                 ._set(None, new_value, update_opposite=False)
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -856,9 +860,10 @@ class EStructuralFeature(ETypedElement):
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
+            return new_value._get()
         value = instance_dict[name]
-        if isinstance(value, EValue):
-            return value.__get__(instance, owner)
+        if type(value) is EValue:
+            return value._get()
         else:
             return value
 
@@ -874,7 +879,7 @@ class EStructuralFeature(ETypedElement):
         previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance_dict[name].__set__(instance, value)
+        instance_dict[name]._set(instance, value)
 
     def __repr__(self):
         eType = getattr(self, 'eType', None)
