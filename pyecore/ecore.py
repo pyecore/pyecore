@@ -164,8 +164,7 @@ class EObject(ENotifer):
                     self_setter(key, ECollection.create(self, feature))
                 else:
                     default_value = None
-                    if isinstance(feature, EAttribute):
-                        default_value = feature.get_default_value()
+                    default_value = feature.get_default_value()
                     self_setter(key, default_value)
 
     def eContainer(self):
