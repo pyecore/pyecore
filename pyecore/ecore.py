@@ -133,6 +133,7 @@ class EObject(ENotifer):
     _staticEClass = True
 
     def __init__(self):
+        super().__init__()
         self.__subinit__()
         self.__initmetattr__()
         self._isready = True
@@ -270,6 +271,7 @@ class EObject(ENotifer):
 
 class PyEcoreValue(object):
     def __init__(self, owner, efeature=None):
+        super().__init__()
         self._owner = owner
         self._efeature = efeature
 
