@@ -80,8 +80,10 @@ class Core(object):
         # init super types
         eSuperTypes_add = cls.eClass.eSuperTypes.append
         for _cls in cls.__bases__:
-            if _cls is not EObject and _cls is not ENotifer:
+            try:
                 eSuperTypes_add(_cls.eClass)
+            except Exception:
+                pass
         # init eclass by reflection
         eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
         for k, feature in cls.__dict__.items():
