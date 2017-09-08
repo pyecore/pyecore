@@ -61,6 +61,15 @@ Changelog
 - Add ``__name__`` attribute on instances of ``EClass`` so they look a little
   bit more like a python class.
 
+- Improve inheritance tree building for static ``EClass``. This new detection
+  relies on the fact that an existing EClass already have an ``eClass``
+  attribute. This modification will prepare the work for the introduction of a
+  new method for generating static ``EClass``.
+
+- Add missing ``super().__init__()`` call in base classes. This missing
+  statement could be an issue for multiple inheritance.
+
+
 0.6.0
 +++++
 
