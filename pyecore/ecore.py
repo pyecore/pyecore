@@ -446,7 +446,7 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        [self.remove(x) for x in self]
+        [self.remove(x) for x in set(self)]
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -892,6 +892,14 @@ class EStructuralFeature(ETypedElement):
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
         instance_dict[name]._set(instance, value)
+
+    def __delete__(self, instance):
+        name = self._name
+        value = getattr(instance, name)
+        if self.many:
+            value.clear()
+        else:
+            setattr(instance, name, self.get_default_value())
 
     def __repr__(self):
         eType = getattr(self, 'eType', None)

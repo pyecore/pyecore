@@ -28,6 +28,12 @@ Changelog
   add elements to PyEcore collections using ``+=``. This operator also works
   for single element as right operand.
 
+- Add ``del obj.attr`` support for ``EObject`` attributes/references. The
+  support for the ``del`` keywords is only activated on ``EStructuralFeature``
+  instances. It allows to clean references on elements for a given object.
+  **WARNING:** this action does not delete the pointed object, it only clears
+  the reference/collection from the calling element towards the objects.
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The
