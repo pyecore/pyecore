@@ -34,6 +34,10 @@ Changelog
   **WARNING:** this action does not delete the pointed object, it only clears
   the reference/collection from the calling element towards the objects.
 
+- Add support for ``dir`` on ``EObject``. The function ``dir()`` now gives a
+  sum up of all the attributes/references and operations that can be called on
+  an object. This is really handy when PyEcore is handled in the Python console.
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The

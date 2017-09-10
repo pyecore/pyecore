@@ -270,6 +270,13 @@ class EObject(ENotifer):
             return self.eContainer()
         return self.eContainer().eRoot()
 
+    def __dir__(self):
+        eclass = self.eClass
+        relevant = [x.name for x in eclass.eAllStructuralFeatures()]
+        relevant.extend([x.name for x in eclass.eAllOperations()
+                        if not x.name.startswith('_')])
+        return relevant
+
 
 class PyEcoreValue(object):
     def __init__(self, owner, efeature=None):

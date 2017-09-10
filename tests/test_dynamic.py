@@ -865,3 +865,16 @@ def test_ecollection_iadd():
 
     with pytest.raises(BadValueError):
         a.a += [A(), 'test']
+
+
+def test_eobject_dir():
+    A = EClass('A')
+    assert 'name' in dir(A)  # just an example
+
+    a = A()
+    assert dir(a) == []
+
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EReference('to_a', A))
+    assert 'name' in dir(a)
+    assert 'to_a' in dir(a)

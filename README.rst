@@ -178,6 +178,43 @@ Opposite and 'collection' meta-references are also managed:
     >>> instance1.toCs  # 'toCs' should contain 'c1' because 'toMy' is opposite relation of 'toCs'
     [<pyecore.ecore.C object at 0x7f7da7053390>]
 
+Explore Dynamic metamodel/model objects
+---------------------------------------
+
+It is possible, when you are handling an object in the Python console, to ask
+for all the meta-attributes/meta-references and meta-operations that can
+be called on it using ``dir()`` on, either a dynamic metamodel object or a
+model instance. This allows you to quickly experiment and find the information
+you are looking for:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> dir(A)
+    ['abstract',
+     'delete',
+     'eAllContents',
+     'eAllOperations',
+     'eAllReferences',
+     'eAllStructuralFeatures',
+     'eAllSuperTypes',
+     'eAnnotations',
+     'eAttributes',
+     'eContainer',
+     # ... there is many others
+     'findEOperation',
+     'findEStructuralFeature',
+     'getEAnnotation',
+     'instanceClassName',
+     'interface',
+     'name']
+    >>> a = A()
+    >>> dir(a)
+    []
+    >>> A.eStructuralFeatures.append(EAttribute('myname', EString))
+    >>> dir(a)
+    ['myname']
+
 
 Enhance the Dynamic metamodel
 -----------------------------
