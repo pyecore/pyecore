@@ -79,6 +79,8 @@ Changelog
 - Add missing ``super().__init__()`` call in base classes. This missing
   statement could be an issue for multiple inheritance.
 
+- Add better support for ``**kwargs`` in ``EObject`` constructors.
+
 
 0.6.0
 +++++

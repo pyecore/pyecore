@@ -134,8 +134,8 @@ class Core(object):
 class EObject(ENotifer):
     _staticEClass = True
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.__subinit__()
         self.__initmetattr__()
         self._isready = True
@@ -589,8 +589,8 @@ class ESet(EOrderedSet):
 
 
 class EModelElement(EObject):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def eURIFragment(self):
         if not self.eContainer():
@@ -610,21 +610,21 @@ class EModelElement(EObject):
 
 
 class EAnnotation(EModelElement):
-    def __init__(self, source=None):
-        super().__init__()
+    def __init__(self, source=None, **kwargs):
+        super().__init__(**kwargs)
         self.source = source
         self.details = {}
 
 
 class ENamedElement(EModelElement):
-    def __init__(self, name=None):
-        super().__init__()
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
         self.name = name
 
 
 class EPackage(ENamedElement):
-    def __init__(self, name=None, nsURI=None, nsPrefix=None):
-        super().__init__(name)
+    def __init__(self, name=None, nsURI=None, nsPrefix=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.nsURI = nsURI
         self.nsPrefix = nsPrefix
 
@@ -639,8 +639,8 @@ class EPackage(ENamedElement):
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False):
-        super().__init__(name)
+                 lower=0, upper=1, required=False, **kwargs):
+        super().__init__(name, **kwargs)
         self.eType = eType
         self.lowerBound = int(lower)
         self.upperBound = int(upper)
@@ -655,8 +655,8 @@ class ETypedElement(ENamedElement):
 
 class EOperation(ETypedElement):
     def __init__(self, name=None, eType=None, params=None, exceptions=None,
-                 lower=0, upper=1):
-        super().__init__(name, eType, lower=lower, upper=upper)
+                 **kwargs):
+        super().__init__(name, eType, **kwargs)
         if params:
                 self.eParameters.extend(params)
         if exceptions:
@@ -677,10 +677,8 @@ class EOperation(ETypedElement):
 
 
 class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None, required=False, lower=0,
-                 upper=1):
-        super().__init__(name, eType, required=required, lower=lower,
-                         upper=upper)
+    def __init__(self, name=None, eType=None, **kwargs):
+        super().__init__(name, eType, **kwargs)
 
     def to_code(self):
         if self.required:
@@ -693,8 +691,8 @@ class EParameter(ETypedElement):
 
 
 class ETypeParameter(ENamedElement):
-    def __init__(self, name=None):
-        super().__init__(name)
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
 
 
 class EGenericType(EObject):
@@ -702,8 +700,8 @@ class EGenericType(EObject):
 
 
 class EClassifier(ENamedElement):
-    def __init__(self, name=None):
-        super().__init__(name)
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
 
     def __isinstance__(self, instance=None):
         return (instance is None and
@@ -748,8 +746,8 @@ class EDataType(EClassifier):
 
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None, instanceClassName=None,
-                 type_as_factory=False):
-        super().__init__(name)
+                 type_as_factory=False, **kwargs):
+        super().__init__(name, **kwargs)
         self.eType = eType
         self.type_as_factory = type_as_factory
         self._default_value = default_value
@@ -803,8 +801,8 @@ class EDataType(EClassifier):
 
 
 class EEnum(EDataType):
-    def __init__(self, name=None, default_value=None, literals=None):
-        super().__init__(name, eType=self)
+    def __init__(self, name=None, default_value=None, literals=None, **kwargs):
+        super().__init__(name, eType=self, **kwargs)
         if literals:
             for i, lit_name in enumerate(literals):
                 lit_name = '_' + lit_name if lit_name[:1].isnumeric() \
@@ -842,8 +840,8 @@ class EEnum(EDataType):
 
 
 class EEnumLiteral(ENamedElement):
-    def __init__(self, value=0, name=None):
-        super().__init__(name)
+    def __init__(self, value=0, name=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.value = value
 
     def __repr__(self):
@@ -851,11 +849,9 @@ class EEnumLiteral(ENamedElement):
 
 
 class EStructuralFeature(ETypedElement):
-    def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False, changeable=True,
-                 volatile=False, transient=False, unsettable=False,
-                 derived=False):
-        super().__init__(name, eType, ordered, unique, lower, upper, required)
+    def __init__(self, name=None, eType=None, changeable=True, volatile=False,
+                 transient=False, unsettable=False, derived=False, **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.changeable = changeable
         self.volatile = volatile
         self.transient = transient
@@ -915,12 +911,9 @@ class EStructuralFeature(ETypedElement):
 
 
 class EAttribute(EStructuralFeature):
-    def __init__(self, name=None, eType=None, default_value=None,
-                 lower=0, upper=1, changeable=True, derived=False,
-                 unique=True, ordered=True, iD=False):
-        super().__init__(name, eType, lower=lower, upper=upper,
-                         derived=derived, changeable=changeable,
-                         unique=unique, ordered=ordered)
+    def __init__(self, name=None, eType=None, default_value=None, iD=False,
+                 **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.iD = iD
         self.default_value = default_value
         if self.default_value is None and isinstance(eType, EDataType):
@@ -936,11 +929,9 @@ class EAttribute(EStructuralFeature):
 
 
 class EReference(EStructuralFeature):
-    def __init__(self, name=None, eType=None, lower=0, upper=1,
-                 containment=False, eOpposite=None, ordered=True, unique=True,
-                 derived=False):
-        super().__init__(name, eType, ordered, unique, lower=lower,
-                         upper=upper, derived=derived)
+    def __init__(self, name=None, eType=None, containment=False,
+                 eOpposite=None, **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.containment = containment
         self.eOpposite = eOpposite
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
@@ -962,8 +953,8 @@ class EReference(EStructuralFeature):
 
 class EClass(EClassifier):
     def __init__(self, name=None, superclass=None, abstract=False,
-                 metainstance=None):
-        super().__init__(name)
+                 metainstance=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.abstract = abstract
         if isinstance(superclass, tuple):
             [self.eSuperTypes.append(x) for x in superclass]
@@ -1126,8 +1117,8 @@ class EPlaceHolder(EObject):
 
 
 class EProxy(EPlaceHolder):
-    def __init__(self, path=None, resource=None, wrapped=None):
-        super().__init__()
+    def __init__(self, path=None, resource=None, wrapped=None, **kwargs):
+        super().__init__(**kwargs)
         super().__setattr__('_wrapped', wrapped)
         super().__setattr__('_proxy_path', path)
         super().__setattr__('_proxy_resource', resource)
