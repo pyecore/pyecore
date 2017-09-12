@@ -753,6 +753,8 @@ class EDataType(EClassifier):
         self._default_value = default_value
         if instanceClassName:
             self.instanceClassName = instanceClassName
+        else:
+            self._instanceClassName = None
         if from_string:
             self.from_string = from_string
         if to_string:
