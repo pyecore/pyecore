@@ -138,14 +138,12 @@ class EObject(ENotifer):
         super().__init__(**kwargs)
         self.__subinit__()
         # self.__initmetattr__()
-        self._isready = True
         self._staticEClass = False
 
     def __subinit__(self):
         self._xmiid = None
         self._isset = set()
         self._container = None
-        self._isready = False
         self._containment_feature = None
         self._eresource = None
         self.listeners = []
@@ -319,9 +317,9 @@ class EValue(PyEcoreValue):
         previous_value = self._value
         self._value = value
         # This case happend during meta-EReference initialization
-        if not self._owner or not self._owner._isready \
-                or not isinstance(self._owner, EObject):
-            return
+        # --> NOTE: finally perhaps not
+        # if not self._owner or not isinstance(self._owner, EObject):
+        #     return
         owner = self._owner
         efeature = self._efeature
         notif = Notification(old=previous_value,
@@ -329,7 +327,7 @@ class EValue(PyEcoreValue):
                              feature=efeature,
                              kind=Kind.UNSET if value is None else Kind.SET)
         owner.notify(notif)
-        if owner._isready and value != efeature.get_default_value:
+        if value != efeature.get_default_value:
             owner._isset.add(efeature)
 
         if not isinstance(efeature, EReference):
@@ -372,8 +370,7 @@ class EValue(PyEcoreValue):
                   _set(None, owner, update_opposite=False)
             notif.kind = Kind.SET
             value.notify(notif)
-            if value._isready and \
-                    eOpposite.get_default_value != owner:
+            if eOpposite.get_default_value != owner:
                 value._isset.add(eOpposite)
 
 
@@ -980,9 +977,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self.python_class(*args, **kwargs)
-        obj._isready = True
-        return obj
+        return self.python_class(*args, **kwargs)
 
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
@@ -1094,9 +1089,7 @@ class MetaEClass(type):
         if cls.eClass.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
-        obj = type.__call__(cls, *args, **kwargs)
-        obj._isready = True
-        return obj
+        return type.__call__(cls, *args, **kwargs)
     #     if not hasattr(obj, '_isready'):
     #         EObject.__subinit__(obj)
     #
