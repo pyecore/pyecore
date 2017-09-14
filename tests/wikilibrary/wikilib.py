@@ -28,7 +28,7 @@ class Book(EObject, metaclass=MetaEClass):
                           default_value=BookCategory.ScienceFiction)
 
     def __init__(self):
-        pass
+        super().__init__()
 
 
 class Writer(EObject, metaclass=MetaEClass):

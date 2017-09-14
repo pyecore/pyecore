@@ -137,7 +137,7 @@ class EObject(ENotifer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.__subinit__()
-        self.__initmetattr__()
+        # self.__initmetattr__()
         self._isready = True
         self._staticEClass = False
 
@@ -152,23 +152,25 @@ class EObject(ENotifer):
         self._eternal_listener = []
         self._inverse_rels = set()
 
-    def __initmetattr__(self):
-        self_setter = self.__setattr__
-        self_dict = self.__dict__
-        for cls in self.__class__.__mro__:
-            if cls is EObject:
-                break
-            for key, feature in cls.__dict__.items():
-                if not isinstance(feature, EStructuralFeature):
-                    continue
-                if key in self_dict:
-                    continue
-                if feature.many:
-                    self_setter(key, ECollection.create(self, feature))
-                else:
-                    default_value = None
-                    default_value = feature.get_default_value()
-                    self_setter(key, default_value)
+    # NOTE: Finally, not so useful as the init is lazy done when
+    #       a property is accessed
+    # def __initmetattr__(self):
+    #     self_setter = self.__setattr__
+    #     self_dict = self.__dict__
+    #     for cls in self.__class__.__mro__:
+    #         if cls is EObject:
+    #             break
+    #         for key, feature in cls.__dict__.items():
+    #             if not isinstance(feature, EStructuralFeature):
+    #                 continue
+    #             if key in self_dict:
+    #                 continue
+    #             if feature.many:
+    #                 self_setter(key, ECollection.create(self, feature))
+    #             else:
+    #                 default_value = None
+    #                 default_value = feature.get_default_value()
+    #                 self_setter(key, default_value)
 
     def eContainer(self):
         return self._container
@@ -279,7 +281,7 @@ class EObject(ENotifer):
 
 
 class PyEcoreValue(object):
-    def __init__(self, owner, efeature=None):
+    def __init__(self, owner, efeature):
         super().__init__()
         self._owner = owner
         self._efeature = efeature
@@ -305,12 +307,9 @@ class PyEcoreValue(object):
 
 
 class EValue(PyEcoreValue):
-    def __init__(self, owner, efeature=None, value=None):
+    def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
-        if value is not None:
-            self._value = None
-        else:
-            self._value = efeature.get_default_value()
+        self._value = efeature.get_default_value()
 
     def _get(self):
         return self._value
@@ -382,15 +381,15 @@ class ECollection(PyEcoreValue):
     @staticmethod
     def create(owner, feature):
         if feature.ordered and feature.unique:
-            return EOrderedSet(owner, efeature=feature)
+            return EOrderedSet(owner, feature)
         elif feature.ordered and not feature.unique:
-            return EList(owner, efeature=feature)
+            return EList(owner, feature)
         elif feature.unique:
-            return ESet(owner, efeature=feature)
+            return ESet(owner, feature)
         else:
-            return EBag(owner, efeature=feature)  # see for better implem
+            return EBag(owner, feature)  # see for better implem
 
-    def __init__(self, owner, efeature=None):
+    def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
 
     def _get(self):
@@ -1096,21 +1095,26 @@ class MetaEClass(type):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         obj = type.__call__(cls, *args, **kwargs)
-        # init instances by reflection
-        if not hasattr(obj, '_isready'):
-            EObject.__subinit__(obj)
-        # required for 'at runtime' added features
-        for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
-            if efeat.name in obj.__dict__:
-                continue
-            if isinstance(efeat, EAttribute):
-                obj.__setattr__(efeat.name, efeat.get_default_value())
-            elif efeat.many:
-                obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
-            else:
-                obj.__setattr__(efeat.name, None)
         obj._isready = True
         return obj
+    #     if not hasattr(obj, '_isready'):
+    #         EObject.__subinit__(obj)
+    #
+    #     # init instances by reflection
+    #     # required for 'at runtime' added features
+    #     # NOTE: Finally, not so useful as the init is lazy done when
+    #     #       a property is accessed
+    #     # for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
+    #     #     if efeat.name in obj.__dict__:
+    #     #         continue
+    #     #     if isinstance(efeat, EAttribute):
+    #     #         obj.__setattr__(efeat.name, efeat.get_default_value())
+    #     #     elif efeat.many:
+    #     #         obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
+    #     #     else:
+    #     #         obj.__setattr__(efeat.name, None)
+    #     obj._isready = True
+    #     return obj
 
 
 class EPlaceHolder(EObject):
