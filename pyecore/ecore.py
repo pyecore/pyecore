@@ -136,11 +136,6 @@ class EObject(ENotifer):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.__subinit__()
-        # self.__initmetattr__()
-        self._staticEClass = False
-
-    def __subinit__(self):
         self._xmiid = None
         self._isset = set()
         self._container = None
@@ -149,26 +144,7 @@ class EObject(ENotifer):
         self.listeners = []
         self._eternal_listener = []
         self._inverse_rels = set()
-
-    # NOTE: Finally, not so useful as the init is lazy done when
-    #       a property is accessed
-    # def __initmetattr__(self):
-    #     self_setter = self.__setattr__
-    #     self_dict = self.__dict__
-    #     for cls in self.__class__.__mro__:
-    #         if cls is EObject:
-    #             break
-    #         for key, feature in cls.__dict__.items():
-    #             if not isinstance(feature, EStructuralFeature):
-    #                 continue
-    #             if key in self_dict:
-    #                 continue
-    #             if feature.many:
-    #                 self_setter(key, ECollection.create(self, feature))
-    #             else:
-    #                 default_value = None
-    #                 default_value = feature.get_default_value()
-    #                 self_setter(key, default_value)
+        self._staticEClass = False
 
     def eContainer(self):
         return self._container
@@ -312,14 +288,10 @@ class EValue(PyEcoreValue):
     def _get(self):
         return self._value
 
-    def _set(self, instance, value, update_opposite=True):
+    def _set(self, value, update_opposite=True):
         self.check(value)
         previous_value = self._value
         self._value = value
-        # This case happend during meta-EReference initialization
-        # --> NOTE: finally perhaps not
-        # if not self._owner or not isinstance(self._owner, EObject):
-        #     return
         owner = self._owner
         efeature = self._efeature
         notif = Notification(old=previous_value,
@@ -367,7 +339,7 @@ class EValue(PyEcoreValue):
         else:
             # We disable the eOpposite update
             value.__dict__[eOpposite.name]. \
-                  _set(None, owner, update_opposite=False)
+                  _set(owner, update_opposite=False)
             notif.kind = Kind.SET
             value.notify(notif)
             if eOpposite.get_default_value != owner:
@@ -415,7 +387,7 @@ class ECollection(PyEcoreValue):
             new_value = None if remove else new_value
             object.__getattribute__(owner, eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
-                 ._set(None, new_value, update_opposite=False)
+                 ._set(new_value, update_opposite=False)
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -892,7 +864,7 @@ class EStructuralFeature(ETypedElement):
         previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance_dict[name]._set(instance, value)
+        instance_dict[name]._set(value)
 
     def __delete__(self, instance):
         name = self._name
@@ -1090,24 +1062,6 @@ class MetaEClass(type):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         return type.__call__(cls, *args, **kwargs)
-    #     if not hasattr(obj, '_isready'):
-    #         EObject.__subinit__(obj)
-    #
-    #     # init instances by reflection
-    #     # required for 'at runtime' added features
-    #     # NOTE: Finally, not so useful as the init is lazy done when
-    #     #       a property is accessed
-    #     # for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
-    #     #     if efeat.name in obj.__dict__:
-    #     #         continue
-    #     #     if isinstance(efeat, EAttribute):
-    #     #         obj.__setattr__(efeat.name, efeat.get_default_value())
-    #     #     elif efeat.many:
-    #     #         obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
-    #     #     else:
-    #     #         obj.__setattr__(efeat.name, None)
-    #     obj._isready = True
-    #     return obj
 
 
 class EPlaceHolder(EObject):
