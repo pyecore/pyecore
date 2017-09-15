@@ -81,6 +81,9 @@ Changelog
 
 - Add better support for ``**kwargs`` in ``EObject`` constructors.
 
+- Improve performance. As attribute are accessed in a lazy-loading way, there
+  is no more need for post object creation initialization.
+
 
 0.6.0
 +++++
