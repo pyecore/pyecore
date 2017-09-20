@@ -118,7 +118,13 @@ class Core(object):
             epackage.eClassifiers = eclassifs
             epackage.getEClassifier = partial(getEClassifier,
                                               searchspace=eclassifs)
-        # object.__setattr__(cls.eClass, 'ePackage', epackage)
+        if not hasattr(epackage, 'eClass'):
+            pack_name = (epackage.__name__ if epackage.__name__ != '__main__'
+                         else 'default_package')
+            print(pack_name)
+            epackage.eClass = EPackage(name=pack_name,
+                                       nsPrefix=pack_name,
+                                       nsURI='http://{}/'.format(pack_name))
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if hasattr(epackage, 'eResource'):
