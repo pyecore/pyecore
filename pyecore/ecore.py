@@ -121,7 +121,6 @@ class Core(object):
         if not hasattr(epackage, 'eClass'):
             pack_name = (epackage.__name__ if epackage.__name__ != '__main__'
                          else 'default_package')
-            print(pack_name)
             epackage.eClass = EPackage(name=pack_name,
                                        nsPrefix=pack_name,
                                        nsURI='http://{}/'.format(pack_name))
