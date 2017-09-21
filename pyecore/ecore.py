@@ -1009,6 +1009,9 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
+            if EObject.eClass in eSuperTypes:
+                index = eSuperTypes.index(EObject.eClass)
+                eSuperTypes.append(eSuperTypes.pop(index))
             return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
