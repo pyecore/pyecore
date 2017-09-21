@@ -685,7 +685,7 @@ class EClassifier(ENamedElement):
     def __isinstance__(self, instance=None):
         return (instance is None and
                 (self is EClassifier or
-                 isinstance(self, EClassifier) or
+                 isinstance(self, (EClassifier, MetaEClass)) or
                  getattr(self, '_staticEClass', False)))
 
 
