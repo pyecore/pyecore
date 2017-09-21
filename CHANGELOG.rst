@@ -38,6 +38,11 @@ Changelog
   sum up of all the attributes/references and operations that can be called on
   an object. This is really handy when PyEcore is handled in the Python console.
 
+- Add ``**kwargs`` support for dynamic ``EClass``. This allows to have more
+  fluent constructors. It is important to note that the default behavior when
+  a named parameter are used is to set the attribute to the value passed as
+  parameter. Also, ``args`` are accepted, but they are not directly handled. 
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The

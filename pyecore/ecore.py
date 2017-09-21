@@ -931,25 +931,36 @@ class EReference(EStructuralFeature):
 
 
 class EClass(EClassifier):
+    def __new__(cls, name=None, superclass=None, metainstance=None, **kwargs):
+        if type(name) is not str:
+            raise BadValueError(got=name, expected=str)
+        instance = super().__new__(cls)
+        if isinstance(superclass, tuple):
+            [instance.eSuperTypes.append(x) for x in superclass]
+        elif isinstance(superclass, EClass):
+            instance.eSuperTypes.append(superclass)
+        if metainstance:
+            instance.python_class = metainstance
+            instance.__name__ = metainstance.__name__
+        else:
+            def new_init(self, *args, **kwargs):
+                for name, value in kwargs.items():
+                    setattr(self, name, value)
+            attr_dict = {
+                'eClass': instance,
+                '_staticEClass': instance._staticEClass,
+                '__init__': new_init
+            }
+            instance.python_class = type(name,
+                                         instance.__compute_supertypes(),
+                                         attr_dict)
+            instance.__name__ = name
+        return instance
+
     def __init__(self, name=None, superclass=None, abstract=False,
                  metainstance=None, **kwargs):
         super().__init__(name, **kwargs)
         self.abstract = abstract
-        if isinstance(superclass, tuple):
-            [self.eSuperTypes.append(x) for x in superclass]
-        elif isinstance(superclass, EClass):
-            self.eSuperTypes.append(superclass)
-        if metainstance:
-            self.python_class = metainstance
-            self.__name__ = self.python_class.__name__
-        else:
-            self.python_class = type(name,
-                                     self.__compute_supertypes(),
-                                     {
-                                         'eClass': self,
-                                         '_staticEClass': self._staticEClass
-                                      })
-            self.__name__ = name
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
         self._eternal_listener.append(self.supertypes_updater)

@@ -878,3 +878,17 @@ def test_eobject_dir():
     A.eStructuralFeatures.append(EReference('to_a', A))
     assert 'name' in dir(a)
     assert 'to_a' in dir(a)
+
+
+def test_eobject_kargs_init():
+    A = EClass('A')
+    a = A(test='test_value')
+    assert a.test == 'test_value'
+
+    del a.test
+    A.eStructuralFeatures.append(EAttribute('test', EString))
+    a.test = 'new_value'
+    assert a.test == 'new_value'
+
+    with pytest.raises(BadValueError):
+        a.test = 4

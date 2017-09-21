@@ -141,16 +141,20 @@ Then, we can add metaproperties to the freshly created metaclass:
 
     >>> instance1.eClass.eAttributes
     []
-    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
-    >>> instance1.eClass.eStructuralFeatures
-    [<pyecore.ecore.EAttribute object at 0x7f7da72ba940>]
-    >>> str(instance1.name)
+    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))  # We add a 'name' which is a string
+    >>> instance1.eClass.eAttributes  # Is there a new feature?
+    [<pyecore.ecore.EAttribute object at 0x7f7da72ba940>]  # Yep, the new feature is here!
+    >>> str(instance1.name)  # There is a default value for the new attribute
     'None'
     >>> instance1.name = 'mystuff'
     >>> instance1.name
     'mystuff'
+    >>> # As the feature exists in the metaclass, the name of the feature can be used in the constructor
+    >>> instance3 = MyMetaclass(name='myname')
+    >>> instance3.name
+    'myname'
 
-We can also create a new metaclass ``B`` and a new metareferences towards
+We can also create a new metaclass ``B`` and a new meta-references towards
 ``B``:
 
 .. code-block:: python
