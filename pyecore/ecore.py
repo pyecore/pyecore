@@ -139,17 +139,21 @@ class Core(object):
 class EObject(ENotifer):
     _staticEClass = True
 
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        instance._xmiid = None
+        instance._isset = set()
+        instance._container = None
+        instance._containment_feature = None
+        instance._eresource = None
+        instance.listeners = []
+        instance._eternal_listener = []
+        instance._inverse_rels = set()
+        instance._staticEClass = False
+        return instance
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._xmiid = None
-        self._isset = set()
-        self._container = None
-        self._containment_feature = None
-        self._eresource = None
-        self.listeners = []
-        self._eternal_listener = []
-        self._inverse_rels = set()
-        self._staticEClass = False
 
     def eContainer(self):
         return self._container
@@ -1069,7 +1073,7 @@ class MetaEClass(type):
         return type.__call__(cls, *args, **kwargs)
 
 
-class EPlaceHolder(EObject):
+class EPlaceHolder(object):
     def __init__(self):
         object.__setattr__(self, 'resolved', False)
 
