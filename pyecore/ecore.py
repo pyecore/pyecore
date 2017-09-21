@@ -92,7 +92,7 @@ class Core(object):
                     feature.name = k
                 eStructuralFeatures_add(feature)
             elif inspect.isfunction(feature):
-                if k == '__init__':
+                if k.startswith('__'):
                     continue
                 argspect = inspect.getfullargspec(feature)
                 args = argspect.args
@@ -648,7 +648,9 @@ class EOperation(ETypedElement):
 
     def to_code(self):
         parameters = [x.to_code() for x in self.eParameters]
-        return """def {0}(self, {1}):
+        if len(parameters) == 0 or parameters[0] != 'self':
+            parameters.insert(0, 'self')
+        return """def {0}({1}):
         raise NotImplementedError('Method {0}({1}) is not yet implemented')
         """.format(self.normalized_name(), ', '.join(parameters))
 
