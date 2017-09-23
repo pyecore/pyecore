@@ -1306,7 +1306,8 @@ EEnumLiteral.literal = EAttribute('literal', EString)
 
 EOperation.eContainingClass = EReference('eContainingClass', EClass,
                                          eOpposite=EClass.eOperations)
-EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
+EOperation.eParameters = EReference('eParameters', EParameter, upper=-1,
+                                    containment=True)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                         upper=-1, containment=True)

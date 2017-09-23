@@ -17,6 +17,8 @@ def test_dynamic_eoperation_1required():
     op1 = EOperation('op1')
     p1 = EParameter('p1', eType=EString, required=True)
     op1.eParameters.append(p1)
+    assert p1.eContainer() is op1
+
     A = EClass('A')
     A.eOperations.append(op1)
     a = A()
