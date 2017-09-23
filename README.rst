@@ -387,6 +387,37 @@ module.
 
     assert TestMeta.eClass.ePackage is eClass
 
+However, when ``@EMetaclass`` is used, the direct ``super()`` call in
+the ``__init__`` constructor cannot be directly called. Instead,
+``super(x, self)`` must be called:
+
+.. code-block:: python
+
+    class Stuff(object):
+        def __init__(self):
+            self.stuff = 10
+
+
+    @EMetaclass
+    class A(Stuff):
+        def __init__(self, tmp):
+            super(A, self).__init__()
+            self.tmp = tmp
+
+
+    a = A()
+    assert a.stuff == 10
+
+If you want to directly extends the PyEcore metamodel, the ``@EMetaclass`` is
+not required, and ``super()`` can be used.
+
+.. code-block:: python
+
+    class MyNamedElement(ENamedElement):
+        def __init__(self, tmp=None, **kwargs):
+            super().__init__(**kwargs)
+            self.tmp = tmp
+
 
 Static/Dynamic ``EOperation``
 =============================
