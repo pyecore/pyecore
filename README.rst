@@ -295,6 +295,10 @@ defined meta-layer.
     >>> assert isinstance(library.Writer.name, Ecore.EAttribute)
 
 
+There is two main ways of creating static ``EClass`` with PyEcore. The first
+one relies on automatic code generation while the second one uses manual
+definition.
+
 The automatic code generator defines a Python package hierarchie instead of
 only a Python module. This allows more freedom for dedicated operations and
 references between packages.
@@ -340,6 +344,48 @@ Using this tool, your static code generation is very simple:
 
 The generated code is automatically formatted using ``autopep8``. Once the code
 is generated, your can import it and use it in your Python code.
+
+
+Manually defines static ``EClass``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To manually defines static ``EClass``, it is simply a matter of creating a
+Python class, and adding to it the ``@EMetaclass`` class decorator. This
+decorator will automatically add the righ metaclass to the defined class, and
+introduce the missing classes in it's inheritance tree. Defining simple
+metaclass is thus fairly easy:
+
+.. code-block:: python
+
+    @EMetaclass
+    class Person(object):
+        name = EAttribute(eType=EString)
+        age = EAttribute(eType=EInt)
+        children = EReference(upper=-1, containment=True)
+
+        def __init__(self, name):
+            self.name = name
+
+    Person.children.eType = Person  # As the relation is reflexive, it must be set AFTER the metaclass creation
+
+    p1 = Person('Parent')
+    p1.children.append(Person('Child'))
+
+
+Without more information, all the created metaclass will be added to a default
+``EPackage``, generated on the fly. If the ``EPackage`` must be controlled, a
+global variable of ``EPackage`` type, named ``eClass``, must be created in the
+module.
+
+.. code-block:: python
+
+    eClass = EPackage(name='pack', nsURI='http://pack/1.0', nsPrefix='pack')
+
+    @EMetaclass
+    class TestMeta(object):
+        pass
+
+    assert TestMeta.eClass.ePackage is eClass
 
 
 Static/Dynamic ``EOperation``
