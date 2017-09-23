@@ -73,6 +73,10 @@ Changelog
    with internal PyEcore code. This new implementation split the two concerns
    and proposes a better way of dealing with these two methods.
 
+ - Fix missing ``containement`` attribute for ``eParameters`` relation. This
+   missing attribute was reslting in the placement of each ``EParameter`` at
+   the root of the model instead of the ``EOperation`` they were linked to.
+
 **Miscellaneous**
 
 - Change ``__repr__`` display for ``EClass`` and ``EStructuralFeature``. The
