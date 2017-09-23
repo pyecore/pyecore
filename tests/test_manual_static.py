@@ -51,18 +51,55 @@ def test_static_metamodel_link_instance():
 
 
 def test_static_metamodel_reorder_mro():
-    class A(EObject, metaclass=MetaEClass):
-        name = EAttribute(eType=EString)
+    class C(EObject, metaclass=MetaEClass):
+        inner = EAttribute(eType=EString)
 
         def __init__(self):
             super().__init__()
 
-    A._staticEClass = False  # Enable static EClass auto-update
+    C._staticEClass = False  # Enable static EClass auto-update
 
-    B = EClass('B')
+    D = EClass('D')
 
-    a = A()
-    assert not isinstance(a, B.python_class)
+    a = C()
+    assert not isinstance(a, D.python_class)
 
-    A.eClass.eSuperTypes.append(B)
-    assert isinstance(a, B.python_class)
+    C.eClass.eSuperTypes.append(D)
+    assert isinstance(a, D.python_class)
+
+
+def test_static_metamodel_annotation():
+    @EMetaclass
+    class C1(object):
+        a = EAttribute(eType=EString)
+        b = EAttribute(eType=EInt)
+
+    class C2(C1):
+        __slots__ = 'd'
+        c = EAttribute(eType=EInt)
+
+        def __init__(self):
+            self.d = 6
+
+    c2 = C2()
+    assert c2.a is None
+    assert c2.b == 0
+    assert c2.c == 0
+    assert c2.d == 6
+
+
+def test_static_metamodel_mixin():
+    class Mixin(object):
+        value = 5
+
+    @EMetaclass
+    class C3(Mixin):
+        __slots__ = 'a'
+
+        def __init__(self):
+            self.a = 5
+
+    c = C3()
+    assert c.value == 5
+    assert c.eClass.python_class is C3
+    assert c.a == 5

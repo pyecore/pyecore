@@ -41,7 +41,13 @@ Changelog
 - Add ``**kwargs`` support for dynamic ``EClass``. This allows to have more
   fluent constructors. It is important to note that the default behavior when
   a named parameter are used is to set the attribute to the value passed as
-  parameter. Also, ``args`` are accepted, but they are not directly handled. 
+  parameter. Also, ``args`` are accepted, but they are not directly handled.
+
+- Add new class decorator for PyEcore metaclass definition. This new decorator:
+  ``@EMetaclass``, uses the ``MetaEClass`` metaclass and provides a convenient
+  way of defining static EClass. This decorator also reoder the inheritance
+  tree so, if the defined class does not inherits from ``EObject``, the
+  decorator makes the defined class inhertit from ``EObject``.
 
 **Bugfixes**
 

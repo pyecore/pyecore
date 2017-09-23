@@ -2,6 +2,7 @@ import pytest
 from pyecore.ecore import *
 import inspect
 
+
 def test_dynamic_eoperation_0params():
     op1 = EOperation('op1')
     A = EClass('A')

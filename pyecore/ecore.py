@@ -1009,9 +1009,8 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            if EObject.eClass in eSuperTypes:
-                index = eSuperTypes.index(EObject.eClass)
-                eSuperTypes.append(eSuperTypes.pop(index))
+            if eSuperTypes and EObject.eClass in eSuperTypes:
+                eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
@@ -1087,6 +1086,30 @@ class MetaEClass(type):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         return type.__call__(cls, *args, **kwargs)
+
+
+def EMetaclass(cls):
+    """Class decorator for creating PyEcore metaclass."""
+    superclass = cls.__bases__
+    if not issubclass(cls, EObject):
+        sclasslist = list(superclass)
+        if object in superclass:
+            index = sclasslist.index(object)
+            sclasslist.insert(index, EObject)
+            sclasslist.remove(object)
+        else:
+            sclasslist.insert(0, EObject)
+        superclass = tuple(sclasslist)
+    orig_vars = cls.__dict__.copy()
+    slots = orig_vars.get('__slots__')
+    if slots is not None:
+        if isinstance(slots, str):
+            slots = [slots]
+        for slots_var in slots:
+            orig_vars.pop(slots_var)
+    orig_vars.pop('__dict__', None)
+    orig_vars.pop('__weakref__', None)
+    return MetaEClass(cls.__name__, superclass, orig_vars)
 
 
 class EPlaceHolder(object):
@@ -1379,4 +1402,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass']
+           'EShort', 'EJavaClass', 'EMetaclass']
