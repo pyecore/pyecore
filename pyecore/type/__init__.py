@@ -16,6 +16,7 @@ Still missing are a proper translation for Java types:
 """
 
 from ..ecore import EDataType, EStringToStringMapEntry
+from ..resources import global_registry, Resource
 from .type import getEClassifier, eClassifiers  # noqa
 from .type import name, nsURI, nsPrefix, eClass  # noqa
 from .type import AnySimpleType, AnyType, AnyURI, Base64Binary, Boolean, \
@@ -79,3 +80,7 @@ for classif in eClassifiers.values():
 # We comment this as there is no subpackages for XMLTypes
 # for subpack in eSubpackages:
 #    eClass.eSubpackages.append(subpack.eClass)
+
+global_registry[eClass.nsURI] = eClass
+xmltypes_resource = Resource(uri=eClass.nsURI)
+xmltypes_resource.append(eClass)

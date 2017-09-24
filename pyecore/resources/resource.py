@@ -229,7 +229,7 @@ class Resource(object):
     def contents(self):
         return self._contents
 
-    def resolve(self, fragment):
+    def resolve(self, fragment, from_resource=None):
         raise NotImplementedError('resolve method must be implemented')
 
     def prefix2epackage(self, prefix):
