@@ -124,6 +124,8 @@ class Core(object):
             epackage.eClass = EPackage(name=pack_name,
                                        nsPrefix=pack_name,
                                        nsURI='http://{}/'.format(pack_name))
+        if not hasattr(epackage, 'eURIFragment'):
+            epackage.eURIFragment = eURIFragment
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if hasattr(epackage, 'eResource'):
