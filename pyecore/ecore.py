@@ -817,7 +817,7 @@ class EEnum(EDataType):
 
     def __repr__(self):
         name = self.name or ''
-        return name + str(self.eLiterals)
+        return '{}[{}]'.format(name, str(self.eLiterals))
 
 
 class EEnumLiteral(ENamedElement):
@@ -827,6 +827,9 @@ class EEnumLiteral(ENamedElement):
 
     def __repr__(self):
         return '{0}={1}'.format(self.name, self.value)
+
+    def __str__(self):
+        return self.name
 
 
 class EStructuralFeature(ETypedElement):

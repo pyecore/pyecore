@@ -81,6 +81,13 @@ def test_eenum_geteenum_print():
     assert MyEnum.__repr__()
 
 
+def test_eenumliteral_geteenum_str():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert str(MyEnum.A) == 'A'
+    assert str(MyEnum.B) == 'B'
+    assert str(MyEnum.C) == 'C'
+
+
 def test_eattribute_etype():
     eattribute = EAttribute('test')
     assert ETypedElement.eClass in eattribute.eClass.eAllSuperTypes()
