@@ -1253,6 +1253,7 @@ EJavaClass = EDataType('EJavaClass', type)
 
 
 ENamedElement.name = EAttribute('name', EString)
+ENamedElement.name._isset.add(ENamedElement.name)  # special case
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
@@ -1272,7 +1273,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-# ETypedElement.default_value = EAttribute('default_value', ENativeType)
+ENamedElement.name._isset.add(ETypedElement.eType)  # special case
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
