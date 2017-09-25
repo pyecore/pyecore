@@ -1216,6 +1216,10 @@ def abstract(cls):
 
 # meta-meta level
 EString = EDataType('EString', str)
+ENamedElement.name = EAttribute('name', EString)
+ENamedElement.name._isset.add(ENamedElement.name)  # special case
+EString._isset.add(ENamedElement.name)  # special case
+
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
@@ -1251,9 +1255,6 @@ ECharacterObject = EDataType('ECharacterObject', str)
 EShort = EDataType('EShort', int, from_string=lambda x: int(x))
 EJavaClass = EDataType('EJavaClass', type)
 
-
-ENamedElement.name = EAttribute('name', EString)
-ENamedElement.name._isset.add(ENamedElement.name)  # special case
 
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
