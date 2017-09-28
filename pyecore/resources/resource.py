@@ -216,6 +216,7 @@ class Resource(object):
         self._uri = uri
         self._decoders = list(Resource._decoders)
         self._contents = []
+        self._resolve_mem = {}
 
     @property
     def uri(self):
@@ -229,8 +230,24 @@ class Resource(object):
     def contents(self):
         return self._contents
 
-    def resolve(self, fragment, from_resource=None):
-        raise NotImplementedError('resolve method must be implemented')
+    def resolve(self, fragment):
+        fragment = self.normalize(fragment)
+        if fragment in self._resolve_mem:
+            return self._resolve_mem[fragment]
+        if self._use_uuid:
+            try:
+                frag = fragment[1:] if fragment.startswith('#') \
+                                    else fragment
+                frag = frag[2:] if frag.startswith('//') else frag
+                return self.uuid_dict[frag]
+            except KeyError:
+                pass
+        result = None
+        for root in self._contents:
+            result = self._navigate_from(fragment, root)
+            if result:
+                self._resolve_mem[fragment] = result
+                return result
 
     def prefix2epackage(self, prefix):
         nsURI = None

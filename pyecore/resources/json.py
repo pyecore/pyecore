@@ -9,26 +9,31 @@ from .. import ecore as Ecore
 class JsonResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
         super().__init__(uri, use_uuid)
-        self._resolve_mem = {}
         self._resolve_later = []
         self._already_saved = []
+
+    def load(self):
+        json_value = self.uri.create_instream()
+        d = json.load(json_value)
+        self._contents.append(self.to_obj(d))
+        self.uri.close_stream()
 
     def save(self, output=None):
         root = self.contents[0]
         return json.dumps(self.to_dict(root), indent=2)
 
-    def __uri_fragment(self, obj):
-        if obj.eResource == self:
-            use_id = self._use_uuid
-        else:
-            use_id = obj.eResource and obj.eResource._use_uuid
-        if use_id:
-            self._assign_uuid(obj)
-            return obj._xmiid
-        else:
-            return obj.eURIFragment()
-
     def to_dict(self, obj, is_ref=False):
+        def uri_fragment(obj):
+            if obj.eResource == self:
+                use_id = self._use_uuid
+            else:
+                use_id = obj.eResource and obj.eResource._use_uuid
+            if use_id:
+                self._assign_uuid(obj)
+                return obj._xmiid
+            else:
+                return obj.eURIFragment()
+
         def to_ref(obj):
             eclass = obj.eClass
             uri = '{}{}'.format(eclass.ePackage.nsURI,
@@ -37,7 +42,7 @@ class JsonResource(Resource):
             resource_uri = obj.eResource.uri if obj.eResource else ''
             if resource_uri is None:
                 resource_uri = ''
-            ref['$ref'] = '{}{}'.format(resource_uri, self.__uri_fragment(obj))
+            ref['$ref'] = '{}{}'.format(resource_uri, uri_fragment(obj))
             return ref
 
         def to_dict_eobject(obj):
@@ -58,8 +63,7 @@ class JsonResource(Resource):
                     continue
                 d[attr.name] = self.to_dict(value, is_ref=is_ref)
                 if self._use_uuid:
-                    if not obj._xmiid:
-                        self._assign_uuid(obj)
+                    self._assign_uuid(obj)
                     d['uuid'] = obj._xmiid
             self._already_saved.append(obj)
             return d
@@ -76,39 +80,17 @@ class JsonResource(Resource):
         else:
             return obj
 
-    def resolve(self, fragment, from_resource=None):
-        fragment = self.normalize(fragment)
-        if fragment in self._resolve_mem:
-            return self._resolve_mem[fragment]
-        if self._use_uuid:
-            try:
-                frag = fragment[1:] if fragment.startswith('#') \
-                                    else fragment
-                frag = frag[2:] if frag.startswith('//') else frag
-                return self.uuid_dict[frag]
-            except KeyError:
-                pass
-        result = None
-        for root in self._contents:
-            result = self._navigate_from(fragment, root)
-            if result:
-                self._resolve_mem[fragment] = result
-                return result
-
-    def load(self, value):
-        json_value = value
-        d = json.loads(json_value)
-        root = self.to_obj(d)
-        return root
-
     def to_obj(self, d, owning_feature=None, first=False):
         uri_eclass = d['eClass']
         is_ref = '$ref' in d
         if is_ref:
-            return EProxy(path=d['$ref'], resource=self)
+            return Ecore.EProxy(path=d['$ref'], resource=self)
         excludes = ['eClass', '$ref', 'uuid']
         decoders = self._get_href_decoder(uri_eclass)
         eclass = decoders.resolve(uri_eclass, self)
+        if not eclass:
+            raise ValueError('Unknown metaclass {} for uri {}'
+                             .format(eclass, uri_eclass))
         if eclass in (Ecore.EClass.eClass, Ecore.EClass):
             inst = eclass(d['name'])
             excludes.append('name')
@@ -142,7 +124,7 @@ class JsonResource(Resource):
             feature = eclass.findEStructuralFeature(key)
             if not feature:
                 raise ValueError('Unknown feature {} for object "{}"'
-                                 .format(key, eClass))
+                                 .format(key, eclass))
             if isinstance(value, Ecore.EAttribute):
                 eattributes.append((feature, value))
             else:
