@@ -1,0 +1,36 @@
+{
+  "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EPackage",
+  "nsURI": "http://test/1.0",
+  "nsPrefix": "pack",
+  "eClassifiers": [
+    {
+      "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+      "eStructuralFeatures": [
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EReference",
+          "eType": {
+            "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+            "$ref": "./f2.json#//B"
+          },
+          "name": "long_ref"
+      },
+      {
+        "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EReference",
+        "eType": {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+          "$ref": "./relative/f2.json#//C"
+        },
+        "name": "relative_ref"
+      }
+      ],
+      "eSuperTypes": [
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+          "$ref": "http://www.eclipse.org/emf/2002/Ecore#//EObject"
+        }
+      ],
+      "name": "A"
+    }
+  ],
+  "name": "pack"
+}

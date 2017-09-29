@@ -1,0 +1,18 @@
+{
+  "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EPackage",
+  "nsURI": "http://test2/1.0",
+  "nsPrefix": "pack2",
+  "eClassifiers": [
+    {
+      "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+      "eSuperTypes": [
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+          "$ref": "http://www.eclipse.org/emf/2002/Ecore#//EObject"
+        }
+      ],
+      "name": "B"
+    }
+  ],
+  "name": "pack2"
+}
