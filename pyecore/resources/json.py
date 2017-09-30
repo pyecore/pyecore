@@ -11,12 +11,16 @@ class JsonResource(Resource):
         super().__init__(uri, use_uuid)
         self._resolve_later = []
         self._already_saved = []
+        self._load_href = {}
 
     def load(self):
         json_value = self.uri.create_instream()
         d = json.load(json_value)
-        self._contents.append(self.to_obj(d))
+        self.to_obj(d, first=True)
         self.uri.close_stream()
+        for inst, refs in self._load_href.items():
+            self.process_inst(inst, refs)
+        self._load_href.clear()
 
     def save(self, output=None):
         stream = self.open_out_stream(output)
@@ -41,7 +45,10 @@ class JsonResource(Resource):
             uri = '{}{}'.format(eclass.ePackage.nsURI,
                                 obj.eClass.eURIFragment())
             ref = {'eClass': uri}
-            resource_uri = obj.eResource.uri if obj.eResource else ''
+            if obj.eResource == self:
+                resource_uri = ''
+            else:
+                resource_uri = obj.eResource.uri.plain if obj.eResource else ''
             if resource_uri is None:
                 resource_uri = ''
             ref['$ref'] = '{}{}'.format(resource_uri, uri_fragment(obj))
@@ -99,26 +106,14 @@ class JsonResource(Resource):
         else:
             inst = eclass()
         if first:
+            self._use_uuid = 'uuid' in d
             self.append(inst)
 
-        def process_inst(inst, features):
-            for feature, value in features:
-                if isinstance(value, dict):
-                    element = self.to_obj(value, owning_feature=feature)
-                    if feature.eOpposite is not owning_feature:
-                        inst.eSet(feature, element)
-                elif isinstance(value, list):
-                    elements = [self.to_obj(x, owning_feature=feature)
-                                for x in value]
-                    elements = [x for x in elements if x is not None]
-                    collection = inst.eGet(feature)
-                    if feature.eOpposite is None or \
-                            feature.eOpposite is not owning_feature:
-                        collection.extend(elements)
-                else:
-                    inst.eSet(feature, value)
+        if self._use_uuid:
+            self.uuid_dict[d['uuid']] = inst
 
         eattributes = []
+        containments = []
         ereferences = []
         eclass = inst.eClass
         for key, value in d.items():
@@ -128,10 +123,32 @@ class JsonResource(Resource):
             if not feature:
                 raise ValueError('Unknown feature {} for object "{}"'
                                  .format(key, eclass))
-            if isinstance(value, Ecore.EAttribute):
+            if isinstance(feature, Ecore.EAttribute):
                 eattributes.append((feature, value))
-            else:
-                ereferences.append((feature, value))
-        process_inst(inst, eattributes)
-        process_inst(inst, ereferences)
+            elif isinstance(feature, Ecore.EReference):
+                if feature.containment:
+                    containments.append((feature, value))
+                else:
+                    ereferences.append((feature, value))
+        self.process_inst(inst, eattributes)
+        self.process_inst(inst, containments, owning_feature)
+        self._load_href[inst] = ereferences
         return inst
+
+    def process_inst(self, inst, features, owning_feature=None):
+        for feature, value in features:
+            if isinstance(value, dict):
+                element = self.to_obj(value, owning_feature=feature)
+                if feature.eOpposite is None or \
+                        feature.eOpposite is not owning_feature:
+                    inst.eSet(feature, element)
+            elif isinstance(value, list):
+                elements = [self.to_obj(x, owning_feature=feature)
+                            for x in value]
+                elements = [x for x in elements if x is not None]
+                collection = inst.eGet(feature)
+                if feature.eOpposite is None or \
+                        feature.eOpposite is not owning_feature:
+                    collection.extend(elements)
+            else:
+                inst.eSet(feature, value)

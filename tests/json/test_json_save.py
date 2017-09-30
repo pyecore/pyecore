@@ -17,7 +17,7 @@ def lib():
     MyRoot.a_container = Ecore.EReference('a_container', eType=AbsA, upper=-1,
                                           containment=True)
     MyRoot.eStructuralFeatures.append(MyRoot.a_container)
-    package.eClassifiers.extend([MyRoot, A, SubA])
+    package.eClassifiers.extend([MyRoot, A, SubA, AbsA])
     package.MyRoot = MyRoot
     package.SubA = SubA
     package.A = A
@@ -26,7 +26,35 @@ def lib():
     return package
 
 
-def test_resource_createset(tmpdir, lib):
+def test_json_resource_save_metamodel(tmpdir, lib):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)))
+    resource.append(lib)
+    resource.save()
+
+    # we read the model
+    resource = JsonResource(URI(str(f)))
+    resource.load()
+    root = resource.contents[0]
+    assert len(root.eContents) == len(lib.eContents)
+    assert isinstance(root, lib.eClass.python_class)
+
+
+def test_json_resource_save_metamodel_uri(tmpdir, lib):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)), use_uuid=True)
+    resource.append(lib)
+    resource.save()
+
+    # we read the model
+    resource = JsonResource(URI(str(f)))
+    resource.load()
+    root = resource.contents[0]
+    assert len(root.eContents) == len(lib.eContents)
+    assert isinstance(root, lib.eClass.python_class)
+
+
+def test_json_resource_createset(tmpdir, lib):
     f = tmpdir.mkdir('pyecore-tmp').join('test.json')
     resource = JsonResource(URI(str(f)))
 
@@ -47,7 +75,7 @@ def test_resource_createset(tmpdir, lib):
     assert len(resource.contents[0].eContents) == 2
 
 
-def test_resource_createSaveModifyRead(tmpdir, lib):
+def test_json_resource_createSaveModifyRead(tmpdir, lib):
     f = tmpdir.mkdir('pyecore-tmp').join('test.json')
     resource = JsonResource(URI(str(f)))
 

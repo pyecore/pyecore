@@ -246,7 +246,7 @@ class Resource(object):
     def contents(self):
         return self._contents
 
-    def resolve(self, fragment):
+    def resolve(self, fragment, resource=None):
         fragment = self.normalize(fragment)
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
