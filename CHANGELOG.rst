@@ -49,6 +49,13 @@ Changelog
   tree so, if the defined class does not inherits from ``EObject``, the
   decorator makes the defined class inhertit from ``EObject``.
 
+-  Add JSON resource serializer. The JSON serializer is able to get an
+   ``EObject`` and serialize it in JSON. It can also takes a JSON representation
+    of a model, and transform it as an ``EObject``. The JSON format used for
+    serialization tries to be closed to the format from the
+    `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
+
+
 **Bugfixes**
 
 - Fix missing ``EDatatypes`` registration in their respective ``EPackage``. The

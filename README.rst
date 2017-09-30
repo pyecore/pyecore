@@ -613,7 +613,7 @@ The Python class hierarchie (inheritance tree) associated to the EClass instance
 Importing an Existing XMI Metamodel/Model
 =========================================
 
-XMI support is still a work in progress, but the XMI import is on good tracks.
+XMI support is still a little rough on the edges, but the XMI import is on good tracks.
 Currently, only basic XMI metamodel (``.ecore``) and model instances can be
 loaded:
 
@@ -771,6 +771,39 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource = rset.create_resource(URI('my/path.xmi'))
     >>> resource.append(root)
     >>> resource.save()
+
+
+Dealing with JSON Resources
+===========================
+
+PyEcore is also able to load/save JSON models/metamodels. The JSON format it uses
+tries to be close from the one described in the `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
+The way the JSON serialization/deserialization works, on a user point of view,
+is pretty much the same than the XMI resources, but as the JSON resource factory
+is not loaded by default (for XMI, it is), you have to manually register it
+first. The registration can be performed globally or at a ``ResourceSet`` level.
+Here is how to register the JSON resource factory for a given ``ResourceSet``.
+
+.. code-block:: python
+
+    >>> from pyecore.resources import ResourceSet
+    >>> from pyecore.resources.json import JsonResource
+    >>> rset = ResourceSet()  # We have a resource set
+    >>> rset.resource_factory['json'] = lambda uri: JsonResource(uri)  # we register the factory for '.json' extensions
+
+
+And here is how to register the factory at a global level:
+
+.. code-block:: python
+
+    >>> from pyecore.resources import ResourceSet
+    >>> from pyecore.resources.json import JsonResource
+    >>> ResourceSet.resource_factory['json'] = lambda uri: JsonResource(uri)
+
+
+Once the resource factory is registered, you can load/save models/metamodels
+exactly the same way you would have done it for XMI. Check the XMI section to
+see how to load/save resources using a ``ResourceSet``.
 
 
 Deleting Elements
@@ -1008,7 +1041,9 @@ In the current state, the project implements:
 * object deletion (first version),
 * EMF commands (first version),
 * EMF basic command stack,
-* EMF very basic Editing Domain.
+* EMF very basic Editing Domain,
+* JSON import (simple JSON format),
+* JSON export (simple JSON format).
 
 The things that are in the roadmap:
 
