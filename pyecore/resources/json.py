@@ -49,8 +49,8 @@ class JsonResource(Resource):
                 resource_uri = ''
             else:
                 resource_uri = obj.eResource.uri.plain if obj.eResource else ''
-            if resource_uri is None:
-                resource_uri = ''
+            # if resource_uri is None:
+            #     resource_uri = ''
             ref['$ref'] = '{}{}'.format(resource_uri, uri_fragment(obj))
             return ref
 

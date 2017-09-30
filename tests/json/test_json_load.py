@@ -108,3 +108,15 @@ def test__jsonresource_load_mm_instance(rset, mm):
 
     a4 = a2.children[0]
     assert a4.parent is a2 and a4.name == 'a4'
+
+
+def test__jsonresource_load_mm_errors(rset, mm):
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    json_file = path.join('tests', 'json', 'data', 'e1.json')
+    with pytest.raises(ValueError):
+        rset.get_resource(json_file)
+
+    json_file = path.join('tests', 'json', 'data', 'e2.json')
+    with pytest.raises(ValueError):
+        rset.get_resource(json_file)
