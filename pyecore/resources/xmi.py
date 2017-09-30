@@ -258,9 +258,7 @@ class XMIResource(Resource):
         self.register_nsmap(prefix, nsURI)
 
     def save(self, output=None):
-        output = output.create_outstream() \
-                 if output \
-                 else self.uri.create_outstream()
+        output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
         # Compute required nsmap for subpackages

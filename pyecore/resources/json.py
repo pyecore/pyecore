@@ -19,8 +19,10 @@ class JsonResource(Resource):
         self.uri.close_stream()
 
     def save(self, output=None):
-        root = self.contents[0]
-        return json.dumps(self.to_dict(root), indent=2)
+        stream = self.open_out_stream(output)
+        root = self.contents[0]  # Only single root atm
+        with stream as out:
+            out.write(json.dumps(self.to_dict(root), indent=2).encode('utf-8'))
 
     def to_dict(self, obj, is_ref=False):
         def uri_fragment(obj):
@@ -110,7 +112,8 @@ class JsonResource(Resource):
                                 for x in value]
                     elements = [x for x in elements if x is not None]
                     collection = inst.eGet(feature)
-                    if feature.eOpposite is not owning_feature:
+                    if feature.eOpposite is None or \
+                            feature.eOpposite is not owning_feature:
                         collection.extend(elements)
                 else:
                     inst.eSet(feature, value)

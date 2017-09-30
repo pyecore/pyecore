@@ -164,6 +164,22 @@ class HttpURI(URI):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
 
 
+# class StdioURI(URI):
+#     def __init__(self):
+#         super().__init__('stdio')
+#
+#     def create_instream(self):
+#         self.__stream = sys.stdin.buffer
+#         return self.__stream
+#
+#     def create_outstream(self):
+#         self.__stream = sys.stdout.buffer
+#         return self.__stream
+#
+#     def close_stream(self):
+#         pass
+
+
 class MetamodelDecoder(object):
     def split_path(path):
         path = Resource.normalize(path)
@@ -386,6 +402,12 @@ class Resource(object):
         root._eresource = self
         for eobject in root.eAllContents():
             eobject._eresource = self
+
+    def open_out_stream(self, other=None):
+        if other and not isinstance(other, URI):
+            other = URI(other)
+        return (other.create_outstream() if other
+                else self.uri.create_outstream())
 
     def extend(self, values):
         [self.append(x) for x in values]
