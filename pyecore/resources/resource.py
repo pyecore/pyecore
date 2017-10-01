@@ -164,6 +164,22 @@ class HttpURI(URI):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
 
 
+# class StdioURI(URI):
+#     def __init__(self):
+#         super().__init__('stdio')
+#
+#     def create_instream(self):
+#         self.__stream = sys.stdin.buffer
+#         return self.__stream
+#
+#     def create_outstream(self):
+#         self.__stream = sys.stdout.buffer
+#         return self.__stream
+#
+#     def close_stream(self):
+#         pass
+
+
 class MetamodelDecoder(object):
     def split_path(path):
         path = Resource.normalize(path)
@@ -216,6 +232,7 @@ class Resource(object):
         self._uri = uri
         self._decoders = list(Resource._decoders)
         self._contents = []
+        self._resolve_mem = {}
 
     @property
     def uri(self):
@@ -229,8 +246,24 @@ class Resource(object):
     def contents(self):
         return self._contents
 
-    def resolve(self, fragment, from_resource=None):
-        raise NotImplementedError('resolve method must be implemented')
+    def resolve(self, fragment, resource=None):
+        fragment = self.normalize(fragment)
+        if fragment in self._resolve_mem:
+            return self._resolve_mem[fragment]
+        if self._use_uuid:
+            try:
+                frag = fragment[1:] if fragment.startswith('#') \
+                                    else fragment
+                frag = frag[2:] if frag.startswith('//') else frag
+                return self.uuid_dict[frag]
+            except KeyError:
+                pass
+        result = None
+        for root in self._contents:
+            result = self._navigate_from(fragment, root)
+            if result:
+                self._resolve_mem[fragment] = result
+                return result
 
     def prefix2epackage(self, prefix):
         nsURI = None
@@ -369,6 +402,12 @@ class Resource(object):
         root._eresource = self
         for eobject in root.eAllContents():
             eobject._eresource = self
+
+    def open_out_stream(self, other=None):
+        if other and not isinstance(other, URI):
+            other = URI(other)
+        return (other.create_outstream() if other
+                else self.uri.create_outstream())
 
     def extend(self, values):
         [self.append(x) for x in values]

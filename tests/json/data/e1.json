@@ -1,0 +1,20 @@
+{
+  "eClass": "http://test/1.0#//Z",
+  "name": "a1",
+  "children": [
+    {
+      "eClass": "http://test/1.0#//A",
+      "name": "a2",
+      "children": [
+        {
+          "eClass": "http://test/1.0#//A",
+          "name": "a4"
+        }
+      ]
+    },
+    {
+      "eClass": "http://test/1.0#//A",
+      "name": "a3"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EPackage",
+  "name": "pack",
+  "nsURI": "http://test/1.0",
+  "nsPrefix": "pack",
+  "eClassifiers": [
+    {
+      "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+      "eStructuralFeatures": [
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EAttribute",
+          "eType": {
+            "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EDataType",
+            "$ref": "http://www.eclipse.org/emf/2002/Ecore#//EString"
+          },
+          "name": "name"
+        },
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EReference",
+          "containment": true,
+          "eType": {
+            "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+            "$ref": "#//A"
+          },
+          "upperBound": -1,
+          "name": "children"
+        },
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EReference",
+          "eType": {
+            "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+            "$ref": "#//A"
+          },
+          "name": "parent"
+        }
+      ],
+      "name": "A",
+      "eSuperTypes": [
+        {
+          "eClass": "http://www.eclipse.org/emf/2002/Ecore#//EClass",
+          "$ref": "http://www.eclipse.org/emf/2002/Ecore#//EObject"
+        }
+      ]
+    }
+  ]
+}

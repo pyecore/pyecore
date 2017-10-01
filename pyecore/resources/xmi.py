@@ -15,10 +15,7 @@ class XMIResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
         super().__init__(uri, use_uuid)
         self._meta_cache = {}
-        self._use_uuid = False
-        self._contents = []
         self._later = []
-        self._resolve_mem = {}
         self.prefixes = {}
         self.reverse_nsmap = {}
 
@@ -40,25 +37,6 @@ class XMIResource(Resource):
         self._decode_ereferences()
         self._clean_registers()
         self.uri.close_stream()
-
-    def resolve(self, fragment):
-        fragment = self.normalize(fragment)
-        if fragment in self._resolve_mem:
-            return self._resolve_mem[fragment]
-        if self._use_uuid:
-            try:
-                frag = fragment[1:] if fragment.startswith('#') \
-                                    else fragment
-                frag = frag[2:] if frag.startswith('//') else frag
-                return self.uuid_dict[frag]
-            except KeyError:
-                pass
-        result = None
-        for root in self._contents:
-            result = self._navigate_from(fragment, root)
-            if result:
-                self._resolve_mem[fragment] = result
-                return result
 
     @staticmethod
     def extract_namespace(tag):
@@ -280,9 +258,7 @@ class XMIResource(Resource):
         self.register_nsmap(prefix, nsURI)
 
     def save(self, output=None):
-        output = output.create_outstream() \
-                 if output \
-                 else self.uri.create_outstream()
+        output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
         # Compute required nsmap for subpackages
