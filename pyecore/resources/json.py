@@ -48,7 +48,7 @@ class JsonResource(Resource):
             if obj.eResource == self:
                 resource_uri = ''
             else:
-                resource_uri = obj.eResource.uri.plain if obj.eResource else ''
+                resource_uri = obj.eResource.uri if obj.eResource else ''
             # if resource_uri is None:
             #     resource_uri = ''
             ref['$ref'] = '{}{}'.format(resource_uri, uri_fragment(obj))
@@ -65,8 +65,8 @@ class JsonResource(Resource):
                 if is_ereference and attr.eOpposite:
                     if attr.eOpposite is containingFeature:
                         continue
-                    if obj.eGet(attr) in self._already_saved:
-                        continue
+                    # if obj.eGet(attr) in self._already_saved:
+                    #     continue  #
                 value = obj.eGet(attr)
                 if value == attr.get_default_value():
                     continue
@@ -150,5 +150,7 @@ class JsonResource(Resource):
                 if feature.eOpposite is None or \
                         feature.eOpposite is not owning_feature:
                     collection.extend(elements)
+            elif isinstance(value, str):
+                inst.eSet(feature, feature.eType.from_string(value))
             else:
                 inst.eSet(feature, value)

@@ -805,6 +805,12 @@ Once the resource factory is registered, you can load/save models/metamodels
 exactly the same way you would have done it for XMI. Check the XMI section to
 see how to load/save resources using a ``ResourceSet``.
 
+**NOTE:** Currently, the Json serialization is performed using the defaut Python
+``json`` lib. It means that your PyEcore model is first translated to a huge
+``dict`` before the export/import. For huge models, this implies a memory and
+performance cost. Future version of this serializer will deal with a different
+way of producing the final file.
+
 
 Deleting Elements
 =================

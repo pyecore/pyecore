@@ -101,3 +101,37 @@ def test_json_resource_createSaveModifyRead(tmpdir, lib):
     resource.load()
     assert resource.contents != []
     assert len(resource.contents[0].eContents) == 3
+
+
+# Defines a small metamodel
+eClass = Ecore.EPackage('pack', nsURI='http://test_pack/1.0', nsPrefix='pack')
+
+
+@Ecore.EMetaclass
+class A(object):
+    child = Ecore.EReference(containment=True, upper=-1)
+    imply = Ecore.EReference()
+    ref_by = Ecore.EReference()
+
+
+A.child.eType = A
+A.imply.eType = A
+A.ref_by.eType = A
+
+
+def test_json_resource_save_static_metamodel(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)))
+
+    # we add the elements to the resource
+    resource.append(eClass)
+    resource.save()
+
+    # we read the model
+    resource = JsonResource(URI(str(f)))
+    resource.load()
+    assert resource.contents != []
+    assert len(resource.contents[0].eContents) == 1
+
+    root = resource.contents[0]
+    assert root.eContents[0].name == 'A'
