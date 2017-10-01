@@ -51,9 +51,9 @@ Changelog
 
 -  Add JSON resource serializer. The JSON serializer is able to get an
    ``EObject`` and serialize it in JSON. It can also takes a JSON representation
-    of a model, and transform it as an ``EObject``. The JSON format used for
-    serialization tries to be closed to the format from the
-    `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
+   of a model, and transform it as an ``EObject``. The JSON format used for
+   serialization tries to be closed to the format from the
+   `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
 
 
 **Bugfixes**
@@ -63,26 +63,26 @@ Changelog
   in their ``EPackage``. The result was a ``None`` value when
   ``datatype.ePackage`` was accessed.
 
- - Fix resource creation if model loading fails for ``ResourceSet``. Even if the
-   model loading fails, a resource is created in a ResourceSet. This behavior
-   was problematic as two successive loading of the same faulty model lead to a
-   failure the first time, but to a success the next time. This commit fixes
-   this behavior and adds more tests to detect possible regressions about this.
+- Fix resource creation if model loading fails for ``ResourceSet``. Even if the
+  model loading fails, a resource is created in a ResourceSet. This behavior
+  was problematic as two successive loading of the same faulty model lead to a
+  failure the first time, but to a success the next time. This commit fixes
+  this behavior and adds more tests to detect possible regressions about this.
 
- - Fix load error when metamodel prefix is empty. When a metamodel prefix is
-   empty, special tags, with the namespace encoded inside, are created by lxml.
-   This was an issue with the xmi loading method as each tag's node was not
-   properly decoded.
+- Fix load error when metamodel prefix is empty. When a metamodel prefix is
+  empty, special tags, with the namespace encoded inside, are created by lxml.
+  This was an issue with the xmi loading method as each tag's node was not
+  properly decoded.
 
- - Improve OrderedSet ``insert/pop`` methods. The default ``OrderedSet``
-   implementation does not provide methods for ``insert`` and ``pop``. The
-   current code provided by PyEcore, monkey patching the library, was mixed
-   with internal PyEcore code. This new implementation split the two concerns
-   and proposes a better way of dealing with these two methods.
+- Improve OrderedSet ``insert/pop`` methods. The default ``OrderedSet``
+  implementation does not provide methods for ``insert`` and ``pop``. The
+  current code provided by PyEcore, monkey patching the library, was mixed
+  with internal PyEcore code. This new implementation split the two concerns
+  and proposes a better way of dealing with these two methods.
 
- - Fix missing ``containement`` attribute for ``eParameters`` relation. This
-   missing attribute was reslting in the placement of each ``EParameter`` at
-   the root of the model instead of the ``EOperation`` they were linked to.
+- Fix missing ``containement`` attribute for ``eParameters`` relation. This
+  missing attribute was reslting in the placement of each ``EParameter`` at
+  the root of the model instead of the ``EOperation`` they were linked to.
 
 **Miscellaneous**
 
