@@ -15,7 +15,7 @@ class JsonResource(Resource):
 
     def load(self):
         json_value = self.uri.create_instream()
-        d = json.load(json_value)
+        d = json.loads(json_value.read().decode('utf-8'))
         self.to_obj(d, first=True)
         self.uri.close_stream()
         for inst, refs in self._load_href.items():
