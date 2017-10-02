@@ -80,6 +80,8 @@ class Core(object):
         # init super types
         eSuperTypes_add = cls.eClass.eSuperTypes.append
         for _cls in cls.__bases__:
+            if _cls is EObject:
+                continue
             try:
                 eSuperTypes_add(_cls.eClass)
             except Exception:
