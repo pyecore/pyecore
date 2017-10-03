@@ -322,10 +322,23 @@ project, copy the  PyEcore generator in it, configure a new Acceleo runner,
 select your ``.ecore`` and your good to go. There is plenty of documentation
 over the Internet for Acceleo/MTL project creation/management...
 
+**WARNING:** the Acceleo generator is now deprecated, use pyecoregen instead!
+
 Using the Dedicated CLI Generator (PyEcoregen)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This generator source can be found at this address:
+For simple generation, the Acceleo generator will still do the job, but for more
+complex metamodel and a more robust generation, pyecoregen is significantly better.
+Its use is the prefered solution for the static metamodel code generation.
+Advantages over the Acceleo generator are the following:
+
+* it gives the ability to deal with generation from the command line,
+* it gives the ability to launch generation programmatically (and very simply),
+* it introduces into PyEcore a framework for code generation,
+* it allows you to code dedicated behavior in mixin classes,
+* it can be installed from `pip`.
+
+This generator source code can be found at this address with mode details:
 https://github.com/pyecore/pyecoregen and is available on Pypi, so you can
 install it quite symply using:
 
