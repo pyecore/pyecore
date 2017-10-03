@@ -10,6 +10,9 @@ except ImportError:
 
 
 class ENotifer(object):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def notify(self, notification):
         notification.notifier = notification.notifier or self
         for listener in self._eternal_listener + self.listeners:

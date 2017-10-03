@@ -7,11 +7,12 @@ if sys.version_info < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
 packages = ['pyecore',
-            'pyecore.resources']
+            'pyecore.resources',
+            'pyecore.type']
 
 setup(
     name='pyecore',
-    version='0.6.0',
+    version='0.7.0',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),

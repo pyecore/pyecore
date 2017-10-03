@@ -11,7 +11,8 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
-from ordered_set import OrderedSet, is_iterable
+from .ordered_set_patch import ordered_set
+from ordered_set import OrderedSet
 from .notification import ENotifer, Notification, Kind, EObserver
 
 
@@ -54,7 +55,7 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
-        elif isinstance(obj, EProxy) and not obj._resolved:
+        elif isinstance(obj, EPlaceHolder) and not obj.resolved:
             return True
         try:
             return _type.__isinstance__(obj)
@@ -79,8 +80,12 @@ class Core(object):
         # init super types
         eSuperTypes_add = cls.eClass.eSuperTypes.append
         for _cls in cls.__bases__:
-            if _cls is not EObject and _cls is not ENotifer:
+            if _cls is EObject:
+                continue
+            try:
                 eSuperTypes_add(_cls.eClass)
+            except Exception:
+                pass
         # init eclass by reflection
         eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
         for k, feature in cls.__dict__.items():
@@ -89,7 +94,7 @@ class Core(object):
                     feature.name = k
                 eStructuralFeatures_add(feature)
             elif inspect.isfunction(feature):
-                if k == '__init__':
+                if k.startswith('__'):
                     continue
                 argspect = inspect.getfullargspec(feature)
                 args = argspect.args
@@ -115,7 +120,14 @@ class Core(object):
             epackage.eClassifiers = eclassifs
             epackage.getEClassifier = partial(getEClassifier,
                                               searchspace=eclassifs)
-        # object.__setattr__(cls.eClass, 'ePackage', epackage)
+        if not hasattr(epackage, 'eClass'):
+            pack_name = (epackage.__name__ if epackage.__name__ != '__main__'
+                         else 'default_package')
+            epackage.eClass = EPackage(name=pack_name,
+                                       nsPrefix=pack_name,
+                                       nsURI='http://{}/'.format(pack_name))
+        if not hasattr(epackage, 'eURIFragment'):
+            epackage.eURIFragment = eURIFragment
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
         if hasattr(epackage, 'eResource'):
@@ -131,41 +143,21 @@ class Core(object):
 class EObject(ENotifer):
     _staticEClass = True
 
-    def __init__(self):
-        self.__subinit__()
-        self.__initmetattr__()
-        self._isready = True
-        self._staticEClass = False
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        instance._xmiid = None
+        instance._isset = set()
+        instance._container = None
+        instance._containment_feature = None
+        instance._eresource = None
+        instance.listeners = []
+        instance._eternal_listener = []
+        instance._inverse_rels = set()
+        instance._staticEClass = False
+        return instance
 
-    def __subinit__(self):
-        self._xmiid = None
-        self._isset = set()
-        self._container = None
-        self._isready = False
-        self._containment_feature = None
-        self._eresource = None
-        self.listeners = []
-        self._eternal_listener = []
-        self._inverse_rels = set()
-
-    def __initmetattr__(self):
-        self_setter = self.__setattr__
-        self_dict = self.__dict__
-        for cls in self.__class__.__mro__:
-            if cls is EObject:
-                break
-            for key, feature in cls.__dict__.items():
-                if not isinstance(feature, EStructuralFeature):
-                    continue
-                if key in self_dict:
-                    continue
-                if feature.many:
-                    self_setter(key, ECollection.create(self, feature))
-                else:
-                    default_value = None
-                    if isinstance(feature, EAttribute):
-                        default_value = feature.get_default_value()
-                    self_setter(key, default_value)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def eContainer(self):
         return self._container
@@ -267,9 +259,17 @@ class EObject(ENotifer):
             return self.eContainer()
         return self.eContainer().eRoot()
 
+    def __dir__(self):
+        eclass = self.eClass
+        relevant = [x.name for x in eclass.eAllStructuralFeatures()]
+        relevant.extend([x.name for x in eclass.eAllOperations()
+                        if not x.name.startswith('_')])
+        return relevant
+
 
 class PyEcoreValue(object):
-    def __init__(self, owner, efeature=None):
+    def __init__(self, owner, efeature):
+        super().__init__()
         self._owner = owner
         self._efeature = efeature
 
@@ -294,24 +294,17 @@ class PyEcoreValue(object):
 
 
 class EValue(PyEcoreValue):
-    def __init__(self, owner, efeature=None, value=None):
+    def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
-        if value is not None:
-            self._value = None
-        else:
-            self._value = efeature.get_default_value()
+        self._value = efeature.get_default_value()
 
-    def __get__(self, obj, owner=None):
+    def _get(self):
         return self._value
 
-    def __set__(self, instance, value, update_opposite=True):
+    def _set(self, value, update_opposite=True):
         self.check(value)
         previous_value = self._value
         self._value = value
-        # This case happend during meta-EReference initialization
-        if not self._owner or not self._owner._isready \
-                or not isinstance(self._owner, EObject):
-            return
         owner = self._owner
         efeature = self._efeature
         notif = Notification(old=previous_value,
@@ -319,7 +312,7 @@ class EValue(PyEcoreValue):
                              feature=efeature,
                              kind=Kind.UNSET if value is None else Kind.SET)
         owner.notify(notif)
-        if owner._isready and value != efeature.get_default_value:
+        if value != efeature.get_default_value:
             owner._isset.add(efeature)
 
         if not isinstance(efeature, EReference):
@@ -359,27 +352,30 @@ class EValue(PyEcoreValue):
         else:
             # We disable the eOpposite update
             value.__dict__[eOpposite.name]. \
-                  __set__(None, owner, update_opposite=False)
+                  _set(owner, update_opposite=False)
             notif.kind = Kind.SET
             value.notify(notif)
-            if value._isready and \
-                    eOpposite.get_default_value != owner:
+            if eOpposite.get_default_value != owner:
                 value._isset.add(eOpposite)
 
 
 class ECollection(PyEcoreValue):
+    @staticmethod
     def create(owner, feature):
         if feature.ordered and feature.unique:
-            return EOrderedSet(owner, efeature=feature)
+            return EOrderedSet(owner, feature)
         elif feature.ordered and not feature.unique:
-            return EList(owner, efeature=feature)
+            return EList(owner, feature)
         elif feature.unique:
-            return ESet(owner, efeature=feature)
+            return ESet(owner, feature)
         else:
-            return EBag(owner, efeature=feature)  # see for better implem
+            return EBag(owner, feature)  # see for better implem
 
-    def __init__(self, owner, efeature=None):
+    def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
+
+    def _get(self):
+        return self
 
     def _update_opposite(self, owner, new_value, remove=False):
         if not isinstance(self._efeature, EReference):
@@ -404,7 +400,7 @@ class ECollection(PyEcoreValue):
             new_value = None if remove else new_value
             object.__getattribute__(owner, eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
-                 .__set__(None, new_value, update_opposite=False)
+                 ._set(new_value, update_opposite=False)
 
     def remove(self, value, update_opposite=True):
         if update_opposite:
@@ -415,14 +411,43 @@ class ECollection(PyEcoreValue):
                                         feature=self._efeature,
                                         kind=Kind.REMOVE))
 
+    def insert(self, i, y):
+        self.check(y)
+        self._update_container(y)
+        self._update_opposite(y, self._owner)
+        super().insert(i, y)
+        self._owner.notify(Notification(new=y,
+                                        feature=self._efeature,
+                                        kind=Kind.ADD))
+        self._owner._isset.add(self._efeature)
+
+    def pop(self, index=None):
+        if index is None:
+            value = super().pop()
+        else:
+            value = super().pop(index)
+        self._update_container(None, previous_value=value)
+        self._update_opposite(value, self._owner, remove=True)
+        self._owner.notify(Notification(old=value,
+                                        feature=self._efeature,
+                                        kind=Kind.REMOVE))
+        return value
+
     def clear(self):
-        [self.remove(x) for x in self]
+        [self.remove(x) for x in set(self)]
 
     def select(self, f):
         return [x for x in self if f(x)]
 
     def reject(self, f):
         return [x for x in self if not f(x)]
+
+    def __iadd__(self, items):
+        if ordered_set.is_iterable(items):
+            self.extend(items)
+        else:
+            self.append(items)
+        return self
 
 
 class EList(ECollection, list):
@@ -441,7 +466,8 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def extend(self, sublist):
-        all(self.check(x) for x in sublist)
+        for x in sublist:
+            self.check(x)
         for value in sublist:
             self._update_container(value)
             self._update_opposite(value, self._owner)
@@ -452,11 +478,11 @@ class EList(ECollection, list):
         self._owner._isset.add(self._efeature)
 
     def __setitem__(self, i, y):
-        is_collection = is_iterable(y)
+        is_collection = ordered_set.is_iterable(y)
         if isinstance(i, slice) and is_collection:
             sliced_elements = self.__getitem__(i)
-            all(self.check(x) for x in y)
             for element in y:
+                self.check(element)
                 self._update_container(element)
                 self._update_opposite(element, self._owner)
             # We remove (not really) all element from the slice
@@ -487,28 +513,6 @@ class EList(ECollection, list):
                                         kind=kind))
         self._owner._isset.add(self._efeature)
 
-    def insert(self, i, y):
-        self.check(y)
-        self._update_container(y)
-        self._update_opposite(y, self._owner)
-        super().insert(i, y)
-        self._owner.notify(Notification(new=y,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD))
-        self._owner._isset.add(self._efeature)
-
-    def pop(self, index=None):
-        if index is None:
-            value = super().pop()
-        else:
-            value = super().pop(index)
-        self._update_container(None, previous_value=value)
-        self._update_opposite(value, self._owner, remove=True)
-        self._owner.notify(Notification(old=value,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
-        return value
-
 
 class EBag(EList):
     pass
@@ -538,7 +542,8 @@ class EAbstractSet(ECollection):
         self.update(sublist)
 
     def update(self, others):
-        all(self.check(x) for x in others)
+        for x in others:
+            self.check(x)
         for value in others:
             self._update_container(value)
             self._update_opposite(value, self._owner)
@@ -549,10 +554,10 @@ class EAbstractSet(ECollection):
         self._owner._isset.add(self._efeature)
 
 
-class EOrderedSet(EAbstractSet, OrderedSet):
+class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
-        OrderedSet.__init__(self)
+        ordered_set.OrderedSet.__init__(self)
 
     def update(self, others):
         self._orderedset_update = True
@@ -565,8 +570,8 @@ class ESet(EOrderedSet):
 
 
 class EModelElement(EObject):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def eURIFragment(self):
         if not self.eContainer():
@@ -586,21 +591,21 @@ class EModelElement(EObject):
 
 
 class EAnnotation(EModelElement):
-    def __init__(self, source=None):
-        super().__init__()
+    def __init__(self, source=None, **kwargs):
+        super().__init__(**kwargs)
         self.source = source
         self.details = {}
 
 
 class ENamedElement(EModelElement):
-    def __init__(self, name=None):
-        super().__init__()
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
         self.name = name
 
 
 class EPackage(ENamedElement):
-    def __init__(self, name=None, nsURI=None, nsPrefix=None):
-        super().__init__(name)
+    def __init__(self, name=None, nsURI=None, nsPrefix=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.nsURI = nsURI
         self.nsPrefix = nsPrefix
 
@@ -615,8 +620,8 @@ class EPackage(ENamedElement):
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False):
-        super().__init__(name)
+                 lower=0, upper=1, required=False, **kwargs):
+        super().__init__(name, **kwargs)
         self.eType = eType
         self.lowerBound = int(lower)
         self.upperBound = int(upper)
@@ -631,8 +636,8 @@ class ETypedElement(ENamedElement):
 
 class EOperation(ETypedElement):
     def __init__(self, name=None, eType=None, params=None, exceptions=None,
-                 lower=0, upper=1):
-        super().__init__(name, eType, lower=lower, upper=upper)
+                 **kwargs):
+        super().__init__(name, eType, **kwargs)
         if params:
                 self.eParameters.extend(params)
         if exceptions:
@@ -647,16 +652,16 @@ class EOperation(ETypedElement):
 
     def to_code(self):
         parameters = [x.to_code() for x in self.eParameters]
-        return """def {0}(self, {1}):
+        if len(parameters) == 0 or parameters[0] != 'self':
+            parameters.insert(0, 'self')
+        return """def {0}({1}):
         raise NotImplementedError('Method {0}({1}) is not yet implemented')
         """.format(self.normalized_name(), ', '.join(parameters))
 
 
 class EParameter(ETypedElement):
-    def __init__(self, name=None, eType=None, required=False, lower=0,
-                 upper=1):
-        super().__init__(name, eType, required=required, lower=lower,
-                         upper=upper)
+    def __init__(self, name=None, eType=None, **kwargs):
+        super().__init__(name, eType, **kwargs)
 
     def to_code(self):
         if self.required:
@@ -669,8 +674,8 @@ class EParameter(ETypedElement):
 
 
 class ETypeParameter(ENamedElement):
-    def __init__(self, name=None):
-        super().__init__(name)
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
 
 
 class EGenericType(EObject):
@@ -678,13 +683,13 @@ class EGenericType(EObject):
 
 
 class EClassifier(ENamedElement):
-    def __init__(self, name=None):
-        super().__init__(name)
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
 
     def __isinstance__(self, instance=None):
         return (instance is None and
                 (self is EClassifier or
-                 isinstance(self, EClassifier) or
+                 isinstance(self, (EClassifier, MetaEClass)) or
                  getattr(self, '_staticEClass', False)))
 
 
@@ -704,7 +709,7 @@ class EDataType(EClassifier):
                     'java.lang.Float': (float, False, 0.0),
                     'java.lang.Integer': (int, False, 0),
                     'java.lang.Class': (type, False, None),
-                    'java.lang.Object': (object, True, None),
+                    'java.lang.Object': (object, False, None),
                     'java.util.Map': (dict, True, None),
                     'java.util.Map$Entry': (dict, True, None),
                     'double': (float, False, 0.0),
@@ -724,13 +729,15 @@ class EDataType(EClassifier):
 
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None, instanceClassName=None,
-                 type_as_factory=False):
-        super().__init__(name)
+                 type_as_factory=False, **kwargs):
+        super().__init__(name, **kwargs)
         self.eType = eType
         self.type_as_factory = type_as_factory
         self._default_value = default_value
         if instanceClassName:
             self.instanceClassName = instanceClassName
+        else:
+            self._instanceClassName = None
         if from_string:
             self.from_string = from_string
         if to_string:
@@ -779,8 +786,8 @@ class EDataType(EClassifier):
 
 
 class EEnum(EDataType):
-    def __init__(self, name=None, default_value=None, literals=None):
-        super().__init__(name, eType=self)
+    def __init__(self, name=None, default_value=None, literals=None, **kwargs):
+        super().__init__(name, eType=self, **kwargs)
         if literals:
             for i, lit_name in enumerate(literals):
                 lit_name = '_' + lit_name if lit_name[:1].isnumeric() \
@@ -814,24 +821,25 @@ class EEnum(EDataType):
 
     def __repr__(self):
         name = self.name or ''
-        return name + str(self.eLiterals)
+        return '{}[{}]'.format(name, str(self.eLiterals))
 
 
 class EEnumLiteral(ENamedElement):
-    def __init__(self, value=0, name=None):
-        super().__init__(name)
+    def __init__(self, value=0, name=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.value = value
 
     def __repr__(self):
         return '{0}={1}'.format(self.name, self.value)
 
+    def __str__(self):
+        return self.name
+
 
 class EStructuralFeature(ETypedElement):
-    def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False, changeable=True,
-                 volatile=False, transient=False, unsettable=False,
-                 derived=False):
-        super().__init__(name, eType, ordered, unique, lower, upper, required)
+    def __init__(self, name=None, eType=None, changeable=True, volatile=False,
+                 transient=False, unsettable=False, derived=False, **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.changeable = changeable
         self.volatile = volatile
         self.transient = transient
@@ -855,9 +863,10 @@ class EStructuralFeature(ETypedElement):
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
+            return new_value._get()
         value = instance_dict[name]
-        if isinstance(value, EValue):
-            return value.__get__(instance, owner)
+        if type(value) is EValue:
+            return value._get()
         else:
             return value
 
@@ -873,21 +882,26 @@ class EStructuralFeature(ETypedElement):
         previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
-        instance_dict[name].__set__(instance, value)
+        instance_dict[name]._set(value)
+
+    def __delete__(self, instance):
+        name = self._name
+        value = getattr(instance, name)
+        if self.many:
+            value.clear()
+        else:
+            setattr(instance, name, self.get_default_value())
 
     def __repr__(self):
         eType = getattr(self, 'eType', None)
         name = getattr(self, 'name', None)
-        return '<EStructuralFeature {0}: {1}>'.format(name, eType)
+        return '<{0} {1}: {2}>'.format(self.__class__.__name__, name, eType)
 
 
 class EAttribute(EStructuralFeature):
-    def __init__(self, name=None, eType=None, default_value=None,
-                 lower=0, upper=1, changeable=True, derived=False,
-                 unique=True, ordered=True, iD=False):
-        super().__init__(name, eType, lower=lower, upper=upper,
-                         derived=derived, changeable=changeable,
-                         unique=unique, ordered=ordered)
+    def __init__(self, name=None, eType=None, default_value=None, iD=False,
+                 **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.iD = iD
         self.default_value = default_value
         if self.default_value is None and isinstance(eType, EDataType):
@@ -903,11 +917,9 @@ class EAttribute(EStructuralFeature):
 
 
 class EReference(EStructuralFeature):
-    def __init__(self, name=None, eType=None, lower=0, upper=1,
-                 containment=False, eOpposite=None, ordered=True, unique=True,
-                 derived=False):
-        super().__init__(name, eType, ordered, unique, lower=lower,
-                         upper=upper, derived=derived)
+    def __init__(self, name=None, eType=None, containment=False,
+                 eOpposite=None, **kwargs):
+        super().__init__(name, eType, **kwargs)
         self.containment = containment
         self.eOpposite = eOpposite
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
@@ -928,23 +940,36 @@ class EReference(EStructuralFeature):
 
 
 class EClass(EClassifier):
-    def __init__(self, name=None, superclass=None, abstract=False,
-                 metainstance=None):
-        super().__init__(name)
-        self.abstract = abstract
+    def __new__(cls, name=None, superclass=None, metainstance=None, **kwargs):
+        if type(name) is not str:
+            raise BadValueError(got=name, expected=str)
+        instance = super().__new__(cls)
         if isinstance(superclass, tuple):
-            [self.eSuperTypes.append(x) for x in superclass]
+            [instance.eSuperTypes.append(x) for x in superclass]
         elif isinstance(superclass, EClass):
-            self.eSuperTypes.append(superclass)
+            instance.eSuperTypes.append(superclass)
         if metainstance:
-            self.python_class = metainstance
+            instance.python_class = metainstance
+            instance.__name__ = metainstance.__name__
         else:
-            self.python_class = type(self.name,
-                                     self.__compute_supertypes(),
-                                     {
-                                         'eClass': self,
-                                         '_staticEClass': self._staticEClass,
-                                      })
+            def new_init(self, *args, **kwargs):
+                for name, value in kwargs.items():
+                    setattr(self, name, value)
+            attr_dict = {
+                'eClass': instance,
+                '_staticEClass': instance._staticEClass,
+                '__init__': new_init
+            }
+            instance.python_class = type(name,
+                                         instance.__compute_supertypes(),
+                                         attr_dict)
+            instance.__name__ = name
+        return instance
+
+    def __init__(self, name=None, superclass=None, abstract=False,
+                 metainstance=None, **kwargs):
+        super().__init__(name, **kwargs)
+        self.abstract = abstract
         self.supertypes_updater = EObserver()
         self.supertypes_updater.notifyChanged = self.__update
         self._eternal_listener.append(self.supertypes_updater)
@@ -953,9 +978,7 @@ class EClass(EClassifier):
         if self.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
-        obj = self.python_class(*args, **kwargs)
-        obj._isready = True
-        return obj
+        return self.python_class(*args, **kwargs)
 
     def __update(self, notif):
         # We do not update in case of static metamodel (could be changed)
@@ -977,6 +1000,9 @@ class EClass(EClassifier):
                     setattr(self.python_class, x.name, x)
             elif notif.kind is Kind.REMOVE:
                 delattr(self.python_class, notif.old.name)
+        elif notif.feature is EClass.name and notif.kind is Kind.SET:
+            self.python_class.__name__ = notif.new
+            self.__name__ = notif.new
 
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()
@@ -990,10 +1016,12 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
+            if eSuperTypes and EObject.eClass in eSuperTypes:
+                eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
-        return '<EClass name="{0}">'.format(self.name)
+        return '<{0} name="{1}">'.format(self.__class__.__name__, self.name)
 
     @property
     def eAttributes(self):
@@ -1064,48 +1092,63 @@ class MetaEClass(type):
         if cls.eClass.abstract:
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
-        obj = type.__call__(cls, *args, **kwargs)
-        # init instances by reflection
-        if not hasattr(obj, '_isready'):
-            EObject.__subinit__(obj)
-        # required for 'at runtime' added features
-        for efeat in reversed(obj.eClass.eAllStructuralFeatures()):
-            if efeat.name in obj.__dict__:
-                continue
-            if isinstance(efeat, EAttribute):
-                obj.__setattr__(efeat.name, efeat.get_default_value())
-            elif efeat.many:
-                obj.__setattr__(efeat.name, ECollection.create(obj, efeat))
-            else:
-                obj.__setattr__(efeat.name, None)
-        obj._isready = True
-        return obj
+        return type.__call__(cls, *args, **kwargs)
 
 
-class EProxy(EObject):
-    def __init__(self, path=None, resource=None, wrapped=None):
+def EMetaclass(cls):
+    """Class decorator for creating PyEcore metaclass."""
+    superclass = cls.__bases__
+    if not issubclass(cls, EObject):
+        sclasslist = list(superclass)
+        if object in superclass:
+            index = sclasslist.index(object)
+            sclasslist.insert(index, EObject)
+            sclasslist.remove(object)
+        else:
+            sclasslist.insert(0, EObject)
+        superclass = tuple(sclasslist)
+    orig_vars = cls.__dict__.copy()
+    slots = orig_vars.get('__slots__')
+    if slots is not None:
+        if isinstance(slots, str):
+            slots = [slots]
+        for slots_var in slots:
+            orig_vars.pop(slots_var)
+    orig_vars.pop('__dict__', None)
+    orig_vars.pop('__weakref__', None)
+    return MetaEClass(cls.__name__, superclass, orig_vars)
+
+
+class EPlaceHolder(object):
+    def __init__(self):
+        object.__setattr__(self, 'resolved', False)
+
+
+class EProxy(EPlaceHolder):
+    def __init__(self, path=None, resource=None, wrapped=None, **kwargs):
+        super().__init__(**kwargs)
         super().__setattr__('_wrapped', wrapped)
         super().__setattr__('_proxy_path', path)
         super().__setattr__('_proxy_resource', resource)
-        super().__setattr__('_resolved', wrapped is not None)
+        super().__setattr__('resolved', wrapped is not None)
         super().__setattr__('_inverse_rels', set())
 
     def force_resolve(self):
-        if self._resolved:
+        if self.resolved:
             return
         resource = self._proxy_resource
         decoders = resource._get_href_decoder(self._proxy_path)
         self._wrapped = decoders.resolve(self._proxy_path, resource)
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
-        self._resolved = True
+        self.resolved = True
 
     def delete(self, recursive=True):
-        if recursive and self._resolved:
+        if recursive and self.resolved:
             [obj.delete() for obj in self.eAllContents()]
 
         seek = set(self._inverse_rels)
-        if self._resolved:
+        if self.resolved:
             seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
@@ -1130,12 +1173,12 @@ class EProxy(EObject):
                     owner.eSet(feature, None)
 
     def __getattribute__(self, name):
-        if name in ['_wrapped', '_proxy_path', '_proxy_resource', '_resolved',
-                    'force_resolve', 'delete']:
+        if name in ('_wrapped', '_proxy_path', '_proxy_resource', 'resolved',
+                    'force_resolve', 'delete'):
             return super().__getattribute__(name)
-        resolved = super().__getattribute__('_resolved')
+        resolved = super().__getattribute__('resolved')
         if not resolved:
-            if name in ['__class__', '_inverse_rels']:
+            if name in ('__class__', '_inverse_rels', '__name__'):
                 return super().__getattribute__(name)
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
@@ -1146,15 +1189,15 @@ class EProxy(EObject):
                 self._wrapped = decoded
             self._wrapped._inverse_rels.update(self._inverse_rels)
             self._inverse_rels = self._wrapped._inverse_rels
-            self._resolved = True
+            self.resolved = True
         wrapped = self._wrapped
         return wrapped.__getattribute__(name)
 
     def __setattr__(self, name, value):
-        if name in ['_wrapped', '_proxy_path', '_resolved', '_proxy_resource']:
+        if name in ('_wrapped', '_proxy_path', 'resolved', '_proxy_resource'):
             super().__setattr__(name, value)
             return
-        resolved = self._resolved
+        resolved = self.resolved
         if not resolved:
             resource = self._proxy_resource
             decoders = resource._get_href_decoder(self._proxy_path)
@@ -1163,7 +1206,7 @@ class EProxy(EObject):
                 self._wrapped = decoded.eClass
             else:
                 self._wrapped = decoded
-            self._resolved = True
+            self.resolved = True
         wrapped = self._wrapped
         wrapped.__setattr__(name, value)
 
@@ -1175,6 +1218,10 @@ def abstract(cls):
 
 # meta-meta level
 EString = EDataType('EString', str)
+ENamedElement.name = EAttribute('name', EString)
+ENamedElement.name._isset.add(ENamedElement.name)  # special case
+EString._isset.add(ENamedElement.name)  # special case
+
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
@@ -1211,8 +1258,6 @@ EShort = EDataType('EShort', int, from_string=lambda x: int(x))
 EJavaClass = EDataType('EJavaClass', type)
 
 
-ENamedElement.name = EAttribute('name', EString)
-
 EModelElement.eAnnotations = EReference('eAnnotations', EAnnotation,
                                         upper=-1, containment=True)
 EAnnotation.eModelElement = EReference('eModelElement', EModelElement,
@@ -1231,7 +1276,7 @@ ETypedElement.upper = EAttribute('upper', EInteger,
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
-# ETypedElement.default_value = EAttribute('default_value', ENativeType)
+ENamedElement.name._isset.add(ETypedElement.eType)  # special case
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -1293,7 +1338,8 @@ EEnumLiteral.literal = EAttribute('literal', EString)
 
 EOperation.eContainingClass = EReference('eContainingClass', EClass,
                                          eOpposite=EClass.eOperations)
-EOperation.eParameters = EReference('eParameters', EParameter, upper=-1)
+EOperation.eParameters = EReference('eParameters', EParameter, upper=-1,
+                                    containment=True)
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                         upper=-1, containment=True)
@@ -1365,4 +1411,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass']
+           'EShort', 'EJavaClass', 'EMetaclass']

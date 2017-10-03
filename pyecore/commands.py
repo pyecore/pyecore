@@ -4,73 +4,8 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 """
 from abc import ABCMeta, abstractmethod
 from collections import MutableSequence
-from pyecore.ecore import EObject, BadValueError
-from pyecore.notification import Notification, Kind
-import ordered_set
-
-
-# monkey patching the OrderedSet implementation
-def insert(self, index, key):
-    """Adds an element at a dedicated position in an OrderedSet.
-
-    This implementation is meant for the OrderedSet from the ordered_set
-    package only.
-    """
-    if key in self.map:
-        return
-    # perform check and container/opposite update
-    self.check(key)
-    self._update_container(key)
-    self._update_opposite(key, self._owner)
-    # insert the value
-    size = len(self.items)
-    index = index % size if size != 0 and index < size else size
-    self.items.insert(index, key)
-    for k, v in self.map.items():
-        if v >= index:
-            self.map[k] = v + 1
-    self.map[key] = index
-    # send the ADD notification
-    self._owner.notify(Notification(new=key,
-                                    feature=self._efeature,
-                                    kind=Kind.ADD))
-    self._owner._isset.add(self._efeature)
-
-
-def pop(self, index=None):
-    """Removes an element at the tail of the OrderedSet or at a dedicated
-    position.
-
-    This implementation is meant for the OrderedSet from the ordered_set
-    package only.
-    """
-    if not self.items:
-        raise KeyError('Set is empty')
-
-    def remove_index(i):
-        elem = self.items[i]
-        self._update_container(None, previous_value=elem)
-        self._update_opposite(elem, self._owner, remove=True)
-        del self.items[i]
-        del self.map[elem]
-        self._owner.notify(Notification(old=elem,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
-        return elem
-    if index is None:
-        elem = remove_index(-1)
-    else:
-        elem = remove_index(index)
-        size = len(self.items)
-        index = index % size if size != 0 and index < size else size
-        for k, v in self.map.items():
-            if v >= index and v > 0:
-                self.map[k] = v - 1
-    return elem
-
-
-ordered_set.OrderedSet.insert = insert
-ordered_set.OrderedSet.pop = pop
+from .ecore import EObject, BadValueError
+from .resources import ResourceSet
 
 
 class Command(metaclass=ABCMeta):
@@ -110,6 +45,7 @@ class AbstractCommand(Command):
         if owner and not isinstance(owner, EObject):
             raise BadValueError(got=owner, expected=EObject)
         self.owner = owner
+        self.resource = owner.eResource
         self.feature = feature
         self.value = value
         self.previous_value = None
@@ -417,3 +353,29 @@ class CommandStack(object):
     def redo(self):
         self.peek_next_top.redo()
         self.stack_index += 1
+
+
+class EditingDomain(object):
+    def __init__(self, resource_set=None, command_stack_class=CommandStack):
+        self.resource_set = resource_set or ResourceSet()
+        self.__stack = command_stack_class()
+        self.clipboard = []
+
+    def create_resource(self, uri):
+        return self.resource_set.create_resource(uri)
+
+    def load_resource(self, uri):
+        return self.resource_set.get_resource(uri)
+
+    def execute(self, cmd):
+        if cmd.resource not in self.resource_set.resources.values():
+            raise ValueError("Cannot execute command '{}', the resource's "
+                             "command is not contained in the editing domain "
+                             "resource set.".format(cmd))
+        self.__stack.execute(cmd)
+
+    def undo(self):
+        self.__stack.undo()
+
+    def redo(self):
+        self.__stack.redo()

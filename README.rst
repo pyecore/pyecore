@@ -141,16 +141,20 @@ Then, we can add metaproperties to the freshly created metaclass:
 
     >>> instance1.eClass.eAttributes
     []
-    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
-    >>> instance1.eClass.eStructuralFeatures
-    [<pyecore.ecore.EAttribute object at 0x7f7da72ba940>]
-    >>> str(instance1.name)
+    >>> MyMetaclass.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))  # We add a 'name' which is a string
+    >>> instance1.eClass.eAttributes  # Is there a new feature?
+    [<pyecore.ecore.EAttribute object at 0x7f7da72ba940>]  # Yep, the new feature is here!
+    >>> str(instance1.name)  # There is a default value for the new attribute
     'None'
     >>> instance1.name = 'mystuff'
     >>> instance1.name
     'mystuff'
+    >>> # As the feature exists in the metaclass, the name of the feature can be used in the constructor
+    >>> instance3 = MyMetaclass(name='myname')
+    >>> instance3.name
+    'myname'
 
-We can also create a new metaclass ``B`` and a new metareferences towards
+We can also create a new metaclass ``B`` and a new meta-references towards
 ``B``:
 
 .. code-block:: python
@@ -177,6 +181,43 @@ Opposite and 'collection' meta-references are also managed:
     >>> c1.toMy = instance1
     >>> instance1.toCs  # 'toCs' should contain 'c1' because 'toMy' is opposite relation of 'toCs'
     [<pyecore.ecore.C object at 0x7f7da7053390>]
+
+Explore Dynamic metamodel/model objects
+---------------------------------------
+
+It is possible, when you are handling an object in the Python console, to ask
+for all the meta-attributes/meta-references and meta-operations that can
+be called on it using ``dir()`` on, either a dynamic metamodel object or a
+model instance. This allows you to quickly experiment and find the information
+you are looking for:
+
+.. code-block:: python
+
+    >>> A = EClass('A')
+    >>> dir(A)
+    ['abstract',
+     'delete',
+     'eAllContents',
+     'eAllOperations',
+     'eAllReferences',
+     'eAllStructuralFeatures',
+     'eAllSuperTypes',
+     'eAnnotations',
+     'eAttributes',
+     'eContainer',
+     # ... there is many others
+     'findEOperation',
+     'findEStructuralFeature',
+     'getEAnnotation',
+     'instanceClassName',
+     'interface',
+     'name']
+    >>> a = A()
+    >>> dir(a)
+    []
+    >>> A.eStructuralFeatures.append(EAttribute('myname', EString))
+    >>> dir(a)
+    ['myname']
 
 
 Enhance the Dynamic metamodel
@@ -254,6 +295,10 @@ defined meta-layer.
     >>> assert isinstance(library.Writer.name, Ecore.EAttribute)
 
 
+There is two main ways of creating static ``EClass`` with PyEcore. The first
+one relies on automatic code generation while the second one uses manual
+definition.
+
 The automatic code generator defines a Python package hierarchie instead of
 only a Python module. This allows more freedom for dedicated operations and
 references between packages.
@@ -277,10 +322,23 @@ project, copy the  PyEcore generator in it, configure a new Acceleo runner,
 select your ``.ecore`` and your good to go. There is plenty of documentation
 over the Internet for Acceleo/MTL project creation/management...
 
+**WARNING:** the Acceleo generator is now deprecated, use pyecoregen instead!
+
 Using the Dedicated CLI Generator (PyEcoregen)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This generator source can be found at this address:
+For simple generation, the Acceleo generator will still do the job, but for more
+complex metamodel and a more robust generation, pyecoregen is significantly better.
+Its use is the prefered solution for the static metamodel code generation.
+Advantages over the Acceleo generator are the following:
+
+* it gives the ability to deal with generation from the command line,
+* it gives the ability to launch generation programmatically (and very simply),
+* it introduces into PyEcore a framework for code generation,
+* it allows you to code dedicated behavior in mixin classes,
+* it can be installed from `pip`.
+
+This generator source code can be found at this address with mode details:
 https://github.com/pyecore/pyecoregen and is available on Pypi, so you can
 install it quite symply using:
 
@@ -299,6 +357,79 @@ Using this tool, your static code generation is very simple:
 
 The generated code is automatically formatted using ``autopep8``. Once the code
 is generated, your can import it and use it in your Python code.
+
+
+Manually defines static ``EClass``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To manually defines static ``EClass``, it is simply a matter of creating a
+Python class, and adding to it the ``@EMetaclass`` class decorator. This
+decorator will automatically add the righ metaclass to the defined class, and
+introduce the missing classes in it's inheritance tree. Defining simple
+metaclass is thus fairly easy:
+
+.. code-block:: python
+
+    @EMetaclass
+    class Person(object):
+        name = EAttribute(eType=EString)
+        age = EAttribute(eType=EInt)
+        children = EReference(upper=-1, containment=True)
+
+        def __init__(self, name):
+            self.name = name
+
+    Person.children.eType = Person  # As the relation is reflexive, it must be set AFTER the metaclass creation
+
+    p1 = Person('Parent')
+    p1.children.append(Person('Child'))
+
+
+Without more information, all the created metaclass will be added to a default
+``EPackage``, generated on the fly. If the ``EPackage`` must be controlled, a
+global variable of ``EPackage`` type, named ``eClass``, must be created in the
+module.
+
+.. code-block:: python
+
+    eClass = EPackage(name='pack', nsURI='http://pack/1.0', nsPrefix='pack')
+
+    @EMetaclass
+    class TestMeta(object):
+        pass
+
+    assert TestMeta.eClass.ePackage is eClass
+
+However, when ``@EMetaclass`` is used, the direct ``super()`` call in
+the ``__init__`` constructor cannot be directly called. Instead,
+``super(x, self)`` must be called:
+
+.. code-block:: python
+
+    class Stuff(object):
+        def __init__(self):
+            self.stuff = 10
+
+
+    @EMetaclass
+    class A(Stuff):
+        def __init__(self, tmp):
+            super(A, self).__init__()
+            self.tmp = tmp
+
+
+    a = A()
+    assert a.stuff == 10
+
+If you want to directly extends the PyEcore metamodel, the ``@EMetaclass`` is
+not required, and ``super()`` can be used.
+
+.. code-block:: python
+
+    class MyNamedElement(ENamedElement):
+        def __init__(self, tmp=None, **kwargs):
+            super().__init__(**kwargs)
+            self.tmp = tmp
 
 
 Static/Dynamic ``EOperation``
@@ -495,7 +626,7 @@ The Python class hierarchie (inheritance tree) associated to the EClass instance
 Importing an Existing XMI Metamodel/Model
 =========================================
 
-XMI support is still a work in progress, but the XMI import is on good tracks.
+XMI support is still a little rough on the edges, but the XMI import is on good tracks.
 Currently, only basic XMI metamodel (``.ecore``) and model instances can be
 loaded:
 
@@ -653,6 +784,45 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource = rset.create_resource(URI('my/path.xmi'))
     >>> resource.append(root)
     >>> resource.save()
+
+
+Dealing with JSON Resources
+===========================
+
+PyEcore is also able to load/save JSON models/metamodels. The JSON format it uses
+tries to be close from the one described in the `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
+The way the JSON serialization/deserialization works, on a user point of view,
+is pretty much the same than the XMI resources, but as the JSON resource factory
+is not loaded by default (for XMI, it is), you have to manually register it
+first. The registration can be performed globally or at a ``ResourceSet`` level.
+Here is how to register the JSON resource factory for a given ``ResourceSet``.
+
+.. code-block:: python
+
+    >>> from pyecore.resources import ResourceSet
+    >>> from pyecore.resources.json import JsonResource
+    >>> rset = ResourceSet()  # We have a resource set
+    >>> rset.resource_factory['json'] = lambda uri: JsonResource(uri)  # we register the factory for '.json' extensions
+
+
+And here is how to register the factory at a global level:
+
+.. code-block:: python
+
+    >>> from pyecore.resources import ResourceSet
+    >>> from pyecore.resources.json import JsonResource
+    >>> ResourceSet.resource_factory['json'] = lambda uri: JsonResource(uri)
+
+
+Once the resource factory is registered, you can load/save models/metamodels
+exactly the same way you would have done it for XMI. Check the XMI section to
+see how to load/save resources using a ``ResourceSet``.
+
+**NOTE:** Currently, the Json serialization is performed using the defaut Python
+``json`` lib. It means that your PyEcore model is first translated to a huge
+``dict`` before the export/import. For huge models, this implies a memory and
+performance cost. Future version of this serializer will deal with a different
+way of producing the final file.
 
 
 Deleting Elements
@@ -889,13 +1059,19 @@ In the current state, the project implements:
 * EMF proxies (first version),
 * object deletion (first version),
 * EMF commands (first version),
-* EMF basic command stack.
+* EMF basic command stack,
+* EMF very basic Editing Domain,
+* JSON import (simple JSON format),
+* JSON export (simple JSON format).
 
 The things that are in the roadmap:
 
-* URI mapper
+* new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
+* new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
+* multiple roots models,
+* derived collections,
+* URI mapper,
 * documentation,
-* EMF Editing Domain,
 * copy/paste (?).
 
 Existing Projects

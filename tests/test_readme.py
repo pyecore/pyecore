@@ -29,3 +29,21 @@ def test_intro():
 
     with pytest.raises(BadValueError):
         a1.myname = 1
+
+
+def test_instance_abstract_intro():
+    MyMetaclass = EClass('MyMetaclass')
+    instance1 = MyMetaclass()
+    instance2 = MyMetaclass()
+    assert instance1 is not instance2
+
+    assert instance1.eClass.eAttributes == []
+    MyMetaclass.eStructuralFeatures.append(EAttribute('name', EString))
+    assert instance1.eClass.eAttributes != []
+    assert instance1.name is None
+
+    instance1.name = 'mystuff'
+    assert instance1.name == 'mystuff'
+
+    instance3 = MyMetaclass(name='myname')
+    assert instance3.name == 'myname'

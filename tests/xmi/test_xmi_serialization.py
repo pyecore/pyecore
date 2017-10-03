@@ -14,9 +14,10 @@ def lib():
     A = Ecore.EClass('A', superclass=(AbsA,))
     SubA = Ecore.EClass('SubA', superclass=(A,))
     MyRoot = Ecore.EClass('MyRoot')
-    MyRoot.a_container = Ecore.EReference('a_container', eType=AbsA, upper=-1, containment=True)
+    MyRoot.a_container = Ecore.EReference('a_container', eType=AbsA, upper=-1,
+                                          containment=True)
     MyRoot.eStructuralFeatures.append(MyRoot.a_container)
-    package.eClassifiers.extend([MyRoot, A, SubA])
+    package.eClassifiers.extend([MyRoot, A, SubA, AbsA])
     package.MyRoot = MyRoot
     package.SubA = SubA
     package.A = A

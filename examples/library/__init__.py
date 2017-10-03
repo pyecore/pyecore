@@ -24,6 +24,7 @@ otherClassifiers = [BookCategory]
 for classif in otherClassifiers:
     eClassifiers[classif.name] = classif
     classif._container = library
+    classif.ePackage = eClass
 
 for classif in eClassifiers.values():
     eClass.eClassifiers.append(classif.eClass)

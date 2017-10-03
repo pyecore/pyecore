@@ -15,10 +15,7 @@ class XMIResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
         super().__init__(uri, use_uuid)
         self._meta_cache = {}
-        self._use_uuid = False
-        self._contents = []
         self._later = []
-        self._resolve_mem = {}
         self.prefixes = {}
         self.reverse_nsmap = {}
 
@@ -41,25 +38,6 @@ class XMIResource(Resource):
         self._clean_registers()
         self.uri.close_stream()
 
-    def resolve(self, fragment):
-        fragment = self.normalize(fragment)
-        if fragment in self._resolve_mem:
-            return self._resolve_mem[fragment]
-        if self._use_uuid:
-            try:
-                frag = fragment[1:] if fragment.startswith('#') \
-                                    else fragment
-                frag = frag[2:] if frag.startswith('//') else frag
-                return self.uuid_dict[frag]
-            except KeyError:
-                pass
-        result = None
-        for root in self._contents:
-            result = self._navigate_from(fragment, root)
-            if result:
-                self._resolve_mem[fragment] = result
-                return result
-
     @staticmethod
     def extract_namespace(tag):
         qname = etree.QName(tag)
@@ -81,7 +59,7 @@ class XMIResource(Resource):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name)
         if not eobject:
-            raise TypeError({'{0} EClass does not exists'}.format(eclass_name))
+            raise TypeError('{0} EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
         self._use_uuid = xmlroot.get(XMIResource.xmiid) is not None
@@ -137,10 +115,11 @@ class XMIResource(Resource):
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
             return (None, None, [], [])
-        feature_container = self._find_in_metacache(parent_eobj, node.tag)
+        _, node_tag = self.extract_namespace(node.tag)
+        feature_container = self._find_in_metacache(parent_eobj, node_tag)
         if not feature_container:
             raise ValueError('Feature {0} is unknown for {1}, line {2}'
-                             .format(node.tag,
+                             .format(node_tag,
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
         if node.get('href'):
@@ -279,9 +258,7 @@ class XMIResource(Resource):
         self.register_nsmap(prefix, nsURI)
 
     def save(self, output=None):
-        output = output.create_outstream() \
-                 if output \
-                 else self.uri.create_outstream()
+        output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
         # Compute required nsmap for subpackages

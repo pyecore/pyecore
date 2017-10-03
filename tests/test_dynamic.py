@@ -836,3 +836,59 @@ testdata = [
 @pytest.mark.parametrize("instance, cls, result", testdata)
 def test_epackage_isinstance(instance, cls, result):
     assert EcoreUtils.isinstance(instance, cls) is result
+
+
+def test_eclass__name__():
+    A = EClass('A')
+    assert A.name == 'A'
+    assert A.python_class.__name__ == 'A'
+    assert A.__name__ == 'A'
+
+    A.name = 'B'
+    assert A.name == 'B'
+    assert A.python_class.__name__ == 'B'
+    assert A.__name__ == 'B'
+
+
+def test_ecollection_iadd():
+    A = EClass('A')
+    A.eStructuralFeatures += EReference('a', A, upper=-1)
+
+    assert len(A.eStructuralFeatures) == 1
+
+    a = A()
+    a.a += [A(), A()]
+    assert len(a.a) == 2
+
+    with pytest.raises(BadValueError):
+        a.a += 'test'
+
+    with pytest.raises(BadValueError):
+        a.a += [A(), 'test']
+
+
+def test_eobject_dir():
+    A = EClass('A')
+    assert 'name' in dir(A)  # just an example
+
+    a = A()
+    assert dir(a) == []
+
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EReference('to_a', A))
+    assert 'name' in dir(a)
+    assert 'to_a' in dir(a)
+
+
+def test_eobject_kargs_init():
+    A = EClass('A')
+    a = A(test='test_value')
+    assert a.test == 'test_value'
+
+    del a.test
+    A.eStructuralFeatures.append(EAttribute('test', EString))
+    a.test = 'new_value'
+    assert a.test == 'new_value'
+
+    with pytest.raises(BadValueError):
+        a.test = 4

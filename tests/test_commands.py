@@ -1,8 +1,10 @@
 import pytest
 from pyecore.ecore import *
 from pyecore.commands import *
+from pyecore.resources import URI, ResourceSet
 from pyecore.utils import DynamicEPackage
 from pyecore.notification import EObserver, Kind
+from os import path
 
 
 class LastObserver(EObserver):
@@ -468,7 +470,7 @@ def test_stack_complex(mm):
         stack.undo()
 
 
-def test_statck_multiple_undo_redo(mm):
+def test_stack_multiple_undo_redo(mm):
     stack = CommandStack()
     a = mm.A()
     b1 = mm.B()
@@ -487,3 +489,12 @@ def test_statck_multiple_undo_redo(mm):
     stack.redo()
     assert a.name == 'testValue'
     assert b1 in a.many_tob
+
+
+def test_command_resource(mm):
+    rset = ResourceSet()
+    resource = rset.create_resource(URI('http://logical'))
+    a = mm.A()
+    resource.append(a)
+    cmd = Set(a, 'name', 'test_value')
+    assert cmd.resource is resource

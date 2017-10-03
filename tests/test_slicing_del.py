@@ -8,6 +8,9 @@ from pyecore.notification import *
 def simplemm():
     A = EClass('A')
     B = EClass('B')
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EAttribute('number', EInt))
+    A.eStructuralFeatures.append(EReference('b', B))
     A.eStructuralFeatures.append(EAttribute('names', EString, upper=-1, unique=False))
     A.eStructuralFeatures.append(EAttribute('ints', EInt, upper=-1, unique=False))
     A.eStructuralFeatures.append(EReference('inners', B, upper=-1, unique=False, containment=True))
@@ -147,3 +150,51 @@ def test_slicing_pop_b(simplemm):
     e = a.cols.pop()
     assert o.calls == 2
     assert o.kind == Kind.REMOVE
+
+
+def test_del_single_attribute(simplemm):
+    a = simplemm.A()
+    default_value = a.name
+    a.name = 'test_name'
+    assert a.name == 'test_name' and a.name != default_value
+
+    del a.name
+    assert a.name is None
+
+    default_value = a.number
+    a.number = 4
+    assert a.number == 4 and a.number != default_value
+    del a.number
+    assert a.number == default_value
+
+
+def test_del_single_reference(simplemm):
+    a = simplemm.A()
+    default_value = a.b
+    b = simplemm.B()
+    a.b = b
+    assert a.b is b and a.b is not default_value
+    del a.b
+    assert a.b is default_value
+
+
+def test_del_multiple_attribute(simplemm):
+    a = simplemm.A()
+    default_value = list(a.ints)
+    a.ints.append(4)
+    assert a.ints == [4] and a.ints != default_value
+
+    del a.ints
+    assert a.ints == default_value
+
+
+def test_del_multiple_reference(simplemm):
+    a = simplemm.A()
+    default_value = list(a.inners)
+    b1 = simplemm.B()
+    b2 = simplemm.B()
+    a.inners.extend([b1, b2])
+    assert a.inners == [b1, b2] and a.inners != default_value
+
+    del a.inners
+    assert a.inners == default_value

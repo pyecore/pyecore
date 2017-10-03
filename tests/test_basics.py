@@ -2,6 +2,7 @@ import pytest
 from pyecore.ecore import *
 import pyecore.ecore as Ecore
 
+
 def test_ecore_URI():
     assert Ecore.nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
 
@@ -78,6 +79,13 @@ def test_eenum_geteenum():
 def test_eenum_geteenum_print():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
     assert MyEnum.__repr__()
+
+
+def test_eenumliteral_geteenum_str():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert str(MyEnum.A) == 'A'
+    assert str(MyEnum.B) == 'B'
+    assert str(MyEnum.C) == 'C'
 
 
 def test_eattribute_etype():
