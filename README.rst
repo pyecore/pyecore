@@ -820,9 +820,8 @@ see how to load/save resources using a ``ResourceSet``.
 
 **NOTE:** Currently, the Json serialization is performed using the defaut Python
 ``json`` lib. It means that your PyEcore model is first translated to a huge
-``dict`` before the export/import. For huge models, this implies a memory and
-performance cost. Future version of this serializer will deal with a different
-way of producing the final file.
+``dict`` before the export/import. For huge models, this could implies a memory
+and a performance cost.
 
 
 Deleting Elements
