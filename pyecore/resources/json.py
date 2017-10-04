@@ -7,11 +7,12 @@ from .. import ecore as Ecore
 
 
 class JsonResource(Resource):
-    def __init__(self, uri=None, use_uuid=False):
+    def __init__(self, uri=None, use_uuid=False, indent=None):
         super().__init__(uri, use_uuid)
         self._resolve_later = []
         self._already_saved = []
         self._load_href = {}
+        self.indent = indent
 
     def load(self):
         json_value = self.uri.create_instream()
@@ -26,65 +27,62 @@ class JsonResource(Resource):
         stream = self.open_out_stream(output)
         root = self.contents[0]  # Only single root atm
         with stream as out:
-            out.write(json.dumps(self.to_dict(root), indent=2).encode('utf-8'))
+            out.write(json.dumps(self.to_dict(root), indent=self.indent)
+                          .encode('utf-8'))
+
+    def _uri_fragment(self, obj):
+        if obj.eResource == self:
+            use_id = self._use_uuid
+        else:
+            use_id = obj.eResource and obj.eResource._use_uuid
+        if use_id:
+            self._assign_uuid(obj)
+            return obj._xmiid
+        else:
+            return obj.eURIFragment()
+
+    def _to_ref_from_obj(self, obj):
+        eclass = obj.eClass
+        uri = '{}{}'.format(eclass.ePackage.nsURI,
+                            obj.eClass.eURIFragment())
+        ref = {'eClass': uri}
+        if obj.eResource == self:
+            resource_uri = ''
+        else:
+            resource_uri = obj.eResource.uri if obj.eResource else ''
+        ref['$ref'] = '{}{}'.format(resource_uri, self._uri_fragment(obj))
+        return ref
+
+    def _to_dict_from_obj(self, obj):
+        eclass = obj.eClass
+        uri = '{}{}'.format(eclass.ePackage.nsURI, eclass.eURIFragment())
+        d = {'eClass': uri}
+        containingFeature = obj.eContainmentFeature()
+        for attr in obj._isset:
+            is_ereference = isinstance(attr, Ecore.EReference)
+            is_ref = is_ereference and not attr.containment
+            if is_ereference and attr.eOpposite:
+                if attr.eOpposite is containingFeature:
+                    continue
+            value = obj.eGet(attr)
+            if value == attr.get_default_value():
+                continue
+            d[attr.name] = self.to_dict(value, is_ref=is_ref)
+            if self._use_uuid:
+                self._assign_uuid(obj)
+                d['uuid'] = obj._xmiid
+        self._already_saved.append(obj)
+        return d
 
     def to_dict(self, obj, is_ref=False):
-        def uri_fragment(obj):
-            if obj.eResource == self:
-                use_id = self._use_uuid
-            else:
-                use_id = obj.eResource and obj.eResource._use_uuid
-            if use_id:
-                self._assign_uuid(obj)
-                return obj._xmiid
-            else:
-                return obj.eURIFragment()
-
-        def to_ref(obj):
-            eclass = obj.eClass
-            uri = '{}{}'.format(eclass.ePackage.nsURI,
-                                obj.eClass.eURIFragment())
-            ref = {'eClass': uri}
-            if obj.eResource == self:
-                resource_uri = ''
-            else:
-                resource_uri = obj.eResource.uri if obj.eResource else ''
-            # if resource_uri is None:
-            #     resource_uri = ''
-            ref['$ref'] = '{}{}'.format(resource_uri, uri_fragment(obj))
-            return ref
-
-        def to_dict_eobject(obj):
-            eclass = obj.eClass
-            uri = '{}{}'.format(eclass.ePackage.nsURI, eclass.eURIFragment())
-            d = {'eClass': uri}
-            containingFeature = obj.eContainmentFeature()
-            for attr in obj._isset:
-                is_ereference = isinstance(attr, Ecore.EReference)
-                is_ref = is_ereference and not attr.containment
-                if is_ereference and attr.eOpposite:
-                    if attr.eOpposite is containingFeature:
-                        continue
-                    # if obj.eGet(attr) in self._already_saved:
-                    #     continue  #
-                value = obj.eGet(attr)
-                if value == attr.get_default_value():
-                    continue
-                d[attr.name] = self.to_dict(value, is_ref=is_ref)
-                if self._use_uuid:
-                    self._assign_uuid(obj)
-                    d['uuid'] = obj._xmiid
-            self._already_saved.append(obj)
-            return d
-
         if isinstance(obj, Ecore.EObject):
-            fun = to_ref if is_ref else to_dict_eobject
+            fun = self._to_ref_from_obj if is_ref else self._to_dict_from_obj
             return fun(obj)
         elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
-            fun = to_ref if is_ref else to_dict_eobject
+            fun = self._to_ref_from_obj if is_ref else self._to_dict_from_obj
             return fun(obj.eClass)
         elif isinstance(obj, Ecore.ECollection):
-            fun = to_ref if is_ref else self.to_dict
+            fun = self._to_ref_from_obj if is_ref else self.to_dict
             return [fun(x) for x in obj]
         else:
             return obj
