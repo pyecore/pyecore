@@ -390,15 +390,12 @@ class ECollection(PyEcoreValue):
             return
 
         if eOpposite.many and not remove:
-            owner.__getattribute__(eOpposite.name)  # force resolve
-            object.__getattribute__(owner, eOpposite.name) \
-                  .append(new_value, False)
+            owner.__getattribute__(eOpposite.name).append(new_value, False)
         elif eOpposite.many and remove:
-            object.__getattribute__(owner, eOpposite.name) \
-                  .remove(new_value, False)
+            owner.__getattribute__(eOpposite.name).remove(new_value, False)
         else:
             new_value = None if remove else new_value
-            object.__getattribute__(owner, eOpposite.name)  # Force load
+            owner.__getattribute__(eOpposite.name)  # Force load
             owner.__dict__[eOpposite.name] \
                  ._set(new_value, update_opposite=False)
 
@@ -1190,8 +1187,7 @@ class EProxy(EPlaceHolder):
             self._wrapped._inverse_rels.update(self._inverse_rels)
             self._inverse_rels = self._wrapped._inverse_rels
             self.resolved = True
-        wrapped = self._wrapped
-        return wrapped.__getattribute__(name)
+        return self._wrapped.__getattribute__(name)
 
     def __setattr__(self, name, value):
         if name in ('_wrapped', '_proxy_path', 'resolved', '_proxy_resource'):
@@ -1207,8 +1203,7 @@ class EProxy(EPlaceHolder):
             else:
                 self._wrapped = decoded
             self.resolved = True
-        wrapped = self._wrapped
-        wrapped.__setattr__(name, value)
+        self._wrapped.__setattr__(name, value)
 
 
 def abstract(cls):
