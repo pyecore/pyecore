@@ -112,6 +112,7 @@ class A(object):
     child = Ecore.EReference(containment=True, upper=-1)
     imply = Ecore.EReference()
     ref_by = Ecore.EReference()
+    distant = Ecore.EReference(eType=Ecore.EObject)
 
 
 A.child.eType = A
