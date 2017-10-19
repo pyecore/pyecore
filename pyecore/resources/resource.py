@@ -4,9 +4,15 @@ A Resource represents a model resource and many of them can be contained in a
 ResourceSet.
 """
 from uuid import uuid4
-import urllib.request
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 from os import path
-from collections import ChainMap
+try:
+    from collections import ChainMap
+except ImportError:
+    from chainmap import ChainMap
 from .. import ecore as Ecore
 
 global_registry = {}
@@ -98,7 +104,7 @@ class URI(object):
 
     def _split(self):
         if '://' in self._uri:
-            self._protocol, rest = self._uri.split('://', maxsplit=1)
+            self._protocol, rest = self._uri.split('://', 1)
         else:
             self._protocol, rest = None, self._uri
         uri_sep = self._uri_split.get(self._protocol, path.sep)
@@ -154,10 +160,10 @@ class URI(object):
 
 class HttpURI(URI):
     def __init__(self, uri):
-        super().__init__(uri)
+        super(HttpURI, self).__init__(uri)
 
     def create_instream(self):
-        self.__stream = urllib.request.urlopen(self.plain)
+        self.__stream = request.urlopen(self.plain)
         return self.__stream
 
     def create_outstream(self):
@@ -181,6 +187,7 @@ class HttpURI(URI):
 
 
 class MetamodelDecoder(object):
+    @staticmethod
     def split_path(path):
         path = Resource.normalize(path)
         fragment = path.split('#')
@@ -190,10 +197,12 @@ class MetamodelDecoder(object):
             uri = None
         return uri, fragment
 
+    @staticmethod
     def can_resolve(path, registry):
         uri, fragment = MetamodelDecoder.split_path(path)
         return uri in registry
 
+    @staticmethod
     def resolve(path, registry):
         path = Resource.normalize(path)
         uri, fragment = path.split('#')
@@ -202,20 +211,24 @@ class MetamodelDecoder(object):
 
 
 class Global_URI_decoder(object):
+    @staticmethod
     def can_resolve(path, from_resource=None):
         return MetamodelDecoder.can_resolve(path, global_registry)
 
+    @staticmethod
     def resolve(path, from_resource=None):
         return MetamodelDecoder.resolve(path, global_registry)
 
 
 class LocalMetamodelDecoder(object):
+    @staticmethod
     def can_resolve(path, from_resource=None):
         if from_resource is None or from_resource.resource_set is None:
             return False
         rset = from_resource.resource_set
         return MetamodelDecoder.can_resolve(path, rset.metamodel_registry)
 
+    @staticmethod
     def resolve(path, from_resource=None):
         rset = from_resource.resource_set
         return MetamodelDecoder.resolve(path, rset.metamodel_registry)

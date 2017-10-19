@@ -1,6 +1,7 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
+from __future__ import absolute_import
 import json
 from .resource import Resource
 from .. import ecore as Ecore
@@ -8,7 +9,7 @@ from .. import ecore as Ecore
 
 class JsonResource(Resource):
     def __init__(self, uri=None, use_uuid=False, indent=None):
-        super().__init__(uri, use_uuid)
+        super(JsonResource, self).__init__(uri, use_uuid)
         self._resolve_later = []
         self._already_saved = []
         self._load_href = {}
@@ -19,7 +20,7 @@ class JsonResource(Resource):
         d = json.loads(json_value.read().decode('utf-8'))
         self.to_obj(d, first=True)
         self.uri.close_stream()
-        for inst, refs in self._load_href.items():
+        for inst, refs in self._load_href.iteritems():
             self.process_inst(inst, refs)
         self._load_href.clear()
 
@@ -99,7 +100,7 @@ class JsonResource(Resource):
             raise ValueError('Unknown metaclass {} for uri {}'
                              .format(eclass, uri_eclass))
         if eclass in (Ecore.EClass.eClass, Ecore.EClass):
-            inst = eclass(d['name'])
+            inst = eclass(d['name'].encode())
             excludes.append('name')
         else:
             inst = eclass()
@@ -114,7 +115,7 @@ class JsonResource(Resource):
         containments = []
         ereferences = []
         eclass = inst.eClass
-        for key, value in d.items():
+        for key, value in d.iteritems():
             if key in excludes:
                 continue
             feature = eclass.findEStructuralFeature(key)
@@ -148,7 +149,9 @@ class JsonResource(Resource):
                 if feature.eOpposite is None or \
                         feature.eOpposite is not owning_feature:
                     collection.extend(elements)
-            elif isinstance(value, str):
+            elif isinstance(value, unicode):
+                inst.eSet(feature, value.encode())
+            elif not isinstance(value, str):
                 inst.eSet(feature, feature.eType.from_string(value))
             else:
                 inst.eSet(feature, value)

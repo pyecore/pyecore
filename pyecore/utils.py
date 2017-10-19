@@ -24,7 +24,7 @@ class DynamicEPackage(EObserver):
     def __init__(self, package):
         if not isinstance(package, EPackage):
             raise BadValueError(got=package, expected=EPackage)
-        super().__init__(notifier=package)
+        super(DynamicEPackage, self).__init__(notifier=package)
 
         for eclass in package.eClassifiers:
             setattr(self, eclass.name, eclass)

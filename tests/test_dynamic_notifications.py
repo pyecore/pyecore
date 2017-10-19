@@ -46,7 +46,7 @@ def test_notification_print(lib):
     a1 = lib.A()
     observer = EObserver()
     observer.observe(root)
-    observer.notify = lambda x: print(x)
+    observer.notify = lambda x: x
     root.namedElements.append(a1)
 
 
@@ -103,7 +103,7 @@ def test_notification_attribute(lib):
 
 class ObserverCounter(EObserver):
     def __init__(self, notifier=None):
-        super().__init__(notifier=notifier)
+        super(ObserverCounter, self).__init__(notifier=notifier)
         self.calls = 0
 
     def notifyChanged(self, notification):

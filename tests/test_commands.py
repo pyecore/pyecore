@@ -9,7 +9,7 @@ from os import path
 
 class LastObserver(EObserver):
     def __init__(self, notifier=None):
-        super().__init__(notifier=notifier)
+        super(LastObserver, self).__init__(notifier=notifier)
         self.last = None
 
     def notifyChanged(self, notification):
@@ -87,19 +87,19 @@ def test_orderedset_pop(mm):
 def test_command_abs():
     class A(Command):
         def can_execute(self):
-            super().can_execute
+            super(A, self).can_execute
 
         def can_undo(self):
-            super().can_undo
+            super(A, self).can_undo
 
         def execute(self):
-            super().execute()
+            super(A, self).execute()
 
         def undo(self):
-            super().undo()
+            super(A, self).undo()
 
         def redo(self):
-            super().redo()
+            super(A, self).redo()
 
     a = A()
     a.can_execute()

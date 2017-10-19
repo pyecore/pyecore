@@ -22,7 +22,7 @@ def simplemm():
 
 class ObserverCounter(EObserver):
     def __init__(self, notifier=None):
-        super().__init__(notifier=notifier)
+        super(ObserverCounter, self).__init__(notifier=notifier)
         self.calls = 0
 
     def notifyChanged(self, notification):

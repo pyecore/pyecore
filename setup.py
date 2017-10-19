@@ -3,9 +3,6 @@
 import sys
 from setuptools import setup
 
-if sys.version_info < (3, 3):
-    sys.exit('Sorry, Python < 3.3 is not supported')
-
 packages = ['pyecore',
             'pyecore.resources',
             'pyecore.type']
@@ -25,6 +22,7 @@ setup(
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
     install_requires=['enum34;python_version<"3.4"',
+                      'chainmap;python_version<"3.4"',
                       'ordered-set',
                       'lxml'],
     tests_require={'pytest'},

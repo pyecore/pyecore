@@ -6,22 +6,24 @@ String = EDataType('String', eType=str, default_value='default_name')
 Integer = EDataType('Integer', eType=int, default_value=0)
 
 
-class A(EObject, metaclass=MetaEClass):
+class A(EObject):
+    __metaclass__ = MetaEClass
     name = EAttribute(eType=String)
     age = EAttribute(eType=Integer)
     to_b = EReference()
 
     def __init__(self, name=None):
-        super().__init__()
+        super(A, self).__init__()
         if name:
             self.name = name
 
 
-class B(EObject, metaclass=MetaEClass):
+class B(EObject):
+    __metaclass__ = MetaEClass
     to_a = EReference(eType=A, eOpposite=A.to_b)
 
     def __init__(self):
-        super().__init__()
+        super(B, self).__init__()
 
 
 A.to_b.eType = B
@@ -51,11 +53,12 @@ def test_static_metamodel_link_instance():
 
 
 def test_static_metamodel_reorder_mro():
-    class C(EObject, metaclass=MetaEClass):
+    class C(EObject):
+        __metaclass__ = MetaEClass
         inner = EAttribute(eType=EString)
 
         def __init__(self):
-            super().__init__()
+            super(C, self).__init__()
 
     C._staticEClass = False  # Enable static EClass auto-update
 

@@ -10,8 +10,10 @@ nsURI = 'http://simple/1.0'
 
 eClass = Ecore.EPackage(name=name, nsPrefix=nsPrefix, nsURI=nsURI)
 
+
 @abstract
-class AbstractA(EObject, metaclass=MetaEClass):
+class AbstractA(EObject):
+    __metaclass__ = MetaEClass
     name = EAttribute(eType=EString)
 
 
@@ -25,5 +27,7 @@ class A(AbstractA):
     def another_one():
         pass
 
-class B(EObject, metaclass=MetaEClass):
+
+class B(EObject):
+    __metaclass__ = MetaEClass
     a = EReference(eType=AbstractA)

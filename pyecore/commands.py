@@ -3,12 +3,15 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
 """
 from abc import ABCMeta, abstractmethod
-from collections import UserList
+try:
+    from collections import UserList
+except ImportError:
+    from UserList import UserList
 from .ecore import EObject, BadValueError
 from .resources import ResourceSet
 
 
-class Command(metaclass=ABCMeta):
+class Command(object):
     """Provides the basic elements that must be implemented by a custom command.
     The methods/properties that need to be implemented are:
     * can_execute (@property)
@@ -17,6 +20,8 @@ class Command(metaclass=ABCMeta):
     * undo (method)
     * redo (method)
     """
+    __metaclass__ = ABCMeta
+
     @property
     @abstractmethod
     def can_execute(self):
@@ -89,11 +94,11 @@ class AbstractCommand(Command):
 
 class Set(AbstractCommand):
     def __init__(self, owner=None, feature=None, value=None):
-        super().__init__(owner, feature, value)
+        super(Set, self).__init__(owner, feature, value)
 
     @property
     def can_execute(self):
-        can = super().can_execute
+        can = super(Set, self).can_execute
         return can and not self.feature.many
 
     def undo(self):
@@ -110,20 +115,20 @@ class Set(AbstractCommand):
 
 class Add(AbstractCommand):
     def __init__(self, owner=None, feature=None, value=None, index=None):
-        super().__init__(owner, feature, value)
+        super(Add, self).__init__(owner, feature, value)
         self.index = index
         self._collection = None
 
     @property
     def can_execute(self):
-        executable = super().can_execute
+        executable = super(Add, self).can_execute
         executable = executable and self.value is not None
         self._collection = self.owner.eGet(self.feature)
         return executable
 
     @property
     def can_undo(self):
-        can = super().can_undo
+        can = super(Add, self).can_undo
         return can and self.value in self._collection
 
     def undo(self):
@@ -142,7 +147,7 @@ class Add(AbstractCommand):
 
 class Remove(AbstractCommand):
     def __init__(self, owner=None, feature=None, value=None, index=None):
-        super().__init__(owner, feature, value)
+        super(Remove, self).__init__(owner, feature, value)
         self.index = index
         self._collection = None
         if bool(self.index is not None) == bool(self.value is not None):
@@ -151,7 +156,7 @@ class Remove(AbstractCommand):
 
     @property
     def can_execute(self):
-        executable = super().can_execute
+        executable = super(Remove, self).can_execute
         self._collection = self.owner.eGet(self.feature)
         if self.index is None:
             executable = executable and self.value is not None
@@ -174,7 +179,7 @@ class Remove(AbstractCommand):
 class Move(AbstractCommand):
     def __init__(self, owner=None, feature=None, from_index=None,
                  to_index=None, value=None):
-        super().__init__(owner, feature, value=value)
+        super(Move, self).__init__(owner, feature, value=value)
         self.from_index = from_index
         self.to_index = to_index
         if bool(self.from_index is not None) == bool(self.value is not None):
@@ -183,7 +188,7 @@ class Move(AbstractCommand):
 
     @property
     def can_execute(self):
-        can = super().can_execute
+        can = super(Move, self).can_execute
         self._collection = self.owner.eGet(self.feature)
         if self.value is None:
             self.value = self._collection[self.from_index]
@@ -193,7 +198,7 @@ class Move(AbstractCommand):
 
     @property
     def can_undo(self):
-        can = super().can_undo
+        can = super(Move, self).can_undo
         obj = self._collection[self.to_index]
         return can and obj is self.value
 
@@ -211,7 +216,7 @@ class Move(AbstractCommand):
 
 class Delete(AbstractCommand):
     def __init__(self, owner=None):
-        super().__init__(owner=owner)
+        super(Delete, self).__init__(owner=owner)
 
     @property
     def can_execute(self):
@@ -261,7 +266,7 @@ class Delete(AbstractCommand):
 
 class Compound(Command, UserList):
     def __init__(self, *commands):
-        super().__init__(commands)
+        super(Compound, self).__init__(commands)
 
     @property
     def can_execute(self):

@@ -185,8 +185,8 @@ UnsignedShortObject = EDataType('UnsignedShortObject',
 # as dict.
 # As consequence, in the constructor, 'extend' is not called anymore, but
 # 'update' is called instead.
-class AnyType(EObject, metaclass=MetaEClass):
-
+class AnyType(EObject):
+    __metaclass__ = MetaEClass
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
                        iD=False, upper=1)
     _any = EAttribute(eType=EFeatureMapEntry, derived=True,
@@ -202,11 +202,11 @@ class AnyType(EObject, metaclass=MetaEClass):
     def any(self, value):
         self._any = value
 
-    def __init__(self, *, mixed=None, any=None, anyAttribute=None, **kwargs):
+    def __init__(self, mixed=None, any=None, anyAttribute=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
-        super().__init__()
+        super(AnyType, self).__init__()
 
         if mixed:
             self.mixed.update(mixed)
@@ -218,16 +218,16 @@ class AnyType(EObject, metaclass=MetaEClass):
             self.anyAttribute.update(anyAttribute)
 
 
-class ProcessingInstruction(EObject, metaclass=MetaEClass):
-
+class ProcessingInstruction(EObject):
+    __metaclass__ = MetaEClass
     data = EAttribute(eType=String, derived=False, changeable=True, iD=False)
     target = EAttribute(eType=String, derived=False, changeable=True, iD=False)
 
-    def __init__(self, *, data=None, target=None, **kwargs):
+    def __init__(self, data=None, target=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
-        super().__init__()
+        super(ProcessingInstruction, self).__init__()
 
         if data is not None:
             self.data = data
@@ -242,8 +242,8 @@ class ProcessingInstruction(EObject, metaclass=MetaEClass):
 # As consequence, in the constructor, 'extend' is not called anymore, but
 # 'update' is called instead.
 # Also, xMLNSPrefixMap and xSISchemaLocation have been tranformed as EAttribute
-class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
-
+class XMLTypeDocumentRoot(EObject):
+    __metaclass__ = MetaEClass
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
                        iD=False, upper=1)
     _cDATA = EAttribute(eType=String, derived=True, changeable=True,
@@ -281,13 +281,13 @@ class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
     def text(self, value):
         self._text = value
 
-    def __init__(self, *, mixed=None, xMLNSPrefixMap=None,
+    def __init__(self, mixed=None, xMLNSPrefixMap=None,
                  xSISchemaLocation=None, cDATA=None, comment=None,
                  processingInstruction=None, text=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
-        super().__init__()
+        super(XMLTypeDocumentRoot, self).__init__()
 
         if mixed:
             self.mixed.update(mixed)
@@ -335,10 +335,10 @@ class SimpleAnyType(AnyType):
     def value(self, value):
         self._value = value
 
-    def __init__(self, *, rawValue=None, value=None, instanceType=None,
+    def __init__(self, rawValue=None, value=None, instanceType=None,
                  **kwargs):
 
-        super().__init__(**kwargs)
+        super(SimpleAnyType, self).__init__(**kwargs)
 
         if rawValue is not None:
             self.rawValue = rawValue

@@ -13,7 +13,7 @@ XMI_URL = 'http://www.omg.org/XMI'
 
 class XMIResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
-        super().__init__(uri, use_uuid)
+        super(XMIResource, self).__init__(uri, use_uuid)
         self._meta_cache = {}
         self._later = []
         self.prefixes = {}
@@ -153,7 +153,7 @@ class XMIResource(Resource):
                 container = parent_eobj.eContainer()
                 if hasattr(container, 'python_class'):
                     container = container.python_class
-                container.__doc__ = annotation_value
+                # container.__doc__ = annotation_value
             return (None, None, [], [])
         else:
             eobject = etype()
@@ -236,7 +236,7 @@ class XMIResource(Resource):
         return self.resolve(fragment)
 
     def _clean_registers(self):
-        self._later.clear()
+        del self._later[:]
         self._meta_cache.clear()
 
     def register_nsmap(self, prefix, uri):
