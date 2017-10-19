@@ -3,7 +3,7 @@ that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
 """
 from abc import ABCMeta, abstractmethod
-from collections import MutableSequence
+from collections import UserList
 from .ecore import EObject, BadValueError
 from .resources import ResourceSet
 
@@ -259,14 +259,13 @@ class Delete(AbstractCommand):
         return '{} {}'.format(self.__class__.__name__, self.owner)
 
 
-class Compound(Command, MutableSequence):
+class Compound(Command, UserList):
     def __init__(self, *commands):
-        super().__init__()
-        self.items = list(commands)
+        super().__init__(commands)
 
     @property
     def can_execute(self):
-        return all(command.can_execute for command in self.items)
+        return all(command.can_execute for command in self)
 
     def execute(self):
         for command in self:
@@ -274,7 +273,7 @@ class Compound(Command, MutableSequence):
 
     @property
     def can_undo(self):
-        return all(command.can_undo for command in self.items)
+        return all(command.can_undo for command in self)
 
     def undo(self):
         for command in reversed(self):
@@ -287,26 +286,8 @@ class Compound(Command, MutableSequence):
     def unwrap(self):
         return self[0] if len(self) == 1 else self
 
-    def __delitem__(self, index):
-        del self.items[index]
-
-    def __getitem__(self, index):
-        return self.items[index]
-
-    def __len__(self):
-        return len(self.items)
-
-    def __setitem__(self, index, item):
-        self.items[index] = item
-
-    def insert(self, index, item):
-        self.items.insert(index, item)
-
-    def __iter__(self):
-        return iter(self.items)
-
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, self.items)
+        return '{}({})'.format(self.__class__.__name__, self.data)
 
 
 class CommandStack(object):
