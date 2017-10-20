@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.7.2
++++++
+
+**Miscellaneous**
+
+- Change the usage of ``MutableSequence`` for ``UserList`` instead, reducing
+  some boilerplate code.
+- Add missing ``@staticmethod`` when required.
+
+
 0.7.0/0.7.1
 +++++++++++
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 from setuptools import setup
 
 packages = ['pyecore',
@@ -8,10 +7,10 @@ packages = ['pyecore',
             'pyecore.type']
 
 setup(
-    name='pyecore',
+    name='pyecore-py2',
     version='0.7.2-dev',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
-                 'Framework (EMF/Ecore)'),
+                 'Framework (EMF/Ecore), Python 2.7 backport'),
     long_description=open('README.rst').read(),
     keywords='model metamodel EMF Ecore MDE',
     url='https://github.com/pyecore/pyecore',
@@ -21,8 +20,8 @@ setup(
     packages=packages,
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
-    install_requires=['enum34;python_version<"3.4"',
-                      'chainmap;python_version<"3.4"',
+    install_requires=['enum34',
+                      'chainmap',
                       'ordered-set',
                       'lxml'],
     tests_require={'pytest'},
@@ -30,10 +29,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 2.7',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Topic :: Software Development',
