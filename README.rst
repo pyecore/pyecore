@@ -20,7 +20,7 @@ PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
     :target: https://raw.githubusercontent.com/pyecore/pyecore/master/LICENSE
 
 PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
-Python 3. It's purpose is to handle model/metamodels in Python almost the same
+Python 2.7. It's purpose is to handle model/metamodels in Python almost the same
 way the Java version does.
 
 However, PyEcore enables you to use a simple ``instance.attribute`` notation
@@ -261,7 +261,8 @@ defined meta-layer.
 
     $ cat library/library.py
     # ... stuffs here
-    class Writer(EObject, metaclass=MetaEClass):
+    class Writer(EObject):
+        __metaclass__ = MetaEClass
         name = EAttribute(eType=EString)
         books = EReference(upper=-1)
 

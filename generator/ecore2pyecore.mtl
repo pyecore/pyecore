@@ -125,7 +125,7 @@ getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         [/if]
-        super().__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
+        super([c.name/], self).__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
         [for (feature : EStructuralFeature | c.eStructuralFeatures->sortedBy(oclIsTypeOf(EReference)))]
         [if (feature.upperBound = 1)]
         if [feature.name/] is not None:
@@ -159,9 +159,10 @@ class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '
 
 
 [template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
-class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
+class [c.name/](EObject):[if (c.getDocumentation() <> '')]
 
     """[c.getDocumentation()/]"""[/if]
+    __metaclass__ = MetaEClass
 [/template]
 
 

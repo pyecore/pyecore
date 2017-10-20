@@ -20,8 +20,8 @@ BookCategory = EEnum('BookCategory', literals=['ScienceFiction',
                                                'Mistery'])
 
 
-
-class Book(EObject, metaclass=MetaEClass):
+class Book(EObject):
+    __metaclass__ = MetaEClass
     title = EAttribute(eType=EString)
     pages = EAttribute(eType=EInteger)
     category = EAttribute(eType=BookCategory,
@@ -31,7 +31,8 @@ class Book(EObject, metaclass=MetaEClass):
         pass
 
 
-class Writer(EObject, metaclass=MetaEClass):
+class Writer(EObject):
+    __metaclass__ = MetaEClass
     name = EAttribute(eType=EString)
     books = EReference(eType=Book, lower=1, upper=-1)
 
@@ -44,7 +45,8 @@ Book.authors = EReference('authors', Writer, lower=1, upper=-1,
 Book.eClass.eStructuralFeatures.append(Book.authors)
 
 
-class Employee(EObject, metaclass=MetaEClass):
+class Employee(EObject):
+    __metaclass__ = MetaEClass
     name = EAttribute(eType=EString)
     age = EAttribute(eType=EInteger)
 
@@ -52,7 +54,8 @@ class Employee(EObject, metaclass=MetaEClass):
         pass
 
 
-class Library(EObject, metaclass=MetaEClass):
+class Library(EObject):
+    __metaclass__ = MetaEClass
     name = EAttribute(eType=EString)
     address = EAttribute(eType=EString)
     employees = EReference(eType=Employee, upper=-1, containment=True)
