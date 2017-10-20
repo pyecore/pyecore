@@ -330,8 +330,8 @@ class CommandStack(object):
                 raise ValueError('Cannot execute command {}'.format(command))
 
     def undo(self):
-        if not self:
-            raise ValueError('Command stack is empty')
+        if self.stack_index < 0:
+            raise IndexError('Command stack is empty')
         if self.top.can_undo:
             self.top.undo()
             del self.top

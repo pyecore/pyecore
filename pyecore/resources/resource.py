@@ -163,7 +163,7 @@ class HttpURI(URI):
         super(HttpURI, self).__init__(uri)
 
     def create_instream(self):
-        self.__stream = request.urlopen(self.plain)
+        self.__stream = urlopen(self.plain)
         return self.__stream
 
     def create_outstream(self):
