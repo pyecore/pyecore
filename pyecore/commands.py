@@ -326,7 +326,7 @@ class CommandStack(object):
 
     def undo(self):
         if not self:
-            raise ValueError('Command stack is empty')
+            raise IndexError('Command stack is empty')
         if self.top.can_undo:
             self.top.undo()
             del self.top

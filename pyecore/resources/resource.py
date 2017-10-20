@@ -181,6 +181,7 @@ class HttpURI(URI):
 
 
 class MetamodelDecoder(object):
+    @staticmethod
     def split_path(path):
         path = Resource.normalize(path)
         fragment = path.split('#')
@@ -190,10 +191,12 @@ class MetamodelDecoder(object):
             uri = None
         return uri, fragment
 
+    @staticmethod
     def can_resolve(path, registry):
         uri, fragment = MetamodelDecoder.split_path(path)
         return uri in registry
 
+    @staticmethod
     def resolve(path, registry):
         path = Resource.normalize(path)
         uri, fragment = path.split('#')
@@ -202,20 +205,24 @@ class MetamodelDecoder(object):
 
 
 class Global_URI_decoder(object):
+    @staticmethod
     def can_resolve(path, from_resource=None):
         return MetamodelDecoder.can_resolve(path, global_registry)
 
+    @staticmethod
     def resolve(path, from_resource=None):
         return MetamodelDecoder.resolve(path, global_registry)
 
 
 class LocalMetamodelDecoder(object):
+    @staticmethod
     def can_resolve(path, from_resource=None):
         if from_resource is None or from_resource.resource_set is None:
             return False
         rset = from_resource.resource_set
         return MetamodelDecoder.can_resolve(path, rset.metamodel_registry)
 
+    @staticmethod
     def resolve(path, from_resource=None):
         rset = from_resource.resource_set
         return MetamodelDecoder.resolve(path, rset.metamodel_registry)

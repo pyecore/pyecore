@@ -420,7 +420,7 @@ def test_command_set_name_stack(mm):
 
 def test_stack_simple(mm):
     stack = CommandStack()
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         stack.undo()
 
     a = mm.A()
@@ -466,7 +466,7 @@ def test_stack_complex(mm):
     stack.undo()
     assert a.name is None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         stack.undo()
 
 
