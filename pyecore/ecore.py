@@ -73,6 +73,7 @@ class EcoreUtils(object):
 
 
 class Core(object):
+    @staticmethod
     def _promote(cls, abstract=False):
         cls.eClass = EClass(cls.__name__, metainstance=cls)
         cls.eClass.abstract = abstract
@@ -111,6 +112,7 @@ class Core(object):
                     operation.eParameters.append(parameter)
                 cls.eClass.eOperations.append(operation)
 
+    @staticmethod
     def register_classifier(cls, abstract=False, promote=False):
         if promote:
             Core._promote(cls, abstract)
