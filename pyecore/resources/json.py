@@ -1,6 +1,7 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
+from functools import lru_cache
 import json
 from .resource import Resource
 from .. import ecore as Ecore
@@ -87,14 +88,18 @@ class JsonResource(Resource):
         else:
             return obj
 
+    @lru_cache()
+    def resolve_eclass(self, uri_eclass):
+        decoders = self._get_href_decoder(uri_eclass)
+        return decoders.resolve(uri_eclass, self)
+
     def to_obj(self, d, owning_feature=None, first=False):
         uri_eclass = d['eClass']
         is_ref = '$ref' in d
         if is_ref:
             return Ecore.EProxy(path=d['$ref'], resource=self)
         excludes = ['eClass', '$ref', 'uuid']
-        decoders = self._get_href_decoder(uri_eclass)
-        eclass = decoders.resolve(uri_eclass, self)
+        eclass = self.resolve_eclass(uri_eclass)
         if not eclass:
             raise ValueError('Unknown metaclass {} for uri {}'
                              .format(eclass, uri_eclass))
