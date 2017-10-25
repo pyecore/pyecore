@@ -271,11 +271,11 @@ class XMIResource(Resource):
                 self.register_eobject_epackage(eobj)
 
             tree = etree.ElementTree(self._go_across(root))
-        with output as out:
-            tree.write(out,
-                       pretty_print=True,
-                       xml_declaration=True,
-                       encoding=tree.docinfo.encoding)
+        tree.write(output,
+                   pretty_print=True,
+                   xml_declaration=True,
+                   encoding=tree.docinfo.encoding)
+        self.uri.close_stream()
 
     def _go_across(self, obj):
         eclass = obj.eClass

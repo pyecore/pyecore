@@ -26,9 +26,9 @@ class JsonResource(Resource):
     def save(self, output=None):
         stream = self.open_out_stream(output)
         root = self.contents[0]  # Only single root atm
-        with stream as out:
-            out.write(json.dumps(self.to_dict(root), indent=self.indent)
-                          .encode('utf-8'))
+        stream.write(json.dumps(self.to_dict(root), indent=self.indent)
+                     .encode('utf-8'))
+        self.uri.close_stream()
 
     def _uri_fragment(self, obj):
         if obj.eResource == self:
