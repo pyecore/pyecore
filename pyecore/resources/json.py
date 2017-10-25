@@ -44,7 +44,7 @@ class JsonResource(Resource):
 
     def _to_ref_from_obj(self, obj):
         eclass = obj.eClass
-        uri = '{}{}'.format(eclass.ePackage.nsURI,
+        uri = '{}{}'.format(eclass.eRoot().nsURI,
                             obj.eClass.eURIFragment())
         ref = {'eClass': uri}
         if obj.eResource == self:
@@ -56,7 +56,7 @@ class JsonResource(Resource):
 
     def _to_dict_from_obj(self, obj):
         eclass = obj.eClass
-        uri = '{}{}'.format(eclass.ePackage.nsURI, eclass.eURIFragment())
+        uri = '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
         d = {'eClass': uri}
         containingFeature = obj.eContainmentFeature()
         for attr in obj._isset:
