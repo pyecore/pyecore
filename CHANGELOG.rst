@@ -1,6 +1,27 @@
 Changelog
 ---------
 
+0.7.3
++++++
+
+**Feature**
+
+- Performance improvement for JSON deserialization. The use of the ``lru_cache``
+  enables the JSON resource to quickly identify metaclasses once they are
+  resolved.
+
+**Bugfixes**
+
+- Fix issue with JSON serializer when multiples subpackages are used. The
+  ``eClass`` relationship, serialized in the form of the root ``EPackage`` uri
+  with the ``EClass`` uri fragment were badly formed.
+
+- Fix calls in ``XMIResource`` and ``JsonResource`` for ``URI`` handling. This
+  new way of calling an ``URI`` input/output stream creation enables a simpler
+  creation of new dedicated ``URI``. As example, a ``StringURI`` is added in
+  the ``README.rst``.
+
+
 0.7.2
 +++++
 

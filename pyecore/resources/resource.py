@@ -49,12 +49,12 @@ class ResourceSet(object):
             resource.load()
         except Exception as e:
             self.remove_resource(resource)
-            raise e
+            raise
         return resource
 
     def can_resolve(self, uri_path, from_resource=None):
         uri_path = Resource.normalize(uri_path)
-        fragment = uri_path.split('#')
+        fragment = uri_path.rsplit('#', maxsplit=1)
         if len(fragment) == 2:
             uri_str, fragment = fragment
         else:
@@ -68,7 +68,7 @@ class ResourceSet(object):
 
     def resolve(self, uri, from_resource=None):
         upath = Resource.normalize(uri)
-        uri_str, fragment = upath.split('#')
+        uri_str, fragment = upath.rsplit('#', maxsplit=1)
         if uri_str in self.resources:
             return Resource._navigate_from(fragment, self.resources[uri_str])
         start = from_resource.uri.normalize() if from_resource else '.'
@@ -184,7 +184,7 @@ class MetamodelDecoder(object):
     @staticmethod
     def split_path(path):
         path = Resource.normalize(path)
-        fragment = path.split('#')
+        fragment = path.rsplit('#', maxsplit=1)
         if len(fragment) == 2:
             uri, fragment = fragment
         else:
@@ -199,7 +199,7 @@ class MetamodelDecoder(object):
     @staticmethod
     def resolve(path, registry):
         path = Resource.normalize(path)
-        uri, fragment = path.split('#')
+        uri, fragment = path.rsplit('#', maxsplit=1)
         epackage = registry[uri]
         return Resource._navigate_from(fragment, epackage)
 
@@ -298,7 +298,8 @@ class Resource(object):
 
     def _is_external(self, path):
         path = self.normalize(path)
-        uri, fragment = path.split('#') if '#' in path else (None, path)
+        uri, fragment = (path.rsplit('#', maxsplit=1)
+                         if '#' in path else (None, path))
         return uri, fragment
 
     def _get_href_decoder(self, path):

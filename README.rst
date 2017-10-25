@@ -824,6 +824,70 @@ see how to load/save resources using a ``ResourceSet``.
 and a performance cost.
 
 
+Creating Your own URI
+=====================
+
+PyEcore uses ``URI`` to deal with 'stream' opening/reading/writing/closing.
+An ``URI`` is used to give a file-like object to a ``Resource``. By default,
+the basic ``URI`` provides a way to read and write to files on your system (if
+the path used is a file system path, abstract paths or logical ones are not
+serialized onto the disk). Another, ``HttpURI`` opens a file-like object from
+a remote URL, but does not give the ability to write to a remote URL.
+
+As example, in this section, we will create a ``StringURI`` that gives the
+resource the ability to read/write from/to a Python String.
+
+.. code-block:: python
+
+    class StringURI(URI):
+    def __init__(self, uri, text=None):
+        super(StringURI, self).__init__(uri)
+        if text is not None:
+            self.__stream = StringIO(text)
+
+    def getvalue(self):
+        return self.__stream.getvalue()
+
+    def create_instream(self):
+        return self.__stream
+
+    def create_outstream(self):
+        self.__stream = StringIO()
+        return self.__stream
+
+
+The ``StringURI`` class inherits from ``URI``, and adds a new parameter to the
+constructor: ``text``. In this class, the ``__stream`` attribute is handled in
+the ``URI`` base class, and inherited from it.
+
+The constructor builds a new ``StringIO`` instance if a text is passed to this
+``URI``. This parameter is used when a string must be decoded.  In this context,
+the ``create_instream()`` method is used to provide the ``__stream`` to read
+from. In this case, it only returns the stream created in the constructor.
+
+The ``create_outstream()`` methods is used to create the output stream. In this
+case, a simple ``StringIO`` instance is created.
+
+In complement, the ``getvalue()`` method provides a way of getting the result
+of the load/save operation. The following code illustrate how the ``StringURI``
+can be used:
+
+.. code-block:: python
+
+    # we have a model in memory in 'root'
+    uri = StringURI('myuri')
+    resource = rset.create_resource(uri)
+    resource.append(root)
+    resource.save()
+    print(uri.getvalue())  # we get the result of the serialization
+
+    mystr = uri.getvalue()  # we assume this is a new string
+    uri = StringURI('newuri', text=mystr)
+    resource = rset.create_resource(uri)
+    resource.load()
+    root = resource.contents[0]  # we get the root of the loaded resource
+
+
 Deleting Elements
 =================
 
