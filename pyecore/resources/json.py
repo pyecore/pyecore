@@ -33,9 +33,9 @@ class JsonResource(Resource):
 
     def _uri_fragment(self, obj):
         if obj.eResource == self:
-            use_id = self._use_uuid
+            use_id = self.use_uuid
         else:
-            use_id = obj.eResource and obj.eResource._use_uuid
+            use_id = obj.eResource and obj.eResource.use_uuid
         if use_id:
             self._assign_uuid(obj)
             return obj._xmiid
@@ -69,7 +69,7 @@ class JsonResource(Resource):
             if value == attr.get_default_value():
                 continue
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
-            if self._use_uuid:
+            if self.use_uuid:
                 self._assign_uuid(obj)
                 d['uuid'] = obj._xmiid
         self._already_saved.append(obj)
@@ -109,10 +109,10 @@ class JsonResource(Resource):
         else:
             inst = eclass()
         if first:
-            self._use_uuid = 'uuid' in d
+            self.use_uuid = 'uuid' in d
             self.append(inst)
 
-        if self._use_uuid:
+        if self.use_uuid:
             self.uuid_dict[d['uuid']] = inst
 
         eattributes = []
