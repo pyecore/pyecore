@@ -914,3 +914,6 @@ def test_eenum_defaultvalue_computed():
     D = EEnumLiteral(name='D')
     E.eLiterals.insert(0, D)
     assert E.default_value is D
+
+    assert E.from_string('A') is A
+    assert E.to_string(A) is 'A'

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="mytest" nsURI="http://mytest/1.0" nsPrefix="myprefix">
+  <eClassifiers xsi:type="ecore:EClass" name="A">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="B">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="enumatt" eType="#//MyEnum"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MyRoot">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="aContainer" upperBound="-1"
+        eType="#//A" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bContainer" upperBound="-1"
+        eType="#//B" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="MyEnum">
+    <eLiterals name="ABC"/>
+    <eLiterals name="DEF"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="C" eSuperTypes="#//B"/>
+</ecore:EPackage>

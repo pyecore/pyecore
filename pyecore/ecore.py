@@ -791,7 +791,7 @@ class EEnum(EDataType):
             for i, lit_name in enumerate(literals):
                 lit_name = '_' + lit_name if lit_name[:1].isnumeric() \
                                           else lit_name
-                literal = EEnumLiteral(i, lit_name)
+                literal = EEnumLiteral(value=i, name=lit_name)
                 self.eLiterals.append(literal)
                 self.__setattr__(lit_name, literal)
         if default_value:
@@ -832,13 +832,16 @@ class EEnum(EDataType):
         except StopIteration:
             return None
 
+    def from_string(self, value):
+        return self.getEEnumLiteral(name=value)
+
     def __repr__(self):
         name = self.name or ''
         return '{}[{}]'.format(name, str(self.eLiterals))
 
 
 class EEnumLiteral(ENamedElement):
-    def __init__(self, value=0, name=None, **kwargs):
+    def __init__(self, name=None, value=0, **kwargs):
         super().__init__(name, **kwargs)
         self.value = value
 
