@@ -20,6 +20,17 @@ Changelog
   Note that for the ``resolve_eclass`` method, the use of a cache like
   ``lru_cache`` is often a good idea.
 
+- Remove systematic serialization of ``EClass`` reference in JSON serializer. In
+  some cases where the containing feature type is the same than the serialized
+  object, the ``eClass`` entry in the JSON resource is not required. This allows
+  to reduce the resource size a little bit more.
+
+- Change the ``EEnum`` implementation for default values. The default value of
+  an ``EENum`` is computed from the first element in the ``eLiterals``. The
+  change of a ``default_value`` is performed by 'reordering' the ``eLiterals``
+  list.
+
+
 **Bugfixes**
 
 - Refactor ``EProxy`` implementation. The new ``EProxy`` implementation get rid
@@ -33,6 +44,12 @@ Changelog
   ``Resource``. The fact that they are registered in a ``Resource`` implies that
   they are part of the same level than the ``Resource`` which is serialized.
   However, they are part of something "greater".
+
+- Add special deserialization method for ``EEnum``. The basic deserialization
+  method for ``EEnum`` instance was the same than the one for ``EDataType``.
+  They only takes the string and put it in the feature instance. Instead, when
+  a string is found for an ``EEnum`` feature, the ``EEnumLiteral`` must be
+  searched. This new ``from_string`` implementation just does this.
 
 
 0.7.3
