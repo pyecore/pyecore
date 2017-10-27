@@ -795,9 +795,23 @@ class EEnum(EDataType):
                 self.eLiterals.append(literal)
                 self.__setattr__(lit_name, literal)
         if default_value:
-            self.default_value = self.__getattribute__(default_value)
-        elif not default_value and literals:
-            self.default_value = self.eLiterals[0]
+            self.default_value = default_value
+
+    @property
+    def default_value(self):
+        return self.eLiterals[0] if self.eLiterals else None
+
+    @default_value.setter
+    def default_value(self, value):
+        if value in self:
+            literal = (value if isinstance(value, EEnumLiteral)
+                       else self.getEEnumLiteral(value))
+            literals = self.eLiterals
+            i = literals.index(literal)
+            literals.insert(0, literals.pop(i))
+        else:
+            raise AttributeError('Enumeration literal {} does not exist '
+                                 'in {}'.format(value, self))
 
     def __contains__(self, key):
         if isinstance(key, EEnumLiteral):
