@@ -1,10 +1,44 @@
 Changelog
 ---------
 
+0.7.4
++++++
+
+**Features**
+
+- Add dedicated method for eclass ref serialization in ``JsonResource``. This
+  method allows the user to override it if required in order to control a little
+  bit the way the JSON will be produced. If the users override this method by
+  providing a new implementation, they also should override the eclass resolve
+  method. Otherwise, the deserialization of a previously serialized model with
+  this new implementation will fail. The two methods to override are the
+  following:
+
+  - ``serialize_eclass(self, eclass)``
+  - ``resolve_eclass(self, uri_eclass)``
+
+  Note that for the ``resolve_eclass`` method, the use of a cache like
+  ``lru_cache`` is often a good idea.
+
+**Bugfixes**
+
+- Refactor ``EProxy`` implementation. The new ``EProxy`` implementation get rid
+  of the ``EPlaceHolder`` class that was used for bad reasons. Now, an
+  ``EProxy`` inherits from an ``EObject``. As a side-effect, this also fixes an
+  issue in the JSON serialization: ``EProxy`` were not resolved, and,
+  consequently, a ``Resource`` with ``EProxy`` inside was not serializable.
+
+- Remove Ecore metamodel from a Resource. Each metamodel registered in a
+  ``ResourceSet`` or the ``global_registry`` should not be part of a
+  ``Resource``. The fact that they are registered in a ``Resource`` implies that
+  they are part of the same level than the ``Resource`` which is serialized.
+  However, they are part of something "greater".
+
+
 0.7.3
 +++++
 
-**Feature**
+**Features**
 
 - Performance improvement for JSON deserialization. The use of the ``lru_cache``
   enables the JSON resource to quickly identify metaclasses once they are
