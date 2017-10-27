@@ -42,10 +42,11 @@ class JsonResource(Resource):
         else:
             return obj.eURIFragment()
 
+    def serialize_eclass(self, eclass):
+        return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
+
     def _to_ref_from_obj(self, obj):
-        eclass = obj.eClass
-        uri = '{}{}'.format(eclass.eRoot().nsURI,
-                            obj.eClass.eURIFragment())
+        uri = self.serialize_eclass(obj.eClass)
         ref = {'eClass': uri}
         if obj.eResource == self:
             resource_uri = ''
@@ -55,8 +56,7 @@ class JsonResource(Resource):
         return ref
 
     def _to_dict_from_obj(self, obj):
-        eclass = obj.eClass
-        uri = '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
+        uri = self.serialize_eclass(obj.eClass)
         d = {'eClass': uri}
         containingFeature = obj.eContainmentFeature()
         for attr in obj._isset:
@@ -101,8 +101,8 @@ class JsonResource(Resource):
         excludes = ['eClass', '$ref', 'uuid']
         eclass = self.resolve_eclass(uri_eclass)
         if not eclass:
-            raise ValueError('Unknown metaclass {} for uri {}'
-                             .format(eclass, uri_eclass))
+            raise ValueError('Unknown metaclass for uri "{}"'
+                             .format(uri_eclass))
         if eclass in (Ecore.EClass.eClass, Ecore.EClass):
             inst = eclass(d['name'])
             excludes.append('name')
