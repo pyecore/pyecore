@@ -26,7 +26,7 @@ class ResourceSet(object):
         except KeyError:
             resource = self.resource_factory['*'](uri)
         self.resources[uri.normalize()] = resource
-        resource._resourceset = self
+        resource.resource_set = self
         resource._decoders.insert(0, self)
         return resource
 
@@ -92,15 +92,15 @@ class URI(object):
     def __init__(self, uri):
         if uri is None:
             raise TypeError('URI cannot be None')
-        self._uri = uri
-        self._split()
+        self.plain = uri
+        self.__split()
         self.__stream = None
 
-    def _split(self):
-        if '://' in self._uri:
-            self._protocol, rest = self._uri.split('://', maxsplit=1)
+    def __split(self):
+        if '://' in self.plain:
+            self._protocol, rest = self.plain.split('://', maxsplit=1)
         else:
-            self._protocol, rest = None, self._uri
+            self._protocol, rest = None, self.plain
         uri_sep = self._uri_split.get(self._protocol, path.sep)
         self._segments = rest.split(uri_sep)
         self._last_segment = self._segments[-1:][0]
@@ -116,10 +116,6 @@ class URI(object):
     @property
     def extension(self):
         return self._extension
-
-    @property
-    def plain(self):
-        return self._uri
 
     @property
     def segments(self):
@@ -142,7 +138,7 @@ class URI(object):
         return self.__stream
 
     def normalize(self):
-        return self._uri_norm.get(self.protocol, path.abspath)(self._uri)
+        return self._uri_norm.get(self.protocol, path.abspath)(self.plain)
 
     def relative_from_me(self, uri):
         normalized = path.dirname(self.normalize())
@@ -233,31 +229,19 @@ class Resource(object):
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
-        self._use_uuid = use_uuid
+        self.use_uuid = use_uuid
         self.prefixes = {}
-        self._resourceset = None
-        self._uri = uri
+        self.uri = uri
+        self.resource_set = None
         self._decoders = list(Resource._decoders)
-        self._contents = []
+        self.contents = []
         self._resolve_mem = {}
-
-    @property
-    def uri(self):
-        return self._uri
-
-    @property
-    def resource_set(self):
-        return self._resourceset
-
-    @property
-    def contents(self):
-        return self._contents
 
     def resolve(self, fragment, resource=None):
         fragment = self.normalize(fragment)
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
-        if self._use_uuid:
+        if self.use_uuid:
             try:
                 frag = fragment[1:] if fragment.startswith('#') \
                                     else fragment
@@ -266,7 +250,7 @@ class Resource(object):
             except KeyError:
                 pass
         result = None
-        for root in self._contents:
+        for root in self.contents:
             result = self._navigate_from(fragment, root)
             if result:
                 self._resolve_mem[fragment] = result
@@ -389,7 +373,7 @@ class Resource(object):
                 return ('{0}{1}'.format(uri, uri_fragment), True)
             else:
                 return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
-        if self._use_uuid:
+        if self.use_uuid:
             self._assign_uuid(obj)
             return (obj._xmiid, False)
         return (obj.eURIFragment(), False)
@@ -406,7 +390,7 @@ class Resource(object):
         if not isinstance(root, Ecore.EObject):
             raise ValueError('The resource requires an EObject type, '
                              'but received {0} instead.'.format(type(root)))
-        self._contents.append(root)
+        self.contents.append(root)
         root._eresource = self
         for eobject in root.eAllContents():
             eobject._eresource = self

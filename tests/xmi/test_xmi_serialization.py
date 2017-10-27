@@ -73,3 +73,27 @@ def test_resource_createSaveModifyRead(tmpdir, lib):
     resource.load()
     assert resource.contents != []
     assert len(resource.contents[0].eContents) == 3
+
+
+eClass = Ecore.EPackage(name='test', nsURI='http://test/1.0',
+                        nsPrefix='test')
+
+
+@Ecore.EMetaclass
+class A(object):
+    name = Ecore.EAttribute('name', Ecore.EString)
+    age = Ecore.EAttribute('age', Ecore.EInt)
+
+
+def test_xmi_ecore_save_load(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.xmi')
+    resource = XMIResource(URI(str(f)))
+
+    resource.append(eClass)
+    resource.save()
+
+    resource = XMIResource(URI(str(f)))
+    resource.load()
+    root = resource.contents[0]
+    assert root.name == 'test'
+    assert root.getEClassifier('A') is not None

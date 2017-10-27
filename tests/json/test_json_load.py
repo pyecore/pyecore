@@ -120,3 +120,26 @@ def test__jsonresource_load_mm_errors(rset, mm):
     json_file = path.join('tests', 'json', 'data', 'e2.json')
     with pytest.raises(ValueError):
         rset.get_resource(json_file)
+
+
+def test__jsonresource_load_enum_incomplete_eclassrefs(rset):
+    mm_file = path.join('tests', 'json', 'data', 'minimal.ecore')
+    mm = rset.get_resource(mm_file).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    A = mm.getEClassifier('A')
+    B = mm.getEClassifier('B')
+    C = mm.getEClassifier('C')
+
+    MyEnum = mm.getEClassifier('MyEnum')
+
+    json_file = path.join('tests', 'json', 'data', 'minimal.json')
+    root = rset.get_resource(json_file).contents[0]
+
+    assert len(root.aContainer) == 1
+    assert len(root.bContainer) == 2
+    assert root.aContainer[0].eClass is A
+    assert root.bContainer[0].eClass is B
+    assert root.bContainer[1].eClass is C
+    assert root.bContainer[0].enumatt is MyEnum.getEEnumLiteral('ABC')
+    assert root.bContainer[1].enumatt is MyEnum.getEEnumLiteral('DEF')

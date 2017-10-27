@@ -892,3 +892,28 @@ def test_eobject_kargs_init():
 
     with pytest.raises(BadValueError):
         a.test = 4
+
+
+def test_eenum_defaultvalue_computed():
+    E = EEnum('enum')
+    A = EEnumLiteral(name='A')
+    E.eLiterals.append(A)
+    B = EEnumLiteral(name='B')
+    E.eLiterals.append(B)
+    C = EEnumLiteral(name='C')
+    E.eLiterals.append(C)
+    assert E.default_value is A
+
+    E.default_value = 'B'
+    assert E.default_value is B
+    assert E.eLiterals[0] is B
+
+    with pytest.raises(AttributeError):
+        E.default_value = 'D'
+
+    D = EEnumLiteral(name='D')
+    E.eLiterals.insert(0, D)
+    assert E.default_value is D
+
+    assert E.from_string('A') is A
+    assert E.to_string(A) is 'A'

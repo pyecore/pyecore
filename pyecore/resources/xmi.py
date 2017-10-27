@@ -62,8 +62,8 @@ class XMIResource(Resource):
             raise TypeError('{0} EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
-        self._use_uuid = xmlroot.get(XMIResource.xmiid) is not None
-        self._contents.append(modelroot)
+        self.use_uuid = xmlroot.get(XMIResource.xmiid) is not None
+        self.contents.append(modelroot)
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
@@ -298,7 +298,7 @@ class XMIResource(Resource):
                 prefix = self.reverse_nsmap[uri]
                 node.attrib[xsi_type] = '{0}:{1}' \
                                         .format(prefix, eclass.name)
-        if self._use_uuid:
+        if self.use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(XMI_URL)
             node.attrib[xmi_id] = obj._xmiid
