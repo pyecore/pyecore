@@ -56,9 +56,11 @@ class JsonResource(Resource):
         return ref
 
     def _to_dict_from_obj(self, obj):
-        uri = self.serialize_eclass(obj.eClass)
-        d = {'eClass': uri}
+        d = {}
         containingFeature = obj.eContainmentFeature()
+        if not containingFeature or obj.eClass is not containingFeature.eType:
+            uri = self.serialize_eclass(obj.eClass)
+            d['eClass'] = uri
         for attr in obj._isset:
             is_ereference = isinstance(attr, Ecore.EReference)
             is_ref = is_ereference and not attr.containment
@@ -94,12 +96,15 @@ class JsonResource(Resource):
         return decoders.resolve(uri_eclass, self)
 
     def to_obj(self, d, owning_feature=None, first=False):
-        uri_eclass = d['eClass']
         is_ref = '$ref' in d
         if is_ref:
             return Ecore.EProxy(path=d['$ref'], resource=self)
         excludes = ['eClass', '$ref', 'uuid']
-        eclass = self.resolve_eclass(uri_eclass)
+        if 'eClass' in d:
+            uri_eclass = d['eClass']
+            eclass = self.resolve_eclass(uri_eclass)
+        else:
+            eclass = owning_feature.eType
         if not eclass:
             raise ValueError('Unknown metaclass for uri "{}"'
                              .format(uri_eclass))
