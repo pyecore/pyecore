@@ -55,7 +55,7 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
-        elif isinstance(obj, EPlaceHolder) and not obj.resolved:
+        elif isinstance(obj, EProxy) and not obj.resolved:
             return True
         try:
             return _type.__isinstance__(obj)
@@ -1118,18 +1118,16 @@ def EMetaclass(cls):
     return MetaEClass(cls.__name__, superclass, orig_vars)
 
 
-class EPlaceHolder(object):
-    def __init__(self):
-        object.__setattr__(self, 'resolved', False)
+class EProxy(EObject):
+    def __new__(cls, *args, **kwargs):
+        return object.__new__(cls)
 
-
-class EProxy(EPlaceHolder):
     def __init__(self, path=None, resource=None, wrapped=None, **kwargs):
         super().__init__(**kwargs)
+        super().__setattr__('resolved', wrapped is not None)
         super().__setattr__('_wrapped', wrapped)
         super().__setattr__('_proxy_path', path)
         super().__setattr__('_proxy_resource', resource)
-        super().__setattr__('resolved', wrapped is not None)
         super().__setattr__('_inverse_rels', set())
 
     def force_resolve(self):
