@@ -1,6 +1,15 @@
 Changelog
 ---------
 
+0.7.5
++++++
+
+**Bugfixes**
+
+- Fix missing exception when affecting single element to collection. When a
+  single assignement is done on a collection-kind meta-attribute, an exception
+  must be raised as the 'attribute' type is, somehow, modified.
+
 0.7.4
 +++++
 
