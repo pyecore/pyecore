@@ -112,9 +112,9 @@ def test_create_dynamic_override_many_eattribute():
     A = EClass('A')
     A.eStructuralFeatures.append(EAttribute('names', EString, upper=-1))
     a = A()
-    assert a.names == []
     with pytest.raises(BadValueError):
         a.names = 'test'
+    assert a.names == []
 
 
 def test_create_dynamic_simple_ereference():

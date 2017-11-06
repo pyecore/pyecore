@@ -893,8 +893,11 @@ class EStructuralFeature(ETypedElement):
             instance_dict[name] = value
             return
         if name not in instance_dict:
-            evalue = EValue(instance, self)
-            instance_dict[name] = evalue
+            if self.many:
+                new_value = ECollection.create(instance, self)
+            else:
+                new_value = EValue(instance, self)
+            instance_dict[name] = new_value
         previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
             raise BadValueError(got=value, expected=previous_value.__class__)
