@@ -4,6 +4,10 @@ Changelog
 0.7.5
 +++++
 
+**Features**
+
+- Add missing ``eAllAttributes`` method on ``EClass``.
+
 **Bugfixes**
 
 - Fix missing exception when affecting single element to collection. When a

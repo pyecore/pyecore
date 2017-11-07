@@ -114,3 +114,22 @@ def test_static_change_baseclasses():
     C4.eClass.eSuperTypes.append(A)
 
     assert EObject.eClass not in C4.eClass.eSuperTypes
+
+
+def test_static_eall_attributes_references():
+    @EMetaclass
+    class A(object):
+        a = EAttribute(eType=EString)
+        b = EAttribute(eType=EInt)
+
+    @EMetaclass
+    class B(A):
+        c = EAttribute(eType=EString)
+        a_ref = EReference(eType=A)
+
+    @EMetaclass
+    class C(B):
+        d = EAttribute(eType=EBoolean)
+
+    assert C.eClass.eAllAttributes() == {A.a, A.b, B.c, C.d}
+    assert C.eClass.eAllReferences() == {B.a_ref}

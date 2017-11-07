@@ -1080,6 +1080,10 @@ class EClass(EClassifier):
         return set((x for x in self._eAllStructuralFeatures_gen()
                     if isinstance(x, EReference)))
 
+    def eAllAttributes(self):
+        return set((x for x in self._eAllStructuralFeatures_gen()
+                    if isinstance(x, EAttribute)))
+
     def _eAllOperations_gen(self):
         for x in self.eOperations:
             yield x
