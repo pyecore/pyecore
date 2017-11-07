@@ -1,0 +1,258 @@
+[module ecore2pyecore('http://www.eclipse.org/emf/2002/Ecore')/]
+
+
+[template public generate(p : EPackage)]
+[comment @main/]
+
+[comment generate __init__/]
+[file (p.qualifiedPath() + '/' + '__init__.py', false, 'UTF-8')]
+from .[p.name/] import getEClassifier, eClassifiers
+from .[p.name/] import name, nsURI, nsPrefix, eClass
+from .[p.name/] import [p.eClassifiers.name->sep(', ')/]
+[if (p.eSuperPackage = null)]
+[let containingTypes : Sequence(EClassifier) = p.eAllContents(EReference).eContainingClass]
+[for (sub : EPackage | p.eAllContents(EPackage))]
+from [sub.qualifiedName().replaceAll('^[^.]+', '')/] Eimport [p.eAllContents(EReference).eType->union(containingTypes)->select(ePackage = sub).name->asOrderedSet()->sep(', ')/]
+[/for]
+[/let]
+[/if]
+from . import [p.name/]
+[if (p.eSuperPackage <> null)]from .. import [p.eSuperPackage.name/]
+[/if]
+[for (sub : EPackage | p.eSubpackages)]
+from . import [sub.name/]
+[/for]
+
+__all__ = ['['/][for (c : EClassifier | p.eClassifiers) separator(', ')]'[c.name/]'[/for]]
+
+eSubpackages = ['['/][p.eSubpackages.name->sep(', ')/]]
+eSuperPackage = [if (p.eSuperPackage <> null)][p.eSuperPackage.name/][else]None[/if]
+
+[if (p.eSuperPackage = null)]
+[for (e : EReference | p.eAllContents(EReference)->select(eOpposite = null)) before('# Non opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[/for]
+[let opposite : Sequence(EReference) = p.eAllContents(EReference)->select(eOpposite <> null)]
+[for (e : EReference | opposite) before('# opposite EReferences\n') after('\n')]
+[e.eContainingClass.name/].[e.name/].eType = [e.eType.name/]
+[if (e.isOppositeBeforeMeIn(opposite))]
+[e.eContainingClass.name/].[e.name/].eOpposite = [e.eOpposite.eContainingClass.name/].[e.eOpposite.name/]
+[/if]
+[/for]
+[/let]
+[/if]
+
+# Manage all other EClassifiers (EEnum, EDatatypes...)
+otherClassifiers = ['['/][p.eClassifiers->select(oclIsKindOf(EDataType)).name->sep(', ')/]]
+for classif in otherClassifiers:
+    eClassifiers['['/]classif.name] = classif
+    classif._container = [p.name/]
+
+for classif in eClassifiers.values():
+    eClass.eClassifiers.append(classif.eClass)
+
+for subpack in eSubpackages:
+    eClass.eSubpackages.append(subpack.eClass)
+[/file]
+
+[comment generate module /]
+[file (p.qualifiedPath() + '/' + p.name + '.py', false, 'UTF-8')]
+from functools import partial
+import pyecore.ecore as Ecore
+from pyecore.ecore import *
+[for (c : EClassifier | p.importFromOtherPackages()->sortedBy(ePackage.name))]
+from [c.ePackage.qualifiedName()/] import [c.name/]
+[/for]
+
+[comment We generate first all the stuffs for PyEcore/]
+name = '[p.name/]'
+nsURI = '[p.nsURI/]'
+nsPrefix = '[p.nsPrefix/]'
+
+eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
+
+eClassifiers = {}
+getEClassifier = partial(Ecore.getEClassifier, searchspace=eClassifiers)
+
+
+[for (c : EClassifier | p.eClassifiers->filter(EDataType))]
+[c.generate()/]
+[/for]
+[for (c : EClassifier | p.eClassifiers->filter(EClass)->sortedBy(nbSuperTypes()))]
+
+
+[c.generate()/]
+[/for]
+[/file]
+[/template]
+
+
+[template public generate(c : EClassifier)/]
+[template public generate(e : EEnum)]
+[e.name/] = EEnum('[e.name/]', literals=['['/][for (l : EEnumLiteral | e.eLiterals) separator(', ')]'[l.name/]'[/for]])  # noqa
+[/template]
+
+
+[template public generate(e : EDataType)]
+[e.name/] = EDataType('[e.name/]', instanceClassName='[e.instanceClassName/]')
+[/template]
+
+
+[template public generate(c : EClass) post(trim())]
+[if (c.abstract)]@abstract
+[/if]
+[c.classHeader()/]
+    [for (a : EAttribute | c.eAttributes)]
+    [a.generate()/]
+    [/for]
+    [for (r : EReference | c.eReferences)]
+    [r.name/] = EReference([r.referenceQualifiers()/])
+    [/for]
+    [for (d : EAttribute | c.eAttributes->select(derived))]
+
+    @property
+    def [d.name/](self):
+        return self._[d.name/]
+
+    @[d.name/].setter
+    def [d.name/](self, value):
+        self._[d.name/] = value
+    [/for]
+
+    def __init__(self[c.initListParameters()/], **kwargs):
+        [if (eSuperTypes->isEmpty())]
+        if kwargs:
+            raise AttributeError('unexpected arguments: {}'.format(kwargs))
+
+        [/if]
+        super().__init__([if (eSuperTypes->notEmpty())]**kwargs[/if])
+        [for (feature : EStructuralFeature | c.eStructuralFeatures->sortedBy(oclIsTypeOf(EReference)))]
+        [if (feature.upperBound = 1)]
+        if [feature.name/] is not None:
+            self.[feature.name/] = [feature.name/]
+        [else]
+        if [feature.name/]:
+            self.[feature.name/].extend([feature.name/])
+        [/if]
+        [/for]
+    [for (o : EOperation | c.eOperations)]
+    def [o.name/](self[for (p : EParameter | o.eParameters) before(', ') separator(', ')][p.name/][if (not p.required)]=None[/if][/for]):
+        [if (c.getDocumentation() <> '')]
+        """
+        [c.getDocumentation()/]
+        """[/if]
+        raise NotImplementedError('Operation [o.name/](...) is not yet implemented')
+    [/for]
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->notEmpty())]
+class [c.name/]([c.eSuperTypes.name->sep(', ')/]):[if (c.getDocumentation() <> '')]
+
+    """[c.getDocumentation()/]"""[/if]
+[/template]
+
+
+[template public initListParameters(c : EClass)]
+[for (feature : EStructuralFeature | c.eStructuralFeatures) before(', ') separator(', ')][feature.name/]=None[/for]
+[/template]
+
+
+[template public classHeader(c : EClass) ? (c.eSuperTypes->isEmpty())]
+class [c.name/](EObject, metaclass=MetaEClass):[if (c.getDocumentation() <> '')]
+
+    """[c.getDocumentation()/]"""[/if]
+[/template]
+
+
+[template public generate(a : EAttribute) ? (not derived)]
+[a.name/] = EAttribute(eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (iD)], iD=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+
+[template public generate(a : EAttribute) ? (derived)]
+_[a.name/] = EAttribute(name='[a.name/]', eType=[a.transtype()/][if (a.many)], upper=-1[/if][if (iD)], iD=True[/if][if (a.derived)], derived=True[/if][if (not a.changeable)], changeable=False[/if])
+[/template]
+
+[template public transtype(t : ETypedElement) ? (t.eType.isInOtherResource()) post(trim().replaceAll('\\n',''))]
+[if (t.eType.name = 'String')]EString
+[elseif (t.eType.name = 'Boolean')]EBoolean
+[elseif (t.eType.name = 'Int')]EInt
+[elseif (t.eType.name = 'Integer')]EInteger
+[elseif (t.eType.name = 'EJavaObject')]EJavaObject
+[elseif (t.eType.name = 'IntObject')]EInteger
+[elseif (t.eType.name = 'Double')]EDouble
+[elseif (t.eType.name = 'Long')]ELong
+[else][t.eType.name/]
+[/if]
+[/template]
+
+
+[template public transtype(t : ETypedElement) ? (not t.eType.isInOtherResource()) post(trim().replaceAll('\\n',''))]
+[t.eType.name/]
+[/template]
+
+
+[template public referenceQualifiers(e : EReference) post(replaceAll('\n', '').replaceAll('placeholder,?\\ ?', ''))]
+placeholder
+[if (e.many)], upper=-1[/if]
+[if (not e.ordered)], ordered=False[/if]
+[if (not e.unique)], unique=False[/if]
+[if (e.containment)], containment=True[/if]
+[/template]
+
+
+[query public importFromOtherPackages(p : EPackage) : OrderedSet(EClassifier) =
+    p.eClassifiers
+            ->filter(EClass)
+            .eAllSuperTypes
+            ->flatten()
+            ->select(c | c.ePackage <> p)
+            ->addAll(
+                p.eClassifiers
+                ->filter(EClass)
+                .eAttributes
+                .eType
+                ->select(e | e.oclIsKindOf(EEnum) and e.ePackage <> p))
+            ->asOrderedSet()
+/]
+
+
+[query public nbSuperTypes(c : EClass) : Integer =
+    c.eAllSuperTypes->size()
+/]
+
+
+[query public qualifiedName(e : ENamedElement) : String =
+    if (e.eContainer() = null) then e.name
+    else e.eContainer().oclAsType(ENamedElement).qualifiedName() + '.' + e.name
+    endif
+/]
+
+
+[query public qualifiedPath(e : ENamedElement) : String =
+    e.qualifiedName().replaceAll('\\.', '/')
+/]
+
+
+[query public isOppositeBeforeMeIn(e : EReference, list : Sequence(EReference)) : Boolean =
+    list->indexOf(e.eOpposite) < list->indexOf(e)
+/]
+
+
+[query public getDocumentation(m : EModelElement) : String =
+    let annotation : EAnnotation = m.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')
+    in if annotation = null then ''
+       else annotation.details->select(key = 'documentation').value->any(true)
+       endif
+/]
+
+
+[query public modelRoot(s : String) : EPackage =
+    EPackage.allInstances()->select(eSuperPackage = null)->any(true)
+/]
+
+
+[query public isInOtherResource(e : EModelElement) : Boolean =
+    e.eResource() <> modelRoot('').eResource()
+/]

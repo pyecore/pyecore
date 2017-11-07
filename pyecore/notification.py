@@ -1,33 +1,33 @@
+"""
+This module gives the "listener" classes for the PyEcore notification layer.
+The main class to create a new listener is "EObserver" which is triggered
+each time a modification is perfomed on an observed element.
+"""
+try:
+    from enum34 import unique, Enum
+except ImportError:
+    from enum import unique, Enum
 
 
 class ENotifer(object):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def notify(self, notification):
         notification.notifier = notification.notifier or self
-        for listener in self.listeners:
-            listener.notify(notification)
+        for listener in self._eternal_listener + self.listeners:
+            listener.notifyChanged(notification)
 
 
-def enum(enumName, *listValueNames):
-    """Clever implementation of an enum like in python
-
-    Shameless copy from: http://sametmax.com/faire-des-enums-en-python/
-    """
-    listValueNumbers = range(len(listValueNames))
-    dictAttrib = dict(zip(listValueNames, listValueNumbers))
-    dictReverse = dict(zip(listValueNumbers, listValueNames))
-    dictAttrib["dictReverse"] = dictReverse
-    mainType = type(enumName, (), dictAttrib)
-    return mainType
-
-
-Kind = enum('Kind',
-            'ADD',
-            'ADD_MANY',
-            'MOVE',
-            'REMOVE',
-            'REMOVE_MANY',
-            'SET',
-            'UNSET')
+@unique
+class Kind(Enum):
+    ADD = 0
+    ADD_MANY = 1
+    MOVE = 2
+    REMOVE = 3
+    REMOVE_MANY = 4
+    SET = 5
+    UNSET = 6
 
 
 class Notification(object):
@@ -41,7 +41,7 @@ class Notification(object):
 
     def __repr__(self):
         return ('[{0}] old={1} new={2} obj={3} #{4}'
-                .format(Kind.dictReverse[self.kind],
+                .format(self.kind.name,
                         self.old,
                         self.new,
                         self.notifier,
@@ -49,14 +49,14 @@ class Notification(object):
 
 
 class EObserver(object):
-    def __init__(self, enotifier=None, notify=None):
-        if enotifier:
-            enotifier.listeners.append(self)
-        if notify:
-            self.notify = notify
+    def __init__(self, notifier=None, notifyChanged=None):
+        if notifier:
+            notifier.listeners.append(self)
+        if notifyChanged:
+            self.notifyChanged = notifyChanged
 
-    def observe(self, enotifier):
-        enotifier.listeners.append(self)
+    def observe(self, notifier):
+        notifier.listeners.append(self)
 
-    def notify(self, notification):
+    def notifyChanged(self, notification):
         pass

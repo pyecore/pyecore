@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmi:id="_cPTssB9KEeeOINGRvT6ccg" name="library" nsURI="http://emf.wikipedia.org/2011/Library" nsPrefix="lib">
+  <eAnnotations xmi:id="_cPfS4B9KEeeOINGRvT6ccg" source="genmymodel">
+    <details xmi:id="_cPfS4R9KEeeOINGRvT6ccg" key="uuid" value="_sVHYgKGcEeawbN_F_HFDxg"/>
+  </eAnnotations>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_cPfS4h9KEeeOINGRvT6ccg" name="Employee">
+    <eAnnotations xmi:id="_cPfS4x9KEeeOINGRvT6ccg" source="genmymodel">
+      <details xmi:id="_cPfS5B9KEeeOINGRvT6ccg" key="uuid" value="_44WagMSREDSrHKQOAiwNVw"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfS5R9KEeeOINGRvT6ccg" name="name">
+      <eAnnotations xmi:id="_cPfS5h9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS5x9KEeeOINGRvT6ccg" key="uuid" value="_-YzLUMSREDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfS6R9KEeeOINGRvT6ccg" name="age" defaultValueLiteral="0">
+      <eAnnotations xmi:id="_cPfS6h9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS6x9KEeeOINGRvT6ccg" key="uuid" value="_EhSzkMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_cPfS7R9KEeeOINGRvT6ccg" name="Library">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Top-level object for library management."/>
+    </eAnnotations>
+    <eAnnotations xmi:id="_cPfS7h9KEeeOINGRvT6ccg" source="genmymodel">
+      <details xmi:id="_cPfS7x9KEeeOINGRvT6ccg" key="uuid" value="_5AMH4MSREDSrHKQOAiwNVw"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfS8B9KEeeOINGRvT6ccg" name="name">
+      <eAnnotations xmi:id="_cPfS8R9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS8h9KEeeOINGRvT6ccg" key="uuid" value="__hNk4MSREDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfS9B9KEeeOINGRvT6ccg" name="address">
+      <eAnnotations xmi:id="_cPfS9R9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS9h9KEeeOINGRvT6ccg" key="uuid" value="_HKdOMMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_cPfS-B9KEeeOINGRvT6ccg" name="employees" upperBound="-1" eType="_cPfS4h9KEeeOINGRvT6ccg" containment="true">
+      <eAnnotations xmi:id="_cPfS-R9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS-h9KEeeOINGRvT6ccg" key="uuid" value="_az22sMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_cPfS_B9KEeeOINGRvT6ccg" name="writers" upperBound="-1" eType="_cPfTBB9KEeeOINGRvT6ccg" containment="true">
+      <eAnnotations xmi:id="_cPfS_R9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfS_h9KEeeOINGRvT6ccg" key="uuid" value="_dwGlYMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_cPfTAB9KEeeOINGRvT6ccg" name="books" upperBound="-1" eType="_cPfTDx9KEeeOINGRvT6ccg" containment="true">
+      <eAnnotations xmi:id="_cPfTAR9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTAh9KEeeOINGRvT6ccg" key="uuid" value="_ejBQEMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_cPfTBB9KEeeOINGRvT6ccg" name="Writer">
+    <eAnnotations xmi:id="_cPfTBR9KEeeOINGRvT6ccg" source="genmymodel">
+      <details xmi:id="_cPfTBh9KEeeOINGRvT6ccg" key="uuid" value="_5IlO4MSREDSrHKQOAiwNVw"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfTBx9KEeeOINGRvT6ccg" name="name">
+      <eAnnotations xmi:id="_cPfTCB9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTCR9KEeeOINGRvT6ccg" key="uuid" value="_AclA8MSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_cPfTCx9KEeeOINGRvT6ccg" name="books" upperBound="-1" eType="_cPfTDx9KEeeOINGRvT6ccg" eOpposite="_cPfTHh9KEeeOINGRvT6ccg">
+      <eAnnotations xmi:id="_cPfTDB9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTDR9KEeeOINGRvT6ccg" key="uuid" value="_nf2BIMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" xmi:id="_cPfTDx9KEeeOINGRvT6ccg" name="Book">
+    <eAnnotations xmi:id="_cPfTEB9KEeeOINGRvT6ccg" source="genmymodel">
+      <details xmi:id="_cPfTER9KEeeOINGRvT6ccg" key="uuid" value="_5P0fUMSREDSrHKQOAiwNVw"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfTEh9KEeeOINGRvT6ccg" name="title">
+      <eAnnotations xmi:id="_cPfTEx9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTFB9KEeeOINGRvT6ccg" key="uuid" value="_BvbI4MSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfTFh9KEeeOINGRvT6ccg" name="pages" defaultValueLiteral="0">
+      <eAnnotations xmi:id="_cPfTFx9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTGB9KEeeOINGRvT6ccg" key="uuid" value="_L34moMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+      <eType xsi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" xmi:id="_cPfTGh9KEeeOINGRvT6ccg" name="category" eType="_cPfTIh9KEeeOINGRvT6ccg" defaultValueLiteral="ScienceFiction">
+      <eAnnotations xmi:id="_cPfTGx9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTHB9KEeeOINGRvT6ccg" key="uuid" value="_NP3GMMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" xmi:id="_cPfTHh9KEeeOINGRvT6ccg" name="authors" upperBound="-1" eType="_cPfTBB9KEeeOINGRvT6ccg" eOpposite="_cPfTCx9KEeeOINGRvT6ccg">
+      <eAnnotations xmi:id="_cPfTHx9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTIB9KEeeOINGRvT6ccg" key="uuid" value="_nIIrwMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" xmi:id="_cPfTIh9KEeeOINGRvT6ccg" name="BookCategory">
+    <eAnnotations xmi:id="_cPfTIx9KEeeOINGRvT6ccg" source="genmymodel">
+      <details xmi:id="_cPfTJB9KEeeOINGRvT6ccg" key="uuid" value="_OL1mQMSSEDSrHKQOAiwNVw"/>
+    </eAnnotations>
+    <eLiterals xmi:id="_cPfTJR9KEeeOINGRvT6ccg" name="ScienceFiction" literal="EEnumLiteral">
+      <eAnnotations xmi:id="_cPfTJh9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTJx9KEeeOINGRvT6ccg" key="uuid" value="_PV6MsMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals xmi:id="_cPfTKB9KEeeOINGRvT6ccg" name="Biographie" literal="EEnumLiteral2">
+      <eAnnotations xmi:id="_cPfTKR9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTKh9KEeeOINGRvT6ccg" key="uuid" value="_PcofwMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals xmi:id="_cPfTKx9KEeeOINGRvT6ccg" name="Mistery" literal="EEnumLiteral3">
+      <eAnnotations xmi:id="_cPfTLB9KEeeOINGRvT6ccg" source="genmymodel">
+        <details xmi:id="_cPfTLR9KEeeOINGRvT6ccg" key="uuid" value="_PiIDwMSSEDSrHKQOAiwNVw"/>
+      </eAnnotations>
+    </eLiterals>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MyRoot
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="mytest"
+    xsi:schemaLocation="http://mytest/1.0 My.ecore">
+  <aContainer
+      name="a1"
+      b="//@bContainer.0"/>
+  <aContainer
+      name="a2"/>
+  <bContainer
+      a="//@aContainer.0"/>
+</MyRoot>

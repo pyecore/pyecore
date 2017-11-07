@@ -1,0 +1,8 @@
+{
+  "eClass" : "http://mytest/1.0#//MyRoot",
+  "aContainer" : [ { } ],
+  "bContainer" : [ { }, {
+    "eClass" : "http://mytest/1.0#//C",
+    "enumatt" : "DEF"
+  } ]
+}

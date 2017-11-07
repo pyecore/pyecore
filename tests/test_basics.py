@@ -1,16 +1,18 @@
 import pytest
 from pyecore.ecore import *
+import pyecore.ecore as Ecore
+
 
 def test_ecore_URI():
-    assert nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
+    assert Ecore.nsURI == 'http://www.eclipse.org/emf/2002/Ecore'
 
 
 def test_get_existing_EClassifier():
-    assert getEClassifier('EClass')
+    assert Ecore.getEClassifier('EClass')
 
 
 def test_get_nonexisting_EClassifier():
-    assert not getEClassifier('EEClass')
+    assert not Ecore.getEClassifier('EEClass')
 
 
 def test_ecoreutil_isinstance_none():
@@ -76,7 +78,14 @@ def test_eenum_geteenum():
 
 def test_eenum_geteenum_print():
     MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
-    print(MyEnum)
+    assert MyEnum.__repr__()
+
+
+def test_eenumliteral_geteenum_str():
+    MyEnum = EEnum('MyEnum', literals=['A', 'B', 'C'])
+    assert str(MyEnum.A) == 'A'
+    assert str(MyEnum.B) == 'B'
+    assert str(MyEnum.C) == 'C'
 
 
 def test_eattribute_etype():
@@ -126,14 +135,27 @@ def test_estructuralfeature_repr():
 
 
 def test_urifragment_default():
-    assert default_eURIFragment() == '/'
+    assert Ecore.default_eURIFragment() == '/'
 
 
 def test_urifragment_ecore():
-    assert eURIFragment() == '#/'
+    assert Ecore.eURIFragment() == '#/'
 
 
 def test_urifragment_static_ecore():
     assert EClass.eClass.eURIFragment() == '#//EClass'
     assert EPackage.eClass.eURIFragment() == '#//EPackage'
     assert EDataType.eClass.eURIFragment() == '#//EDataType'
+
+
+def test_modelelement_annotation():
+    annotation1 = EAnnotation('SOURCE1')
+    annotation2 = EAnnotation('SOURCE2')
+
+    m = EModelElement()
+    m.eAnnotations.extend((annotation1, annotation2))
+
+    assert not m.getEAnnotation(None)
+    assert m.getEAnnotation('SOURCE1') is annotation1
+    assert m.getEAnnotation('SOURCE2') is annotation2
+    assert not m.getEAnnotation('SOURCE3')

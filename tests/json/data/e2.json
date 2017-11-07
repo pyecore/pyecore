@@ -1,0 +1,20 @@
+{
+  "eClass": "http://test/1.0#//A",
+  "name": "a1",
+  "chilen": [
+    {
+      "eClass": "http://test/1.0#//A",
+      "name": "a2",
+      "children": [
+        {
+          "eClass": "http://test/1.0#//A",
+          "name": "a4"
+        }
+      ]
+    },
+    {
+      "eClass": "http://test/1.0#//A",
+      "name": "a3"
+    }
+  ]
+}

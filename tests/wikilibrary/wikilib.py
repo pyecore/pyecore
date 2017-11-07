@@ -28,15 +28,12 @@ class Book(EObject, metaclass=MetaEClass):
                           default_value=BookCategory.ScienceFiction)
 
     def __init__(self):
-        pass
+        super().__init__()
 
 
 class Writer(EObject, metaclass=MetaEClass):
     name = EAttribute(eType=EString)
     books = EReference(eType=Book, lower=1, upper=-1)
-
-    def __init__(self):
-        pass
 
 
 Book.authors = EReference('authors', Writer, lower=1, upper=-1,
@@ -48,9 +45,6 @@ class Employee(EObject, metaclass=MetaEClass):
     name = EAttribute(eType=EString)
     age = EAttribute(eType=EInteger)
 
-    def __init__(self):
-        pass
-
 
 class Library(EObject, metaclass=MetaEClass):
     name = EAttribute(eType=EString)
@@ -58,9 +52,6 @@ class Library(EObject, metaclass=MetaEClass):
     employees = EReference(eType=Employee, upper=-1, containment=True)
     writers = EReference(eType=Writer, upper=-1, containment=True)
     books = EReference(eType=Book, upper=-1, containment=True)
-
-    def __init__(self):
-        pass
 
 
 # ==
