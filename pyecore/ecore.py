@@ -1,9 +1,20 @@
-"""
-This module is the heart of PyEcore. It defines all the basic concepts that
+"""This module is the heart of PyEcore. It defines all the basic concepts that
 are common to EMF-Java and PyEcore (EObject/EClass...).
+It defines the basic classes and behavior for PyEcore implementation:
+
+* EObject
+* EPackage
+* EClass
+* EAttribute
+* EReference
+* EDataType
+* EcoreUtils
 
 These concepts are enough if dynamic metamodel instance are handled (code
 generation is not required).
+
+In addition, ``@EMetaclass`` annotation and ``MetaEClass`` metaclass are
+used for static metamodels definition.
 """
 from functools import partial
 import sys
@@ -28,10 +39,22 @@ eSubpackages = []
 
 
 def default_eURIFragment():
+    """
+    Gets the default root URI fragment.
+
+    :return: the root URI fragment
+    :rtype: str
+    """
     return '/'
 
 
 def eURIFragment():
+    """
+    Gets the URI fragment for the Ecore module.
+
+    :return: the root URI fragment for Ecore
+    :rtype: str
+    """
     return '#/'
 
 
