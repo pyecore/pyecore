@@ -1,5 +1,4 @@
-"""
-This module is the heart of PyEcore. It defines all the basic concepts that
+"""This module is the heart of PyEcore. It defines all the basic concepts that
 are common to EMF-Java and PyEcore (EObject/EClass...).
 It defines the basic classes and behavior for PyEcore implementation:
 
@@ -10,8 +9,12 @@ It defines the basic classes and behavior for PyEcore implementation:
 * EReference
 * EDataType
 * EcoreUtils
+
 These concepts are enough if dynamic metamodel instance are handled (code
 generation is not required).
+
+In addition, ``@EMetaclass`` annotation and ``MetaEClass`` metaclass are
+used for static metamodels definition.
 """
 from functools import partial
 import sys

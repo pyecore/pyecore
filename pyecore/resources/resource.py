@@ -1,7 +1,7 @@
-"""
-The resource proposes all the concepts that are related to Resource handling.
-A Resource represents a model resource and many of them can be contained in a
-ResourceSet.
+""" The resource module proposes all the concepts that are related to Resource
+handling. A Resource represents a special model container that can be
+serialized. Many ``Resource`` can be contained in a ``ResourceSet``, and
+"cross-reference" each others.
 """
 from uuid import uuid4
 import urllib.request
@@ -22,13 +22,13 @@ class ResourceSet(object):
     Resource can be created empty (using ``create_resource(...)``) or with data
     fetched from the actual resource content (using ``get_resource(...)``).
 
-    A ResourceSet contains 3 handy properties:
+    A :py:class:`ResourceSet` contains 3 handy properties:
 
     * ``resources`` which is a dictonary of the ResourceSet loaded resources
       (key is the plain string URI, value: the resource).
     * ``metamodel_registry`` which is a dictonary of the ResourceSet known
       metamodels (key is the plain string metamodel URI, value: the metamodel
-      EPackage root)
+      ``EPackage`` root)
     * ``resource_factory`` which is a factory used by the ResourceSet to build
       the right Resource kind regarding the URI.
 
