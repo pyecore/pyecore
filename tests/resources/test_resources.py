@@ -4,6 +4,7 @@ from pyecore.ecore import *
 from pyecore.resources import *
 from pyecore.resources.resource import Global_URI_decoder
 from pyecore.resources.resource import HttpURI
+from pyecore.resources.xmi import XMIResource
 from os import path
 
 
@@ -21,6 +22,9 @@ def simplemm():
 
     pack = EPackage('pack', nsURI='http://pack/1.0', nsPrefix='pack')
     pack.eClassifiers.extend([Root, A, B])
+    pack.Root = Root
+    pack.A = A
+    pack.B = B
     return pack
 
 
@@ -240,17 +244,22 @@ def test_resource_double_load(simplemm):
     assert root is root2
 
 
-# def test__stdouturi(simplemm):
-#     import sys
-#     uri = StdioURI()
-#     assert uri.plain == 'stdio'
-#     assert uri.create_outstream() is sys.stdout.buffer
-#     assert uri.create_instream() is sys.stdin.buffer
-#
-#
-# def test__stdouturi_write(simplemm):
-#     rset = ResourceSet()
-#     rset.metamodel_registry[simplemm.nsURI] = simplemm
-#     resource = rset.get_resource(path.join('tests', 'xmi',
-#                                            'xmi-tests', 'b1.xmi'))
-#     resource.save(StdioURI())
+def test_resource_swap(simplemm):
+    root = simplemm.Root()
+    a = simplemm.A()
+    b = simplemm.B()
+    root.a.append(a)
+    root.b.append(b)
+
+    r1 = XMIResource(URI('resource1.xmi'))
+    r2 = XMIResource(URI('resource2.xmi'))
+    r1.append(root)
+
+    assert root.eResource is r1
+    assert a.eResource is root.eResource
+    assert b.eResource is root.eResource
+
+    r2.append(root)
+    assert root.eResource is r2
+    assert a.eResource is root.eResource
+    assert b.eResource is root.eResource

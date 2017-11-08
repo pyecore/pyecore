@@ -155,8 +155,6 @@ class Core(object):
             epackage.eURIFragment = eURIFragment
         cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
         epackage.eClassifiers[cname] = cls
-        if hasattr(epackage, 'eResource'):
-            cls._eresource = epackage.eResource
         if isinstance(cls, EDataType):
             epackage.eClass.eClassifiers.append(cls)
             cls._container = epackage
@@ -197,6 +195,11 @@ class EObject(ENotifer):
 
     @property
     def eResource(self):
+        if self.eContainer():
+            try:
+                return self.eContainer().eResource
+            except AttributeError:
+                pass
         return self._eresource
 
     def eGet(self, feature):
@@ -310,12 +313,9 @@ class PyEcoreValue(object):
         if isinstance(value, EObject):
             object.__setattr__(value, '_container', self._owner)
             object.__setattr__(value, '_containment_feature', self._efeature)
-            object.__setattr__(value, '_eresource', self._owner.eResource)
         elif previous_value:
             object.__setattr__(previous_value, '_container', value)
             object.__setattr__(previous_value, '_containment_feature', value)
-            object.__setattr__(previous_value, '_eresource',
-                               value.eResource if value else None)
 
 
 class EValue(PyEcoreValue):

@@ -157,7 +157,6 @@ class XMIResource(Resource):
             return (None, None, [], [])
         else:
             eobject = etype()
-        eobject._eresource = self
 
         # we sort the node feature (no containments)
         eatts = []

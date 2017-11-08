@@ -10,6 +10,12 @@ Changelog
   single assignement is done on a collection-kind meta-attribute, an exception
   must be raised as the 'attribute' type is, somehow, modified.
 
+**Miscellaneous**
+
+- Improve the ``eResource`` management. This reduces memory footprint, slightly
+  improves big model serialization, and avoides 'unsync' objects with their
+  resource. 
+
 0.7.4
 +++++
 

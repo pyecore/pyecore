@@ -424,8 +424,6 @@ class Resource(object):
                              'but received {0} instead.'.format(type(root)))
         self.contents.append(root)
         root._eresource = self
-        for eobject in root.eAllContents():
-            eobject._eresource = self
 
     def open_out_stream(self, other=None):
         if other and not isinstance(other, URI):
