@@ -323,8 +323,16 @@ class Resource(object):
                         if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
-            raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
+            decoder = self._try_resource_autoload(uri)
         return decoder if decoder else self
+
+    def _try_resource_autoload(self, uri):
+        try:
+            self.resource_set.get_resource(URI(uri))
+            return self.resource_set
+        except Exception:
+            raise TypeError('Resource "{0}" cannot be resolved'
+                            .format(uri))
 
     @staticmethod
     def _navigate_from(path, start_obj):
