@@ -59,8 +59,6 @@ class XMIResource(Resource):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name)
         if not eobject:
-            eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name.capitalize())
-        if not eobject:
             raise TypeError('{0} EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
