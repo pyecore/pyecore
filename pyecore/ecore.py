@@ -633,6 +633,7 @@ class EPackage(ENamedElement):
     def getEClassifier(self, name):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
+    @staticmethod
     def __isinstance__(self, instance=None):
         return (instance is None and
                 (isinstance(self, EPackage) or
@@ -707,6 +708,7 @@ class EClassifier(ENamedElement):
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
 
+    @staticmethod
     def __isinstance__(self, instance=None):
         return (instance is None and
                 (self is EClassifier or
