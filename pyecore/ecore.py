@@ -1111,9 +1111,6 @@ class EClass(EClassifier):
         return next((f for f in self._eAllOperations_gen() if f.name == name),
                     None)
 
-    def __isinstance__(self, instance):
-        return isinstance(instance, self)
-
     def __instancecheck__(self, instance):
         return isinstance(instance, self.python_class)
 
@@ -1244,7 +1241,8 @@ class EProxy(EObject):
         self._wrapped.__setattr__(name, value)
 
     def __instancecheck__(self, instance):
-        return True
+        self.force_resolve()
+        return self._wrapped.__instancecheck__(instance)
 
 
 def abstract(cls):

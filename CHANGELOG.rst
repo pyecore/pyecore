@@ -4,6 +4,11 @@ Changelog
 0.7.5
 +++++
 
+**Features**
+
+- Add easier way of dynamically add behavior to ``EClass``. This features adds
+  the ability to register function to existing dynamic and static ``EClass``. 
+
 **Bugfixes**
 
 - Fix missing exception when affecting single element to collection. When a
@@ -14,7 +19,7 @@ Changelog
 
 - Improve the ``eResource`` management. This reduces memory footprint, slightly
   improves big model serialization, and avoides 'unsync' objects with their
-  resource. 
+  resource.
 
 0.7.4
 +++++
