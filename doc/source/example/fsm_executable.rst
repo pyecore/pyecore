@@ -18,7 +18,8 @@ from ALE homepage):
 - Extensible: If ALE doesn’t fit your needs, register Java classes as services
   and invoke them inside your implementations of EOperations.
 
-PyEcore provides the exact same ability in a full Python fashion. You can
+PyEcore provides the exact same ability in a full Python fashion (beside the
+Eclipse relation and the Java invokation, Python is invoked instead). You can
 find more information about how to add behavior to your metamodel in the
 :ref:`behavior` section of the advanced User Documentation.
 
