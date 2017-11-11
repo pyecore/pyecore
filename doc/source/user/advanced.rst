@@ -164,8 +164,8 @@ module to run your executable model:
 Example
 ~~~~~~~
 
-As full coded, ready to use, and explained example, check out the FSM_ example. 
-
+As full coded, ready to use, and explained example, check out the
+:ref:`FSM` example.
 
 
 Modifying Elements Using Commands

@@ -104,6 +104,7 @@ User Documentation
    user/install
    user/quickstart
    user/advanced
+   example/fsm_executable
 
 Indices and tables
 ==================
