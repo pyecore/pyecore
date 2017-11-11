@@ -90,7 +90,7 @@ Let's create some instances of our freshly created metamodel:
     <pyecore.ecore.Graph at 0x7f0055554dd8>
 
 
-This example gives a quick overvienw of some of the features you get for free
+This example gives a quick overview of some of the features you get for free
 when using PyEcore.
 
 

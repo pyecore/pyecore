@@ -3,6 +3,78 @@
 Quick Start
 ===========
 
+Quick Overview
+--------------
+
+PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
+Python 3. It's purpose is to handle model/metamodels in Python almost the same
+way the Java version does.
+
+However, PyEcore enables you to use a simple ``instance.attribute`` notation
+instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
+version. To achieve this, PyEcore relies on reflection (a lot).
+
+Let see by yourself how it works on a very simple metamodel created on
+the fly (dynamic metamodel):
+
+.. code-block:: python
+
+    >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
+    >>> A = EClass('A')  # We create metaclass named 'A'
+    >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
+    >>> a1 = A()  # We create an instance
+    >>> a1.myname
+    'new_name'
+    >>> a1.myname = 'a_instance'
+    >>> a1.myname
+    'a_instance'
+    >>> isinstance(a1, EObject)
+    True
+
+PyEcore also support introspection and the EMF reflexive API using basic Python
+reflexive features:
+
+.. code-block:: python
+
+    >>> a1.eClass # some introspection
+    <EClass name="A">
+    >>> a1.eClass.eClass
+    <EClass name="EClass">
+    >>> a1.eClass.eClass is a1.eClass.eClass.eClass
+    True
+    >>> a1.eClass.eStructuralFeatures
+    EOrderedSet([<EStructuralFeature myname: EString(str)>])
+    >>> a1.eClass.eStructuralFeatures[0].name
+    'myname'
+    >>> a1.eClass.eStructuralFeatures[0].eClass
+    <EClass name="EAttribute">
+    >>> a1.__getattribute__('myname')
+    'a_instance'
+    >>> a1.__setattr__('myname', 'reflexive')
+    >>> a1.__getattribute__('myname')
+    'reflexive'
+    >>> a1.eSet('myname', 'newname')
+    >>> a1.eGet('myname')
+    'newname'
+
+Runtime type checking is also performed (regarding what you expressed in your)
+metamodel:
+
+.. code-block:: python
+
+    >>> a1.myname = 1
+    Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File ".../pyecore/ecore.py", line 66, in setattr
+            raise BadValueError(got=value, expected=estruct.eType)
+    pyecore.ecore.BadValueError: Expected type EString(str), but got type int with value 1 instead
+
+
+PyEcore does support dynamic metamodel and static ones (see details in next
+sections).
+
+
+
 Dynamic Metamodels
 ------------------
 
