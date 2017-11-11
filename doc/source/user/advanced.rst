@@ -4,6 +4,7 @@ Advanced Usage
 ==============
 
 
+.. _behavior:
 Adding Behavior: Executable Models
 ----------------------------------
 
@@ -158,6 +159,12 @@ module to run your executable model:
 
     model_root = rset.get_resource(URI('model.xmi')).contents[0]
     behavior.run(model_root, 5, x='test')
+
+
+Example
+~~~~~~~
+
+As full coded, ready to use, and explained example, check out the FSM_ example. 
 
 
 
