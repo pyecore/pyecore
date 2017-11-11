@@ -32,16 +32,34 @@ The exact same code can be applied with dynamic metamodels:
 
 This same mechanism can also be used for overriding ``EOperation``.
 """
+import inspect
 from . import ecore
 
 
 def meta_behavior(self, fun):
     setattr(self, fun.__name__, fun)
+    return fun
 
 
 def behavior(self, fun):
     setattr(self.python_class, fun.__name__, fun)
+    return fun
 
 
 ecore.MetaEClass.behavior = meta_behavior
 ecore.EClass.behavior = behavior
+
+
+def main(fun):
+    fun.main = True
+    return fun
+
+
+def run(eclass, *args, **kwargs):
+    cls = eclass.eClass.python_class
+    for _, attr in cls.__dict__.items():
+        if inspect.isfunction(attr) and getattr(attr, 'main', False):
+            return attr(eclass, *args, **kwargs)
+    else:
+        raise NotImplementedError('No @main entry point found for {}'
+                                  .format(cls))

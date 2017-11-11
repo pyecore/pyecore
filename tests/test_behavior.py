@@ -1,6 +1,6 @@
 import pytest
 from pyecore.ecore import *
-import pyecore.behavior
+import pyecore.behavior as behavior
 
 
 def test_static_metamodel_behavior_injection():
@@ -24,6 +24,30 @@ def test_static_metamodel_behavior_injection():
     assert a.i == 0
 
 
+def test_static_metamodel_entry_point():
+    @EMetaclass
+    class A(object):
+        pass
+
+    @A.behavior
+    def my_fun(self, i):
+        return i + 1
+
+    a = A()
+    x = 1
+    with pytest.raises(NotImplementedError):
+        behavior.run(a)
+
+    # We add the behavior *after* the instance creation
+    @behavior.main
+    @A.behavior
+    def entry_point(self, i=0):
+        return self.my_fun(i)
+
+    y = behavior.run(a, x)
+    assert y == x + 1
+
+
 def test_dynamic_metamodel_behavior_injection():
     A = EClass('A')
 
@@ -41,3 +65,25 @@ def test_dynamic_metamodel_behavior_injection():
 
     a = A(i=0)
     assert a.i == 0
+
+
+def test_dynamic_metamodel_entry_point():
+    A = EClass('A')
+
+    @A.behavior
+    def my_fun(self, i):
+        return i + 1
+
+    a = A()
+    x = 1
+    with pytest.raises(NotImplementedError):
+        behavior.run(a)
+
+    # We add the behavior *after* the instance creation
+    @behavior.main
+    @A.behavior
+    def entry_point(self, i=0):
+        return self.my_fun(i)
+
+    y = behavior.run(a, x)
+    assert y == x + 1

@@ -24,7 +24,7 @@ example shows how to do it on a dynamic metamodel built on-the-fly:
 .. code-block:: python
 
     from pyecore.ecore import EClass, EAttribute
-    import pyecore.behavior  # We need to import the 'behavior' package
+    import pyecore.behavior as behavior # We need to import the 'behavior' package
 
     HelloWorld = EClass('HelloWorld')
     HelloWorld.eStructuralFeatures.append(EAttribute('name', EString))
@@ -55,7 +55,7 @@ we have a generated metamodel named ``hello``, the previous code becomes:
 
 .. code-block:: python
 
-    import pyecore.behavior
+    import pyecore.behavior as behavior
     import hello
 
     @hello.HelloWorld.behavior
@@ -87,7 +87,7 @@ an example of how to use it. We consider that we have an existing
 
     from pyecore.resources import ResourceSet, URI
     from pyecore.utils import DynamicEPackage
-    import pyecore.behavior
+    import pyecore.behavior as behavior
 
     # Read the metamodel first
     rset = ResourceSet()
@@ -112,6 +112,53 @@ model. Assuming we have a ``model.xmi`` file:
 
     model_root = rset.get_resource(URI('model.xmi')).contents[0]
     model_root.greeting()
+
+
+Defining an Entry Point to your Executable Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the previous section, we saw that it becomes possible to add behavior to
+your metamodel and launch it by calling the one of the defined behavior.
+However, this implies a knowledge of the added behavior in order to run the
+adequat one. PyEcore provides a way of defining the main entry point of your
+model. Currently, this entry point must be added to your root metaclass (i.e:
+the ``EClass`` that will provide the root of your model). The following
+example takes the same previous ``HelloWorld`` example, and add the entry
+point:
+
+.. code-block:: python
+
+    @behavior.main
+    @hello.HelloWorld.behavior
+    def entry_point(self):
+        self.greeting()
+
+
+The entry point is defined by the ``@beavior.main`` annotation on a function.
+This function must also be marked as a ``behavior``. One you've defined an
+entry point, you can use the ``run()`` method from the ``pyecore.behavior``
+module to run your executable model:
+
+.. code-block:: python
+
+    # We obtain the model from an XMI
+    model_root = rset.get_resource(URI('model.xmi')).contents[0]
+    behavior.run(model_root)
+
+
+**Note:** the entry point can be defined with required or optional parameters:
+
+.. code-block:: python
+
+    @behavior.main
+    @hello.HelloWorld.behavior
+    def entry_point(self, i, x=None):
+        print('Run', i, x)
+        self.greeting()
+
+    model_root = rset.get_resource(URI('model.xmi')).contents[0]
+    behavior.run(model_root, 5, x='test')
+
 
 
 Modifying Elements Using Commands
