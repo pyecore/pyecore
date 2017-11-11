@@ -21,7 +21,7 @@ from ALE homepage):
 PyEcore provides the exact same ability in a full Python fashion (beside the
 Eclipse relation and the Java invokation, Python is invoked instead). You can
 find more information about how to add behavior to your metamodel in the
-:ref:`behavior` section of the advanced User Documentation.
+":ref:`behavior`" section of the advanced User Documentation.
 
 The following code gives you the full code for the FSM example of the ALE
 tutorial page, but in a pure Python style using PyEcore. The script:
