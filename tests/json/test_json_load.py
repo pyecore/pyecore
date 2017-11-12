@@ -81,12 +81,10 @@ def test__jsonresource_load_crossref_ecore(rset):
     assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'B'
     assert isinstance(root.eClassifiers[0].eStructuralFeatures[1].eType,
                       Ecore.EProxy)
-    # 'relative/f2.json' is not loaded in the resource set and cannot be
-    # resolved
-    with pytest.raises(TypeError):
-        root.eClassifiers[0].eStructuralFeatures[1].eType.name
+    # auto-load kicks in
+    assert root.eClassifiers[0].eStructuralFeatures[1].eType.name == 'C'
 
-    # we load it, the feature is now accessible
+    # we load it, we have the same result
     json_file = path.join('tests', 'json', 'data', 'relative', 'f2.json')
     rset.get_resource(json_file)
     assert root.eClassifiers[0].eStructuralFeatures[1].eType.name == 'C'

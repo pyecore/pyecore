@@ -204,3 +204,14 @@ def test_resourceset_load_faulty_exception_bad_metamodel():
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My_faulty2.ecore')
     with pytest.raises(Exception):
         rset.get_resource(ecore_file)
+
+
+def test_ecore_nonhref_external_resources_autoload():
+    rset = ResourceSet()
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    root = rset.get_resource(a_ecore).contents[0]
+    assert root
+
+    A = root.getEClassifier('A')
+    assert A
+    assert len(A.eSuperTypes) == 2

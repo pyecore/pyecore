@@ -163,7 +163,7 @@ def test_resource_load_proxy_missinghref(simplemm):
     rset = ResourceSet()
     rset.metamodel_registry[simplemm.nsURI] = simplemm
     root = rset.get_resource(path.join('tests', 'xmi',
-                                       'xmi-tests', 'a1.xmi')).contents[0]
+                                       'xmi-tests', 'a1-1.xmi')).contents[0]
     assert isinstance(root.a[0].tob[0], EProxy)
     with pytest.raises(TypeError):
         root.a[0].tob[0].eClass

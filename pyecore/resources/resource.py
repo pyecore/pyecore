@@ -179,6 +179,10 @@ class URI(object):
             other = uri.normalize()
         return path.relpath(other, normalized)
 
+    def apply_relative_from_me(self, relative_path):
+        parent_path = path.dirname(self.normalize())
+        return path.join(parent_path, relative_path)
+
 
 class HttpURI(URI):
     def __init__(self, uri):
@@ -328,7 +332,8 @@ class Resource(object):
 
     def _try_resource_autoload(self, uri):
         try:
-            self.resource_set.get_resource(URI(uri))
+            external_uri = self.uri.apply_relative_from_me(uri)
+            self.resource_set.get_resource(external_uri)
             return self.resource_set
         except Exception:
             raise TypeError('Resource "{0}" cannot be resolved'
