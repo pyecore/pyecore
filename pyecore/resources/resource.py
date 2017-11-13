@@ -332,8 +332,8 @@ class Resource(object):
 
     def _try_resource_autoload(self, uri):
         try:
-            external_uri = self.uri.apply_relative_from_me(uri)
-            self.resource_set.get_resource(external_uri)
+            external_uri = URI(self.uri.apply_relative_from_me(uri))
+            self.resource_set.get_resource(external_uri.normalize())
             return self.resource_set
         except Exception:
             raise TypeError('Resource "{0}" cannot be resolved'
