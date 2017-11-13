@@ -179,6 +179,10 @@ class URI(object):
             other = uri.normalize()
         return path.relpath(other, normalized)
 
+    def apply_relative_from_me(self, relative_path):
+        parent_path = path.dirname(self.normalize())
+        return path.join(parent_path, relative_path)
+
 
 class HttpURI(URI):
     def __init__(self, uri):
@@ -323,8 +327,17 @@ class Resource(object):
                         if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
-            raise TypeError('Resource "{0}" cannot be resolved'.format(uri))
+            decoder = self._try_resource_autoload(uri)
         return decoder if decoder else self
+
+    def _try_resource_autoload(self, uri):
+        try:
+            external_uri = URI(self.uri.apply_relative_from_me(uri))
+            self.resource_set.get_resource(external_uri)
+            return self.resource_set
+        except Exception:
+            raise TypeError('Resource "{0}" cannot be resolved'
+                            .format(uri))
 
     @staticmethod
     def _navigate_from(path, start_obj):
@@ -424,8 +437,6 @@ class Resource(object):
                              'but received {0} instead.'.format(type(root)))
         self.contents.append(root)
         root._eresource = self
-        for eobject in root.eAllContents():
-            eobject._eresource = self
 
     def open_out_stream(self, other=None):
         if other and not isinstance(other, URI):

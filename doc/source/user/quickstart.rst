@@ -3,6 +3,78 @@
 Quick Start
 ===========
 
+Quick Overview
+--------------
+
+PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
+Python 3. It's purpose is to handle model/metamodels in Python almost the same
+way the Java version does.
+
+However, PyEcore enables you to use a simple ``instance.attribute`` notation
+instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
+version. To achieve this, PyEcore relies on reflection (a lot).
+
+Let see by yourself how it works on a very simple metamodel created on
+the fly (dynamic metamodel):
+
+.. code-block:: python
+
+    >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
+    >>> A = EClass('A')  # We create metaclass named 'A'
+    >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
+    >>> a1 = A()  # We create an instance
+    >>> a1.myname
+    'new_name'
+    >>> a1.myname = 'a_instance'
+    >>> a1.myname
+    'a_instance'
+    >>> isinstance(a1, EObject)
+    True
+
+PyEcore also support introspection and the EMF reflexive API using basic Python
+reflexive features:
+
+.. code-block:: python
+
+    >>> a1.eClass # some introspection
+    <EClass name="A">
+    >>> a1.eClass.eClass
+    <EClass name="EClass">
+    >>> a1.eClass.eClass is a1.eClass.eClass.eClass
+    True
+    >>> a1.eClass.eStructuralFeatures
+    EOrderedSet([<EStructuralFeature myname: EString(str)>])
+    >>> a1.eClass.eStructuralFeatures[0].name
+    'myname'
+    >>> a1.eClass.eStructuralFeatures[0].eClass
+    <EClass name="EAttribute">
+    >>> a1.__getattribute__('myname')
+    'a_instance'
+    >>> a1.__setattr__('myname', 'reflexive')
+    >>> a1.__getattribute__('myname')
+    'reflexive'
+    >>> a1.eSet('myname', 'newname')
+    >>> a1.eGet('myname')
+    'newname'
+
+Runtime type checking is also performed (regarding what you expressed in your)
+metamodel:
+
+.. code-block:: python
+
+    >>> a1.myname = 1
+    Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File ".../pyecore/ecore.py", line 66, in setattr
+            raise BadValueError(got=value, expected=estruct.eType)
+    pyecore.ecore.BadValueError: Expected type EString(str), but got type int with value 1 instead
+
+
+PyEcore does support dynamic metamodel and static ones (see details in next
+sections).
+
+
+
 Dynamic Metamodels
 ------------------
 
@@ -327,61 +399,6 @@ not required, and ``super()`` can be used.
             super().__init__(**kwargs)
             self.tmp = tmp
 
-
-Static/Dynamic ``EOperation``
------------------------------
-
-PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
-For static metamodel, the solution is simple, a simple method with the code is
-added inside the defined class. The corresponding ``EOperation`` is created on
-the fly. Theire is still some "requirements" for this. In order to be understood
-as an ``EOperation`` candidate, the defined method must have at least one
-parameter and the first parameter must always be named ``self``.
-
-For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
-the ``EClass`` instance, adds an "empty" implementation:
-
-.. code-block:: python
-
-    >>> import pyecore.ecore as Ecore
-    >>> A = Ecore.EClass('A')
-    >>> operation = Ecore.EOperation('myoperation')
-    >>> param1 = Ecore.EParameter('param1', eType=Ecore.EString, required=True)
-    >>> operation.eParameters.append(param1)
-    >>> A.eOperations.append(operation)
-    >>> a = A()
-    >>> help(a.myoperation)
-    Help on method myoperation:
-
-    myoperation(param1) method of pyecore.ecore.A instance
-    >>> a.myoperation('test')
-    ...
-    NotImplementedError: Method myoperation(param1) is not yet implemented
-
-For each ``EParameter``, the ``required`` parameter express the fact that the
-parameter is required or not in the produced operation:
-
-.. code-block:: python
-
-    >>> operation2 = Ecore.EOperation('myoperation2')
-    >>> p1 = Ecore.EParameter('p1', eType=Ecore.EString)
-    >>> operation2.eParameters.append(p1)
-    >>> A.eOperations.append(operation2)
-    >>> a = A()
-    >>> a.operation2(p1='test')  # Will raise a NotImplementedError exception
-
-You can then create an implementation for the eoperation and link it to the
-EClass:
-
-.. code-block:: python
-
-    >>> def myoperation(self, param1):
-    ...     print(self, param1)
-    ...
-    >>> A.python_class.myoperation = myoperation
-
-To be able to propose a dynamic empty implementation of the operation, PyEcore
-relies on Python code generation at runtime.
 
 Notifications
 -------------

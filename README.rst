@@ -19,72 +19,79 @@ PyEcore: A Pythonic Implementation of the Eclipse Modeling Framework
 .. |license| image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
     :target: https://raw.githubusercontent.com/pyecore/pyecore/master/LICENSE
 
-PyEcore is a "Pythonic?" (sounds pretentious) implementation of EMF/Ecore for
-Python 3. It's purpose is to handle model/metamodels in Python almost the same
-way the Java version does.
+PyEcore is a Model Driven Engineering (MDE) framework written for Python.
+Precisely, it is an implementation of `EMF/Ecore
+<https://www.eclipse.org/modeling/emf/>`_ for Python, and it tries to give an
+API which is compatible with the original EMF Java implementation.
 
-However, PyEcore enables you to use a simple ``instance.attribute`` notation
-instead of ``instance.setAttribute(...)/getAttribute(...)`` for the Java
-version. To achieve this, PyEcore relies on reflection (a lot).
+PyEcore allows you to handle models and metamodels (structured data model), and
+gives the key you need for building MDE-based tools and other applications based
+on a structured data model. It supports out-of-the-box:
 
-Let see by yourself how it works on a very simple metamodel created on
-the fly (dynamic metamodel):
+* Data inheritance,
+* Two-ways relationship management (opposite references),
+* XMI (de)serialization,
+* JSON (de)serialization,
+* Notification system,
+* Reflexive API...
+
+Let see how to create on a very simple "dynamic" metamodel (in opposite to
+static ones, see the `documentation <https://pyecore.readthedocs.io/en/latest/>`_
+for more details):
 
 .. code-block:: python
 
     >>> from pyecore.ecore import EClass, EAttribute, EString, EObject
-    >>> A = EClass('A')  # We create metaclass named 'A'
-    >>> A.eStructuralFeatures.append(EAttribute('myname', EString, default_value='new_name')) # We add a name attribute to the A metaclass
-    >>> a1 = A()  # We create an instance
-    >>> a1.myname
-    'new_name'
-    >>> a1.myname = 'a_instance'
-    >>> a1.myname
-    'a_instance'
-    >>> isinstance(a1, EObject)
-    True
+    >>> Graph = EClass('Graph')  # We create a 'Graph' concept
+    >>> Node = EClass('Node')  # We create a 'Node' concept
+    >>>
+    >>> # We add a "name" attribute to the Graph concept
+    >>> Graph.eStructuralFeatures.append(EAttribute('name', EString,
+                                                    default_value='new_name'))
+    >>> # And one on the 'Node' concept
+    >>> Node.eStructuralFeatures.append(EAttribute('name', EString))
+    >>>
+    >>> # We now introduce a containment relation between Graph and Node
+    >>> contains_nodes = EReference('nodes', Node, upper=-1, containment=True)
+    >>> Graph.eStructuralFeatures.append(contains_nodes)
+    >>> # We add an opposite relation between Graph and Node
+    >>> Node.eStructuralFeatures.append(EReference('owned_by', Graph, eOpposite=contains_nodes))
 
-PyEcore also support introspection and the EMF reflexive API using basic Python
-reflexive features:
+With this code, we have defined two concepts: ``Graph`` and ``Node``. Both have
+a ``name``, and it exists a containment relationship between them. This relation
+is bi-directionnal, which means that each time a ``Node`` object is added to the
+``nodes`` relationship of a ``Graph``, the ``owned_by`` relation of the ``Node``
+is updated also (it also work in the other way).
 
-.. code-block:: python
-
-    >>> a1.eClass # some introspection
-    <EClass name="A">
-    >>> a1.eClass.eClass
-    <EClass name="EClass">
-    >>> a1.eClass.eClass is a1.eClass.eClass.eClass
-    True
-    >>> a1.eClass.eStructuralFeatures
-    EOrderedSet([<EStructuralFeature myname: EString(str)>])
-    >>> a1.eClass.eStructuralFeatures[0].name
-    'myname'
-    >>> a1.eClass.eStructuralFeatures[0].eClass
-    <EClass name="EAttribute">
-    >>> a1.__getattribute__('myname')
-    'a_instance'
-    >>> a1.__setattr__('myname', 'reflexive')
-    >>> a1.__getattribute__('myname')
-    'reflexive'
-    >>> a1.eSet('myname', 'newname')
-    >>> a1.eGet('myname')
-    'newname'
-
-Runtime type checking is also performed (regarding what you expressed in your)
-metamodel:
+Let's create some instances of our freshly created metamodel:
 
 .. code-block:: python
 
-    >>> a1.myname = 1
-    Traceback (most recent call last):
-        File "<stdin>", line 1, in <module>
-        File ".../pyecore/ecore.py", line 66, in setattr
-            raise BadValueError(got=value, expected=estruct.eType)
-    pyecore.ecore.BadValueError: Expected type EString(str), but got type int with value 1 instead
+    >>> # We create a Graph
+    >>> g1 = Graph(name='Graph 1')
+    >>> g1
+    <pyecore.ecore.Graph at 0x7f0055554dd8>
+    >>>
+    >>> # And two node instances
+    >>> n1 = Node(name='Node 1')
+    >>> n2 = Node(name='Node 2')
+    >>> n1, n2
+    (<pyecore.ecore.Node at 0x7f0055550588>,
+     <pyecore.ecore.Node at 0x7f00555502b0>)
+    >>>
+    >>> # We add them to the Graph
+    >>> g1.nodes.extend([n1, n2])
+    >>> g1.nodes
+    EOrderedSet([<pyecore.ecore.Node object at 0x7f0055550588>,
+                 <pyecore.ecore.Node object at 0x7f00555502b0>])
+    >>>
+    >>> # bi-directional references are updated
+    >>> n1.owned_by
+    <pyecore.ecore.Graph at 0x7f0055554dd8>
 
 
-PyEcore does support dynamic metamodel and static ones (see details in next
-sections).
+This example gives a quick overview of some of the features you get for free
+when using PyEcore.
 
 *The project slowly grows and it still requires more love.*
 
@@ -102,6 +109,15 @@ The installation can also be performed manually (better in a virtualenv):
 .. code-block:: bash
 
     $ python setup.py install
+
+
+Documentation
+=============
+
+You can read the documentation, which sums up pretty much everything you can
+find in this page, and more:
+
+https://pyecore.readthedocs.io/en/latest/
 
 
 .. contents:: :depth: 2

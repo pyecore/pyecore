@@ -103,3 +103,14 @@ def test_static_metamodel_mixin():
     assert c.value == 5
     assert c.eClass.python_class is C3
     assert c.a == 5
+
+
+def test_static_change_baseclasses():
+    @EMetaclass
+    class C4(EObject):
+        pass
+
+    A = EClass('A')
+    C4.eClass.eSuperTypes.append(A)
+
+    assert EObject.eClass not in C4.eClass.eSuperTypes

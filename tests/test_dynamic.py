@@ -112,9 +112,9 @@ def test_create_dynamic_override_many_eattribute():
     A = EClass('A')
     A.eStructuralFeatures.append(EAttribute('names', EString, upper=-1))
     a = A()
-    assert a.names == []
     with pytest.raises(BadValueError):
         a.names = 'test'
+    assert a.names == []
 
 
 def test_create_dynamic_simple_ereference():
@@ -917,3 +917,32 @@ def test_eenum_defaultvalue_computed():
 
     assert E.from_string('A') is A
     assert E.to_string(A) is 'A'
+
+
+def test_eclass_isinstance():
+    A = EClass('A')
+    B = EClass('B', superclass=(A,))
+
+    b = B()
+    assert isinstance(b, B)
+    assert isinstance(b, A)
+
+    MetaA = EClass('MetaA', superclass=(EClass.eClass,))
+    A = MetaA('A')
+    a = A()
+
+    assert isinstance(a, A)
+    assert isinstance(MetaA, EClass)
+
+
+def test_edatatype_direct_isinstance():
+    assert isinstance('string', EString)
+    assert isinstance(3, EInt)
+
+    MyDatatype = EDataType('MyDatatype', eType=complex)
+    assert isinstance(3+4j, MyDatatype)
+
+
+def test_eenum_isinstance():
+    MyEnum = EEnum('MyEnum', literals=('A', 'B', 'C'))
+    assert isinstance(MyEnum.A, MyEnum)

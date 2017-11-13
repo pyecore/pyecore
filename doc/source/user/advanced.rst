@@ -4,6 +4,170 @@ Advanced Usage
 ==============
 
 
+.. _behavior:
+Adding Behavior: Executable Models
+----------------------------------
+
+Using the Python dynamic nature, PyEcore allows you to add any kind of behavior
+to your metamodel that will be launch on your model instance. You can add to
+any metamodel, static **and** dynamic metamodel new behavior. The added
+behavior can be the implementation of an ``EOperation`` defined in your
+metamodel or a new operation. Also, as PyEcore allows you to dynamically
+add new attributes to your class/metaclasses, you have the ability to add
+information that are not directly defined in your metamodel.
+
+For Static and Dynamic Metamodels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The way of adding a new behavior to your ``EClass`` is pretty forward. This
+example shows how to do it on a dynamic metamodel built on-the-fly:
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass, EAttribute
+    import pyecore.behavior as behavior # We need to import the 'behavior' package
+
+    HelloWorld = EClass('HelloWorld')
+    HelloWorld.eStructuralFeatures.append(EAttribute('name', EString))
+
+    @HelloWorld.behavior
+    def greeting(self):
+        print('Hello World and', self.name)
+
+
+If we sum up, the ``behavior`` is imported and a new ``EClass`` defined.
+To this new ``EClass``, we added the ``greeting`` behavior. You can see that
+the behavior addition is made directly using the ``EClass`` through the
+``@HelloWorld.behavior`` annotation.
+
+Now that our behavior is implemented, we can build an example model and launch
+it:
+
+.. code-block:: python
+
+    a = A()
+    a.name = 'guys'
+    a.greeting()
+    # prints 'Hello World and guys'
+
+
+The exact same process can be applied to static metamodel. Considering that
+we have a generated metamodel named ``hello``, the previous code becomes:
+
+.. code-block:: python
+
+    import pyecore.behavior as behavior
+    import hello
+
+    @hello.HelloWorld.behavior
+    def greeting(self):
+        print('Hello World and', self.name)
+
+
+That's all, the model creation/execution remains the same. The interesting
+thing about this is when you read your model from an XMI, your behavior is
+automatically added to your model. Also, using closure, you can conditionally
+inject a behavior or another to a model element, to sum up, you can dynamically
+change your model behavior if you need.
+
+**Caution:** if you only need to add a single behavior on static metamodel,
+a prefered solution is to use the mixin generation proposed by ``pyecoregen``.
+The mixin generation propose a strong and solid way of adding a dedicated
+behavior to your metamodel.
+
+
+For Dynamic Metamodels Read from an Ecore File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With the same flexibility, you can add behavior to your existing ``.ecore``. To
+ease all of this, you can make use of the ``DynamicEPackage`` helper. Here is
+an example of how to use it. We consider that we have an existing
+``hello.ecore`` file, with the same metamodel than before:
+
+.. code-block:: python
+
+    from pyecore.resources import ResourceSet, URI
+    from pyecore.utils import DynamicEPackage
+    import pyecore.behavior as behavior
+
+    # Read the metamodel first
+    rset = ResourceSet()
+    mm_root = rset.get_resource(URI('hello.ecore')).contents[0]
+
+    # Register the metamodel (in case we open an XMI model later)
+    rset.metamodel_registry[mm_root.nsURI] = mm_root
+
+    # Get the metamodel helper
+    hello = DynamicEPackage(mm_root)
+
+    @hello.HelloWorld.behavior
+    def greeting(self):
+        print('Hello World and', self.name)
+
+
+That's it. Beside the metamodel loading, the good stuff is always the same than
+before. You can then either create instances or load an XMI model, and run your
+model. Assuming we have a ``model.xmi`` file:
+
+.. code-block:: python
+
+    model_root = rset.get_resource(URI('model.xmi')).contents[0]
+    model_root.greeting()
+
+
+Defining an Entry Point to your Executable Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the previous section, we saw that it becomes possible to add behavior to
+your metamodel and launch it by calling the one of the defined behavior.
+However, this implies a knowledge of the added behavior in order to run the
+adequat one. PyEcore provides a way of defining the main entry point of your
+model. Currently, this entry point must be added to your root metaclass (i.e:
+the ``EClass`` that will provide the root of your model). The following
+example takes the same previous ``HelloWorld`` example, and add the entry
+point:
+
+.. code-block:: python
+
+    @behavior.main
+    @hello.HelloWorld.behavior
+    def entry_point(self):
+        self.greeting()
+
+
+The entry point is defined by the ``@beavior.main`` annotation on a function.
+This function must also be marked as a ``behavior``. One you've defined an
+entry point, you can use the ``run()`` method from the ``pyecore.behavior``
+module to run your executable model:
+
+.. code-block:: python
+
+    # We obtain the model from an XMI
+    model_root = rset.get_resource(URI('model.xmi')).contents[0]
+    behavior.run(model_root)
+
+
+**Note:** the entry point can be defined with required or optional parameters:
+
+.. code-block:: python
+
+    @behavior.main
+    @hello.HelloWorld.behavior
+    def entry_point(self, i, x=None):
+        print('Run', i, x)
+        self.greeting()
+
+    model_root = rset.get_resource(URI('model.xmi')).contents[0]
+    behavior.run(model_root, 5, x='test')
+
+
+Example
+~~~~~~~
+
+As full coded, ready to use, and explained example, check out the
+:ref:`FSM` example.
+
+
 Modifying Elements Using Commands
 ---------------------------------
 
@@ -275,3 +439,59 @@ The Python class hierarchie (inheritance tree) associated to the EClass instance
     >>> b_instance = B()
     >>> assert isinstance(b_instance, A.python_class)
     >>> assert EcoreUtils.isinstance(b_instance, A)
+
+
+Static/Dynamic ``EOperation``, Behind the Scene
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
+For static metamodel, the solution is simple, a simple method with the code is
+added inside the defined class. The corresponding ``EOperation`` is created on
+the fly. Theire is still some "requirements" for this. In order to be understood
+as an ``EOperation`` candidate, the defined method must have at least one
+parameter and the first parameter must always be named ``self``.
+
+For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
+the ``EClass`` instance, adds an "empty" implementation:
+
+.. code-block:: python
+
+    >>> import pyecore.ecore as Ecore
+    >>> A = Ecore.EClass('A')
+    >>> operation = Ecore.EOperation('myoperation')
+    >>> param1 = Ecore.EParameter('param1', eType=Ecore.EString, required=True)
+    >>> operation.eParameters.append(param1)
+    >>> A.eOperations.append(operation)
+    >>> a = A()
+    >>> help(a.myoperation)
+    Help on method myoperation:
+
+    myoperation(param1) method of pyecore.ecore.A instance
+    >>> a.myoperation('test')
+    ...
+    NotImplementedError: Method myoperation(param1) is not yet implemented
+
+For each ``EParameter``, the ``required`` parameter express the fact that the
+parameter is required or not in the produced operation:
+
+.. code-block:: python
+
+    >>> operation2 = Ecore.EOperation('myoperation2')
+    >>> p1 = Ecore.EParameter('p1', eType=Ecore.EString)
+    >>> operation2.eParameters.append(p1)
+    >>> A.eOperations.append(operation2)
+    >>> a = A()
+    >>> a.operation2(p1='test')  # Will raise a NotImplementedError exception
+
+You can then create an implementation for the eoperation and link it to the
+EClass:
+
+.. code-block:: python
+
+    >>> def myoperation(self, param1):
+    ...     print(self, param1)
+    ...
+    >>> A.python_class.myoperation = myoperation
+
+To be able to propose a dynamic empty implementation of the operation, PyEcore
+relies on Python code generation at runtime.
