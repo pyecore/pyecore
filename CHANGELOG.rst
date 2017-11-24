@@ -1,13 +1,24 @@
 Changelog
 ---------
 
+0.7.6
++++++
+
+**Bugfixes**
+
+- Fix bad default value for ``xxxObject`` data types. These data types (e.g:
+  ``EIntegerObject``) must have a ``None`` default value as they do not represent
+  the Java boxed type, but their **object** version. This fix introduces a real
+  difference between boxed types and non-boxed types.
+
+
 0.7.5
 +++++
 
 **Features**
 
 - Add easier way of dynamically add behavior to ``EClass``. This features adds
-  the ability to register function to existing dynamic and static ``EClass``. 
+  the ability to register function to existing dynamic and static ``EClass``.
 
 **Bugfixes**
 
