@@ -8,12 +8,13 @@ from .. import ecore as Ecore
 
 
 class JsonResource(Resource):
-    def __init__(self, uri=None, use_uuid=False, indent=None):
+    def __init__(self, uri=None, use_uuid=False, indent=None, ref_tag='$ref'):
         super().__init__(uri, use_uuid)
         self._resolve_later = []
         self._already_saved = []
         self._load_href = {}
         self.indent = indent
+        self.ref_tag = ref_tag
 
     def load(self):
         json_value = self.uri.create_instream()
@@ -52,7 +53,8 @@ class JsonResource(Resource):
             resource_uri = ''
         else:
             resource_uri = obj.eResource.uri if obj.eResource else ''
-        ref['$ref'] = '{}{}'.format(resource_uri, self._uri_fragment(obj))
+        ref[self.ref_tag] = '{}{}'.format(resource_uri,
+                                          self._uri_fragment(obj))
         return ref
 
     def _to_dict_from_obj(self, obj):
@@ -96,10 +98,10 @@ class JsonResource(Resource):
         return decoders.resolve(uri_eclass, self)
 
     def to_obj(self, d, owning_feature=None, first=False):
-        is_ref = '$ref' in d
+        is_ref = self.ref_tag in d
         if is_ref:
-            return Ecore.EProxy(path=d['$ref'], resource=self)
-        excludes = ['eClass', '$ref', 'uuid']
+            return Ecore.EProxy(path=d[self.ref_tag], resource=self)
+        excludes = ['eClass', self.ref_tag, 'uuid']
         if 'eClass' in d:
             uri_eclass = d['eClass']
             eclass = self.resolve_eclass(uri_eclass)
