@@ -27,7 +27,7 @@ setup(
     install_requires=['enum34;python_version<"3.4"',
                       'ordered-set',
                       'lxml'],
-    tests_require={'pytest'},
+    tests_require=['pytest'],
     license='BSD 3-Clause',
     classifiers=[
         'Development Status :: 4 - Beta',
