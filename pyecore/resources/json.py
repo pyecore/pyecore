@@ -1,10 +1,20 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
-from functools import lru_cache
+from __future__ import absolute_import
+try:
+    from enum34 import unique, Enum
+except ImportError:
+    from enum import unique, Enum
+from backports.functools_lru_cache import lru_cache
 import json
 from .resource import Resource
 from .. import ecore as Ecore
+
+
+@unique
+class JsonOptions(Enum):
+    SERIALIZE_DEFAULT_VALUES = 0
 
 
 class JsonResource(Resource):
@@ -25,12 +35,14 @@ class JsonResource(Resource):
             self.process_inst(inst, refs)
         self._load_href.clear()
 
-    def save(self, output=None):
+    def save(self, output=None, options=None):
+        self.options = options or {}
         stream = self.open_out_stream(output)
         root = self.contents[0]  # Only single root atm
         stream.write(json.dumps(self.to_dict(root), indent=self.indent)
                      .encode('utf-8'))
         self.uri.close_stream()
+        self.options = None
 
     def _uri_fragment(self, obj):
         if obj.eResource == self:
@@ -70,7 +82,9 @@ class JsonResource(Resource):
                 if attr.eOpposite is containingFeature:
                     continue
             value = obj.eGet(attr)
-            if value == attr.get_default_value():
+            serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
+            if (not self.options.get(serialize_default_option, False) and
+                    value == attr.get_default_value()):
                 continue
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
             if self.use_uuid:
