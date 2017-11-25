@@ -689,9 +689,19 @@ def test_edatatype_instanceClass():
     Integer = EDataType('Integer', instanceClassName='java.lang.Integer')
     assert Integer.eType is int
     assert Integer.type_as_factory is False
-    assert Integer.default_value == 0
+    assert Integer.default_value is None
     assert Integer.instanceClassName == 'java.lang.Integer'
     assert Integer.to_string(45) == '45'
+
+    Integer = EDataType('Integer', instanceClassName='int')
+    assert Integer.eType is int
+    assert Integer.type_as_factory is False
+    assert Integer.default_value is 0
+    assert Integer.instanceClassName == 'int'
+    assert Integer.to_string(45) == '45'
+
+
+def test_edatatype_instanceClass_unknown():
     Unknown = EDataType('Unknown', instanceClassName='unknown')
     assert Unknown.eType is object
     assert Unknown.type_as_factory is True

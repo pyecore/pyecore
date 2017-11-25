@@ -119,6 +119,7 @@ find in this page, and more:
 
 https://pyecore.readthedocs.io/en/latest/
 
+You can also find on this page a part of the Documentation:
 
 .. contents:: :depth: 2
 
@@ -1108,10 +1109,10 @@ to run the tests simply run:
 Liberty Regarding the Java EMF Implementation
 =============================================
 
-* There is some meta-property that are not still coded inside PyEcore. More will come with time,
-* ``Resource`` can only contain a single root at the moment,
-* External resources (like ``http://www.eclipse.org/emf/2003/XMLType``) must be create by hand an loaded in the ``global_registry`` or as a ``resource`` of a ``ResourceSet``,
+* There is some meta-property that could be missing inside PyEcore. If you see one missing, please open a new ticket!
+* ``Resource`` can only contain a single root at the moment.
 * Proxies are not "removed" once resolved as in the the Java version, instead they acts as transparent proxies and redirect each calls to the 'proxied' object.
+* PyEcore is able to automatically load some model/metamodel dependencies on its own.
 
 State
 =====
@@ -1141,16 +1142,18 @@ In the current state, the project implements:
 * EMF basic command stack,
 * EMF very basic Editing Domain,
 * JSON import (simple JSON format),
-* JSON export (simple JSON format).
+* JSON export (simple JSON format),
+* introduce behavior @runtime,
+* resources auto-load for some cross-references.
 
 The things that are in the roadmap:
 
 * new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
 * new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
-* multiple roots models,
+* multiple roots ressources,
 * derived collections,
 * URI mapper,
-* documentation,
+* improve documentation,
 * copy/paste (?).
 
 Existing Projects

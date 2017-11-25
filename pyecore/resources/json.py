@@ -1,19 +1,29 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
+try:
+    from enum34 import unique, Enum
+except ImportError:
+    from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource
 from .. import ecore as Ecore
 
 
+@unique
+class JsonOptions(Enum):
+    SERIALIZE_DEFAULT_VALUES = 0
+
+
 class JsonResource(Resource):
-    def __init__(self, uri=None, use_uuid=False, indent=None):
+    def __init__(self, uri=None, use_uuid=False, indent=None, ref_tag='$ref'):
         super().__init__(uri, use_uuid)
         self._resolve_later = []
         self._already_saved = []
         self._load_href = {}
         self.indent = indent
+        self.ref_tag = ref_tag
 
     def load(self):
         json_value = self.uri.create_instream()
@@ -24,12 +34,14 @@ class JsonResource(Resource):
             self.process_inst(inst, refs)
         self._load_href.clear()
 
-    def save(self, output=None):
+    def save(self, output=None, options=None):
+        self.options = options or {}
         stream = self.open_out_stream(output)
         root = self.contents[0]  # Only single root atm
         stream.write(json.dumps(self.to_dict(root), indent=self.indent)
                      .encode('utf-8'))
         self.uri.close_stream()
+        self.options = None
 
     def _uri_fragment(self, obj):
         if obj.eResource == self:
@@ -52,7 +64,8 @@ class JsonResource(Resource):
             resource_uri = ''
         else:
             resource_uri = obj.eResource.uri if obj.eResource else ''
-        ref['$ref'] = '{}{}'.format(resource_uri, self._uri_fragment(obj))
+        ref[self.ref_tag] = '{}{}'.format(resource_uri,
+                                          self._uri_fragment(obj))
         return ref
 
     def _to_dict_from_obj(self, obj):
@@ -68,7 +81,9 @@ class JsonResource(Resource):
                 if attr.eOpposite is containingFeature:
                     continue
             value = obj.eGet(attr)
-            if value == attr.get_default_value():
+            serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
+            if (not self.options.get(serialize_default_option, False) and
+                    value == attr.get_default_value()):
                 continue
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
             if self.use_uuid:
@@ -96,10 +111,10 @@ class JsonResource(Resource):
         return decoders.resolve(uri_eclass, self)
 
     def to_obj(self, d, owning_feature=None, first=False):
-        is_ref = '$ref' in d
+        is_ref = self.ref_tag in d
         if is_ref:
-            return Ecore.EProxy(path=d['$ref'], resource=self)
-        excludes = ['eClass', '$ref', 'uuid']
+            return Ecore.EProxy(path=d[self.ref_tag], resource=self)
+        excludes = ['eClass', self.ref_tag, 'uuid']
         if 'eClass' in d:
             uri_eclass = d['eClass']
             eclass = self.resolve_eclass(uri_eclass)

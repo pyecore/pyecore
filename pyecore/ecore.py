@@ -336,8 +336,7 @@ class EValue(PyEcoreValue):
                              feature=efeature,
                              kind=Kind.UNSET if value is None else Kind.SET)
         owner.notify(notif)
-        if value != efeature.get_default_value:
-            owner._isset.add(efeature)
+        owner._isset.add(efeature)
 
         if not isinstance(efeature, EReference):
             return
@@ -379,8 +378,7 @@ class EValue(PyEcoreValue):
                   _set(owner, update_opposite=False)
             notif.kind = Kind.SET
             value.notify(notif)
-            if eOpposite.get_default_value != owner:
-                value._isset.add(eOpposite)
+            value._isset.add(eOpposite)
 
 
 class ECollection(PyEcoreValue):
@@ -727,20 +725,20 @@ class EDataType(EClassifier):
                     'int': (int, False, 0),
                     'long': (int, False, 0),
                     'float': (float, False, 0.0),
-                    'java.lang.Short': (int, False, 0),
-                    'java.lang.Long': (int, False, 0),
-                    'java.lang.Float': (float, False, 0.0),
-                    'java.lang.Integer': (int, False, 0),
+                    'java.lang.Short': (int, False, None),
+                    'java.lang.Long': (int, False, None),
+                    'java.lang.Float': (float, False, None),
+                    'java.lang.Integer': (int, False, None),
                     'java.lang.Class': (type, False, None),
                     'java.lang.Object': (object, False, None),
                     'java.util.Map': (dict, True, None),
                     'java.util.Map$Entry': (dict, True, None),
                     'double': (float, False, 0.0),
-                    'java.lang.Double': (float, False, 0.0),
+                    'java.lang.Double': (float, False, None),
                     'char': (str, False, ''),
-                    'java.lang.Character': (str, False, ''),
+                    'java.lang.Character': (str, False, None),
                     'byte[]': (bytearray, True, None),
-                    'java.lang.Byte': (int, False, 0),
+                    'java.lang.Byte': (int, False, None),
                     'java.util.Date': (datetime, False, None),
                     'org.eclipse.emf.common.util.EList': (list, True, None),
                     'org.eclipse.emf.ecore.util.FeatureMap': (dict,
@@ -1259,21 +1257,20 @@ EString._isset.add(ENamedElement.name)  # special case
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
                      from_string=lambda x: x in ['True', 'true'])
-EBooleanObject = EDataType('EBooleanObject', bool, False,
+EBooleanObject = EDataType('EBooleanObject', bool,
                            to_string=lambda x: str(x).lower(),
                            from_string=lambda x: x in ['True', 'true'])
 EInteger = EDataType('EInteger', int, 0, from_string=lambda x: int(x))
 EInt = EDataType('EInt', int, 0, from_string=lambda x: int(x))
 ELong = EDataType('ELong', int, 0, from_string=lambda x: int(x))
-ELongObject = EDataType('ELongObject', int, 0, from_string=lambda x: int(x))
+ELongObject = EDataType('ELongObject', int, from_string=lambda x: int(x))
 EIntegerObject = EDataType('EIntegerObject', int, from_string=lambda x: int(x))
 EBigInteger = EDataType('EBigInteger', int, from_string=lambda x: int(x))
 EDouble = EDataType('EDouble', float, 0.0, from_string=lambda x: float(x))
-EDoubleObject = EDataType('EDoubleObject', float, 0.0,
+EDoubleObject = EDataType('EDoubleObject', float,
                           from_string=lambda x: float(x))
 EFloat = EDataType('EFloat', float, 0.0, from_string=lambda x: float(x))
-EFloatObject = EDataType('EFloatObject', float, 0.0,
-                         from_string=lambda x: float(x))
+EFloatObject = EDataType('EFloatObject', float, from_string=lambda x: float(x))
 EStringToStringMapEntry = EDataType('EStringToStringMapEntry', dict,
                                     type_as_factory=True)
 EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
