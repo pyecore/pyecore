@@ -1,12 +1,11 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
-from __future__ import absolute_import
 try:
     from enum34 import unique, Enum
 except ImportError:
     from enum import unique, Enum
-from backports.functools_lru_cache import lru_cache
+from functools import lru_cache
 import json
 from .resource import Resource
 from .. import ecore as Ecore

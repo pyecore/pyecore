@@ -4,6 +4,14 @@ Changelog
 0.7.6
 +++++
 
+**Features**
+
+- Add options support for JSON serialization. Currently, the only JSON
+  serialization option that is added is: ``SERIALIZE_DEFAULT_VALUE``. This
+  option allows the user to serialize feature values that are equal to the
+  default ones.
+
+
 **Bugfixes**
 
 - Fix bad default value for ``xxxObject`` data types. These data types (e.g:

@@ -1,8 +1,9 @@
 import pytest
 import os
+import json
 import pyecore.ecore as Ecore
 from pyecore.resources import *
-from pyecore.resources.json import JsonResource
+from pyecore.resources.json import JsonResource, JsonOptions
 
 
 @pytest.fixture(scope='module')
@@ -105,7 +106,7 @@ def test_json_resource_createSaveModifyRead(tmpdir, lib):
 
 # Defines a small metamodel
 eClass = Ecore.EPackage('pack', nsURI='http://test_pack/1.0', nsPrefix='pack')
-
+nsURI = 'http://tst/1.0'
 
 @Ecore.EMetaclass
 class A(object):
@@ -120,6 +121,13 @@ A.imply.eType = A
 A.ref_by.eType = A
 
 
+@Ecore.EMetaclass
+class Point(object):
+    x = Ecore.EAttribute(eType=Ecore.EDouble)
+    y = Ecore.EAttribute(eType=Ecore.EDouble)
+    z = Ecore.EAttribute(eType=Ecore.EDouble)
+
+
 def test_json_resource_save_static_metamodel(tmpdir):
     f = tmpdir.mkdir('pyecore-tmp').join('test.json')
     resource = JsonResource(URI(str(f)))
@@ -132,7 +140,23 @@ def test_json_resource_save_static_metamodel(tmpdir):
     resource = JsonResource(URI(str(f)))
     resource.load()
     assert resource.contents != []
-    assert len(resource.contents[0].eContents) == 1
+    assert len(resource.contents[0].eContents) == 2
 
     root = resource.contents[0]
     assert root.eContents[0].name == 'A'
+
+
+def test_json_option_serialize_default_values(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)))
+
+    p = Point()
+    p.x = 0.0
+    p.z = 0.0
+    resource.append(p)
+    resource.save(options={JsonOptions.SERIALIZE_DEFAULT_VALUES: True})
+
+    dct = json.load(open(str(f)))
+    assert dct['x'] == 0.0
+    assert dct['z'] == 0.0
+    assert 'y' not in dct
