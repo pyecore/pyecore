@@ -1,6 +1,21 @@
 Changelog
 ---------
 
+0.7.7
++++++
+
+**Bugfixes**
+
+- Improve ``EClass`` dynamic modifications. The ``__init__`` method of the
+  ``EClass`` was responsible for the registration of an 'eternal_listener'
+  (a listener that cannot be removed. In case the ``EClass`` instance was
+  created using ``__new__`` then using ``__init__`` to set some values in the
+  parameter, the listener was registered **after** the set of some values.
+  This implies that some modifications (name modification for example)
+  couldn't be took into account in the method that sync the python class with
+  the ``EClass`` instance.
+
+
 0.7.6
 +++++
 
