@@ -11,7 +11,7 @@ except ImportError:
 
 class ENotifer(object):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
 
     def notify(self, notification):
         notification.notifier = notification.notifier or self
