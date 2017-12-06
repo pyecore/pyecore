@@ -1,10 +1,7 @@
 """
 The json module introduces JSON resource and JSON parsing.
 """
-try:
-    from enum34 import unique, Enum
-except ImportError:
-    from enum import unique, Enum
+from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource

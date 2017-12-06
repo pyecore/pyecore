@@ -3,15 +3,12 @@ This module gives the "listener" classes for the PyEcore notification layer.
 The main class to create a new listener is "EObserver" which is triggered
 each time a modification is perfomed on an observed element.
 """
-try:
-    from enum34 import unique, Enum
-except ImportError:
-    from enum import unique, Enum
+from enum import unique, Enum
 
 
 class ENotifer(object):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
 
     def notify(self, notification):
         notification.notifier = notification.notifier or self
