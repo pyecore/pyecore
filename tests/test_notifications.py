@@ -58,3 +58,22 @@ def test_notification_delete_onecall():
     assert o2.calls == 1
     assert o2.kind == Kind.UNSET
     assert o2.feature is EClassifier.ePackage
+
+
+def test_notification_only_one_with_opposites():
+    @EMetaclass
+    class A(object):
+        tob = EReference()
+
+    @EMetaclass
+    class B(object):
+        toa = EReference(eType=A, upper=-1, eOpposite=A.tob)
+
+    A.tob.eType = B
+
+    a = A()
+    b = B()
+    o1 = ObserverCounter(notifier=a)
+
+    a.tob = b
+    assert o1.calls == 1
