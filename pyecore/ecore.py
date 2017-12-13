@@ -355,25 +355,25 @@ class EValue(PyEcoreValue):
                 previous_value._inverse_rels.remove(couple)
             return
 
+        eOpposite = efeature.eOpposite
         # if we are in an 'unset' context
         if value is None:
-            eOpposite = efeature.eOpposite
-            if previous_value and eOpposite.many:
+            if previous_value is None:
+                return
+            if eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
                       .remove(owner, update_opposite=False)
-            elif previous_value:
+            else:
                 object.__setattr__(previous_value, eOpposite.name, None)
-            return
-
-        eOpposite = efeature.eOpposite
-        previous_value = value.__getattribute__(eOpposite.name)
-        if eOpposite.many:
-            value.__getattribute__(eOpposite.name) \
-                 .append(owner, update_opposite=False)
         else:
-            # We disable the eOpposite update
-            value.__dict__[eOpposite.name]. \
-                  _set(owner, update_opposite=False)
+            previous_value = value.__getattribute__(eOpposite.name)
+            if eOpposite.many:
+                value.__getattribute__(eOpposite.name) \
+                     .append(owner, update_opposite=False)
+            else:
+                # We disable the eOpposite update
+                value.__dict__[eOpposite.name]. \
+                      _set(owner, update_opposite=False)
 
 
 class ECollection(PyEcoreValue):
