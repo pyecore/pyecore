@@ -1,8 +1,13 @@
 Changelog
 ---------
 
-0.7.7
+0.7.8
 +++++
+
+**Features**
+
+- Add missing ``eAllAttributes()`` method for retriving all
+  ``eStructuralFeatures`` that are ``EAttributes``.
 
 **Bugfixes**
 
