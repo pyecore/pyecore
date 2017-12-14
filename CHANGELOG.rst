@@ -6,6 +6,17 @@ Changelog
 
 **Bugfixes**
 
+- Fix issue with double notification for x..1--x..* opposite references. When a
+  relationship with an eOpposite involving a x..1 and a x..* relationship, in
+  case the x..1 was set, the x..* opposite update was doing a "double set",
+  thus throwing two times the notification.
+
+
+0.7.7
++++++
+
+**Bugfixes**
+
 - Improve ``EClass`` dynamic modifications. The ``__init__`` method of the
   ``EClass`` was responsible for the registration of an 'eternal_listener'
   (a listener that cannot be removed. In case the ``EClass`` instance was
