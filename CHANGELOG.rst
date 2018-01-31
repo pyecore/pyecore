@@ -1,6 +1,22 @@
 Changelog
 ---------
 
+0.7.8
++++++
+
+**Features**
+
+- Add missing ``eAllAttributes()`` method for retriving all
+  ``eStructuralFeatures`` that are ``EAttributes``.
+
+**Bugfixes**
+
+- Fix issue with double notification for x..1--x..* opposite references. When a
+  relationship with an eOpposite involving a x..1 and a x..* relationship, in
+  case the x..1 was set, the x..* opposite update was doing a "double set",
+  thus throwing two times the notification.
+
+
 0.7.7
 +++++
 

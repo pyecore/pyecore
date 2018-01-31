@@ -355,30 +355,25 @@ class EValue(PyEcoreValue):
                 previous_value._inverse_rels.remove(couple)
             return
 
+        eOpposite = efeature.eOpposite
         # if we are in an 'unset' context
         if value is None:
-            eOpposite = efeature.eOpposite
-            if previous_value and eOpposite.many:
+            if previous_value is None:
+                return
+            if eOpposite.many:
                 object.__getattribute__(previous_value, eOpposite.name) \
                       .remove(owner, update_opposite=False)
-            elif previous_value:
+            else:
                 object.__setattr__(previous_value, eOpposite.name, None)
-            return
-
-        eOpposite = efeature.eOpposite
-        previous_value = value.__getattribute__(eOpposite.name)
-        notif = Notification(new=owner, feature=eOpposite)
-        if eOpposite.many:
-            value.__getattribute__(eOpposite.name).append(owner)
-            notif.kind = Kind.ADD
-            value.notify(notif)
         else:
-            # We disable the eOpposite update
-            value.__dict__[eOpposite.name]. \
-                  _set(owner, update_opposite=False)
-            notif.kind = Kind.SET
-            value.notify(notif)
-            value._isset.add(eOpposite)
+            previous_value = value.__getattribute__(eOpposite.name)
+            if eOpposite.many:
+                value.__getattribute__(eOpposite.name) \
+                     .append(owner, update_opposite=False)
+            else:
+                # We disable the eOpposite update
+                value.__dict__[eOpposite.name]. \
+                      _set(owner, update_opposite=False)
 
 
 class ECollection(PyEcoreValue):
@@ -422,8 +417,8 @@ class ECollection(PyEcoreValue):
                  ._set(new_value, update_opposite=False)
 
     def remove(self, value, update_opposite=True):
+        self._update_container(None, previous_value=value)
         if update_opposite:
-            self._update_container(None, previous_value=value)
             self._update_opposite(value, self._owner, remove=True)
         super().remove(value)
         self._owner.notify(Notification(old=value,
@@ -475,8 +470,8 @@ class EList(ECollection, list):
 
     def append(self, value, update_opposite=True):
         self.check(value)
+        self._update_container(value)
         if update_opposite:
-            self._update_container(value)
             self._update_opposite(value, self._owner)
         super().append(value)
         self._owner.notify(Notification(new=value,
@@ -547,8 +542,8 @@ class EAbstractSet(ECollection):
 
     def add(self, value, update_opposite=True):
         self.check(value)
+        self._update_container(value)
         if update_opposite:
-            self._update_container(value)
             self._update_opposite(value, self._owner)
         super().add(value)
         if not self._orderedset_update:
@@ -1095,6 +1090,10 @@ class EClass(EClassifier):
     def eAllReferences(self):
         return set((x for x in self._eAllStructuralFeatures_gen()
                     if isinstance(x, EReference)))
+
+    def eAllAttributes(self):
+        return set((x for x in self._eAllStructuralFeatures_gen()
+                    if isinstance(x, EAttribute)))
 
     def _eAllOperations_gen(self):
         for x in self.eOperations:

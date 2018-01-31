@@ -956,3 +956,14 @@ def test_edatatype_direct_isinstance():
 def test_eenum_isinstance():
     MyEnum = EEnum('MyEnum', literals=('A', 'B', 'C'))
     assert isinstance(MyEnum.A, MyEnum)
+
+
+def test_eall_ref_attrs():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    A.eStructuralFeatures.append(EReference('toa', A))
+
+    B = EClass('B', superclass=(A,))
+
+    assert B.eAllReferences() == {A.eStructuralFeatures[1]}
+    assert B.eAllAttributes() == {A.eStructuralFeatures[0]}
