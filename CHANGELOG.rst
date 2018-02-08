@@ -1,8 +1,27 @@
 Changelog
 ---------
 
-0.7.8
-+++++
+0.7.12
+++++++
+
+**Features**
+
+- Add option for specific XMI "type" field serialization. XMI uses a special
+  field to encode the type of the element. This field is almost always named:
+  ``xsi:type``, but in some cases, ``xmi:type`` is used instead. To deal with such
+  cases, an option is now available: ``XMIOptions.OPTION_USE_XMI_TYPE``.
+
+**Bugfixes**
+-  Add missing 'type' field for XMI href serialization. The 'xsi:type' field is
+   required when a crossreference is serialized. This field is used to check if
+   the resolved resource has the right type (not really, but it help). This
+   field is kinda optional at the moment for PyEcore, but required for Java-EMF,
+   otherwise the EMF will not be able to create the right proxy for the
+   crossreferenced resource.
+
+
+0.7.8/0.7.11
+++++++++++++
 
 **Features**
 
