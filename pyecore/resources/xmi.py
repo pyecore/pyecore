@@ -32,10 +32,7 @@ class XMIResource(Resource):
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
 
-        type_prefix = XSI
-        if self.options.get(XMIOptions.OPTION_USE_XMI_TYPE, False):
-            type_prefix = XMI
-        self.xsitype = '{{{0}}}type'.format(self.prefixes.get(type_prefix))
+        self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
         self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
@@ -68,7 +65,13 @@ class XMIResource(Resource):
             return feat
 
     def _type_attribute(self, node):
-        return node.get(self.xsitype)
+        type_ = node.get(self.xsitype)
+        if type_ is None:
+            xmi_type_url = '{{{0}}}type'.format(self.prefixes.get(XMI))
+            type_ = node.get(xmi_type_url)
+            if type_ is not None:
+                self.xsitype = xmi_type_url
+        return type_
 
     def _init_modelroot(self, xmlroot):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
@@ -142,7 +145,7 @@ class XMIResource(Resource):
             proxy = Ecore.EProxy(path=ref, resource=self)
             return (feature_container, proxy, [], [])
         if self._type_attribute(node):
-            prefix, _type = node.get(self.xsitype).split(':')
+            prefix, _type = self._type_attribute(node).split(':')
             if not prefix:
                 raise ValueError('Prefix {0} is not registered, line {1}'
                                  .format(prefix, node.tag))
