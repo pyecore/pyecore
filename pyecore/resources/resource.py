@@ -386,7 +386,7 @@ class Resource(object):
         if isinstance(obj, type):
             obj = obj.eClass
 
-        if isinstance(obj, Ecore.EProxy) and not obj._resolved:
+        if isinstance(obj, Ecore.EProxy) and not obj.resolved:
             return (obj._proxy_path, True)
 
         if obj.eResource != self:

@@ -276,11 +276,16 @@ class XMIResource(Resource):
                    encoding=tree.docinfo.encoding)
         self.uri.close_stream()
 
+    def _add_explicit_type(self, node, obj):
+        xsi_type = etree.QName(XSI_URL, 'type')
+        uri = obj.eClass.ePackage.nsURI
+        prefix = self.reverse_nsmap[uri]
+        node.attrib[xsi_type] = '{0}:{1}'.format(prefix, obj.eClass.name)
+
     def _go_across(self, obj):
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
             epackage = eclass.ePackage
-            prefix = epackage.nsPrefix
             nsURI = epackage.nsURI
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {XMI: XMI_URL,
@@ -292,11 +297,8 @@ class XMIResource(Resource):
         else:
             node = etree.Element(obj.eContainmentFeature().name)
             if obj.eContainmentFeature().eType != eclass:
-                xsi_type = etree.QName(XSI_URL, 'type')
-                uri = eclass.ePackage.nsURI
-                prefix = self.reverse_nsmap[uri]
-                node.attrib[xsi_type] = '{0}:{1}' \
-                                        .format(prefix, eclass.name)
+                self._add_explicit_type(node, obj)
+
         if self.use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(XMI_URL)
@@ -342,11 +344,13 @@ class XMIResource(Resource):
                     for ref in crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = ref
+                        self._add_explicit_type(sub, value)
                 else:
                     frag, is_crossref = self._build_path_from(value)
                     if is_crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = frag
+                        self._add_explicit_type(sub, value)
                     else:
                         node.attrib[feat.name] = frag
 
