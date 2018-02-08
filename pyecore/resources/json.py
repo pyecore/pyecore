@@ -22,7 +22,7 @@ class JsonResource(Resource):
         self.indent = indent
         self.ref_tag = ref_tag
 
-    def load(self):
+    def load(self, options=None):
         json_value = self.uri.create_instream()
         d = json.loads(json_value.read().decode('utf-8'))
         self.to_obj(d, first=True)

@@ -1,7 +1,7 @@
 import pytest
 import pyecore.ecore as Ecore
 from pyecore.resources import *
-from pyecore.resources.xmi import XMIResource
+from pyecore.resources.xmi import XMIResource, XMIOptions
 from pyecore.resources.resource import HttpURI
 from pyecore.utils import DynamicEPackage
 from os import path
@@ -215,3 +215,19 @@ def test_ecore_nonhref_external_resources_autoload():
     A = root.getEClassifier('A')
     assert A
     assert len(A.eSuperTypes) == 2
+
+
+def test_xmi_ecore_load_option_xmitype():
+    rset = ResourceSet()
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'My2.ecore')
+    options = {XMIOptions.OPTION_USE_XMI_TYPE: True}
+    root = rset.get_resource(a_ecore, options=options).contents[0]
+    assert root
+
+    A = root.getEClassifier('A')
+    assert A
+    assert len(A.eStructuralFeatures) == 2
+
+    rset2 = ResourceSet()
+    with pytest.raises(Exception):
+        rset2.get_resource(a_ecore)
