@@ -69,7 +69,7 @@ class ResourceSet(object):
             if value is resource:
                 del self.resources[key]
 
-    def get_resource(self, uri):
+    def get_resource(self, uri, options=None):
         if isinstance(uri, str):
             uri = URI(uri)
         # We check first if the resource already exists in the ResourceSet
@@ -78,7 +78,7 @@ class ResourceSet(object):
         # If not, we create a new resource
         resource = self.create_resource(uri)
         try:
-            resource.load()
+            resource.load(options=options)
         except Exception as e:
             self.remove_resource(resource)
             raise
@@ -386,7 +386,7 @@ class Resource(object):
         if isinstance(obj, type):
             obj = obj.eClass
 
-        if isinstance(obj, Ecore.EProxy) and not obj._resolved:
+        if isinstance(obj, Ecore.EProxy) and not obj.resolved:
             return (obj._proxy_path, True)
 
         if obj.eResource != self:

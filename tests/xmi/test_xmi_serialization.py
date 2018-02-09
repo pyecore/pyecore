@@ -2,7 +2,7 @@ import pytest
 import os
 import pyecore.ecore as Ecore
 from pyecore.resources import *
-from pyecore.resources.xmi import XMIResource
+from pyecore.resources.xmi import XMIResource, XMIOptions
 
 
 @pytest.fixture(scope='module')
@@ -97,3 +97,28 @@ def test_xmi_ecore_save_load(tmpdir):
     root = resource.contents[0]
     assert root.name == 'test'
     assert root.getEClassifier('A') is not None
+
+
+def test_xmi_ecore_save_option_xmitype(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('xmitype.xmi')
+    resource = XMIResource(URI(str(f)))
+
+    resource.append(eClass)
+    resource.save(options={XMIOptions.OPTION_USE_XMI_TYPE: True})
+
+    has_xmi_type = False
+    with open(str(f)) as output:
+        for line in output:
+            if 'xmi:type="' in line:
+                has_xmi_type = True
+                break
+    assert has_xmi_type
+
+    resource.save()
+    has_xmi_type = False
+    with open(str(f)) as output:
+        for line in output:
+            if 'xmi:type="' in line:
+                has_xmi_type = True
+                break
+    assert has_xmi_type is False

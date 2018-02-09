@@ -625,6 +625,25 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource.save()
 
 
+Altering XMI ``xsi:type`` serialization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When an XMI resource is serialized, information about the type of each element
+is inserted in the file. By default, the field ``xsi:type`` is used, but in some
+cases, you could want to change this field name to ``xmi:type``. To perform such
+a switch, you can pass option to the resource serialization.
+
+.. code-block:: python
+
+    from pyecore.resources.XMI import XMIOptions
+
+    # ... we assume we have a 'XMIResource' in the 'resource' variable
+    options = {
+        XMIOptions.OPTION_USE_XMI_TYPE: True
+    }
+    resource.save(options=options)
+
+
 Dealing with JSON Resources
 ---------------------------
 

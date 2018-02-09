@@ -1,6 +1,7 @@
 """
 The xmi module introduces XMI resource and XMI parsing.
 """
+from enum import unique, Enum
 from lxml import etree
 from .resource import Resource
 from .. import ecore as Ecore
@@ -11,6 +12,11 @@ XMI = 'xmi'
 XMI_URL = 'http://www.omg.org/XMI'
 
 
+@unique
+class XMIOptions(Enum):
+    OPTION_USE_XMI_TYPE = 0
+
+
 class XMIResource(Resource):
     def __init__(self, uri=None, use_uuid=False):
         super().__init__(uri, use_uuid)
@@ -19,14 +25,15 @@ class XMIResource(Resource):
         self.prefixes = {}
         self.reverse_nsmap = {}
 
-    def load(self):
+    def load(self, options=None):
+        self.options = options or {}
         tree = etree.parse(self.uri.create_instream())
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
 
-        XMIResource.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
-        XMIResource.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
+        self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
+        self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
         # Decode the XMI
         modelroot = self._init_modelroot(xmlroot)
         if not self.contents:
@@ -37,6 +44,11 @@ class XMIResource(Resource):
         self._decode_ereferences()
         self._clean_registers()
         self.uri.close_stream()
+
+    def xsi_type_url(self):
+        if self.options.get(XMIOptions.OPTION_USE_XMI_TYPE, False):
+            return XMI_URL
+        return XSI_URL
 
     @staticmethod
     def extract_namespace(tag):
@@ -53,7 +65,13 @@ class XMIResource(Resource):
             return feat
 
     def _type_attribute(self, node):
-        return node.get(XMIResource.xsitype)
+        type_ = node.get(self.xsitype)
+        if type_ is None:
+            xmi_type_url = '{{{0}}}type'.format(self.prefixes.get(XMI))
+            type_ = node.get(xmi_type_url)
+            if type_ is not None:
+                self.xsitype = xmi_type_url
+        return type_
 
     def _init_modelroot(self, xmlroot):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
@@ -62,7 +80,7 @@ class XMIResource(Resource):
             raise TypeError('{0} EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
-        self.use_uuid = xmlroot.get(XMIResource.xmiid) is not None
+        self.use_uuid = xmlroot.get(self.xmiid) is not None
         self.contents.append(modelroot)
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
@@ -127,7 +145,7 @@ class XMIResource(Resource):
             proxy = Ecore.EProxy(path=ref, resource=self)
             return (feature_container, proxy, [], [])
         if self._type_attribute(node):
-            prefix, _type = node.get(XMIResource.xsitype).split(':')
+            prefix, _type = self._type_attribute(node).split(':')
             if not prefix:
                 raise ValueError('Prefix {0} is not registered, line {1}'
                                  .format(prefix, node.tag))
@@ -180,7 +198,7 @@ class XMIResource(Resource):
         if prefix == 'xmi' and att_name == 'id':
             owner._xmiid = value
             self.uuid_dict[value] = owner
-        elif prefix == 'xsi' and att_name == 'type':
+        elif prefix in ('xsi', 'xmi') and att_name == 'type':
             # type has already been handled
             pass
         elif namespace:
@@ -256,7 +274,8 @@ class XMIResource(Resource):
         nsURI = epackage.nsURI
         self.register_nsmap(prefix, nsURI)
 
-    def save(self, output=None):
+    def save(self, output=None, options=None):
+        self.options = options or {}
         output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
@@ -276,11 +295,16 @@ class XMIResource(Resource):
                    encoding=tree.docinfo.encoding)
         self.uri.close_stream()
 
+    def _add_explicit_type(self, node, obj):
+        xsi_type = etree.QName(self.xsi_type_url(), 'type')
+        uri = obj.eClass.ePackage.nsURI
+        prefix = self.reverse_nsmap[uri]
+        node.attrib[xsi_type] = '{0}:{1}'.format(prefix, obj.eClass.name)
+
     def _go_across(self, obj):
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
             epackage = eclass.ePackage
-            prefix = epackage.nsPrefix
             nsURI = epackage.nsURI
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {XMI: XMI_URL,
@@ -292,11 +316,8 @@ class XMIResource(Resource):
         else:
             node = etree.Element(obj.eContainmentFeature().name)
             if obj.eContainmentFeature().eType != eclass:
-                xsi_type = etree.QName(XSI_URL, 'type')
-                uri = eclass.ePackage.nsURI
-                prefix = self.reverse_nsmap[uri]
-                node.attrib[xsi_type] = '{0}:{1}' \
-                                        .format(prefix, eclass.name)
+                self._add_explicit_type(node, obj)
+
         if self.use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(XMI_URL)
@@ -342,11 +363,13 @@ class XMIResource(Resource):
                     for ref in crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = ref
+                        self._add_explicit_type(sub, value)
                 else:
                     frag, is_crossref = self._build_path_from(value)
                     if is_crossref:
                         sub = etree.SubElement(node, feat.name)
                         sub.attrib['href'] = frag
+                        self._add_explicit_type(sub, value)
                     else:
                         node.attrib[feat.name] = frag
 
