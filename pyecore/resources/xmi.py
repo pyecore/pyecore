@@ -82,6 +82,7 @@ class XMIResource(Resource):
         modelroot._eresource = self
         self.use_uuid = xmlroot.get(self.xmiid) is not None
         self.contents.append(modelroot)
+        erefs = []
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
@@ -96,11 +97,26 @@ class XMIResource(Resource):
                 except KeyError:
                     pass
             elif not namespace:
-                feature = self._find_in_metacache(eobject, key)
+                feature = self._find_in_metacache(modelroot, key)
                 if not feature:
                     continue
-                modelroot.__setattr__(key, value)
+                if isinstance(feature, Ecore.EAttribute):
+                    self._decode_eattribute_value(modelroot, feature, value)
+                else:
+                    erefs.append((feature, value))
+        if erefs:
+            self._later.append((modelroot, erefs))
         return modelroot
+
+    @staticmethod
+    def _decode_eattribute_value(eobject, eattribute, value):
+        if eattribute.many:
+            values = value.split()
+            results = [eattribute.eType.from_string(x) for x in values]
+            eobject.__getattribute__(eattribute.name).extend(results)
+        else:
+            val = eattribute.eType.from_string(value)
+            eobject.__setattr__(eattribute.name, val)
 
     def _decode_eobject(self, current_node, parent_eobj):
         eobject_info = self._decode_node(parent_eobj, current_node)
@@ -110,12 +126,7 @@ class XMIResource(Resource):
 
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
-            if eattribute.many:
-                values = value.split()
-                results = [eattribute.eType.from_string(x) for x in values]
-                eobject.__getattribute__(eattribute.name).extend(results)
-            val = eattribute.eType.from_string(value)
-            eobject.__setattr__(eattribute.name, val)
+            self._decode_eattribute_value(eobject, eattribute, value)
 
         if erefs:
             self._later.append((eobject, erefs))

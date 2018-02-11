@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.7.13
+++++++
+
+**Bugfixes**
+- Fix bad ``EAttribute`` decoding for XMI root element. By default, each field
+  of an XMI root were decoded as strings instead of making use of the
+  ``from_string(...)`` method from the type of each attribute. This case is not
+  very common, but could still occur.
+
+
 0.7.12
 ++++++
 
