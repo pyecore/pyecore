@@ -226,3 +226,18 @@ def test_xmi_ecore_load_option_xmitype():
     A = root.getEClassifier('A')
     assert A
     assert len(A.eStructuralFeatures) == 2
+
+
+def test_ecore_attribute_at_root():
+    rset = ResourceSet()
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    root = rset.get_resource(a_ecore).contents[0]
+    assert root
+    print(root.getEClassifier('Root').eStructuralFeatures)
+    rset.metamodel_registry[root.nsURI] = root
+
+    a_xmi = path.join('tests', 'xmi', 'xmi-tests', 'a4.xmi')
+    root = rset.get_resource(a_xmi).contents[0]
+    assert root
+    assert root.visible
+    assert root.refa is root.a[0]

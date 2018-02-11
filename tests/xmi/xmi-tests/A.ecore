@@ -2,6 +2,8 @@
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="a" nsURI="http://A/1.0" nsPrefix="a">
   <eClassifiers xsi:type="ecore:EClass" name="Root">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="visible" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="refa" eType="#//A" />
     <eStructuralFeatures xsi:type="ecore:EReference" name="a" upperBound="-1" eType="#//A"
         containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="b" upperBound="-1" eType="#//B"
