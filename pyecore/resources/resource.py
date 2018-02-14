@@ -420,16 +420,16 @@ class Resource(object):
                 return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
         if self.use_uuid:
             self._assign_uuid(obj)
-            return (obj._xmiid, False)
+            return (obj._internal_id, False)
         return (obj.eURIFragment(), False)
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with
         # and obj has none yet (addition to the resource for example)
-        if not obj._xmiid:
+        if not obj._internal_id:
             uuid = str(uuid4())
             self.uuid_dict[uuid] = obj
-            obj._xmiid = uuid
+            obj._internal_id = uuid
 
     def append(self, root):
         if not isinstance(root, Ecore.EObject):

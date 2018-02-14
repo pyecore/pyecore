@@ -47,7 +47,7 @@ class JsonResource(Resource):
             use_id = obj.eResource and obj.eResource.use_uuid
         if use_id:
             self._assign_uuid(obj)
-            return obj._xmiid
+            return obj._internal_id
         else:
             return obj.eURIFragment()
 
@@ -85,7 +85,7 @@ class JsonResource(Resource):
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
             if self.use_uuid:
                 self._assign_uuid(obj)
-                d['uuid'] = obj._xmiid
+                d['uuid'] = obj._internal_id
         self._already_saved.append(obj)
         return d
 

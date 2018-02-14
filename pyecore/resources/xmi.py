@@ -87,7 +87,7 @@ class XMIResource(Resource):
             namespace, att_name = self.extract_namespace(key)
             prefix = self.reverse_nsmap[namespace] if namespace else None
             if prefix == 'xmi' and att_name == 'id':
-                modelroot._xmiid = value
+                modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
             elif namespace:
                 try:
@@ -207,7 +207,7 @@ class XMIResource(Resource):
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
         if prefix == 'xmi' and att_name == 'id':
-            owner._xmiid = value
+            owner._internal_id = value
             self.uuid_dict[value] = owner
         elif prefix in ('xsi', 'xmi') and att_name == 'type':
             # type has already been handled
@@ -332,7 +332,7 @@ class XMIResource(Resource):
         if self.use_uuid:
             self._assign_uuid(obj)
             xmi_id = '{{{0}}}id'.format(XMI_URL)
-            node.attrib[xmi_id] = obj._xmiid
+            node.attrib[xmi_id] = obj._internal_id
 
         for feat in obj._isset:
             if feat.derived:

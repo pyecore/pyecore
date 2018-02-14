@@ -167,7 +167,7 @@ class EObject(ENotifer):
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
-        instance._xmiid = None
+        instance._internal_id = None
         instance._isset = set()
         instance._container = None
         instance._containment_feature = None
