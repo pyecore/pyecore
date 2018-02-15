@@ -1,6 +1,17 @@
 Changelog
 ---------
 
+0.8.0
++++++
+
+**Miscellaneous**
+
+- Add new module for basic values and collections. This module contains the
+  ``ECollection`` and ``EValue`` classes. These class were formerly in the
+  ``ecore`` module, but due to further development, it is better to have it
+  into a dedicated place. This modification is retrocompatible and invisible
+  for existing manual/generated code.
+
 0.7.13
 ++++++
 
