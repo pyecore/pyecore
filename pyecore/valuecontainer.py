@@ -1,6 +1,7 @@
 from .ecore import EcoreUtils, EReference, EObject
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
+from collections import MutableSet, MutableSequence
 
 
 class BadValueError(TypeError):
@@ -13,21 +14,21 @@ class BadValueError(TypeError):
 class PyEcoreValue(object):
     def __init__(self, owner, efeature):
         super().__init__()
-        self._owner = owner
-        self._efeature = efeature
+        self.owner = owner
+        self.feature = efeature
 
     def check(self, value):
-        if not EcoreUtils.isinstance(value, self._efeature.eType):
-            raise BadValueError(value, self._efeature.eType)
+        if not EcoreUtils.isinstance(value, self.feature.eType):
+            raise BadValueError(value, self.feature.eType)
 
     def _update_container(self, value, previous_value=None):
-        if not isinstance(self._efeature, EReference):
+        if not isinstance(self.feature, EReference):
             return
-        if not self._efeature.containment:
+        if not self.feature.containment:
             return
         if isinstance(value, EObject):
-            object.__setattr__(value, '_container', self._owner)
-            object.__setattr__(value, '_containment_feature', self._efeature)
+            object.__setattr__(value, '_container', self.owner)
+            object.__setattr__(value, '_containment_feature', self.feature)
         elif previous_value:
             object.__setattr__(previous_value, '_container', value)
             object.__setattr__(previous_value, '_containment_feature', value)
@@ -45,8 +46,8 @@ class EValue(PyEcoreValue):
         self.check(value)
         previous_value = self._value
         self._value = value
-        owner = self._owner
-        efeature = self._efeature
+        owner = self.owner
+        efeature = self.feature
         notif = Notification(old=previous_value,
                              new=value,
                              feature=efeature,
@@ -111,11 +112,11 @@ class ECollection(PyEcoreValue):
         return self
 
     def _update_opposite(self, owner, new_value, remove=False):
-        if not isinstance(self._efeature, EReference):
+        if not isinstance(self.feature, EReference):
             return
-        eOpposite = self._efeature.eOpposite
+        eOpposite = self.feature.eOpposite
         if not eOpposite:
-            couple = (new_value, self._efeature)
+            couple = (new_value, self.feature)
             if remove and couple in owner._inverse_rels:
                 owner._inverse_rels.remove(couple)
             else:
@@ -135,21 +136,21 @@ class ECollection(PyEcoreValue):
     def remove(self, value, update_opposite=True):
         self._update_container(None, previous_value=value)
         if update_opposite:
-            self._update_opposite(value, self._owner, remove=True)
+            self._update_opposite(value, self.owner, remove=True)
         super().remove(value)
-        self._owner.notify(Notification(old=value,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
+        self.owner.notify(Notification(old=value,
+                                       feature=self.feature,
+                                       kind=Kind.REMOVE))
 
     def insert(self, i, y):
         self.check(y)
         self._update_container(y)
-        self._update_opposite(y, self._owner)
+        self._update_opposite(y, self.owner)
         super().insert(i, y)
-        self._owner.notify(Notification(new=y,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD))
-        self._owner._isset.add(self._efeature)
+        self.owner.notify(Notification(new=y,
+                                       feature=self.feature,
+                                       kind=Kind.ADD))
+        self.owner._isset.add(self.feature)
 
     def pop(self, index=None):
         if index is None:
@@ -157,10 +158,10 @@ class ECollection(PyEcoreValue):
         else:
             value = super().pop(index)
         self._update_container(None, previous_value=value)
-        self._update_opposite(value, self._owner, remove=True)
-        self._owner.notify(Notification(old=value,
-                                        feature=self._efeature,
-                                        kind=Kind.REMOVE))
+        self._update_opposite(value, self.owner, remove=True)
+        self.owner.notify(Notification(old=value,
+                                       feature=self.feature,
+                                       kind=Kind.REMOVE))
         return value
 
     def clear(self):
@@ -188,24 +189,24 @@ class EList(ECollection, list):
         self.check(value)
         self._update_container(value)
         if update_opposite:
-            self._update_opposite(value, self._owner)
+            self._update_opposite(value, self.owner)
         super().append(value)
-        self._owner.notify(Notification(new=value,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD))
-        self._owner._isset.add(self._efeature)
+        self.owner.notify(Notification(new=value,
+                                       feature=self.feature,
+                                       kind=Kind.ADD))
+        self.owner._isset.add(self.feature)
 
     def extend(self, sublist):
         for x in sublist:
             self.check(x)
         for value in sublist:
             self._update_container(value)
-            self._update_opposite(value, self._owner)
+            self._update_opposite(value, self.owner)
         super().extend(sublist)
-        self._owner.notify(Notification(new=sublist,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD_MANY))
-        self._owner._isset.add(self._efeature)
+        self.owner.notify(Notification(new=sublist,
+                                       feature=self.feature,
+                                       kind=Kind.ADD_MANY))
+        self.owner._isset.add(self.feature)
 
     def __setitem__(self, i, y):
         is_collection = ordered_set.is_iterable(y)
@@ -214,34 +215,34 @@ class EList(ECollection, list):
             for element in y:
                 self.check(element)
                 self._update_container(element)
-                self._update_opposite(element, self._owner)
+                self._update_opposite(element, self.owner)
             # We remove (not really) all element from the slice
             for element in sliced_elements:
                 self._update_container(None, previous_value=element)
-                self._update_opposite(element, self._owner, remove=True)
+                self._update_opposite(element, self.owner, remove=True)
             if sliced_elements and len(sliced_elements) > 1:
-                self._owner.notify(Notification(old=sliced_elements,
-                                                feature=self._efeature,
-                                                kind=Kind.REMOVE_MANY))
+                self.owner.notify(Notification(old=sliced_elements,
+                                               feature=self.feature,
+                                               kind=Kind.REMOVE_MANY))
             elif sliced_elements:
-                self._owner.notify(Notification(old=sliced_elements[0],
-                                                feature=self._efeature,
-                                                kind=Kind.REMOVE))
+                self.owner.notify(Notification(old=sliced_elements[0],
+                                               feature=self.feature,
+                                               kind=Kind.REMOVE))
 
         else:
             self.check(y)
             self._update_container(y)
-            self._update_opposite(y, self._owner)
+            self._update_opposite(y, self.owner)
         super().__setitem__(i, y)
         kind = Kind.ADD
         if is_collection and len(y) > 1:
             kind = Kind.ADD_MANY
         elif is_collection:
             y = y[0] if y else y
-        self._owner.notify(Notification(new=y,
-                                        feature=self._efeature,
-                                        kind=kind))
-        self._owner._isset.add(self._efeature)
+        self.owner.notify(Notification(new=y,
+                                       feature=self.feature,
+                                       kind=kind))
+        self.owner._isset.add(self.feature)
 
 
 class EBag(EList):
@@ -260,13 +261,13 @@ class EAbstractSet(ECollection):
         self.check(value)
         self._update_container(value)
         if update_opposite:
-            self._update_opposite(value, self._owner)
+            self._update_opposite(value, self.owner)
         super().add(value)
         if not self._orderedset_update:
-            self._owner.notify(Notification(new=value,
-                                            feature=self._efeature,
-                                            kind=Kind.ADD))
-        self._owner._isset.add(self._efeature)
+            self.owner.notify(Notification(new=value,
+                                           feature=self.feature,
+                                           kind=Kind.ADD))
+        self.owner._isset.add(self.feature)
 
     def extend(self, sublist):
         self.update(sublist)
@@ -276,12 +277,12 @@ class EAbstractSet(ECollection):
             self.check(x)
         for value in others:
             self._update_container(value)
-            self._update_opposite(value, self._owner)
+            self._update_opposite(value, self.owner)
         super().update(others)
-        self._owner.notify(Notification(new=others,
-                                        feature=self._efeature,
-                                        kind=Kind.ADD_MANY))
-        self._owner._isset.add(self._efeature)
+        self.owner.notify(Notification(new=others,
+                                       feature=self.feature,
+                                       kind=Kind.ADD_MANY))
+        self.owner._isset.add(self.feature)
 
 
 class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
@@ -297,3 +298,40 @@ class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
 
 class ESet(EOrderedSet):
     pass
+
+
+class EDerivedCollection(MutableSet, MutableSequence, ECollection):
+    @classmethod
+    def create(cls, owner, feature=None):
+        return cls(owner, feature)
+
+    def __init__(self, owner, feature=None):
+        super().__init__(owner, feature)
+
+    def __delitem__(self, index):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def __getitem__(self, index):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def __len__(self):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def __setitem__(self, index, item):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def add(self, item):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def discard(self, item):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
+
+    def insert(self, index, item):
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))

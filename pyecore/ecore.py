@@ -74,7 +74,10 @@ class EcoreUtils(object):
             return True
         elif isinstance(obj, _type):
             return True
-        return _type.__isinstance__(obj)
+        try:
+            return _type.__isinstance__(obj)
+        except AttributeError:
+            return False
 
     @staticmethod
     def getRoot(obj):
@@ -568,13 +571,15 @@ class EEnumLiteral(ENamedElement):
 
 class EStructuralFeature(ETypedElement):
     def __init__(self, name=None, eType=None, changeable=True, volatile=False,
-                 transient=False, unsettable=False, derived=False, **kwargs):
+                 transient=False, unsettable=False, derived=False,
+                 factory=None, **kwargs):
         super().__init__(name, eType, **kwargs)
         self.changeable = changeable
         self.volatile = volatile
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
+        self.factory = factory or ECollection
         self._name = name
         self._eternal_listener.append(self)
 
@@ -589,7 +594,7 @@ class EStructuralFeature(ETypedElement):
         instance_dict = instance.__dict__
         if name not in instance_dict:
             if self.many:
-                new_value = ECollection.create(instance, self)
+                new_value = self.factory.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
@@ -608,7 +613,7 @@ class EStructuralFeature(ETypedElement):
             return
         if name not in instance_dict:
             if self.many:
-                new_value = ECollection.create(instance, self)
+                new_value = self.factory.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
@@ -952,6 +957,7 @@ def abstract(cls):
 
 from .valuecontainer import ECollection, EValue, \
                             EList, EOrderedSet, ESet, EBag, \
+                            EDerivedCollection, \
                             BadValueError  # noqa
 
 
@@ -1149,4 +1155,4 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass', 'EMetaclass']
+           'EShort', 'EJavaClass', 'EMetaclass', 'EDerivedCollection']

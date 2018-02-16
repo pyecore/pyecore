@@ -148,6 +148,11 @@ def test_static_init_single_attribute_bad_type():
         library.Writer(name=4)
 
 
+def test_static_init_single_reference_bad_type():
+    with pytest.raises(BadValueError):
+        library.Book(authors=[library.Book()])
+
+
 def test_static_init_bad_argument():
     with pytest.raises(AttributeError):
         library.Book(unknown=None)

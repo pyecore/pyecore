@@ -583,7 +583,7 @@ def test_update_estructuralfeature_in_eclass():
 
     A.eStructuralFeatures.append(EAttribute('name', EString))
     a.name  # We access the name
-    assert a.__dict__['name']._owner is a
+    assert a.__dict__['name'].owner is a
 
 
 def test_get_eattribute():
