@@ -335,7 +335,7 @@ class XMIResource(Resource):
             node.attrib[xmi_id] = obj._internal_id
 
         for feat in obj._isset:
-            if feat.derived:
+            if feat.derived or feat.transient:
                 continue
             value = obj.__getattribute__(feat.name)
             if hasattr(feat.eType, 'eType') and feat.eType.eType is dict:

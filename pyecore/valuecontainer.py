@@ -96,7 +96,9 @@ class EValue(PyEcoreValue):
 class ECollection(PyEcoreValue):
     @staticmethod
     def create(owner, feature):
-        if feature.ordered and feature.unique:
+        if feature.derived:
+            return EDerivedCollection(owner, feature)
+        elif feature.ordered and feature.unique:
             return EOrderedSet(owner, feature)
         elif feature.ordered and not feature.unique:
             return EList(owner, feature)
@@ -317,8 +319,7 @@ class EDerivedCollection(MutableSet, MutableSequence, ECollection):
                              .format(self.feature.name))
 
     def __len__(self):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        return 0
 
     def __setitem__(self, index, item):
         raise AttributeError('Operation not permited for "{}" feature'

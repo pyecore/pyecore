@@ -245,7 +245,7 @@ class EObject(ENotifer):
     def eContents(self):
         children = []
         for feature in self.eClass.eAllReferences():
-            if not feature.containment:
+            if not feature.containment or feature.derived:
                 continue
             if feature.many:
                 values = self.__getattribute__(feature.name)
@@ -572,14 +572,14 @@ class EEnumLiteral(ENamedElement):
 class EStructuralFeature(ETypedElement):
     def __init__(self, name=None, eType=None, changeable=True, volatile=False,
                  transient=False, unsettable=False, derived=False,
-                 factory=None, **kwargs):
+                 derived_class=None, **kwargs):
         super().__init__(name, eType, **kwargs)
         self.changeable = changeable
         self.volatile = volatile
         self.transient = transient
         self.unsettable = unsettable
         self.derived = derived
-        self.factory = factory or ECollection
+        self.derived_class = derived_class or ECollection
         self._name = name
         self._eternal_listener.append(self)
 
@@ -594,7 +594,7 @@ class EStructuralFeature(ETypedElement):
         instance_dict = instance.__dict__
         if name not in instance_dict:
             if self.many:
-                new_value = self.factory.create(instance, self)
+                new_value = self.derived_class.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
@@ -613,7 +613,7 @@ class EStructuralFeature(ETypedElement):
             return
         if name not in instance_dict:
             if self.many:
-                new_value = self.factory.create(instance, self)
+                new_value = self.derived_class.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value

@@ -12,6 +12,8 @@
         eType="#//A" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="bContainer" upperBound="-1"
         eType="#//B" containment="true"/>
+   <eStructuralFeatures xsi:type="ecore:EReference" name="b_transient" upperBound="-1"
+       eType="#//B" transient="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EEnum" name="MyEnum">
     <eLiterals name="ABC"/>

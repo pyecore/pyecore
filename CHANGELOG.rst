@@ -4,6 +4,21 @@ Changelog
 0.8.0
 +++++
 
+**Features**
+- Add first support for ``EDerivedCollection``. The derived collections are
+  obtained from many features that are also marked as derived. A derived
+  collection does not stores nor gets direct information, instead it fetches
+  information from other collection, compute a result and store it. In the
+  realisation, a derived collection will inherits from a generic derived
+  collection that only proposed an empty implementation. Then, the
+  implementation must be manually added.
+
+**Bugfixes**
+- Exception when a wrong type value was inserted in a reference for generated
+  code. The call to the ``EcoreUtils.isinstance`` method were raising an
+  exception as the last part of the code tries to deal with an unexisting
+  methods from the generated class.
+
 **Miscellaneous**
 
 - Add new module for basic values and collections. This module contains the

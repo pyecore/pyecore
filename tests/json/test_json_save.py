@@ -18,6 +18,9 @@ def lib():
     MyRoot.a_container = Ecore.EReference('a_container', eType=AbsA, upper=-1,
                                           containment=True)
     MyRoot.eStructuralFeatures.append(MyRoot.a_container)
+    MyRoot.eStructuralFeatures.append(Ecore.EAttribute('trans',
+                                                       eType=Ecore.EString,
+                                                       transient=True))
     package.eClassifiers.extend([MyRoot, A, SubA, AbsA])
     package.MyRoot = MyRoot
     package.SubA = SubA
@@ -64,6 +67,7 @@ def test_json_resource_createset(tmpdir, lib):
     a1 = lib.A()
     suba1 = lib.SubA()
     root.a_container.extend([a1, suba1])
+    root.trans = 'transient_value'
 
     # we add the elements to the resource
     resource.append(root)

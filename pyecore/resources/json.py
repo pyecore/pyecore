@@ -72,6 +72,8 @@ class JsonResource(Resource):
             uri = self.serialize_eclass(obj.eClass)
             d['eClass'] = uri
         for attr in obj._isset:
+            if attr.derived or attr.transient:
+                continue
             is_ereference = isinstance(attr, Ecore.EReference)
             is_ref = is_ereference and not attr.containment
             if is_ereference and attr.eOpposite:
