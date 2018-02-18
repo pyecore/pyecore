@@ -1144,14 +1144,14 @@ In the current state, the project implements:
 * JSON import (simple JSON format),
 * JSON export (simple JSON format),
 * introduce behavior @runtime,
-* resources auto-load for some cross-references.
+* resources auto-load for some cross-references,
+* derived collections.
 
 The things that are in the roadmap:
 
 * new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
 * new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
 * multiple roots ressources,
-* derived collections,
 * URI mapper,
 * improve documentation,
 * copy/paste (?).
