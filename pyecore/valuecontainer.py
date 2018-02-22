@@ -74,22 +74,22 @@ class EValue(PyEcoreValue):
 
         eOpposite = efeature.eOpposite
         # if we are in an 'unset' context
+        opposite_name = eOpposite.name
         if value is None:
             if previous_value is None:
                 return
             if eOpposite.many:
-                object.__getattribute__(previous_value, eOpposite.name) \
+                object.__getattribute__(previous_value, opposite_name) \
                       .remove(owner, update_opposite=False)
             else:
-                object.__setattr__(previous_value, eOpposite.name, None)
+                object.__setattr__(previous_value, opposite_name, None)
         else:
-            previous_value = value.__getattribute__(eOpposite.name)
+            previous_value = value.__getattribute__(opposite_name)
             if eOpposite.many:
-                value.__getattribute__(eOpposite.name) \
-                     .append(owner, update_opposite=False)
+                previous_value.append(owner, update_opposite=False)
             else:
                 # We disable the eOpposite update
-                value.__dict__[eOpposite.name]. \
+                value.__dict__[opposite_name]. \
                       _set(owner, update_opposite=False)
 
 
@@ -125,14 +125,15 @@ class ECollection(PyEcoreValue):
                 owner._inverse_rels.add(couple)
             return
 
+        opposite_name = eOpposite.name
         if eOpposite.many and not remove:
-            owner.__getattribute__(eOpposite.name).append(new_value, False)
+            owner.__getattribute__(opposite_name).append(new_value, False)
         elif eOpposite.many and remove:
-            owner.__getattribute__(eOpposite.name).remove(new_value, False)
+            owner.__getattribute__(opposite_name).remove(new_value, False)
         else:
             new_value = None if remove else new_value
-            owner.__getattribute__(eOpposite.name)  # Force load
-            owner.__dict__[eOpposite.name] \
+            owner.__getattribute__(opposite_name)  # Force load
+            owner.__dict__[opposite_name] \
                  ._set(new_value, update_opposite=False)
 
     def remove(self, value, update_opposite=True):

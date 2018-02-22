@@ -263,7 +263,10 @@ class EObject(ENotifer):
 
     def eURIFragment(self):
         if not self.eContainer():
-            return '/'
+            if not self.eResource or len(self.eResource.contents) == 1:
+                return '/'
+            else:
+                return '/{}'.format(self.eResource.contents.index(self))
         feat = self.eContainmentFeature()
         parent = self.eContainer()
         name = feat.name
@@ -295,7 +298,10 @@ class EModelElement(EObject):
 
     def eURIFragment(self):
         if not self.eContainer():
-            return '#/'
+            if not self.eResource or len(self.eResource.contents) == 1:
+                return '#/'
+            else:
+                return '#/{}'.format(self.eResource.contents.index(self))
         parent = self.eContainer()
         if getattr(self, 'name', None):
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
@@ -648,10 +654,11 @@ class EAttribute(EStructuralFeature):
     def get_default_value(self):
         if self.default_value is not None:
             return self.default_value
-        elif self.eType is None:
+        etype = self.eType
+        if etype is None:
             self.eType = ENativeType
             return object()
-        return self.eType.default_value
+        return etype.default_value
 
 
 class EReference(EStructuralFeature):

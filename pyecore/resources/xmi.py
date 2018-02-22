@@ -35,13 +35,21 @@ class XMIResource(Resource):
         self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
         self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
         # Decode the XMI
-        modelroot = self._init_modelroot(xmlroot)
-        if not self.contents:
-            self._clean_registers()
-            return
-        for child in xmlroot:
-            self._decode_eobject(child, modelroot)
+        if '{{{0}}}XMI'.format(self.prefixes.get(XMI)) == xmlroot.tag:
+            real_roots = xmlroot
+        else:
+            real_roots = [xmlroot]
+
+        for root in real_roots:
+            modelroot = self._init_modelroot(root)
+            if not self.contents:
+                self._clean_registers()
+                return
+
+            for child in root:
+                self._decode_eobject(child, modelroot)
         self._decode_ereferences()
+
         self._clean_registers()
         self.uri.close_stream()
 
@@ -227,7 +235,8 @@ class XMIResource(Resource):
         opposite = []
         for eobject, erefs in self._later:
             for ref, value in erefs:
-                if ref.name == 'eOpposite':
+                name = ref.name
+                if name == 'eOpposite':
                     opposite.append((eobject, ref, value))
                     continue
                 if ref.many:
@@ -242,10 +251,9 @@ class XMIResource(Resource):
                     if not hasattr(resolved_value, '_inverse_rels'):
                         resolved_value = resolved_value.eClass
                     if ref.many:
-                        eobject.__getattribute__(ref.name) \
-                               .append(resolved_value)
+                        eobject.__getattribute__(name).append(resolved_value)
                     else:
-                        eobject.__setattr__(ref.name, resolved_value)
+                        eobject.__setattr__(name, resolved_value)
 
         for eobject, ref, value in opposite:
             resolved_value = self._resolve_nonhref(value)
