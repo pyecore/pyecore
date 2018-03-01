@@ -300,7 +300,8 @@ class XMIResource(Resource):
                 self.register_eobject_epackage(eobj)
 
             old_root_node = self._go_across(root)
-            nsmap = old_root_node.nsmap
+            nsmap = {XMI: XMI_URL,
+                     XSI: XSI_URL}
             nsmap.update(self.prefixes)
             root_node = etree.Element(old_root_node.tag, nsmap=nsmap)
             root_node[:] = old_root_node[:]
@@ -327,9 +328,7 @@ class XMIResource(Resource):
             epackage = eclass.ePackage
             nsURI = epackage.nsURI
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
-            nsmap = {XMI: XMI_URL,
-                     XSI: XSI_URL}
-            node = etree.Element(tag, nsmap=nsmap)
+            node = etree.Element(tag)
             xmi_version = etree.QName(XMI_URL, 'version')
             node.attrib[xmi_version] = '2.0'
         else:
