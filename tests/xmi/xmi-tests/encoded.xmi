@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<myprefix:MyRoot xmlns:myprefix="http://mytest/1.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmi:version="2.0" xmi:id="0b903905-ebcf-4099-aa8e-ff98922954ab">
+  <bContainer xmi:id="54630c51-91e4-44d4-b31b-4b5f1324665d" a="fc916eec-2fad-4322-87d6-e7dcdb7f19ed"/>
+  <aContainer xmi:id="fc916eec-2fad-4322-87d6-e7dcdb7f19ed" b="54630c51-91e4-44d4-b31b-4b5f1324665d" name="a1"/>
+  <aContainer xmi:id="8f7305fc-5a84-4e51-a3b1-30102ca6626f" name="a2"/>
+</myprefix:MyRoot>
