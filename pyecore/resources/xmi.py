@@ -299,7 +299,13 @@ class XMIResource(Resource):
             for eobj in root.eAllContents():
                 self.register_eobject_epackage(eobj)
 
-            tree = etree.ElementTree(self._go_across(root))
+            old_root_node = self._go_across(root)
+            nsmap = old_root_node.nsmap
+            nsmap.update(self.prefixes)
+            root_node = etree.Element(old_root_node.tag, nsmap=nsmap)
+            root_node[:] = old_root_node[:]
+            root_node.attrib.update(old_root_node)
+            tree = etree.ElementTree(root_node)
         tree.write(output,
                    pretty_print=True,
                    xml_declaration=True,
@@ -309,6 +315,9 @@ class XMIResource(Resource):
     def _add_explicit_type(self, node, obj):
         xsi_type = etree.QName(self.xsi_type_url(), 'type')
         uri = obj.eClass.ePackage.nsURI
+        if uri not in self.reverse_nsmap:
+            epackage = self.get_metamodel(uri)
+            self.register_nsmap(epackage.nsPrefix, uri)
         prefix = self.reverse_nsmap[uri]
         node.attrib[xsi_type] = '{0}:{1}'.format(prefix, obj.eClass.name)
 
@@ -320,7 +329,6 @@ class XMIResource(Resource):
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             nsmap = {XMI: XMI_URL,
                      XSI: XSI_URL}
-            nsmap.update(self.prefixes)
             node = etree.Element(tag, nsmap=nsmap)
             xmi_version = etree.QName(XMI_URL, 'version')
             node.attrib[xmi_version] = '2.0'
