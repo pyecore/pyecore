@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+0.7.14
+++++++
+**Features**
+-  Add href uuid (de)serialization for XMI. This new features allows the XMI
+   for having href that directly uses the uuid of the target element.
+
+
+**Bugfixes**
+- Fix nsmap computation for heteroneous models with crossrefs. When crossrefs
+  are serialized in XMI, they need to add the referenced namespace at the
+  root of the XMI. This fix adds these namespace and their related prefixes.
+
+
 0.7.13
 ++++++
 
