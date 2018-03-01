@@ -304,7 +304,7 @@ class XMIResource(Resource):
             nsmap.update(self.prefixes)
             root_node = etree.Element(old_root_node.tag, nsmap=nsmap)
             root_node[:] = old_root_node[:]
-            root_node.attrib.update(old_root_node)
+            root_node.attrib.update(old_root_node.attrib)
             tree = etree.ElementTree(root_node)
         tree.write(output,
                    pretty_print=True,

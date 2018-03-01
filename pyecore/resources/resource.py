@@ -398,6 +398,8 @@ class Resource(object):
             if obj.eResource:
                 uri = self.uri.relative_from_me(obj.eResource.uri)
                 crossref = True
+                # if obj.eResource.use_uuid:
+                #     uri_fragment = obj._xmiid
             else:
                 uri = ''
                 root = obj.eRoot()
