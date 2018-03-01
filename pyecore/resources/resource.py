@@ -340,9 +340,16 @@ class Resource(object):
                             .format(uri))
 
     @staticmethod
-    def _navigate_from(path, start_obj):
+    def is_fragment_uuid(fragment):
+        return fragment and fragment[0] != '/'
+
+    @classmethod
+    def _navigate_from(cls, path, start_obj):
         if '#' in path[:1]:
             path = path[1:]
+        if cls.is_fragment_uuid(path) and start_obj.eResource:
+            return start_obj.eResource.uuid_dict[path]
+
         features = [x for x in path.split('/') if x]
         feat_info = [x.split('.') for x in features]
         obj = start_obj
@@ -398,6 +405,8 @@ class Resource(object):
             if obj.eResource:
                 uri = self.uri.relative_from_me(obj.eResource.uri)
                 crossref = True
+                if obj.eResource.use_uuid:
+                    uri_fragment = obj._xmiid
             else:
                 uri = ''
                 root = obj.eRoot()

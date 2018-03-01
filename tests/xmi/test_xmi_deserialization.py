@@ -241,3 +241,24 @@ def test_ecore_attribute_at_root():
     assert root
     assert root.visible
     assert root.refa is root.a[0]
+
+
+def test_deserialize_href_uuid_ref():
+    Root = Ecore.EClass('Root')
+    Root.eStructuralFeatures.append(Ecore.EReference('element', Ecore.EObject))
+    pack = Ecore.EPackage('mypack', nsURI='http://mypack/1.0',
+                          nsPrefix='mypack_pref')
+    pack.eClassifiers.append(Root)
+
+    rset = ResourceSet()
+
+    resource = rset.get_resource('tests/xmi/xmi-tests/My.ecore')
+    root = resource.contents[0]
+    rset.metamodel_registry[root.nsURI] = root
+    rset.metamodel_registry[pack.nsURI] = pack
+
+    resource = rset.get_resource('tests/xmi/xmi-tests/encoded.xmi')
+    root1 = resource.contents[0]
+    resource = rset.get_resource('tests/xmi/xmi-tests/encoded2.xmi')
+    root2 = resource.contents[0]
+    assert root2.element.eClass is root1.eClass
