@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mypack_pref:Root xmlns:mypack_pref="http://mypack/1.0" xmlns:myprefix="http://mytest/1.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmi:version="2.0">
+  <element href="encoded.xmi#0b903905-ebcf-4099-aa8e-ff98922954ab" xsi:type="myprefix:MyRoot"/>
+</mypack_pref:Root>
