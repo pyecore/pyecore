@@ -144,7 +144,7 @@ class XMIResource(Resource):
 
     @staticmethod
     def _is_none_node(node):
-        return '{{{}}}nill'.format(XSI_URL) in node.attrib
+        return '{{{}}}nil'.format(XSI_URL) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
@@ -332,7 +332,7 @@ class XMIResource(Resource):
 
     def _build_none_node(self, feature_name):
         sub = etree.Element(feature_name)
-        xsi_null = etree.QName(self.xsi_type_url(), 'nill')
+        xsi_null = etree.QName(self.xsi_type_url(), 'nil')
         sub.attrib[xsi_null] = 'true'
         return sub
 
