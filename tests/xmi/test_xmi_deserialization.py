@@ -233,7 +233,6 @@ def test_ecore_attribute_at_root():
     a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
     root = rset.get_resource(a_ecore).contents[0]
     assert root
-    print(root.getEClassifier('Root').eStructuralFeatures)
     rset.metamodel_registry[root.nsURI] = root
 
     a_xmi = path.join('tests', 'xmi', 'xmi-tests', 'a4.xmi')
@@ -262,3 +261,19 @@ def test_deserialize_href_uuid_ref():
     resource = rset.get_resource('tests/xmi/xmi-tests/encoded2.xmi')
     root2 = resource.contents[0]
     assert root2.element.eClass is root1.eClass
+
+
+def test_load_nill_values():
+    rset = ResourceSet()
+    mm_ecore = path.join('tests', 'xmi', 'xmi-tests', 'mm_for_nill.ecore')
+    root = rset.get_resource(mm_ecore).contents[0]
+    rset.metamodel_registry[root.nsURI] = root
+
+    model = path.join('tests', 'xmi', 'xmi-tests', 'model_with_nill.xmi')
+    root = rset.get_resource(model).contents[0]
+    assert root
+    set_features = [x.name for x in root._isset]
+    assert 'name' in set_features
+    assert 'element' in set_features
+    assert root.name is None
+    assert root.element is None
