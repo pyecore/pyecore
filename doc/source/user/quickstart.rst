@@ -644,6 +644,26 @@ a switch, you can pass option to the resource serialization.
     resource.save(options=options)
 
 
+Force default values serializations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When an XMI resource is serialized, default and ``None`` values are not written
+in the file. You can alter this behavior by passing the
+``XMIOptions.SERIALIZE_DEFAULT_VALUES`` option during the save operation.
+
+.. code-block:: python
+
+    from pyecore.resources.XMI import XMIOptions
+
+    # ... we assume we have a 'XMIResource' in the 'resource' variable
+    options = {
+        XMIOptions.SERIALIZE_DEFAULT_VALUES: True
+    }
+    resource.save(options=options)
+
+This option will also introduce the special XML node ``xsi:nill="true"`` when
+an attribute or a reference is explicitly set to ``None``.
+
 Dealing with JSON Resources
 ---------------------------
 
