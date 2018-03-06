@@ -155,3 +155,34 @@ def test_xmi_ecore_save_heterogeneous_metamodel(tmpdir):
         xmlroot = tree.getroot()
         assert 'mypack_pref' in xmlroot.nsmap
         assert 'myprefix' in xmlroot.nsmap
+
+
+def test_xmi_save_none_value(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('default_none_value.xmi')
+
+    # Build a simple metamodel
+    Root = Ecore.EClass('Root')
+    Root.eStructuralFeatures.append(Ecore.EReference('element', Ecore.EObject))
+    Root.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    Root.eStructuralFeatures.append(Ecore.EAttribute('ints', Ecore.EInt,
+                                                     upper=-1))
+    pack = Ecore.EPackage('mypack', nsURI='http://mypack/1.0',
+                          nsPrefix='mypack_pref')
+    pack.eClassifiers.append(Root)
+
+    r = Root()
+    r.element = None
+    r.name = None
+    r.ints.extend([3, 4, 5])
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(f)))
+    resource.append(r)
+    resource.save(options={XMIOptions.SERIALIZE_DEFAULT_VALUES: True})
+
+    with open(str(f), 'r') as f:
+        tree = etree.parse(f)
+        xmlroot = tree.getroot()
+        assert xmlroot[0].tag in ('name', 'element')
+        assert xmlroot[1].tag in ('name', 'element')
+        assert xmlroot[0].tag != xmlroot[1].tag
