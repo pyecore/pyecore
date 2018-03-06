@@ -265,11 +265,11 @@ def test_deserialize_href_uuid_ref():
 
 def test_load_nill_values():
     rset = ResourceSet()
-    mm_ecore = path.join('tests', 'xmi', 'xmi-tests', 'mm_for_nill.ecore')
+    mm_ecore = path.join('tests', 'xmi', 'xmi-tests', 'mm_for_nil.ecore')
     root = rset.get_resource(mm_ecore).contents[0]
     rset.metamodel_registry[root.nsURI] = root
 
-    model = path.join('tests', 'xmi', 'xmi-tests', 'model_with_nill.xmi')
+    model = path.join('tests', 'xmi', 'xmi-tests', 'model_with_nil.xmi')
     root = rset.get_resource(model).contents[0]
     assert root
     set_features = [x.name for x in root._isset]
