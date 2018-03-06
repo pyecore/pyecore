@@ -1,8 +1,8 @@
 Changelog
 ---------
 
-0.7.15
-++++++
+0.7.15/16
++++++++++
 **Features**
 - Add xmi option for default value serialization. This new option allows to
   save the default value in the produced XMI, and it also gives the ability to
