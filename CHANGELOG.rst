@@ -19,6 +19,12 @@ Changelog
   exception as the last part of the code tries to deal with an unexisting
   methods from the generated class.
 
+- Fix ``EProxy`` 'force resolve' for static metamodels. When a proxy is set
+  towards a static metaclass, the proxy resolution tries to handle the
+  inverse reference list which only exists in the ``.eClass`` "level".
+  Consequently, when a static metaclass is used, the corresponding ``EClass``
+  instance must be used. 
+
 **Miscellaneous**
 
 - Add new module for basic values and collections. This module contains the

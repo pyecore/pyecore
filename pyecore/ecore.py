@@ -851,7 +851,11 @@ class EProxy(EObject):
             return
         resource = self._proxy_resource
         decoders = resource._get_href_decoder(self._proxy_path)
-        self._wrapped = decoders.resolve(self._proxy_path, resource)
+        decoded = decoders.resolve(self._proxy_path, resource)
+        if not hasattr(decoded, '_inverse_rels'):
+            self._wrapped = decoded.eClass
+        else:
+            self._wrapped = decoded
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
         self.resolved = True
