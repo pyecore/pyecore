@@ -150,9 +150,8 @@ class XMIResource(Resource):
         for child in current_node:
             self._decode_eobject(child, eobject)
 
-    @staticmethod
-    def _is_none_node(node):
-        return '{{{}}}nil'.format(XSI_URL) in node.attrib
+    def _is_none_node(self, node):
+        return '{{{}}}nil'.format(self.prefixes.get(XSI)) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
@@ -201,6 +200,9 @@ class XMIResource(Resource):
                 container.__doc__ = annotation_value
             return (None, None, [], [])
         else:
+            # idref = node.get('{{{}}}idref'.format(XMI_URL))
+            # if idref:
+            #     return (None, parent_eobj, [], [(feature_container, idref)])
             eobject = etype()
 
         # we sort the node feature (no containments)
