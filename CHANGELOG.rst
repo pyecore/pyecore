@@ -13,11 +13,25 @@ Changelog
   collection that only proposed an empty implementation. Then, the
   implementation must be manually added.
 
+- Add multi-root support for XMI resources. XMI with multiple roots can now
+  be serialized and deserialized. Their handling is pretty transparent as the
+  addition of a new root goes through the ``append(...)`` method.
+
+- Add a ``remove(...)`` method on resources. This method is pretty much the
+  opposite of the ``append(...)`` method on resources, it simply remove a
+  root from the resource.
+
 **Bugfixes**
 - Exception when a wrong type value was inserted in a reference for generated
   code. The call to the ``EcoreUtils.isinstance`` method were raising an
   exception as the last part of the code tries to deal with an unexisting
   methods from the generated class.
+
+- Fix ``EProxy`` 'force resolve' for static metamodels. When a proxy is set
+  towards a static metaclass, the proxy resolution tries to handle the
+  inverse reference list which only exists in the ``.eClass`` "level".
+  Consequently, when a static metaclass is used, the corresponding ``EClass``
+  instance must be used.
 
 **Miscellaneous**
 

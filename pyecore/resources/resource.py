@@ -5,6 +5,7 @@ serialized. Many ``Resource`` can be contained in a ``ResourceSet``, and
 """
 from uuid import uuid4
 import urllib.request
+import re
 from os import path
 from collections import ChainMap
 from .. import ecore as Ecore
@@ -106,10 +107,11 @@ class ResourceSet(object):
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
-        epackage = self.resources[uri.normalize()]
-        if isinstance(epackage, Resource):
-            epackage = epackage.contents[0]
-        return Resource._navigate_from(fragment, epackage)
+        root = self.resources[uri.normalize()]
+        if isinstance(root, Resource):
+            root_number, fragment = Resource.extract_root_number(fragment)
+            root = root.contents[root_number]
+        return Resource._navigate_from(fragment, root)
 
 
 class URI(object):
@@ -286,11 +288,23 @@ class Resource(object):
             except KeyError:
                 pass
         result = None
-        for root in self.contents:
-            result = self._navigate_from(fragment, root)
-            if result:
-                self._resolve_mem[fragment] = result
-                return result
+        root_number, fragment = self.extract_root_number(fragment)
+        root = self.contents[root_number]
+        result = self._navigate_from(fragment, root)
+        if result:
+            self._resolve_mem[fragment] = result
+            return result
+
+    @staticmethod
+    def extract_root_number(fragment):
+        if re.match('^/\d+/.*', fragment):
+            fragment = fragment[1:]
+            index = fragment.index('/')
+            root_number = fragment[:index]
+            fragment = fragment[index:]
+            return (int(root_number), fragment)
+        else:
+            return (0, fragment)
 
     def prefix2epackage(self, prefix):
         nsURI = None
@@ -446,6 +460,10 @@ class Resource(object):
                              'but received {0} instead.'.format(type(root)))
         self.contents.append(root)
         root._eresource = self
+
+    def remove(self, root):
+        self.contents.remove(root)
+        root._eresource = None
 
     def open_out_stream(self, other=None):
         if other and not isinstance(other, URI):

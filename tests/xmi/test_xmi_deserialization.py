@@ -277,3 +277,44 @@ def test_load_nill_values():
     assert 'element' in set_features
     assert root.name is None
     assert root.element is None
+
+
+def test_load_empty_xmi():
+    rset = ResourceSet()
+    empty = path.join('tests', 'xmi', 'xmi-tests', 'empty.xmi')
+
+    resource = rset.get_resource(empty)
+    assert resource.contents == []
+
+
+def test_load_multi_root_ecore():
+    rset = ResourceSet()
+    multi_root = path.join('tests', 'xmi', 'xmi-tests', 'multi_root.xmi')
+
+    resource = rset.get_resource(multi_root)
+    assert len(resource.contents) == 2
+
+    root1 = resource.contents[0]
+    assert root1.eClassifiers[0].name == 'A'
+
+    root2 = resource.contents[1]
+    assert root2.eClassifiers[0].name == 'B'
+
+    A = root1.eClassifiers[0]
+    B = root2.eClassifiers[0]
+    assert B.findEStructuralFeature('to_a').eType is A
+
+
+def test_load_multivalued_attribute():
+    rset = ResourceSet()
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    b_ecore_root = rset.get_resource(b_ecore).contents[0]
+    rset.metamodel_registry[b_ecore_root.nsURI] = b_ecore_root
+
+    b2_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b2.xmi')
+    root = rset.get_resource(b2_xmi).contents[0]
+    assert root.names == ['abc', 'def', 'ghi']
+
+    b3_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b3.xmi')
+    root = rset.get_resource(b3_xmi).contents[0]
+    assert root.names == ['abc']

@@ -24,6 +24,7 @@ from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
 from .notification import ENotifer, Kind, EObserver
+from .javatransmap import javaTransMap
 
 
 name = 'ecore'
@@ -263,7 +264,10 @@ class EObject(ENotifer):
 
     def eURIFragment(self):
         if not self.eContainer():
-            return '/'
+            if not self.eResource or len(self.eResource.contents) == 1:
+                return '/'
+            else:
+                return '/{}'.format(self.eResource.contents.index(self))
         feat = self.eContainmentFeature()
         parent = self.eContainer()
         name = feat.name
@@ -295,7 +299,10 @@ class EModelElement(EObject):
 
     def eURIFragment(self):
         if not self.eContainer():
-            return '#/'
+            if not self.eResource or len(self.eResource.contents) == 1:
+                return '#/'
+            else:
+                return '#/{}'.format(self.eResource.contents.index(self))
         parent = self.eContainer()
         if getattr(self, 'name', None):
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
@@ -416,38 +423,7 @@ class EClassifier(ENamedElement):
 
 
 class EDataType(EClassifier):
-    # Must be completed
-    # tuple is '(implem_type, use_type_as_factory, default_value)'
-    javaTransMap = {'java.lang.String': (str, False, None),
-                    'boolean': (bool, False, False),
-                    'java.lang.Boolean': (bool, False, False),
-                    'byte': (int, False, 0),
-                    'short': (int, False, 0),
-                    'int': (int, False, 0),
-                    'long': (int, False, 0),
-                    'float': (float, False, 0.0),
-                    'java.lang.Short': (int, False, None),
-                    'java.lang.Long': (int, False, None),
-                    'java.lang.Float': (float, False, None),
-                    'java.lang.Integer': (int, False, None),
-                    'java.lang.Class': (type, False, None),
-                    'java.lang.Object': (object, False, None),
-                    'java.util.Map': (dict, True, None),
-                    'java.util.Map$Entry': (dict, True, None),
-                    'double': (float, False, 0.0),
-                    'java.lang.Double': (float, False, None),
-                    'char': (str, False, ''),
-                    'java.lang.Character': (str, False, None),
-                    'byte[]': (bytearray, True, None),
-                    'java.lang.Byte': (int, False, None),
-                    'java.util.Date': (datetime, False, None),
-                    'org.eclipse.emf.common.util.EList': (list, True, None),
-                    'org.eclipse.emf.ecore.util.FeatureMap': (dict,
-                                                              True,
-                                                              None),
-                    'org.eclipse.emf.ecore.util.FeatureMap$Entry': (dict,
-                                                                    True,
-                                                                    None)}
+    transmap = javaTransMap
 
     def __init__(self, name=None, eType=None, default_value=None,
                  from_string=None, to_string=None, instanceClassName=None,
@@ -492,9 +468,8 @@ class EDataType(EClassifier):
     @instanceClassName.setter
     def instanceClassName(self, name):
         self._instanceClassName = name
-        type, type_as_factory, default = self.javaTransMap.get(name, (object,
-                                                                      True,
-                                                                      None))
+        default_type = (object, True, None)
+        type, type_as_factory, default = self.transmap.get(name, default_type)
         self.eType = type
         self.type_as_factory = type_as_factory
         self.default_value = default
@@ -648,10 +623,11 @@ class EAttribute(EStructuralFeature):
     def get_default_value(self):
         if self.default_value is not None:
             return self.default_value
-        elif self.eType is None:
+        etype = self.eType
+        if etype is None:
             self.eType = ENativeType
             return object()
-        return self.eType.default_value
+        return etype.default_value
 
 
 class EReference(EStructuralFeature):
@@ -754,7 +730,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            if eSuperTypes and EObject.eClass in eSuperTypes:
+            if EObject.eClass in eSuperTypes:
                 eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
 
@@ -875,7 +851,11 @@ class EProxy(EObject):
             return
         resource = self._proxy_resource
         decoders = resource._get_href_decoder(self._proxy_path)
-        self._wrapped = decoders.resolve(self._proxy_path, resource)
+        decoded = decoders.resolve(self._proxy_path, resource)
+        if not hasattr(decoded, '_inverse_rels'):
+            self._wrapped = decoded.eClass
+        else:
+            self._wrapped = decoded
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
         self.resolved = True
@@ -1046,6 +1026,11 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
 EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                          upper=-1, containment=True)
+EClassifier.instanceClassName = EAttribute('instanceTypeName', EString)
+EClassifier.instanceClass = EAttribute('instanceClass', EJavaClass)
+EClassifier.defaultValue = EAttribute('defaultValue', EJavaObject)
+EClassifier.instanceTypeName = EAttribute('instanceTypeName', EString,
+                                          volatile=True, unsettable=True)
 
 EDataType.instanceClassName_ = EAttribute('instanceClassName', EString)
 EDataType.serializable = EAttribute('serializable', EBoolean)

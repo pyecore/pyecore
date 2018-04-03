@@ -35,14 +35,21 @@ class XMIResource(Resource):
 
         self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
         self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
+
         # Decode the XMI
-        modelroot = self._init_modelroot(xmlroot)
-        if not self.contents:
-            self._clean_registers()
-            return
-        for child in xmlroot:
-            self._decode_eobject(child, modelroot)
-        self._decode_ereferences()
+        if '{{{0}}}XMI'.format(self.prefixes.get(XMI)) == xmlroot.tag:
+            real_roots = xmlroot
+        else:
+            real_roots = [xmlroot]
+
+        for root in real_roots:
+            modelroot = self._init_modelroot(root)
+            for child in root:
+                self._decode_eobject(child, modelroot)
+
+        if self.contents:
+            self._decode_ereferences()
+
         self._clean_registers()
         self.uri.close_stream()
 
@@ -90,13 +97,14 @@ class XMIResource(Resource):
             if prefix == 'xmi' and att_name == 'id':
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
-            elif namespace:
-                try:
-                    # Do stuff with this
-                    # metaclass = self.get_metamodel(namespace)
-                    pass
-                except KeyError:
-                    pass
+            # Do stuff with this
+            # elif namespace:
+            #     try:
+            #
+            #         # metaclass = self.get_metamodel(namespace)
+            #         pass
+            #     except KeyError:
+            #         pass
             elif not namespace:
                 feature = self._find_in_metacache(modelroot, key)
                 if not feature:
@@ -142,9 +150,8 @@ class XMIResource(Resource):
         for child in current_node:
             self._decode_eobject(child, eobject)
 
-    @staticmethod
-    def _is_none_node(node):
-        return '{{{}}}nil'.format(XSI_URL) in node.attrib
+    def _is_none_node(self, node):
+        return '{{{}}}nil'.format(self.prefixes.get(XSI)) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
@@ -193,6 +200,9 @@ class XMIResource(Resource):
                 container.__doc__ = annotation_value
             return (None, None, [], [])
         else:
+            # idref = node.get('{{{}}}idref'.format(XMI_URL))
+            # if idref:
+            #     return (None, parent_eobj, [], [(feature_container, idref)])
             eobject = etype()
 
         # we sort the node feature (no containments)
@@ -220,8 +230,8 @@ class XMIResource(Resource):
         elif prefix in ('xsi', 'xmi') and att_name == 'type':
             # type has already been handled
             pass
-        elif namespace:
-            pass
+        # elif namespace:
+        #     pass
         elif not namespace:
             if att_name == 'href':
                 return
@@ -235,7 +245,8 @@ class XMIResource(Resource):
         opposite = []
         for eobject, erefs in self._later:
             for ref, value in erefs:
-                if ref.name == 'eOpposite':
+                name = ref.name
+                if name == 'eOpposite':
                     opposite.append((eobject, ref, value))
                     continue
                 if ref.many:
@@ -250,10 +261,9 @@ class XMIResource(Resource):
                     if not hasattr(resolved_value, '_inverse_rels'):
                         resolved_value = resolved_value.eClass
                     if ref.many:
-                        eobject.__getattribute__(ref.name) \
-                               .append(resolved_value)
+                        eobject.__getattribute__(name).append(resolved_value)
                     else:
-                        eobject.__setattr__(ref.name, resolved_value)
+                        eobject.__setattr__(name, resolved_value)
 
         for eobject, ref, value in opposite:
             resolved_value = self._resolve_nonhref(value)
@@ -298,23 +308,32 @@ class XMIResource(Resource):
         output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
-        # Compute required nsmap for subpackages
-        if not self.contents:
-            tree = etree.ElementTree()
-        else:
-            serialize_default = \
-                self.options.get(XMIOptions.SERIALIZE_DEFAULT_VALUES,
-                                 False)
+
+        serialize_default = \
+            self.options.get(XMIOptions.SERIALIZE_DEFAULT_VALUES,
+                             False)
+        nsmap = {XMI: XMI_URL,
+                 XSI: XSI_URL}
+
+        if len(self.contents) == 1:
             root = self.contents[0]
             self.register_eobject_epackage(root)
-            old_root_node = self._go_across(root, serialize_default)
-            nsmap = {XMI: XMI_URL,
-                     XSI: XSI_URL}
-            nsmap.update(self.prefixes)
-            root_node = etree.Element(old_root_node.tag, nsmap=nsmap)
-            root_node[:] = old_root_node[:]
-            root_node.attrib.update(old_root_node.attrib)
-            tree = etree.ElementTree(root_node)
+            tmp_xmi_root = self._go_across(root, serialize_default)
+        else:
+            tag = etree.QName(XMI_URL, 'XMI')
+            tmp_xmi_root = etree.Element(tag)
+            for root in self.contents:
+                root_node = self._go_across(root, serialize_default)
+                tmp_xmi_root.append(root_node)
+
+        # update nsmap with prefixes register during the nodes creation
+        nsmap.update(self.prefixes)
+        xmi_root = etree.Element(tmp_xmi_root.tag, nsmap=nsmap)
+        xmi_root[:] = tmp_xmi_root[:]
+        xmi_root.attrib.update(tmp_xmi_root.attrib)
+        xmi_version = etree.QName(XMI_URL, 'version')
+        xmi_root.attrib[xmi_version] = '2.0'
+        tree = etree.ElementTree(xmi_root)
         tree.write(output,
                    pretty_print=True,
                    xml_declaration=True,
@@ -344,8 +363,6 @@ class XMIResource(Resource):
             nsURI = epackage.nsURI
             tag = etree.QName(nsURI, eclass.name) if nsURI else eclass.name
             node = etree.Element(tag)
-            xmi_version = etree.QName(XMI_URL, 'version')
-            node.attrib[xmi_version] = '2.0'
         else:
             node = etree.Element(obj.eContainmentFeature().name)
             if obj.eContainmentFeature().eType != eclass:
