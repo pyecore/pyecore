@@ -978,3 +978,9 @@ def test_allContent_derived_containment():
     a1, a2 = A(), A()
     a1.a = a2
     assert a2 in a1.eContents
+
+
+def test_explicit_eobject_inheritance():
+    A = EClass('A', superclass=(EObject.eClass))
+
+    assert isinstance(A, EObject)
