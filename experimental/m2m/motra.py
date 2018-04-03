@@ -164,7 +164,7 @@ class Transformation(object):
             @functools.wraps(inner)
             def when_inner(*args, **kwargs):
                 if when(*args, **kwargs):
-                    return functools.lru_cache()(inner)(*args, **kwargs)
+                    return inner(*args, **kwargs)
             return when_inner
         return functools.lru_cache()(inner)
 
@@ -180,4 +180,4 @@ class Transformation(object):
                     break
             f(*args, **kwargs)
             return result
-        return functools.lru_cache()(inner)
+        return inner
