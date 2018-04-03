@@ -277,3 +277,11 @@ def test_load_nill_values():
     assert 'element' in set_features
     assert root.name is None
     assert root.element is None
+
+
+def test_load_empty_xmi():
+    rset = ResourceSet()
+    empty = path.join('tests', 'xmi', 'xmi-tests', 'empty.xmi')
+
+    resource = rset.get_resource(empty)
+    assert resource.contents == []

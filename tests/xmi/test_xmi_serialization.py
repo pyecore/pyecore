@@ -186,3 +186,13 @@ def test_xmi_save_none_value(tmpdir):
         assert xmlroot[0].tag in ('name', 'element')
         assert xmlroot[1].tag in ('name', 'element')
         assert xmlroot[0].tag != xmlroot[1].tag
+
+
+def test_xmi_save_empty_model(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('empty.xmi')
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(f)))
+    resource.save()
+
+    

@@ -308,34 +308,25 @@ class XMIResource(Resource):
         output = self.open_out_stream(output)
         self.prefixes.clear()
         self.reverse_nsmap.clear()
-        # Compute required nsmap for subpackages
-        if not self.contents:
-            tree = etree.ElementTree()
-            tree.write(output,
-                       pretty_print=True,
-                       xml_declaration=True,
-                       encoding=tree.docinfo.encoding)
-            self.uri.close_stream()
-            return
 
         serialize_default = \
             self.options.get(XMIOptions.SERIALIZE_DEFAULT_VALUES,
                              False)
         nsmap = {XMI: XMI_URL,
                  XSI: XSI_URL}
+
         if len(self.contents) == 1:
             root = self.contents[0]
             self.register_eobject_epackage(root)
             tmp_xmi_root = self._go_across(root, serialize_default)
         else:
-            serialize_default = \
-                self.options.get(XMIOptions.SERIALIZE_DEFAULT_VALUES,
-                                 False)
             tag = etree.QName(XMI_URL, 'XMI')
             tmp_xmi_root = etree.Element(tag)
             for root in self.contents:
                 root_node = self._go_across(root, serialize_default)
                 tmp_xmi_root.append(root_node)
+
+        # update nsmap with prefixes register during the nodes creation
         nsmap.update(self.prefixes)
         xmi_root = etree.Element(tmp_xmi_root.tag, nsmap=nsmap)
         xmi_root[:] = tmp_xmi_root[:]
