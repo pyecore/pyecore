@@ -461,6 +461,10 @@ class Resource(object):
         self.contents.append(root)
         root._eresource = self
 
+    def remove(self, root):
+        self.contents.remove(root)
+        root._eresource = None
+
     def open_out_stream(self, other=None):
         if other and not isinstance(other, URI):
             other = URI(other)

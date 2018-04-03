@@ -263,3 +263,25 @@ def test_resource_swap(simplemm):
     assert root.eResource is r2
     assert a.eResource is root.eResource
     assert b.eResource is root.eResource
+
+
+def test_resource_multiroot_urifragment():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+    a2.toa = a3
+
+    resource = XMIResource('test')
+    resource.append(a1)
+    resource.append(a2)
+
+    assert a1.eURIFragment() == '/0'
+    assert a2.eURIFragment() == '/1'
+    assert a3.eURIFragment() == '/1/toa'
+
+    resource.remove(a2)
+    assert len(resource.contents) == 1
+    assert a2._eresource is None

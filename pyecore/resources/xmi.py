@@ -35,6 +35,7 @@ class XMIResource(Resource):
 
         self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
         self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
+
         # Decode the XMI
         if '{{{0}}}XMI'.format(self.prefixes.get(XMI)) == xmlroot.tag:
             real_roots = xmlroot
@@ -43,13 +44,11 @@ class XMIResource(Resource):
 
         for root in real_roots:
             modelroot = self._init_modelroot(root)
-            if not self.contents:
-                self._clean_registers()
-                return
-
             for child in root:
                 self._decode_eobject(child, modelroot)
-        self._decode_ereferences()
+
+        if self.contents:
+            self._decode_ereferences()
 
         self._clean_registers()
         self.uri.close_stream()
@@ -98,13 +97,14 @@ class XMIResource(Resource):
             if prefix == 'xmi' and att_name == 'id':
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
-            elif namespace:
-                try:
-                    # Do stuff with this
-                    # metaclass = self.get_metamodel(namespace)
-                    pass
-                except KeyError:
-                    pass
+            # Do stuff with this
+            # elif namespace:
+            #     try:
+            #
+            #         # metaclass = self.get_metamodel(namespace)
+            #         pass
+            #     except KeyError:
+            #         pass
             elif not namespace:
                 feature = self._find_in_metacache(modelroot, key)
                 if not feature:
@@ -230,8 +230,8 @@ class XMIResource(Resource):
         elif prefix in ('xsi', 'xmi') and att_name == 'type':
             # type has already been handled
             pass
-        elif namespace:
-            pass
+        # elif namespace:
+        #     pass
         elif not namespace:
             if att_name == 'href':
                 return

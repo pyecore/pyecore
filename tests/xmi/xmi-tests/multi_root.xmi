@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xmi:XMI xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmi:version="2.0">
+  <ecore:EPackage name="pack1" nsURI="http://pack1/1.0" nsPrefix="pack1">
+    <eClassifiers xsi:type="ecore:EClass" name="A">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString" name="name"/>
+    </eClassifiers>
+  </ecore:EPackage>
+  <ecore:EPackage name="pack2" nsURI="http://pack2/1.0" nsPrefix="pack2">
+    <eClassifiers xsi:type="ecore:EClass" name="B">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt" name="age"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" eType="#/0/A" name="to_a"/>
+    </eClassifiers>
+  </ecore:EPackage>
+</xmi:XMI>
