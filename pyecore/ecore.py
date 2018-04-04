@@ -8,7 +8,6 @@ It defines the basic classes and behavior for PyEcore implementation:
 * EAttribute
 * EReference
 * EDataType
-* EcoreUtils
 
 These concepts are enough if dynamic metamodel instance are handled (code
 generation is not required).
@@ -64,30 +63,6 @@ def getEClassifier(name, searchspace=None):
         return searchspace[name]
     except KeyError:
         return None
-
-
-class EcoreUtils(object):
-    @staticmethod
-    def isinstance(obj, _type):
-        if obj is None:
-            return True
-        elif isinstance(obj, EProxy) and not obj.resolved:
-            return True
-        elif isinstance(obj, _type):
-            return True
-        try:
-            return _type.__isinstance__(obj)
-        except AttributeError:
-            return False
-
-    @staticmethod
-    def getRoot(obj):
-        if not obj:
-            return None
-        previous = obj
-        while previous.eContainer() is not None:
-            previous = previous.eContainer()
-        return previous
 
 
 class Core(object):
@@ -938,6 +913,7 @@ def abstract(cls):
 from .valuecontainer import ECollection, EValue, \
                             EList, EOrderedSet, ESet, EBag, \
                             EDerivedCollection, \
+                            EcoreUtils, \
                             BadValueError  # noqa
 
 
