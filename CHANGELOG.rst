@@ -13,9 +13,10 @@ Changelog
   collection that only proposed an empty implementation. Then, the
   implementation must be manually added.
 
-- Add multi-root support for XMI resources. XMI with multiple roots can now
-  be serialized and deserialized. Their handling is pretty transparent as the
-  addition of a new root goes through the ``append(...)`` method.
+- Add multi-root support for XMI and JSON resources. XMI and JSON with multiple
+  roots can now be serialized and deserialized. Their handling is pretty
+  transparent as the addition of a new root goes through the ``append(...)``
+  method.
 
 - Add a ``remove(...)`` method on resources. This method is pretty much the
   opposite of the ``append(...)`` method on resources, it simply remove a
