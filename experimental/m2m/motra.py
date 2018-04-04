@@ -3,6 +3,7 @@ import pyecore.ecore as Ecore
 from pyecore.resources import ResourceSet, URI, Resource
 import functools
 from pyecore.notification import EObserver
+import inspect
 
 
 class ResultObserver(EObserver):
@@ -80,6 +81,7 @@ class Transformation(object):
     def run(self, **kwargs):
         self.inputs = Parameters(self, self.inputs_def)
         self.outputs = Parameters(self, self.outputs_def)
+        params = {}
         for in_model in self.inputs_def:
             try:
                 param = kwargs.pop(in_model)
@@ -95,16 +97,19 @@ class Transformation(object):
                 else:
                     resource = load_model(param)
                 setattr(self.inputs, in_model, resource)
+                params[in_model] = resource
                 if in_model in self.inouts:
                     setattr(self.outputs, in_model, resource)
+                    params[in_model] = resource
             except KeyError as e:
                 raise type(e)(str(e) + ' is a missing input model'
                               .format(in_model)) from None
         for out_model in list(set(self.outputs_def) - set(self.inouts)):
             resource = self.resource_set.create_resource(URI(out_model))
             setattr(self.outputs, out_model, resource)
+            params[out_model] = resource
         self.primary_output = self.outputs[0]
-        self._main(self.inputs, self.outputs)
+        self._main(**params)
 
     def mapping(self, f=None, output_model=None, when=None):
         if not f:
@@ -121,13 +126,13 @@ class Transformation(object):
             raise ValueError("Missing 'self' parameter for mapping: '{}'"
                              .format(f.__name__))
         f.result_eclass = typing.get_type_hints(f).get('return')
-        f.is_pure_inout = f.result_eclass is None
+        f.inout = f.result_eclass is None
         output_model_name = output_model or self.outputs_def[0]
-        f.output_def = None if f.is_pure_inout else output_model_name
+        f.output_def = None if f.inout else output_model_name
 
         @functools.wraps(f)
         def inner(*args, **kwargs):
-            if f.is_pure_inout:
+            if f.inout:
                 index = f.__code__.co_varnames.index(self_var_name)
                 result = kwargs.get(self_var_name, args[index])
             elif f.result_eclass is Ecore.EClass:
@@ -145,7 +150,8 @@ class Transformation(object):
                         if isinstance(obj, Ecore.EObject)
                         else obj
                         for obj in args]
-            for key, value in kwargs:
+
+            for key, value in kwargs.items():
                 if isinstance(value, Ecore.EObject):
                     kwargs[key] = EObjectProxy(obj)
             try:

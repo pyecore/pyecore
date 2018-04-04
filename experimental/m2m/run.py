@@ -1,5 +1,5 @@
 from pyecore.resources.xmi import XMIResource
-from transfo_example import transfo
+from transfo_example import ghmde2graph as transfo
 
 # generated using
 # https://github.com/kolovos/datasets/blob/master/github-mde/ghmde.ecore
@@ -12,21 +12,18 @@ a = ghmde.Repository(name='repo')
 f = ghmde.File(path='test')
 a.files.append(f)
 
-b = ghmde.Repository()
+# b = ghmde.Repository(name='repo2')
 
 resource = XMIResource()
 resource.append(a)
-resource.append(b)
+# resource.append(b)
 
 # run transfo (multi-root)
-transfo.run(ghmde=resource)
+transfo.run(ghmde_model=resource)
 
-print(transfo.inputs.ghmde.contents[0])
-assert transfo.outputs.other == transfo.primary_output
-assert transfo.outputs.other == transfo.outputs[0]
-print(transfo.outputs.other.contents)
-print(transfo.outputs.test2.contents)
+print(transfo.inputs.ghmde_model.contents[0])
+print(transfo.outputs.graph_model.contents)
+print(transfo.outputs.graph_model.contents[0].nodes)
 
-
-# run transfo (single direct root)
-transfo.run(ghmde=a)
+# # run transfo (single direct root)
+# transfo.run(ghmde=a)
