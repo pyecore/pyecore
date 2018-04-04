@@ -26,12 +26,15 @@ class PyEcoreValue(object):
             return
         if not self.feature.containment:
             return
-        if isinstance(value, EObject):
-            object.__setattr__(value, '_container', self.owner)
-            object.__setattr__(value, '_containment_feature', self.feature)
-        elif previous_value:
-            object.__setattr__(previous_value, '_container', value)
-            object.__setattr__(previous_value, '_containment_feature', value)
+        if value:
+            resource = value.eResource
+            if resource and value in resource.contents:
+                resource.remove(value)
+            value._container = self.owner
+            value._containment_feature = self.feature
+        if previous_value:
+            previous_value._container = None
+            previous_value._containment_feature = None
 
 
 class EValue(PyEcoreValue):

@@ -285,3 +285,21 @@ def test_resource_multiroot_urifragment():
     resource.remove(a2)
     assert len(resource.contents) == 1
     assert a2._eresource is None
+
+
+def test_resource_multiroot_container_changement():
+    resource = XMIResource('testResource')
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+
+    resource = XMIResource('test')
+    resource.append(a1)
+    resource.append(a2)
+
+    assert resource.contents == [a1, a2]
+
+    a1.toa = a2
+    assert resource.contents == [a1]

@@ -984,3 +984,28 @@ def test_explicit_eobject_inheritance():
     A = EClass('A', superclass=(EObject.eClass))
 
     assert isinstance(A, EObject)
+
+
+def test_containerswitching():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+    assert a2.eContainer() is None
+    assert a2.eContainmentFeature() is None
+
+    a1.toa = a2
+    assert a2.eContainer() is a1
+    assert a2.eContainmentFeature() is A.eStructuralFeatures[0]
+
+    a3 = A()
+    a4 = A()
+    a4.toa = a3
+    assert a3.eContainer() is a4
+    assert a3.eContainmentFeature() is A.eStructuralFeatures[0]
+
+    a1.toa = a3
+    assert a3.eContainer() is a1
+    assert a2.eContainer() is None
+    assert a2.eContainmentFeature() is None
