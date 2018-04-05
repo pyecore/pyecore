@@ -164,3 +164,42 @@ def test_json_option_serialize_default_values(tmpdir):
     assert dct['x'] == 0.0
     assert dct['z'] == 0.0
     assert 'y' not in dct
+
+
+def test_json_save_multiple_roots(tmpdir):
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    f = tmpdir.mkdir('pyecore-tmp').join('multiple.json')
+    resource = JsonResource(URI(str(f)))
+    resource.append(A(name='root1'))
+    resource.append(A(name='root2'))
+    resource.save()
+
+    dct = json.load(open(str(f)))
+    assert type(dct) is list
+    assert dct[0]['name'] == 'root1'
+    assert dct[1]['name'] == 'root2'
+
+
+def test_json_save_multiple_roots_roundtrip(tmpdir):
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    f = tmpdir.mkdir('pyecore-tmp').join('multiple.json')
+    resource = JsonResource(URI(str(f)))
+    resource.append(A(name='root1'))
+    resource.append(A(name='root2'))
+    resource.save()
+
+    global_registry[pack.nsURI] = pack
+    resource = JsonResource(URI(str(f)))
+    resource.load()
+    assert len(resource.contents) == 2
+    assert resource.contents[0].name == 'root1'
+    assert resource.contents[1].name == 'root2'
+    del global_registry[pack.nsURI]

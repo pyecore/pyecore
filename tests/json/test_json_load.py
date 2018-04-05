@@ -141,3 +141,16 @@ def test__jsonresource_load_enum_incomplete_eclassrefs(rset):
     assert root.bContainer[1].eClass is C
     assert root.bContainer[0].enumatt is MyEnum.getEEnumLiteral('ABC')
     assert root.bContainer[1].enumatt is MyEnum.getEEnumLiteral('DEF')
+
+
+def test__jsonresource_load_multiple_root(rset):
+    A = Ecore.EClass('A')
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    rset.metamodel_registry[pack.nsURI] = pack
+    json_file = path.join('tests', 'json', 'data', 'multiple_root.json')
+    resource = rset.get_resource(json_file)
+
+    assert len(resource.contents) == 2
+    assert resource.contents[0] != resource.contents[1]
