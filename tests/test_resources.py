@@ -303,3 +303,17 @@ def test_resource_multiroot_container_changement():
 
     a1.toa = a2
     assert resource.contents == [a1]
+
+
+def test_resource_extract_rootnum_and_frag():
+    num, frag = Resource.extract_rootnum_and_frag('/1/a.b')
+    assert num == 1
+    assert frag == '/a.b'
+
+    num, frag = Resource.extract_rootnum_and_frag('/123')
+    assert num == 123
+    assert frag == ''
+
+    num, frag = Resource.extract_rootnum_and_frag('/234/a/b/c/d')
+    assert num == 234
+    assert frag == '/a/b/c/d'

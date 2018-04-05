@@ -109,7 +109,7 @@ class ResourceSet(object):
         uri = URI(path.join(apath, uri_str))
         root = self.resources[uri.normalize()]
         if isinstance(root, Resource):
-            root_number, fragment = Resource.extract_root_number(fragment)
+            root_number, fragment = Resource.extract_rootnum_and_frag(fragment)
             root = root.contents[root_number]
         return Resource._navigate_from(fragment, root)
 
@@ -288,7 +288,7 @@ class Resource(object):
             except KeyError:
                 pass
         result = None
-        root_number, fragment = self.extract_root_number(fragment)
+        root_number, fragment = self.extract_rootnum_and_frag(fragment)
         root = self.contents[root_number]
         result = self._navigate_from(fragment, root)
         if result:
@@ -296,10 +296,13 @@ class Resource(object):
             return result
 
     @staticmethod
-    def extract_root_number(fragment):
-        if re.match('^/\d+/.*', fragment):
+    def extract_rootnum_and_frag(fragment):
+        if re.match('^/\d+.*', fragment):
             fragment = fragment[1:]
-            index = fragment.index('/')
+            if '/' in fragment:
+                index = fragment.index('/')
+            else:
+                index = len(fragment)
             root_number = fragment[:index]
             fragment = fragment[index:]
             return (int(root_number), fragment)

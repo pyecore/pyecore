@@ -318,3 +318,26 @@ def test_load_multivalued_attribute():
     b3_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b3.xmi')
     root = rset.get_resource(b3_xmi).contents[0]
     assert root.names == ['abc']
+
+
+def test_load_multipleroot_with_refs():
+    rset = ResourceSet()
+    multi_root = path.join('tests', 'xmi', 'xmi-tests',
+                           'multiple_with_refs.xmi')
+
+    package = Ecore.EPackage('amm', 'ammuri', 'amm')
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    A.eStructuralFeatures.append(Ecore.EReference('toa', A))
+    A.eStructuralFeatures.append(Ecore.EReference('contains', A,
+                                                  containment=True))
+    package.eClassifiers.append(A)
+
+    rset.metamodel_registry[package.nsURI] = package
+    resource = rset.get_resource(URI(str(multi_root)))
+
+    root1, root2 = resource.contents
+    assert root1.contains.toa is root2
+    assert root1.name == 'root1'
+    assert root2.name == 'root2'
+    assert root1.contains.name == 'inner'

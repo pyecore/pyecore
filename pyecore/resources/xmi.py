@@ -218,6 +218,7 @@ class XMIResource(Resource):
                 eatts.append((feature, value))
             else:
                 erefs.append((feature, value))
+        self._resolve_mem[eobject.eURIFragment()] = eobject
         return (feature_container, eobject, eatts, erefs)
 
     def _decode_attribute(self, owner, key, value):
@@ -284,6 +285,7 @@ class XMIResource(Resource):
     def _clean_registers(self):
         self._later.clear()
         self._meta_cache.clear()
+        self._resolve_mem.clear()
 
     def register_nsmap(self, prefix, uri):
         if uri in self.reverse_nsmap:

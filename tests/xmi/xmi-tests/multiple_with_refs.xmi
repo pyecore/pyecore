@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xmi:XMI xmlns:amm="ammuri" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmi:version="2.0">
+  <amm:A name="root1">
+    <contains name="inner" toa="/1"/>
+  </amm:A>
+  <amm:A name="root2"/>
+</xmi:XMI>
