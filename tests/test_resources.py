@@ -263,3 +263,57 @@ def test_resource_swap(simplemm):
     assert root.eResource is r2
     assert a.eResource is root.eResource
     assert b.eResource is root.eResource
+
+
+def test_resource_multiroot_urifragment():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+    a2.toa = a3
+
+    resource = XMIResource('test')
+    resource.append(a1)
+    resource.append(a2)
+
+    assert a1.eURIFragment() == '/0'
+    assert a2.eURIFragment() == '/1'
+    assert a3.eURIFragment() == '/1/toa'
+
+    resource.remove(a2)
+    assert len(resource.contents) == 1
+    assert a2._eresource is None
+
+
+def test_resource_multiroot_container_changement():
+    resource = XMIResource('testResource')
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+
+    resource = XMIResource('test')
+    resource.append(a1)
+    resource.append(a2)
+
+    assert resource.contents == [a1, a2]
+
+    a1.toa = a2
+    assert resource.contents == [a1]
+
+
+def test_resource_extract_rootnum_and_frag():
+    num, frag = Resource.extract_rootnum_and_frag('/1/a.b')
+    assert num == 1
+    assert frag == '/a.b'
+
+    num, frag = Resource.extract_rootnum_and_frag('/123')
+    assert num == 123
+    assert frag == ''
+
+    num, frag = Resource.extract_rootnum_and_frag('/234/a/b/c/d')
+    assert num == 234
+    assert frag == '/a/b/c/d'

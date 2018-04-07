@@ -583,7 +583,7 @@ def test_update_estructuralfeature_in_eclass():
 
     A.eStructuralFeatures.append(EAttribute('name', EString))
     a.name  # We access the name
-    assert a.__dict__['name']._owner is a
+    assert a.__dict__['name'].owner is a
 
 
 def test_get_eattribute():
@@ -967,3 +967,45 @@ def test_eall_ref_attrs():
 
     assert B.eAllReferences() == {A.eStructuralFeatures[1]}
     assert B.eAllAttributes() == {A.eStructuralFeatures[0]}
+
+
+def test_allContent_derived_containment():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('a', A, containment=True))
+    A.eStructuralFeatures.append(EReference('b', A, derived=True,
+                                            containment=True))
+
+    a1, a2 = A(), A()
+    a1.a = a2
+    assert a2 in a1.eContents
+
+
+def test_explicit_eobject_inheritance():
+    A = EClass('A', superclass=(EObject.eClass))
+
+    assert isinstance(A, EObject)
+
+
+def test_containerswitching():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+
+    a1 = A()
+    a2 = A()
+    assert a2.eContainer() is None
+    assert a2.eContainmentFeature() is None
+
+    a1.toa = a2
+    assert a2.eContainer() is a1
+    assert a2.eContainmentFeature() is A.eStructuralFeatures[0]
+
+    a3 = A()
+    a4 = A()
+    a4.toa = a3
+    assert a3.eContainer() is a4
+    assert a3.eContainmentFeature() is A.eStructuralFeatures[0]
+
+    a1.toa = a3
+    assert a3.eContainer() is a1
+    assert a2.eContainer() is None
+    assert a2.eContainmentFeature() is None

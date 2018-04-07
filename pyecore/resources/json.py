@@ -25,7 +25,11 @@ class JsonResource(Resource):
     def load(self, options=None):
         json_value = self.uri.create_instream()
         d = json.loads(json_value.read().decode('utf-8'))
-        self.to_obj(d, first=True)
+        if type(d) is list:
+            for x in d:
+                self.to_obj(x, first=True)
+        else:
+            self.to_obj(d, first=True)
         self.uri.close_stream()
         for inst, refs in self._load_href.items():
             self.process_inst(inst, refs)
@@ -34,8 +38,13 @@ class JsonResource(Resource):
     def save(self, output=None, options=None):
         self.options = options or {}
         stream = self.open_out_stream(output)
-        root = self.contents[0]  # Only single root atm
-        stream.write(json.dumps(self.to_dict(root), indent=self.indent)
+        dict_list = []
+        for root in self.contents:
+            dict_list.append(self.to_dict(root))
+        if len(dict_list) <= 1:
+            dict_list = dict_list[0]
+
+        stream.write(json.dumps(dict_list, indent=self.indent)
                      .encode('utf-8'))
         self.uri.close_stream()
         self.options = None
@@ -47,7 +56,7 @@ class JsonResource(Resource):
             use_id = obj.eResource and obj.eResource.use_uuid
         if use_id:
             self._assign_uuid(obj)
-            return obj._xmiid
+            return obj._internal_id
         else:
             return obj.eURIFragment()
 
@@ -72,6 +81,8 @@ class JsonResource(Resource):
             uri = self.serialize_eclass(obj.eClass)
             d['eClass'] = uri
         for attr in obj._isset:
+            if attr.derived or attr.transient:
+                continue
             is_ereference = isinstance(attr, Ecore.EReference)
             is_ref = is_ereference and not attr.containment
             if is_ereference and attr.eOpposite:
@@ -85,7 +96,7 @@ class JsonResource(Resource):
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
             if self.use_uuid:
                 self._assign_uuid(obj)
-                d['uuid'] = obj._xmiid
+                d['uuid'] = obj._internal_id
         self._already_saved.append(obj)
         return d
 

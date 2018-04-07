@@ -73,6 +73,59 @@ metamodel:
 PyEcore does support dynamic metamodel and static ones (see details in next
 sections).
 
+Navigating in a Model
+---------------------
+
+When you have a model loaded in memory, either loaded from a resource (XMI,
+JSON) or built programmatically, you can navigate from a point to another using
+the name of the meta-attributes/references using their names (as despicted in
+the quickstart). This way, you can get attributes and references values
+directly.
+
+Moreover, for containment references, there is another way of getting the
+contained elements. You can use the reference name, but you can also use the
+``eContents`` reference that keep tracks of all the element that are directly
+contained by another. Let consider the following very simple metaclass and
+some instances:
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass, EReference
+
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('container1', containment=True,
+                                            upper=-1))
+    A.eStructuralFeatures.append(EReference('container2', containment=True,
+                                            upper=-1))
+
+    # we create an element hierarchie which looks like this:
+    # +- a1
+    #   +- a2    (in container1)
+    #     +- a4  (in container1)
+    #   +- a3    (in container2)
+    a1, a2, a3, a4 = A(), A(), A(), A()
+    a1.container1.append(a2)
+    a2.container1.append(a4)
+    a1.container2.append(a3)
+
+
+You can get the children of ``a1`` using ``a1.container1`` and
+``a1.container2``, or you can get all the children directly contained by ``a1``
+like this:
+
+.. code-block:: python
+
+    a1.eContents  # returns a list containing a2 and a3
+
+
+You can also get all the children contained in an element, transitively, using
+the ``eAllContents()`` method that returns a generator over all the children:
+
+.. code-block:: python
+
+    # this will print repr for a2, a4 and a3
+    for child in a1.eAllContents():
+        print(child)
 
 
 Dynamic Metamodels
@@ -400,6 +453,53 @@ not required, and ``super()`` can be used.
             self.tmp = tmp
 
 
+
+Programmatically Create a Metamodel and Serialize it
+----------------------------------------------------
+
+Creating a metamodel programmatically is the same than creating a dynamic
+metamodel. You create ``EClass`` instances, add ``EAttributes`` and
+``EReferences`` to them, and add the instances in an ``EPackage``. For example
+here is a little snippet that creates two metaclasses and add them to the
+an ``EPackage`` instance:
+
+.. code-block:: python
+
+    from pyecore.ecore import *
+
+    # we define a Root that can contain A and B instances, and B instances can hold references towards A instances
+    Root = EClass('Root')
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    B.eStructuralFeatures.append(EReference('to_many_a', A, upper=-1))
+    Root.eStructuralFeatures.append(EReference('a_container', A, containment=True))
+    Root.eStructuralFeatures.append(EReference('b_container', B, contaimnent=True))
+
+    # we add all the concepts to an EPackage
+    my_ecore_schema = EPackage('my_ecor', nsURI='http://myecore/1.0', nsPrefix='myecore')
+    my_ecore_schema.eClassifiers.extend([Root, A, B])
+
+
+Then, in order to serialize it, it's simply a matter of adding the created
+``EPackage`` to a ``Resource`` (you can see more details about ``Resource`` in
+the sections `Importing an Existing XMI Metamodel/Model`_,  `Exporting an
+Existing XMI Resource`_ or `Dealing with JSON Resources`_). Here is a quick
+example of how the created metamodel could be serialized in an XMI format:
+
+.. code-block:: python
+
+    from pyecore.resources import ResourceSet, URI
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI('my/location/my_ecore_schema.ecore'))  # This will create an XMI resource
+    resource.append(my_ecore_schema)  # we add the EPackage instance in the resource
+    resource.save()  # we then serialize it
+
+This process is identical to the one you would apply for serializing almost any
+kind of models.
+
+
 Notifications
 -------------
 
@@ -625,6 +725,26 @@ You can also use a ``ResourceSet`` to deal with this:
     >>> resource.save()
 
 
+Multiple Root XMI Resource
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyEcore supports XMI resources with multiple roots. When deserialized, the
+``contents`` attribute of the loaded ``Resource`` contains all the deserialized
+roots (usually, only one is used). If you want to add a new root to your
+resource, you only can simply use the ``append(...)`` method:
+
+.. code-block:: python
+
+    from pyecore.resources import ResourceSet, URI
+
+    # we suppose we have already existing roots named 'root1' and 'root2'
+    rset = ResourceSet()
+    resource = rset.create_resource(URI('my/path.xmi'))
+    resource.append(root1)
+    resource.append(root2)
+    resource.save()
+
+
 Altering XMI ``xsi:type`` serialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -635,13 +755,51 @@ a switch, you can pass option to the resource serialization.
 
 .. code-block:: python
 
-    from pyecore.resources.XMI import XMIOptions
+    from pyecore.resources.xmi import XMIOptions
 
     # ... we assume we have a 'XMIResource' in the 'resource' variable
     options = {
         XMIOptions.OPTION_USE_XMI_TYPE: True
     }
     resource.save(options=options)
+
+Using UUID to reference elements instead of URI fragments during serialization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the XMI resource, the elements are classicaly referenced using an URI
+fragment. This fragment is built using the containment reference name and the
+object position in the resource. If you load a model that contains UUIDs, the
+XMI resource will automatically switch in "UUID mode" and you don't have to
+do anything else, during the next ``save()``, the resource will embedd the
+UUID of each element. However, if you build a resource "from scratch", the
+default behavior is to use the URI fragment. You can change this during the
+resource creation or after it has been created. The following example shows
+how to switch to a "UUID mode" from an existing resource (__e.g.__: created
+using a ``ResourceSet``):
+
+.. code-block:: python
+
+    from pyecore.resources import ResourceSet
+
+    # ... we assume we have a 'root' that is the model we want to serialize
+    rset = ResourceSet()
+    resource = rset.create_resource(URI('my/path/output.xmi'))
+    resource.use_uuid = True
+    resource.append(root)  # we add the root to the resource
+    resource.save()
+
+
+If you don't need a ``ResourceSet``, you can also perform the same thing like
+this:
+
+.. code-block:: python
+
+    from pyecore.resources.xmi import XMIResource
+
+    # ... we assume we have a 'root' that is the model we want to serialize
+    resource = XMIResource(URI('my/path/output.xmi'), use_uuid=True)
+    resource.append(root)
+    resource.save()
 
 
 Force default values serializations
@@ -653,7 +811,7 @@ in the file. You can alter this behavior by passing the
 
 .. code-block:: python
 
-    from pyecore.resources.XMI import XMIOptions
+    from pyecore.resources.xmi import XMIOptions
 
     # ... we assume we have a 'XMIResource' in the 'resource' variable
     options = {
@@ -661,7 +819,7 @@ in the file. You can alter this behavior by passing the
     }
     resource.save(options=options)
 
-This option will also introduce the special XML node ``xsi:nill="true"`` when
+This option will also introduce the special XML node ``xsi:nil="true"`` when
 an attribute or a reference is explicitly set to ``None``.
 
 Dealing with JSON Resources

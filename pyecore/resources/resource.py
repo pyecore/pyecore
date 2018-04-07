@@ -5,6 +5,7 @@ serialized. Many ``Resource`` can be contained in a ``ResourceSet``, and
 """
 from uuid import uuid4
 import urllib.request
+import re
 from os import path
 from collections import ChainMap
 from .. import ecore as Ecore
@@ -106,10 +107,11 @@ class ResourceSet(object):
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
-        epackage = self.resources[uri.normalize()]
-        if isinstance(epackage, Resource):
-            epackage = epackage.contents[0]
-        return Resource._navigate_from(fragment, epackage)
+        root = self.resources[uri.normalize()]
+        if isinstance(root, Resource):
+            root_number, fragment = Resource.extract_rootnum_and_frag(fragment)
+            root = root.contents[root_number]
+        return Resource._navigate_from(fragment, root)
 
 
 class URI(object):
@@ -286,11 +288,26 @@ class Resource(object):
             except KeyError:
                 pass
         result = None
-        for root in self.contents:
-            result = self._navigate_from(fragment, root)
-            if result:
-                self._resolve_mem[fragment] = result
-                return result
+        root_number, fragment = self.extract_rootnum_and_frag(fragment)
+        root = self.contents[root_number]
+        result = self._navigate_from(fragment, root)
+        if result:
+            self._resolve_mem[fragment] = result
+            return result
+
+    @staticmethod
+    def extract_rootnum_and_frag(fragment):
+        if re.match('^/\d+.*', fragment):
+            fragment = fragment[1:]
+            if '/' in fragment:
+                index = fragment.index('/')
+            else:
+                index = len(fragment)
+            root_number = fragment[:index]
+            fragment = fragment[index:]
+            return (int(root_number), fragment)
+        else:
+            return (0, fragment)
 
     def prefix2epackage(self, prefix):
         nsURI = None
@@ -429,16 +446,16 @@ class Resource(object):
                 return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
         if self.use_uuid:
             self._assign_uuid(obj)
-            return (obj._xmiid, False)
+            return (obj._internal_id, False)
         return (obj.eURIFragment(), False)
 
     def _assign_uuid(self, obj):
         # sets an uuid if the resource should deal with
         # and obj has none yet (addition to the resource for example)
-        if not obj._xmiid:
+        if not obj._internal_id:
             uuid = str(uuid4())
             self.uuid_dict[uuid] = obj
-            obj._xmiid = uuid
+            obj._internal_id = uuid
 
     def append(self, root):
         if not isinstance(root, Ecore.EObject):
@@ -446,6 +463,10 @@ class Resource(object):
                              'but received {0} instead.'.format(type(root)))
         self.contents.append(root)
         root._eresource = self
+
+    def remove(self, root):
+        self.contents.remove(root)
+        root._eresource = None
 
     def open_out_stream(self, other=None):
         if other and not isinstance(other, URI):

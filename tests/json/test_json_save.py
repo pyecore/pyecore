@@ -18,6 +18,9 @@ def lib():
     MyRoot.a_container = Ecore.EReference('a_container', eType=AbsA, upper=-1,
                                           containment=True)
     MyRoot.eStructuralFeatures.append(MyRoot.a_container)
+    MyRoot.eStructuralFeatures.append(Ecore.EAttribute('trans',
+                                                       eType=Ecore.EString,
+                                                       transient=True))
     package.eClassifiers.extend([MyRoot, A, SubA, AbsA])
     package.MyRoot = MyRoot
     package.SubA = SubA
@@ -64,6 +67,7 @@ def test_json_resource_createset(tmpdir, lib):
     a1 = lib.A()
     suba1 = lib.SubA()
     root.a_container.extend([a1, suba1])
+    root.trans = 'transient_value'
 
     # we add the elements to the resource
     resource.append(root)
@@ -160,3 +164,42 @@ def test_json_option_serialize_default_values(tmpdir):
     assert dct['x'] == 0.0
     assert dct['z'] == 0.0
     assert 'y' not in dct
+
+
+def test_json_save_multiple_roots(tmpdir):
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    f = tmpdir.mkdir('pyecore-tmp').join('multiple.json')
+    resource = JsonResource(URI(str(f)))
+    resource.append(A(name='root1'))
+    resource.append(A(name='root2'))
+    resource.save()
+
+    dct = json.load(open(str(f)))
+    assert type(dct) is list
+    assert dct[0]['name'] == 'root1'
+    assert dct[1]['name'] == 'root2'
+
+
+def test_json_save_multiple_roots_roundtrip(tmpdir):
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    f = tmpdir.mkdir('pyecore-tmp').join('multiple.json')
+    resource = JsonResource(URI(str(f)))
+    resource.append(A(name='root1'))
+    resource.append(A(name='root2'))
+    resource.save()
+
+    global_registry[pack.nsURI] = pack
+    resource = JsonResource(URI(str(f)))
+    resource.load()
+    assert len(resource.contents) == 2
+    assert resource.contents[0].name == 'root1'
+    assert resource.contents[1].name == 'root2'
+    del global_registry[pack.nsURI]

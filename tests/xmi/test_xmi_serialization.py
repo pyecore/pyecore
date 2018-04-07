@@ -3,7 +3,7 @@ import os
 from lxml import etree
 import pyecore.ecore as Ecore
 from pyecore.resources import *
-from pyecore.resources.xmi import XMIResource, XMIOptions
+from pyecore.resources.xmi import XMIResource, XMIOptions, XMI_URL
 
 
 @pytest.fixture(scope='module')
@@ -186,3 +186,37 @@ def test_xmi_save_none_value(tmpdir):
         assert xmlroot[0].tag in ('name', 'element')
         assert xmlroot[1].tag in ('name', 'element')
         assert xmlroot[0].tag != xmlroot[1].tag
+
+
+def test_xmi_save_empty_model(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('empty.xmi')
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(f)))
+    resource.save()
+
+
+def test_xmi_multiroot_save(tmpdir):
+    # Define a simple model that will be split in many roots
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
+    pack1 = Ecore.EPackage('pack1', nsURI='http://pack1/1.0', nsPrefix='pack1')
+    pack1.eClassifiers.append(A)
+
+    B = Ecore.EClass('B')
+    B.eStructuralFeatures.append(Ecore.EAttribute('age', Ecore.EInt))
+    B.eStructuralFeatures.append(Ecore.EReference('to_a', A))
+    pack2 = Ecore.EPackage('pack2', nsURI='http://pack2/1.0', nsPrefix='pack2')
+    pack2.eClassifiers.append(B)
+
+    f = tmpdir.mkdir('pyecore-tmp').join('multi_root.xmi')
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(f)))
+    resource.append(pack1)
+    resource.append(pack2)
+    resource.save()
+
+    with open(str(f), 'r') as f:
+        tree = etree.parse(f)
+        xmlroot = tree.getroot()
+        assert xmlroot.tag == '{{{0}}}XMI'.format(XMI_URL)

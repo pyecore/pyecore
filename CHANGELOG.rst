@@ -1,12 +1,55 @@
 Changelog
 ---------
 
+0.8.0
++++++
+
+**Features**
+- Add first support for ``EDerivedCollection``. The derived collections are
+  obtained from many features that are also marked as derived. A derived
+  collection does not stores nor gets direct information, instead it fetches
+  information from other collection, compute a result and store it. In the
+  realisation, a derived collection will inherits from a generic derived
+  collection that only proposed an empty implementation. Then, the
+  implementation must be manually added.
+
+- Add multi-root support for XMI and JSON resources. XMI and JSON with multiple
+  roots can now be serialized and deserialized. Their handling is pretty
+  transparent as the addition of a new root goes through the ``append(...)``
+  method.
+
+- Add a ``remove(...)`` method on resources. This method is pretty much the
+  opposite of the ``append(...)`` method on resources, it simply remove a
+  root from the resource.
+
+**Bugfixes**
+- Exception when a wrong type value was inserted in a reference for generated
+  code. The call to the ``EcoreUtils.isinstance`` method were raising an
+  exception as the last part of the code tries to deal with an unexisting
+  methods from the generated class.
+
+- Fix ``EProxy`` 'force resolve' for static metamodels. When a proxy is set
+  towards a static metaclass, the proxy resolution tries to handle the
+  inverse reference list which only exists in the ``.eClass`` "level".
+  Consequently, when a static metaclass is used, the corresponding ``EClass``
+  instance must be used.
+
+**Miscellaneous**
+
+- Add new module for basic values and collections. This module contains the
+  ``ECollection`` and ``EValue`` classes. These class were formerly in the
+  ``ecore`` module, but due to further development, it is better to have it
+  into a dedicated place. This modification is retrocompatible and invisible
+  for existing manual/generated code.
+
+
 0.7.15/16
 +++++++++
 **Features**
 - Add xmi option for default value serialization. This new option allows to
   save the default value in the produced XMI, and it also gives the ability to
   store attribute set to `None` as `xsi:nill="true"` field.
+
 
 0.7.14
 ++++++

@@ -62,16 +62,10 @@ def test__XMLTypeDocumentRoot_full():
     document = XMLTypes.XMLTypeDocumentRoot(mixed={'x': 0},
                                             xMLNSPrefixMap={'y': 1},
                                             xSISchemaLocation={'z': 2},
-                                            cDATA=('my_data',),
-                                            comment=('my_comment',),
-                                            text=('my_text',),
                                             processingInstruction=(inst,))
     assert document.mixed['x'] == 0
     assert document.xMLNSPrefixMap['y'] == 1
     assert document.xSISchemaLocation['z'] == 2
-    assert 'my_data' in document.cDATA
-    assert 'my_text' in document.text
-    assert 'my_comment' in document.comment
     assert inst in document.processingInstruction
 
     document.cDATA = EOrderedSet(document, XMLTypes.XMLTypeDocumentRoot._cDATA)
@@ -91,3 +85,12 @@ def test__XMLTypeDocumentRoot_full():
 def test__XMLTypeDocumentRoot_bad_args():
     with pytest.raises(AttributeError):
         XMLTypes.XMLTypeDocumentRoot(my_arg='test')
+
+    with pytest.raises(AttributeError):
+        XMLTypes.XMLTypeDocumentRoot(cDATA=('my_data',))
+
+    with pytest.raises(AttributeError):
+        XMLTypes.XMLTypeDocumentRoot(comment=('my_comment',))
+
+    with pytest.raises(AttributeError):
+        XMLTypes.XMLTypeDocumentRoot(text=('my_text',))
