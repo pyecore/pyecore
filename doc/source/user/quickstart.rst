@@ -453,6 +453,53 @@ not required, and ``super()`` can be used.
             self.tmp = tmp
 
 
+
+Programmatically Create a Metamodel and Serialize it
+----------------------------------------------------
+
+Creating a metamodel programmatically is the same than creating a dynamic
+metamodel. You create ``EClass`` instances, add ``EAttributes`` and
+``EReferences`` to them, and add the instances in an ``EPackage``. For example
+here is a little snippet that creates two metaclasses and add them to the
+an ``EPackage`` instance:
+
+.. code-block:: python
+
+    from pyecore.ecore import *
+
+    # we define a Root that can contain A and B instances, and B instances can hold references towards A instances
+    Root = EClass('Root')
+    A = EClass('A')
+    B = EClass('B')
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+    B.eStructuralFeatures.append(EReference('to_many_a', A, upper=-1))
+    Root.eStructuralFeatures.append(EReference('a_container', A, containment=True))
+    Root.eStructuralFeatures.append(EReference('b_container', B, contaimnent=True))
+
+    # we add all the concepts to an EPackage
+    my_ecore_schema = EPackage('my_ecor', nsURI='http://myecore/1.0', nsPrefix='myecore')
+    my_ecore_schema.eClassifiers.extend([Root, A, B])
+
+
+Then, in order to serialize it, it's simply a matter of adding the created
+``EPackage`` to a ``Resource`` (you can see more details about ``Resource`` in
+the sections `Importing an Existing XMI Metamodel/Model`_,  `Exporting an
+Existing XMI Resource`_ or `Dealing with JSON Resources`_). Here is a quick
+example of how the created metamodel could be serialized in an XMI format:
+
+.. code-block:: python
+
+    from pyecore.resources import ResourceSet, URI
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI('my/location/my_ecore_schema.ecore'))  # This will create an XMI resource
+    resource.append(my_ecore_schema)  # we add the EPackage instance in the resource
+    resource.save()  # we then serialize it
+
+This process is identical to the one you would apply for serializing almost any
+kind of models.
+
+
 Notifications
 -------------
 
