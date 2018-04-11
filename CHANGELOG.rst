@@ -5,6 +5,7 @@ Changelog
 +++++
 
 **Features**
+
 - Add first support for ``EDerivedCollection``. The derived collections are
   obtained from many features that are also marked as derived. A derived
   collection does not stores nor gets direct information, instead it fetches
@@ -23,6 +24,7 @@ Changelog
   root from the resource.
 
 **Bugfixes**
+
 - Exception when a wrong type value was inserted in a reference for generated
   code. The call to the ``EcoreUtils.isinstance`` method were raising an
   exception as the last part of the code tries to deal with an unexisting
@@ -46,6 +48,7 @@ Changelog
 0.7.15/16
 +++++++++
 **Features**
+
 - Add xmi option for default value serialization. This new option allows to
   save the default value in the produced XMI, and it also gives the ability to
   store attribute set to `None` as `xsi:nill="true"` field.
@@ -54,11 +57,13 @@ Changelog
 0.7.14
 ++++++
 **Features**
+
 -  Add href uuid (de)serialization for XMI. This new features allows the XMI
    for having href that directly uses the uuid of the target element.
 
 
 **Bugfixes**
+
 - Fix nsmap computation for heteroneous models with crossrefs. When crossrefs
   are serialized in XMI, they need to add the referenced namespace at the
   root of the XMI. This fix adds these namespace and their related prefixes.
@@ -68,6 +73,7 @@ Changelog
 ++++++
 
 **Bugfixes**
+
 - Fix bad ``EAttribute`` decoding for XMI root element. By default, each field
   of an XMI root were decoded as strings instead of making use of the
   ``from_string(...)`` method from the type of each attribute. This case is not
