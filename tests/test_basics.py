@@ -159,3 +159,14 @@ def test_modelelement_annotation():
     assert m.getEAnnotation('SOURCE1') is annotation1
     assert m.getEAnnotation('SOURCE2') is annotation2
     assert not m.getEAnnotation('SOURCE3')
+
+
+def test_typedelement_lower_upper():
+    ref = EAttribute('names', EString, upper=-1, lower=1)
+    assert ref.upper == -1
+    assert ref.lower == 1
+
+    ref.upperBound = 1
+    ref.lowerBound = 0
+    assert ref.upper == 1
+    assert ref.lower == 0
