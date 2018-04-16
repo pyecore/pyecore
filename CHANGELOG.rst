@@ -4,6 +4,14 @@ Changelog
 0.8.1
 +++++
 
+**Features**
+
+- Add ``dispatch`` decorator to mimic the ``doSwitch`` from EMF. This
+  implementation relies on the use of the ``singleDispatch`` decorator and does
+  not include a ``ComposedSwitch`` equivalent as some restrictions from EMF are
+  no longer an issue in Python. 
+
+
 **Bugfixes**
 
 - Fixed ``lower`` and ``upper`` derived attributes computation. The previous
