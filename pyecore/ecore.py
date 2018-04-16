@@ -334,7 +334,8 @@ class ETypedElement(ENamedElement):
 
     @property
     def many(self):
-        return self.upperBound > 1 or self.upperBound < 0
+        upperbound = self.upperBound
+        return upperbound < 0 or upperbound > 1
 
 
 class EOperation(ETypedElement):
