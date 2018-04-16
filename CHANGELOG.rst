@@ -1,6 +1,20 @@
 Changelog
 ---------
 
+0.8.1
++++++
+
+**Bugfixes**
+
+- Fixed ``lower`` and ``upper`` derived attributes computation. The previous
+  implementation were considering the attributes as normal ones instead of
+  derived ones.
+
+**Miscellaneous**
+
+- Improved performances of the ``many`` derived attribute.
+
+
 0.8.0
 +++++
 
