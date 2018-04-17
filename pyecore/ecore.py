@@ -333,8 +333,17 @@ class ETypedElement(ENamedElement):
         self.required = required
 
     @property
+    def upper(self):
+        return self.upperBound
+
+    @property
+    def lower(self):
+        return self.lowerBound
+
+    @property
     def many(self):
-        return self.upperBound > 1 or self.upperBound < 0
+        upperbound = self.upperBound
+        return upperbound < 0 or upperbound > 1
 
 
 class EOperation(ETypedElement):
@@ -969,10 +978,9 @@ EAnnotation.contents = EReference('contents', EObject, upper=-1)
 
 ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
-ETypedElement.lower = EAttribute('lower', EInteger, derived=True)
+ETypedElement._lower = EAttribute('lower', EInteger, derived=True)
 ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
-ETypedElement.upper = EAttribute('upper', EInteger,
-                                 default_value=1, derived=True)
+ETypedElement._upper = EAttribute('upper', EInteger, derived=True)
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)

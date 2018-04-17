@@ -12,6 +12,7 @@ def lib():
     package.nsURI = 'http://simplemetamodel/1.0'
     package.nsPrefix = 'simplemm'
     AbsA = Ecore.EClass('AbsA', abstract=True)
+    AbsA.eStructuralFeatures.append(Ecore.EReference('toa', AbsA))
     A = Ecore.EClass('A', superclass=(AbsA,))
     SubA = Ecore.EClass('SubA', superclass=(A,))
     MyRoot = Ecore.EClass('MyRoot')
@@ -220,3 +221,39 @@ def test_xmi_multiroot_save(tmpdir):
         tree = etree.parse(f)
         xmlroot = tree.getroot()
         assert xmlroot.tag == '{{{0}}}XMI'.format(XMI_URL)
+
+
+def test_resource_crossref_uuid(tmpdir, lib):
+    f1 = tmpdir.mkdir('pyecore-tmp2').join('main_uuid1.xmi')
+    f2 = tmpdir.join('pyecore-tmp2', 'href_uuid2.xmi')
+    r1 = XMIResource(URI(str(f1)))
+    r2 = XMIResource(URI(str(f2)))
+    r2.use_uuid = True
+
+    # we create some instances
+    root = lib.MyRoot()
+    a1 = lib.A()
+    a2 = lib.SubA()
+    a1.toa = a2
+    root.a_container.append(a1)
+
+    # we add the elements to the first resource
+    r1.append(root)
+
+    # we create and add element to the second resource
+    root2 = lib.MyRoot()
+    root2.a_container.append(a2)
+    r2.append(root2)
+
+    r1.save()
+    r2.save()
+
+    # we read the model
+    rset = ResourceSet()
+    resource = rset.get_resource(URI(str(f1)))
+    resource.load()
+    assert resource.contents != []
+    assert len(resource.contents[0].eContents) == 1
+    a_obj = resource.contents[0].eContents[0]
+    a_obj.toa.force_resolve()
+    assert isinstance(a_obj.toa, lib.SubA)
