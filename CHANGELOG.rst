@@ -9,7 +9,7 @@ Changelog
 - Add ``dispatch`` decorator to mimic the ``doSwitch`` from EMF. This
   implementation relies on the use of the ``singleDispatch`` decorator and does
   not include a ``ComposedSwitch`` equivalent as some restrictions from EMF are
-  no longer an issue in Python. 
+  no longer an issue in Python.
 
 
 **Bugfixes**
@@ -17,6 +17,10 @@ Changelog
 - Fixed ``lower`` and ``upper`` derived attributes computation. The previous
   implementation were considering the attributes as normal ones instead of
   derived ones.
+
+- Fixed merge issue during ``0.8.0`` release. A case test was not properly
+  working, and models which have crossref towards models that were using
+  UUID raised an exception.
 
 **Miscellaneous**
 
