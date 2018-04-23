@@ -25,6 +25,7 @@ setup(
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
     install_requires=['ordered-set',
+                      'lxml',
                       'defusedxml'],
     tests_require=['pytest'],
     license='BSD 3-Clause',
