@@ -190,7 +190,8 @@ class EObject(ENotifer):
 
     def delete(self, recursive=True):
         if recursive:
-            [obj.delete() for obj in self.eAllContents()]
+            for obj in self.eAllContents():
+                obj.delete()
         seek = set(self._inverse_rels)
         # we also clean all the object references
         seek.update((self, ref) for ref in self.eClass.eAllReferences())

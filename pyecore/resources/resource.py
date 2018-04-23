@@ -476,4 +476,6 @@ class Resource(object):
                 else self.uri.create_outstream())
 
     def extend(self, values):
-        [self.append(x) for x in values]
+        append = self.append
+        for x in values:
+            append(x)
