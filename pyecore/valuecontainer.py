@@ -353,14 +353,14 @@ class EDerivedCollection(MutableSet, MutableSequence, ECollection):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def add(self, item):
+    def add(self, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def discard(self, item):
+    def discard(self, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def insert(self, index, item):
+    def insert(self, index, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
