@@ -643,7 +643,9 @@ class EClass(EClassifier):
             raise BadValueError(got=name, expected=str)
         instance = super().__new__(cls)
         if isinstance(superclass, tuple):
-            [instance.eSuperTypes.append(x) for x in superclass]
+            eSuperType_append = instance.eSuperTypes.append
+            for x in superclass:
+                eSuperType_append(x)
         elif isinstance(superclass, EClass):
             instance.eSuperTypes.append(superclass)
         if metainstance:

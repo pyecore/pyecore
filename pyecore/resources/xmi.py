@@ -2,7 +2,7 @@
 The xmi module introduces XMI resource and XMI parsing.
 """
 from enum import unique, Enum
-from lxml import etree
+from defusedxml.lxml import _etree as etree
 from .resource import Resource
 from .. import ecore as Ecore
 

@@ -80,7 +80,7 @@ class ResourceSet(object):
         resource = self.create_resource(uri)
         try:
             resource.load(options=options)
-        except Exception as e:
+        except Exception:
             self.remove_resource(resource)
             raise
         return resource
@@ -227,7 +227,7 @@ class MetamodelDecoder(object):
 
     @staticmethod
     def can_resolve(path, registry):
-        uri, fragment = MetamodelDecoder.split_path(path)
+        uri, _ = MetamodelDecoder.split_path(path)
         return uri in registry
 
     @staticmethod

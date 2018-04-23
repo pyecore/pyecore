@@ -195,7 +195,8 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        [self.remove(x) for x in set(self)]
+        for x in set(self):
+            self.remove(x)
 
     def select(self, f):
         return [x for x in self if f(x)]
