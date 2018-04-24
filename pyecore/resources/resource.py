@@ -35,6 +35,7 @@ class ResourceSet(object):
 
     .. seealso:: Resource
     """
+
     def __init__(self):
         self.resources = {}
         self.metamodel_registry = ChainMap({}, global_registry)
@@ -297,7 +298,7 @@ class Resource(object):
 
     @staticmethod
     def extract_rootnum_and_frag(fragment):
-        if re.match('^/\d+.*', fragment):
+        if re.match(r'^/\d+.*', fragment):
             fragment = fragment[1:]
             if '/' in fragment:
                 index = fragment.index('/')
@@ -401,7 +402,7 @@ class Resource(object):
                     obj = obj.getEClassifier(key)
                 except AttributeError:
                     obj = next((c for c in obj.eContents
-                               if hasattr(c, 'name') and c.name == key),
+                                if hasattr(c, 'name') and c.name == key),
                                None)
         return obj
 

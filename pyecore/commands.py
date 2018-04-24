@@ -9,7 +9,9 @@ from .resources import ResourceSet
 
 
 class Command(metaclass=ABCMeta):
-    """Provides the basic elements that must be implemented by a custom command.
+    """Provides the basic elements that must be implemented by a custom
+    command.
+
     The methods/properties that need to be implemented are:
     * can_execute (@property)
     * can_undo (@property)

@@ -90,8 +90,8 @@ class JsonResource(Resource):
                     continue
             value = obj.eGet(attr)
             serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
-            if (not self.options.get(serialize_default_option, False) and
-                    value == attr.get_default_value()):
+            if (not self.options.get(serialize_default_option, False)
+                    and value == attr.get_default_value()):
                 continue
             d[attr.name] = self.to_dict(value, is_ref=is_ref)
             if self.use_uuid:

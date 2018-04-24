@@ -265,7 +265,7 @@ class EObject(ENotifer):
         eclass = self.eClass
         relevant = [x.name for x in eclass.eAllStructuralFeatures()]
         relevant.extend([x.name for x in eclass.eAllOperations()
-                        if not x.name.startswith('_')])
+                         if not x.name.startswith('_')])
         return relevant
 
 
@@ -317,9 +317,9 @@ class EPackage(ENamedElement):
 
     @staticmethod
     def __isinstance__(self, instance=None):
-        return (instance is None and
-                (isinstance(self, EPackage) or
-                 inspect.ismodule(self) and hasattr(self, 'nsURI')))
+        return (instance is None
+                and (isinstance(self, EPackage)
+                     or inspect.ismodule(self) and hasattr(self, 'nsURI')))
 
 
 class ETypedElement(ENamedElement):
@@ -401,10 +401,10 @@ class EClassifier(ENamedElement):
 
     @staticmethod
     def __isinstance__(self, instance=None):
-        return (instance is None and
-                (self is EClassifier or
-                 isinstance(self, (EClassifier, MetaEClass)) or
-                 getattr(self, '_staticEClass', False)))
+        return (instance is None
+                and (self is EClassifier
+                     or isinstance(self, (EClassifier, MetaEClass))
+                     or getattr(self, '_staticEClass', False)))
 
 
 class EDataType(EClassifier):
@@ -849,7 +849,8 @@ class EProxy(EObject):
 
     def delete(self, recursive=True):
         if recursive and self.resolved:
-            [obj.delete() for obj in self.eAllContents()]
+            for obj in self.eAllContents():
+                obj.delete()
 
         seek = set(self._inverse_rels)
         if self.resolved:

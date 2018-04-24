@@ -187,8 +187,8 @@ class XMIResource(Resource):
         if etype is Ecore.EClass or etype is Ecore.EClass.eClass:
             name = node.get('name')
             eobject = etype(name)
-        elif (etype is Ecore.EStringToStringMapEntry or
-              etype is Ecore.EStringToStringMapEntry.eClass) \
+        elif (etype is Ecore.EStringToStringMapEntry
+              or etype is Ecore.EStringToStringMapEntry.eClass) \
                 and feature_container is Ecore.EAnnotation.details:
             annotation_key = node.get('key')
             annotation_value = node.get('value')
