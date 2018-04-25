@@ -9,6 +9,7 @@ import re
 from os import path
 from collections import ChainMap
 from .. import ecore as Ecore
+from ..innerutils import ignored
 
 global_registry = {}
 
@@ -281,13 +282,11 @@ class Resource(object):
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if self.use_uuid:
-            try:
+            with ignored(KeyError):
                 frag = fragment[1:] if fragment.startswith('#') \
                                     else fragment
                 frag = frag[2:] if frag.startswith('//') else frag
                 return self.uuid_dict[frag]
-            except KeyError:
-                pass
         result = None
         root_number, fragment = self.extract_rootnum_and_frag(fragment)
         root = self.contents[root_number]
@@ -389,15 +388,13 @@ class Resource(object):
                 annot_content = False
                 obj = obj.contents.select(lambda x: x.name == key)[0]
             else:
-                try:
+                with ignored(Exception):
                     subpack = next((p for p in obj.eSubpackages
                                     if p.name == key),
                                    None)
                     if subpack:
                         obj = subpack
                         continue
-                except Exception:
-                    pass
                 try:
                     obj = obj.getEClassifier(key)
                 except AttributeError:

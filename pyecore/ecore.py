@@ -24,6 +24,7 @@ from datetime import datetime
 from ordered_set import OrderedSet
 from .notification import ENotifer, Kind, EObserver
 from .javatransmap import javaTransMap
+from .innerutils import ignored
 
 
 name = 'ecore'
@@ -76,10 +77,8 @@ class Core(object):
         for _cls in cls.__bases__:
             if _cls is EObject:
                 continue
-            try:
+            with ignored(Exception):
                 eSuperTypes_add(_cls.eClass)
-            except Exception:
-                pass
         # init eclass by reflection
         eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
         for k, feature in cls.__dict__.items():
@@ -166,10 +165,8 @@ class EObject(ENotifer):
     @property
     def eResource(self):
         if self.eContainer():
-            try:
+            with ignored(AttributeError):
                 return self.eContainer().eResource
-            except AttributeError:
-                pass
         return self._eresource
 
     def eGet(self, feature):
