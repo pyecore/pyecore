@@ -23,8 +23,7 @@ from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
 from .notification import ENotifer, Kind, EObserver
-from .javatransmap import javaTransMap
-from .innerutils import ignored
+from .innerutils import ignored, javaTransMap
 
 
 name = 'ecore'
