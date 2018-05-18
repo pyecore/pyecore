@@ -40,13 +40,14 @@ class PyEcoreValue(object):
         super().__init__()
         self.owner = owner
         self.feature = efeature
+        self.is_ref = isinstance(efeature, EReference)
 
     def check(self, value):
         if not EcoreUtils.isinstance(value, self.feature.eType):
             raise BadValueError(value, self.feature.eType)
 
     def _update_container(self, value, previous_value=None):
-        if not isinstance(self.feature, EReference):
+        if not self.is_ref:
             return
         if not self.feature.containment:
             return
@@ -82,7 +83,7 @@ class EValue(PyEcoreValue):
         owner.notify(notif)
         owner._isset.add(efeature)
 
-        if not isinstance(efeature, EReference):
+        if not self.is_ref:
             return
         self._update_container(value, previous_value)
         if not update_opposite:
@@ -141,7 +142,7 @@ class ECollection(PyEcoreValue):
         return self
 
     def _update_opposite(self, owner, new_value, remove=False):
-        if not isinstance(self.feature, EReference):
+        if not self.is_ref:
             return
         eOpposite = self.feature.eOpposite
         if not eOpposite:

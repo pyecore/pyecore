@@ -22,7 +22,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
-from .notification import ENotifer, Kind, EObserver
+from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap
 
 
@@ -671,15 +671,13 @@ class EClass(EClassifier):
                                          instance.__compute_supertypes(),
                                          attr_dict)
         instance.__name__ = name
-        instance.supertypes_updater = EObserver()
-        instance.supertypes_updater.notifyChanged = instance.__update
-        instance._eternal_listener.append(instance.supertypes_updater)
         return instance
 
     def __init__(self, name=None, superclass=None, abstract=False,
                  metainstance=None, **kwargs):
         super().__init__(name, **kwargs)
         self.abstract = abstract
+        self._eternal_listener.append(self)
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
@@ -687,7 +685,7 @@ class EClass(EClassifier):
                             .format(self.name))
         return self.python_class(*args, **kwargs)
 
-    def __update(self, notif):
+    def notifyChanged(self, notif):
         # We do not update in case of static metamodel (could be changed)
         if getattr(self.python_class, '_staticEClass', False):
             return
