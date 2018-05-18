@@ -67,20 +67,20 @@ def getEClassifier(name, searchspace=None):
 
 class Core(object):
     @staticmethod
-    def _promote(cls, abstract=False):
-        cls.eClass = EClass(cls.__name__, metainstance=cls)
-        cls.eClass.abstract = abstract
-        cls._staticEClass = True
+    def _promote(rcls, abstract=False):
+        rcls.eClass = EClass(rcls.__name__, metainstance=rcls)
+        rcls.eClass.abstract = abstract
+        rcls._staticEClass = True
         # init super types
-        eSuperTypes_add = cls.eClass.eSuperTypes.append
-        for _cls in cls.__bases__:
+        eSuperTypes_add = rcls.eClass.eSuperTypes.append
+        for _cls in rcls.__bases__:
             if _cls is EObject:
                 continue
             with ignored(Exception):
                 eSuperTypes_add(_cls.eClass)
         # init eclass by reflection
-        eStructuralFeatures_add = cls.eClass.eStructuralFeatures.append
-        for k, feature in cls.__dict__.items():
+        eStructuralFeatures_add = rcls.eClass.eStructuralFeatures.append
+        for k, feature in rcls.__dict__.items():
             if isinstance(feature, EStructuralFeature):
                 if not feature.name:
                     feature.name = k
@@ -101,13 +101,13 @@ class Core(object):
                     if i < nb_required:
                         parameter.required = True
                     operation.eParameters.append(parameter)
-                cls.eClass.eOperations.append(operation)
+                rcls.eClass.eOperations.append(operation)
 
-    @staticmethod
-    def register_classifier(cls, abstract=False, promote=False):
+    @classmethod
+    def register_classifier(cls, rcls, abstract=False, promote=False):
         if promote:
-            Core._promote(cls, abstract)
-        epackage = sys.modules[cls.__module__]
+            cls._promote(rcls, abstract)
+        epackage = sys.modules[rcls.__module__]
         if not hasattr(epackage, 'eClassifiers'):
             eclassifs = {}
             epackage.eClassifiers = eclassifs
@@ -121,14 +121,14 @@ class Core(object):
                                        nsURI='http://{}/'.format(pack_name))
         if not hasattr(epackage, 'eURIFragment'):
             epackage.eURIFragment = eURIFragment
-        cname = cls.name if isinstance(cls, EClassifier) else cls.__name__
-        epackage.eClassifiers[cname] = cls
-        if isinstance(cls, EDataType):
-            epackage.eClass.eClassifiers.append(cls)
-            cls._container = epackage
+        cname = rcls.name if isinstance(rcls, EClassifier) else rcls.__name__
+        epackage.eClassifiers[cname] = rcls
+        if isinstance(rcls, EDataType):
+            epackage.eClass.eClassifiers.append(rcls)
+            rcls._container = epackage
         else:
-            epackage.eClass.eClassifiers.append(cls.eClass)
-            cls.eClass._container = epackage
+            epackage.eClass.eClassifiers.append(rcls.eClass)
+            rcls.eClass._container = epackage
 
 
 class EObject(ENotifer):
