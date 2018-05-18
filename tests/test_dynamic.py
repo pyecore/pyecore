@@ -406,8 +406,8 @@ def test_create_dynamic_contaiment_getroot():
     a1 = A()
     b1 = B()
     a1.b = b1
-    assert EcoreUtils.getRoot(b1) is a1
-    assert EcoreUtils.getRoot(None) is None
+    assert EcoreUtils.get_root(b1) is a1
+    assert EcoreUtils.get_root(None) is None
     assert b1.eRoot() is a1
 
 
@@ -1009,3 +1009,17 @@ def test_containerswitching():
     assert a3.eContainer() is a1
     assert a2.eContainer() is None
     assert a2.eContainmentFeature() is None
+
+
+def test_structuralfeature_many_computation():
+    attrib = EAttribute('attrib')
+    assert attrib.many is False
+
+    attrib.upperBound = -1
+    assert attrib.many is True
+
+    attrib.lowerBound = 2
+    assert attrib.many is True
+
+    attrib.upperBound = attrib.lowerBound
+    assert attrib.many is False

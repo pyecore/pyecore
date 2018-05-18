@@ -328,6 +328,17 @@ class ETypedElement(ENamedElement):
         self.ordered = ordered
         self.unique = unique
         self.required = required
+        self._many_cache = self._compute_many()
+        self._eternal_listener.append(self)
+
+    def _compute_many(self):
+        upper = self.upperBound
+        lower = self.lowerBound
+        return upper < 0 or upper > 1 and upper - lower > 1
+
+    def notifyChanged(self, notif):
+        if notif.feature is ETypedElement.upperBound:
+            self._many_cache = self._compute_many()
 
     @property
     def upper(self):
@@ -339,8 +350,7 @@ class ETypedElement(ENamedElement):
 
     @property
     def many(self):
-        upperbound = self.upperBound
-        return upperbound < 0 or upperbound > 1
+        return self._many_cache
 
 
 class EOperation(ETypedElement):
@@ -537,9 +547,9 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
         self.derived_class = derived_class or ECollection
         self._name = name
-        self._eternal_listener.append(self)
 
     def notifyChanged(self, notif):
+        super().notifyChanged(notif)
         if notif.feature is ENamedElement.name:
             self._name = notif.new
 
@@ -556,9 +566,9 @@ class EStructuralFeature(ETypedElement):
             instance_dict[name] = new_value
             return new_value._get()
         value = instance_dict[name]
-        if type(value) is EValue:
+        try:
             return value._get()
-        else:
+        except AttributeError:
             return value
 
     def __set__(self, instance, value):

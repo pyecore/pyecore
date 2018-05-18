@@ -26,7 +26,7 @@ class EcoreUtils(object):
             return False
 
     @staticmethod
-    def getRoot(obj):
+    def get_root(obj):
         if not obj:
             return None
         previous = obj
