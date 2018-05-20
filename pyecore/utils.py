@@ -2,8 +2,9 @@
 This module gathers utility classes and functions that can ease metamodel and
 model manipulation.
 """
-from .ecore import EPackage, BadValueError
+from .ecore import EPackage, EObject, BadValueError
 from .notification import EObserver, Kind
+from functools import singledispatch, update_wrapper
 
 
 class DynamicEPackage(EObserver):
@@ -46,3 +47,18 @@ class DynamicEPackage(EObserver):
             #     for element in notification.old:
             #         if element.eResource is None:
             #             delattr(self, element.name)
+
+
+def dispatch(func):
+    dispatcher = singledispatch(func)
+
+    def wrapper(*args, **kw):
+        return dispatcher.dispatch(args[1].__class__)(*args, **kw)
+
+    def register(cls, func=None):
+        if isinstance(cls, EObject):
+            return dispatcher.register(cls.python_class)
+        return dispatcher.register(cls)
+    wrapper.register = register
+    update_wrapper(wrapper, func)
+    return wrapper

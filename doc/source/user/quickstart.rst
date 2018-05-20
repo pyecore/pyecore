@@ -421,8 +421,9 @@ module.
 
     assert TestMeta.eClass.ePackage is eClass
 
-However, when ``@EMetaclass`` is used, the direct ``super()`` call in
-the ``__init__`` constructor cannot be directly called. Instead,
+However, when ``@EMetaclass`` is used and your freshly created metaclass
+inherits from a non metaclass (see the example below), the direct ``super()``
+call in the ``__init__`` constructor cannot be directly called. Instead,
 ``super(x, self)`` must be called:
 
 .. code-block:: python
@@ -901,3 +902,50 @@ serialization. If you want to remove an element from a Resource, you have to
 remove it from its container. PyEcore does not serialize elements that are not
 contained by a ``Resource`` and each reference to this 'not-contained' element
 is not serialized.
+
+
+Traversing the Whole Model with Single Dispatch
+-----------------------------------------------
+
+Sometimese, you need to go across your whole model, and you want to have a
+dedicated function for each time of element you could run into. To achieve
+this goal, PyEcore proposes a simple way of performing single dispatch which
+is equivalent for dynamic and static metamodels. The single dispatch uses
+the default Python ``@singledispatch``.
+
+Here is an example using the `library <https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/EMF_based_meta-model.png/800px-EMF_based_meta-model.png>`_
+metamodel.
+
+.. code-block:: python
+
+    import library
+    from pyecore.utils import dispatch
+
+    class LibrarySwitch(object):
+        @dispatch
+        def do_switch(self, o):
+            print('Fallback for objects of kind ', o.eClass.name)
+
+        @do_switch.register(library.Writer)
+        def writer_switch(self, o):
+            print('Visiting a ', o.eClass.name, ' named ', o.name)
+
+        @do_switch.register(library.Book)
+        def book_switch(self, o):
+            print('Reading a ', o.eClass.name, ' titled ', o.name)
+
+
+    switch = LibrarySwitch()
+    # assuming we have a Library instance in 'mylib'
+    for obj in mylib.eAllContents():
+        switch.do_switch(obj)
+
+
+In this example, only the ``Writer`` and the ``Book`` metaclasses are dispatched
+the other instances would fall in the default ``do_switch`` method. It is also
+important to note that in case of inheritence, if a method for a dedicated
+metaclass is not found, ``dispatch`` will search a method that have been
+registered for a super type of the instance. In this scenario, assuming we have
+a metaclass ``A`` that inherits from ``B`` and that it exists a dispatch for
+``B``, but not for ``A``, any instance of ``A`` would be handled by the  method
+rgistered for ``B``.
