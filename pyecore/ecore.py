@@ -23,7 +23,7 @@ from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
 from .notification import ENotifer, Kind
-from .innerutils import ignored, javaTransMap
+from .innerutils import ignored, javaTransMap, parse_date
 
 
 name = 'ecore'
@@ -962,7 +962,7 @@ EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
-EDate = EDataType('EDate', datetime)
+EDate = EDataType('EDate', datetime, from_string=parse_date)
 EBigDecimal = EDataType('EBigDecimal', Decimal, from_string=Decimal)
 EByte = EDataType('EByte', bytes)
 EByteObject = EDataType('EByteObject', bytes)

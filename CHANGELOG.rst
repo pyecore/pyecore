@@ -8,6 +8,9 @@ Changelog
 
 - Fixed ``many`` faulty computation in cases where ``upper == lower > 1``. This
   case is not very common, but it could occurs.
+- Fixed missing deserialization for ``EDate`` datatype. The missing method on
+  resulted in a bad ``str`` object conversion leading to an exception as the
+  a ``datetime`` object was expected instead of a ``str``.
 
 **Miscellaneous**
 

@@ -3,7 +3,7 @@ This module gives decorators, functions and variables that are shared among the
 different modules.
 """
 from contextlib import contextmanager
-import datetime
+from datetime import datetime
 
 
 @contextmanager
@@ -50,3 +50,7 @@ javaTransMap = {
     'org.eclipse.emf.ecore.util.FeatureMap': (dict, True, None),
     'org.eclipse.emf.ecore.util.FeatureMap$Entry': (dict, True, None)
 }
+
+
+def parse_date(str_date):
+    return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')

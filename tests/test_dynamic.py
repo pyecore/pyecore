@@ -1023,3 +1023,8 @@ def test_structuralfeature_many_computation():
 
     attrib.upperBound = attrib.lowerBound
     assert attrib.many is False
+
+
+def test_datatype_edate_serialization_deserialization():
+    time = datetime.utcnow()
+    assert EDate.from_string(EDate.to_string(time)) == time
