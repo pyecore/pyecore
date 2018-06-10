@@ -349,7 +349,8 @@ class EDerivedCollection(MutableSet, MutableSequence, ECollection):
                              .format(self.feature.name))
 
     def __len__(self):
-        return 0
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
 
     def __setitem__(self, index, item):
         raise AttributeError('Operation not permited for "{}" feature'

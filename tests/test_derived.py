@@ -4,7 +4,8 @@ from pyecore.ecore import *
 
 def test_default_derived_collection():
     collection = EDerivedCollection.create(None, None)
-    assert len(collection) == 0
+    with pytest.raises(AttributeError):
+        len(collection)
 
     with pytest.raises(AttributeError):
         collection[0]
