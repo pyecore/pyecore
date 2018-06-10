@@ -42,13 +42,12 @@ DateTime = EDataType('DateTime',
                                        'XMLGregorianCalendar')
 
 Decimal = EDataType('Decimal', instanceClassName='java.math.BigDecimal',
-                    from_string=lambda x: int(x))
+                    from_string=int)
 
-Double = EDataType('Double', instanceClassName='double',
-                   from_string=lambda x: float(x))
+Double = EDataType('Double', instanceClassName='double', from_string=float)
 
 DoubleObject = EDataType('DoubleObject', instanceClassName='java.lang.Double',
-                         from_string=lambda x: float(x))
+                         from_string=float)
 
 Duration = EDataType('Duration',
                      instanceClassName='javax.xml.datatype.Duration')
@@ -59,11 +58,10 @@ ENTITIESBase = EDataType('ENTITIESBase', instanceClassName='java.util.List')
 
 ENTITY = EDataType('ENTITY', instanceClassName='java.lang.String')
 
-Float = EDataType('Float', instanceClassName='float',
-                  from_string=lambda x: float(x))
+Float = EDataType('Float', instanceClassName='float', from_string=float)
 
 FloatObject = EDataType('FloatObject', instanceClassName='java.lang.Float',
-                        from_string=lambda x: float(x))
+                        from_string=float)
 
 GDay = EDataType('GDay',
                  instanceClassName='javax.xml.datatype.XMLGregorianCalendar')
@@ -92,21 +90,20 @@ IDREFS = EDataType('IDREFS', instanceClassName='java.util.List')
 
 IDREFSBase = EDataType('IDREFSBase', instanceClassName='java.util.List')
 
-Int = EDataType('Int', instanceClassName='int')
+Int = EDataType('Int', instanceClassName='int', from_string=int)
 
 Integer = EDataType('Integer', instanceClassName='java.math.BigInteger',
-                    from_string=lambda x: int(x))
+                    from_string=int)
 
 IntObject = EDataType('IntObject', instanceClassName='java.lang.Integer',
-                      from_string=lambda x: int(x))
+                      from_string=int)
 
 Language = EDataType('Language', instanceClassName='java.lang.String')
 
-Long = EDataType('Long', instanceClassName='long',
-                 from_string=lambda x: int(x))
+Long = EDataType('Long', instanceClassName='long', from_string=int)
 
 LongObject = EDataType('LongObject', instanceClassName='java.lang.Long',
-                       from_string=lambda x: int(x))
+                       from_string=int)
 
 Name = EDataType('Name', instanceClassName='java.lang.String')
 
@@ -114,7 +111,7 @@ NCName = EDataType('NCName', instanceClassName='java.lang.String')
 
 NegativeInteger = EDataType('NegativeInteger',
                             instanceClassName='java.math.BigInteger',
-                            from_string=lambda x: int(x))
+                            from_string=int)
 
 NMTOKEN = EDataType('NMTOKEN', instanceClassName='java.lang.String')
 
@@ -124,11 +121,11 @@ NMTOKENSBase = EDataType('NMTOKENSBase', instanceClassName='java.util.List')
 
 NonNegativeInteger = EDataType('NonNegativeInteger',
                                instanceClassName='java.math.BigInteger',
-                               from_string=lambda x: int(x))
+                               from_string=int)
 
 NonPositiveInteger = EDataType('NonPositiveInteger',
                                instanceClassName='java.math.BigInteger',
-                               from_string=lambda x: int(x))
+                               from_string=int)
 
 NormalizedString = EDataType('NormalizedString',
                              instanceClassName='java.lang.String')
@@ -137,15 +134,14 @@ NOTATION = EDataType('NOTATION', instanceClassName='javax.xml.namespace.QName')
 
 PositiveInteger = EDataType('PositiveInteger',
                             instanceClassName='java.math.BigInteger',
-                            from_string=lambda x: int(x))
+                            from_string=int)
 
 QName = EDataType('QName', instanceClassName='javax.xml.namespace.QName')
 
-Short = EDataType('Short', instanceClassName='short',
-                  from_string=lambda x: int(x))
+Short = EDataType('Short', instanceClassName='short', from_string=int)
 
 ShortObject = EDataType('ShortObject', instanceClassName='java.lang.Short',
-                        from_string=lambda x: int(x))
+                        from_string=int)
 
 String = EDataType('String', instanceClassName='java.lang.String')
 
@@ -155,29 +151,29 @@ Time = EDataType('Time',
 Token = EDataType('Token', instanceClassName='java.lang.String')
 
 UnsignedByte = EDataType('UnsignedByte', instanceClassName='short',
-                         from_string=lambda x: int(x))
+                         from_string=int)
 
 UnsignedByteObject = EDataType('UnsignedByteObject',
                                instanceClassName='java.lang.Short',
-                               from_string=lambda x: int(x))
+                               from_string=int)
 
 UnsignedInt = EDataType('UnsignedInt', instanceClassName='long',
-                        from_string=lambda x: int(x))
+                        from_string=int)
 
 UnsignedIntObject = EDataType('UnsignedIntObject',
                               instanceClassName='java.lang.Long',
-                              from_string=lambda x: int(x))
+                              from_string=int)
 
 UnsignedLong = EDataType('UnsignedLong',
                          instanceClassName='java.math.BigInteger',
-                         from_string=lambda x: int(x))
+                         from_string=int)
 
 UnsignedShort = EDataType('UnsignedShort', instanceClassName='int',
-                          from_string=lambda x: int(x))
+                          from_string=int)
 
 UnsignedShortObject = EDataType('UnsignedShortObject',
                                 instanceClassName='java.lang.Integer',
-                                from_string=lambda x: int(x))
+                                from_string=int)
 
 
 # mixed, any and anyAttribute should have upper=-1 (but dict this implies)

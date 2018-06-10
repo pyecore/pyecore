@@ -26,7 +26,7 @@ class EcoreUtils(object):
             return False
 
     @staticmethod
-    def getRoot(obj):
+    def get_root(obj):
         if not obj:
             return None
         previous = obj
@@ -40,13 +40,14 @@ class PyEcoreValue(object):
         super().__init__()
         self.owner = owner
         self.feature = efeature
+        self.is_ref = isinstance(efeature, EReference)
 
     def check(self, value):
         if not EcoreUtils.isinstance(value, self.feature.eType):
             raise BadValueError(value, self.feature.eType)
 
     def _update_container(self, value, previous_value=None):
-        if not isinstance(self.feature, EReference):
+        if not self.is_ref:
             return
         if not self.feature.containment:
             return
@@ -82,7 +83,7 @@ class EValue(PyEcoreValue):
         owner.notify(notif)
         owner._isset.add(efeature)
 
-        if not isinstance(efeature, EReference):
+        if not self.is_ref:
             return
         self._update_container(value, previous_value)
         if not update_opposite:
@@ -141,7 +142,7 @@ class ECollection(PyEcoreValue):
         return self
 
     def _update_opposite(self, owner, new_value, remove=False):
-        if not isinstance(self.feature, EReference):
+        if not self.is_ref:
             return
         eOpposite = self.feature.eOpposite
         if not eOpposite:
@@ -195,7 +196,8 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        [self.remove(x) for x in set(self)]
+        for x in set(self):
+            self.remove(x)
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -347,20 +349,21 @@ class EDerivedCollection(MutableSet, MutableSequence, ECollection):
                              .format(self.feature.name))
 
     def __len__(self):
-        return 0
+        raise AttributeError('Operation not permited for "{}" feature'
+                             .format(self.feature.name))
 
     def __setitem__(self, index, item):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def add(self, item):
+    def add(self, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def discard(self, item):
+    def discard(self, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))
 
-    def insert(self, index, item):
+    def insert(self, index, value):
         raise AttributeError('Operation not permited for "{}" feature'
                              .format(self.feature.name))

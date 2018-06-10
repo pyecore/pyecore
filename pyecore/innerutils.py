@@ -1,4 +1,22 @@
-import datetime
+"""
+This module gives decorators, functions and variables that are shared among the
+different modules.
+"""
+from contextlib import contextmanager
+from datetime import datetime
+
+
+@contextmanager
+def ignored(*exceptions):
+    """Gives a convenient way of ignoring exceptions.
+
+    Obviously took from a Raymond Hettinger tweet
+    """
+    try:
+        yield
+    except exceptions:
+        pass
+
 
 # Must be completed
 # tuple is '(implem_type, use_type_as_factory, default_value)'
@@ -32,3 +50,7 @@ javaTransMap = {
     'org.eclipse.emf.ecore.util.FeatureMap': (dict, True, None),
     'org.eclipse.emf.ecore.util.FeatureMap$Entry': (dict, True, None)
 }
+
+
+def parse_date(str_date):
+    return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')

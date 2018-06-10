@@ -1,6 +1,6 @@
 import pytest
 from pyecore.ecore import *
-from pyecore.dispatch import dispatch
+from pyecore.utils import dispatch
 
 
 def test_dispatch_dynamic_mm():

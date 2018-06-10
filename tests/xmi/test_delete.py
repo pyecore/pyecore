@@ -300,3 +300,16 @@ def test_delete_resolved_proxy_loaded_models_from_pointed_simple_rel(lib):
     assert root.a[0].simpleb is None  # the element is still in the col.
     assert len(root2.b) == 0
     assert b.eContainer() is None
+
+
+def test_delete_resolved_proxy_with_childre():
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EReference('children', A,
+                                                  containment=True, upper=-1))
+    a0, a1, a2, a3 = A(), A(), A(), A()
+    a0.children.append(a1)
+    a1.children.extend([a2, a3])
+
+    proxy = Ecore.EProxy(wrapped=a1)
+    proxy.delete()
+    assert a0.children == []

@@ -257,3 +257,29 @@ def test_resource_crossref_uuid(tmpdir, lib):
     a_obj = resource.contents[0].eContents[0]
     a_obj.toa.force_resolve()
     assert isinstance(a_obj.toa, lib.SubA)
+
+
+def test_xmi_save_load_EDate(tmpdir):
+    from datetime import datetime
+    f = tmpdir.mkdir('pyecore-tmp').join('default_date.xmi')
+
+    # Build a simple metamodel
+    Root = Ecore.EClass('Root')
+    Root.eStructuralFeatures.append(Ecore.EAttribute('date', Ecore.EDate))
+    pack = Ecore.EPackage('mypack', nsURI='http://mypack/1.0',
+                          nsPrefix='mypack_pref')
+    pack.eClassifiers.append(Root)
+
+    date = datetime.utcnow()
+    r = Root()
+    r.date = date
+
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(f)))
+    resource.append(r)
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[pack.nsURI] = pack
+    resource = rset.get_resource(URI(str(f)))
+    assert resource.contents[0].date == date

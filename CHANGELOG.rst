@@ -1,6 +1,25 @@
 Changelog
 ---------
 
+0.8.2
++++++
+
+**Bugfixes**
+
+- Fixed ``many`` faulty computation in cases where ``upper == lower > 1``. This
+  case is not very common, but it could occurs.
+- Fixed missing deserialization for ``EDate`` datatype. The missing method on
+  resulted in a bad ``str`` object conversion leading to an exception as the
+  a ``datetime`` object was expected instead of a ``str``.
+
+**Miscellaneous**
+
+- Improve ``many`` derived attribute computation, resulting in performance
+  improvements.
+- Add performance improvement tweaks.
+- Move ``dispatch`` from ``pyecore.dispatch`` to ``pyecore.utils``
+
+
 0.8.1
 +++++
 

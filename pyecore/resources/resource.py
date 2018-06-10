@@ -9,6 +9,7 @@ import re
 from os import path
 from collections import ChainMap
 from .. import ecore as Ecore
+from ..innerutils import ignored
 
 global_registry = {}
 
@@ -35,6 +36,7 @@ class ResourceSet(object):
 
     .. seealso:: Resource
     """
+
     def __init__(self):
         self.resources = {}
         self.metamodel_registry = ChainMap({}, global_registry)
@@ -80,7 +82,7 @@ class ResourceSet(object):
         resource = self.create_resource(uri)
         try:
             resource.load(options=options)
-        except Exception as e:
+        except Exception:
             self.remove_resource(resource)
             raise
         return resource
@@ -227,7 +229,7 @@ class MetamodelDecoder(object):
 
     @staticmethod
     def can_resolve(path, registry):
-        uri, fragment = MetamodelDecoder.split_path(path)
+        uri, _ = MetamodelDecoder.split_path(path)
         return uri in registry
 
     @staticmethod
@@ -280,13 +282,11 @@ class Resource(object):
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if self.use_uuid:
-            try:
+            with ignored(KeyError):
                 frag = fragment[1:] if fragment.startswith('#') \
                                     else fragment
                 frag = frag[2:] if frag.startswith('//') else frag
                 return self.uuid_dict[frag]
-            except KeyError:
-                pass
         result = None
         root_number, fragment = self.extract_rootnum_and_frag(fragment)
         root = self.contents[root_number]
@@ -297,7 +297,7 @@ class Resource(object):
 
     @staticmethod
     def extract_rootnum_and_frag(fragment):
-        if re.match('^/\d+.*', fragment):
+        if re.match(r'^/\d+.*', fragment):
             fragment = fragment[1:]
             if '/' in fragment:
                 index = fragment.index('/')
@@ -388,20 +388,18 @@ class Resource(object):
                 annot_content = False
                 obj = obj.contents.select(lambda x: x.name == key)[0]
             else:
-                try:
+                with ignored(Exception):
                     subpack = next((p for p in obj.eSubpackages
                                     if p.name == key),
                                    None)
                     if subpack:
                         obj = subpack
                         continue
-                except Exception:
-                    pass
                 try:
                     obj = obj.getEClassifier(key)
                 except AttributeError:
                     obj = next((c for c in obj.eContents
-                               if hasattr(c, 'name') and c.name == key),
+                                if hasattr(c, 'name') and c.name == key),
                                None)
         return obj
 
@@ -476,4 +474,6 @@ class Resource(object):
                 else self.uri.create_outstream())
 
     def extend(self, values):
-        [self.append(x) for x in values]
+        append = self.append
+        for x in values:
+            append(x)
