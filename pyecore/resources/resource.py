@@ -105,11 +105,12 @@ class ResourceSet(object):
         upath = Resource.normalize(uri)
         uri_str, fragment = upath.rsplit('#', maxsplit=1)
         if uri_str in self.resources:
-            return Resource._navigate_from(fragment, self.resources[uri_str])
-        start = from_resource.uri.normalize() if from_resource else '.'
-        apath = path.dirname(start)
-        uri = URI(path.join(apath, uri_str))
-        root = self.resources[uri.normalize()]
+            root = self.resources[uri_str]
+        else:
+            start = from_resource.uri.normalize() if from_resource else '.'
+            apath = path.dirname(start)
+            uri = URI(path.join(apath, uri_str))
+            root = self.resources[uri.normalize()]
         if isinstance(root, Resource):
             root_number, fragment = Resource.extract_rootnum_and_frag(fragment)
             root = root.contents[root_number]

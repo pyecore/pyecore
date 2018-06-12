@@ -2,7 +2,7 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource, XMIOptions
-from pyecore.resources.resource import HttpURI
+from pyecore.resources.resource import HttpURI, Resource
 from pyecore.utils import DynamicEPackage
 from os import path
 
@@ -113,17 +113,20 @@ def test_resourceset_getresource_ecore_Ecore():
 def test_resourceset_getresource_ecore_UML():
     global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
-    # UMLPrimitiveTypes Metaclasses Creation
-    umltypes = Ecore.EPackage('umltypes')
-    String = Ecore.EDataType('String', str)
-    Boolean = Ecore.EDataType('Boolean', bool, False)
-    Integer = Ecore.EDataType('Integer', int, 0)
-    UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
-    Real = Ecore.EDataType('Real', float, 0.0)
-    umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
-    rset.resources['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+    # # UMLPrimitiveTypes Metaclasses Creation
+    # umltypes = Ecore.EPackage('umltypes')
+    # String = Ecore.EDataType('String', str)
+    # Boolean = Ecore.EDataType('Boolean', bool, False)
+    # Integer = Ecore.EDataType('Integer', int, 0)
+    # UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
+    # Real = Ecore.EDataType('Real', float, 0.0)
+    # umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
+    # type_resource = rset.create_resource('platform:/plugin/org.eclipse.uml2.types/model/Types.ecore')
+    # type_resource.append(umltypes)
     # Register Ecore metamodel as a model
-    rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = Ecore
+    ecore_resource = rset.create_resource('platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore')
+    ecore_resource.append(Ecore.eClass)
+    print(rset.resources)
     # Load the UML metamodel
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
     resource = rset.get_resource(URI(ecore_file))
