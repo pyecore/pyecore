@@ -135,6 +135,8 @@ class URI(object):
     def __split(self):
         if '://' in self.plain:
             self._protocol, rest = self.plain.split('://', maxsplit=1)
+        elif ':/' in self.plain:
+            self._protocol, rest = self.plain.split(':/', maxsplit=1)
         else:
             self._protocol, rest = None, self.plain
         uri_sep = self._uri_split.get(self._protocol, path.sep)
@@ -174,7 +176,9 @@ class URI(object):
         return self.__stream
 
     def normalize(self):
-        return self._uri_norm.get(self.protocol, path.abspath)(self.plain)
+        if self.protocol is not None:
+            return self._uri_norm.get(self.protocol, lambda x: x)(self.plain)
+        return path.abspath(self.plain)
 
     def relative_from_me(self, uri):
         normalized = path.dirname(self.normalize())
@@ -271,11 +275,27 @@ class Resource(object):
         self.uuid_dict = {}
         self.use_uuid = use_uuid
         self.prefixes = {}
-        self.uri = uri
+        self._uri = uri
         self.resource_set = None
         self._decoders = list(Resource._decoders)
         self.contents = []
         self._resolve_mem = {}
+
+    @property
+    def uri(self):
+        return self._uri
+
+    @uri.setter
+    def uri(self, value):
+        uri = value
+        if isinstance(value, str):
+            uri = URI(value)
+        if self.resource_set:
+            old_uri = self._uri.normalize()
+            resources = self.resource_set.resources
+            resources[uri.normalize()] = resources[old_uri]
+            del resources[old_uri]
+        self._uri = uri
 
     def resolve(self, fragment, resource=None):
         fragment = self.normalize(fragment)
