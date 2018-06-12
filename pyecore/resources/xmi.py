@@ -130,8 +130,6 @@ class XMIResource(Resource):
     def _decode_eobject(self, current_node, parent_eobj):
         eobject_info = self._decode_node(parent_eobj, current_node)
         feat_container, eobject, eatts, erefs = eobject_info
-        if not feat_container:
-            return
 
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
@@ -140,10 +138,13 @@ class XMIResource(Resource):
         if erefs:
             self._later.append((eobject, erefs))
 
+        if not feat_container:
+            return
+
         # attach the new eobject to the parent one
-        if feat_container and feat_container.many:
+        if feat_container.many:
             parent_eobj.__getattribute__(feat_container.name).append(eobject)
-        elif feat_container:
+        else:
             parent_eobj.__setattr__(feat_container.name, eobject)
 
         # iterate on children
@@ -159,7 +160,7 @@ class XMIResource(Resource):
         _, node_tag = self.extract_namespace(node.tag)
         feature_container = self._find_in_metacache(parent_eobj, node_tag)
         if not feature_container:
-            raise ValueError('Feature {0} is unknown for {1}, line {2}'
+            raise ValueError('Feature "{0}" is unknown for {1}, line {2}'
                              .format(node_tag,
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
@@ -198,7 +199,12 @@ class XMIResource(Resource):
                 if hasattr(container, 'python_class'):
                     container = container.python_class
                 container.__doc__ = annotation_value
-            return (None, None, [], [])
+            return (None, None, tuple(), tuple())
+        elif node.text and node.text.strip():
+            key = node.tag
+            value = node.text
+            feature = self._decode_attribute(parent_eobj, key, value)
+            return (None, parent_eobj, ((feature, value),), tuple())
         else:
             # idref = node.get('{{{}}}idref'.format(XMI_URL))
             # if idref:

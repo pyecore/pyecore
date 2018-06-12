@@ -344,3 +344,25 @@ def test_load_multipleroot_with_refs():
     assert root1.name == 'root1'
     assert root2.name == 'root2'
     assert root1.contains.name == 'inner'
+
+
+def test_load_xmi_node_attribute():
+    rset = ResourceSet()
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    b_ecore_root = rset.get_resource(b_ecore).contents[0]
+    rset.metamodel_registry[b_ecore_root.nsURI] = b_ecore_root
+
+    b4_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b4.xmi')
+    root = rset.get_resource(b4_xmi).contents[0]
+    assert root.names == ['abc', 'def']
+
+
+def test_load_xmi_missing_attribute():
+    rset = ResourceSet()
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    b_ecore_root = rset.get_resource(b_ecore).contents[0]
+    rset.metamodel_registry[b_ecore_root.nsURI] = b_ecore_root
+
+    b5_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b5.xmi')
+    with pytest.raises(Exception):
+        root = rset.get_resource(b5_xmi).contents[0]
