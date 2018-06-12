@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+0.8.3
++++++
+
+**Features**
+
+- Add support for ``tag`` attributes in XMI.
+- Add ``URI`` change support for ``Resource``.
+
+**Bugfixes**
+
+- Fix bad containment feature value for ``contents`` on ``EAnnotation``.
+- Fix resource resolving for non-trivial ``URI``.
+
 0.8.2
 +++++
 
