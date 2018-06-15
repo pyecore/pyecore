@@ -13,6 +13,7 @@ Changelog
 
 - Fix bad containment feature value for ``contents`` on ``EAnnotation``.
 - Fix resource resolving for non-trivial ``URI``.
+- Fix bad crossreferences serialization for "many" features (collections).
 
 0.8.2
 +++++

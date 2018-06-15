@@ -418,18 +418,19 @@ class XMIResource(Resource):
                     results = [self._build_path_from(x) for x in value]
                     embedded = []
                     crossref = []
-                    for frag, cref in results:
+                    for i, result in enumerate(results):
+                        frag, cref = result
                         if cref:
-                            crossref.append(frag)
+                            crossref.append((i, frag))
                         else:
                             embedded.append(frag)
                     if embedded:
                         result = ' '.join(embedded)
                         node.attrib[feat_name] = result
-                    for ref in crossref:
+                    for i, ref in crossref:
                         sub = etree.SubElement(node, feat_name)
                         sub.attrib['href'] = ref
-                        self._add_explicit_type(sub, value)
+                        self._add_explicit_type(sub, value[i])
                 else:
                     frag, is_crossref = self._build_path_from(value)
                     if is_crossref:
