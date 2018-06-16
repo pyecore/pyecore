@@ -2,9 +2,10 @@
 This module gathers utility classes and functions that can ease metamodel and
 model manipulation.
 """
-from .ecore import EPackage, EObject, BadValueError
+from .ecore import EPackage, EObject, BadValueError, EClass
 from .notification import EObserver, Kind
 from functools import singledispatch, update_wrapper
+import builtins
 
 
 class DynamicEPackage(EObserver):
@@ -62,3 +63,13 @@ def dispatch(func):
     wrapper.register = register
     update_wrapper(wrapper, func)
     return wrapper
+
+
+def install_issubclass_patch():
+    old_issubclass = builtins.issubclass
+
+    def issubclass(self, cls):
+        if isinstance(self, EClass):
+            return old_issubclass(self.python_class, cls)
+        return old_issubclass(self, cls)
+    builtins.issubclass = issubclass

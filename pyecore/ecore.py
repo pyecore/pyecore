@@ -786,6 +786,9 @@ class EClass(EClassifier):
     def __instancecheck__(self, instance):
         return isinstance(instance, self.python_class)
 
+    def __subclasscheck__(self, cls):
+        return issubclass(cls, self.python_class)
+
 
 # Meta methods for static EClass
 class MetaEClass(type):

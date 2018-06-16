@@ -8,6 +8,8 @@ Changelog
 
 - Add support for ``tag`` attributes in XMI.
 - Add ``URI`` change support for ``Resource``.
+- Add patch for ``issubclass`` so the test works regardless the input parameters
+  are ``EClass`` instances or not.
 
 **Bugfixes**
 
