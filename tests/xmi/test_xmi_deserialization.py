@@ -32,7 +32,6 @@ def test_uri_simple():
 
 
 def test_xmiresource_load_ecore_testEMF():
-    global_registry[Ecore.nsURI] = Ecore
     xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
     resource = XMIResource(URI(xmi_file))
     resource.load()
@@ -58,7 +57,6 @@ def test_xmiresource_load_ecore_testEMF():
 
 
 def test_resourceset_getresource_ecore_My():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -76,7 +74,6 @@ def test_resourceset_getresource_ecore_My():
 
 
 def test_resourceset_getresource_instance_MyRoot():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     # register the My.ecore metamodel in the resource set (could be in the global_registry)
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
@@ -97,7 +94,6 @@ def test_resourceset_getresource_instance_MyRoot():
 
 def test_resourceset_getresource_ecore_Ecore():
      # load the ecore metamodel first
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'Ecore.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -111,7 +107,6 @@ def test_resourceset_getresource_ecore_Ecore():
 
 
 def test_resourceset_getresource_ecore_UML():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     # # UMLPrimitiveTypes Metaclasses Creation
     # umltypes = Ecore.EPackage('umltypes')
@@ -366,3 +361,20 @@ def test_load_xmi_missing_attribute():
     b5_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b5.xmi')
     with pytest.raises(Exception):
         root = rset.get_resource(b5_xmi).contents[0]
+
+
+def test_load_xsi_schemaLocation():
+    rset = ResourceSet()
+
+    b_file = path.join('tests', 'xmi', 'xmi-tests', 'b6.xmi')
+    resource = rset.get_resource(b_file)
+
+    assert len(resource.contents) == 1
+
+
+def test_load_xsi_schemaLocation_error():
+    rset = ResourceSet()
+
+    b_file = path.join('tests', 'xmi', 'xmi-tests', 'b7.xmi')
+    with pytest.raises(Exception):
+        rset.get_resource(b_file)

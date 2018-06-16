@@ -5,6 +5,11 @@ from pyecore.resources import global_registry, ResourceSet
 from os import path
 
 
+def teardown_module(module):
+    global_registry.clear()
+    global_registry[Ecore.nsURI] = Ecore
+
+
 @pytest.fixture(scope='module')
 def lib():
     package = EPackage('pack', nsURI='http://pack/1.0', nsPrefix='pack')

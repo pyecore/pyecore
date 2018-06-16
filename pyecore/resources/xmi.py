@@ -35,12 +35,26 @@ class XMIResource(Resource):
 
         self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
         self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
+        self.schema_tag = '{{{0}}}schemaLocation'.format(
+                            self.prefixes.get(XSI))
 
         # Decode the XMI
         if '{{{0}}}XMI'.format(self.prefixes.get(XMI)) == xmlroot.tag:
             real_roots = xmlroot
         else:
             real_roots = [xmlroot]
+
+        def grouper(iterable):
+            args = [iter(iterable)] * 2
+            return zip(*args)
+
+        schema_tag_list = xmlroot.attrib.get(self.schema_tag)
+        if schema_tag_list:
+            self.schema_locations = {prefix: Ecore.EProxy(path, self)
+                                     for prefix, path in
+                                     grouper(schema_tag_list.split())}
+        else:
+            self.schema_locations = {}
 
         for root in real_roots:
             modelroot = self._init_modelroot(root)
@@ -81,11 +95,21 @@ class XMIResource(Resource):
                 self.xsitype = xmi_type_url
         return type_
 
+    def _get_metaclass(self, nsURI, eclass_name):
+        try:
+            return self.get_metamodel(nsURI).getEClassifier(eclass_name)
+        except Exception as e:
+            proxy = self.schema_locations[nsURI]
+            try:
+                return proxy.getEClassifier(eclass_name)
+            except Exception:
+                raise e
+
     def _init_modelroot(self, xmlroot):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
-        eobject = self.get_metamodel(nsURI).getEClassifier(eclass_name)
+        eobject = self._get_metaclass(nsURI, eclass_name)
         if not eobject:
-            raise TypeError('{0} EClass does not exists'.format(eclass_name))
+            raise TypeError('"{0}" EClass does not exists'.format(eclass_name))
         modelroot = eobject()
         modelroot._eresource = self
         self.use_uuid = xmlroot.get(self.xmiid) is not None

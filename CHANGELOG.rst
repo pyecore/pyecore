@@ -10,6 +10,7 @@ Changelog
 - Add ``URI`` change support for ``Resource``.
 - Add patch for ``issubclass`` so the test works regardless the input parameters
   are ``EClass`` instances or not.
+- Add ``xsi:schemaLocation`` deserialization support.
 
 **Bugfixes**
 
