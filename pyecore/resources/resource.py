@@ -93,8 +93,6 @@ class ResourceSet(object):
         nb_fragments = len(fragment)
         if nb_fragments == 2:
             uri_str, fragment = fragment
-        else:
-            uri_str, fragment = fragment[0], '/'
         if uri_str in self.resources:
             return True
         start = from_resource.uri.normalize() if from_resource else '.'
@@ -311,8 +309,6 @@ class Resource(object):
                 return self.uuid_dict[frag]
         result = None
         root_number, fragment = self.extract_rootnum_and_frag(fragment)
-        if not self.contents:
-            return None
         root = self.contents[root_number]
         result = self._navigate_from(fragment, root)
         if result:
