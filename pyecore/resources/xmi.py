@@ -48,13 +48,12 @@ class XMIResource(Resource):
             args = [iter(iterable)] * 2
             return zip(*args)
 
-        schema_tag_list = xmlroot.attrib.get(self.schema_tag)
-        if schema_tag_list:
-            self.schema_locations = {prefix: Ecore.EProxy(path, self)
-                                     for prefix, path in
-                                     grouper(schema_tag_list.split())}
-        else:
-            self.schema_locations = {}
+        self.schema_locations = {}
+        schema_tag_list = xmlroot.attrib.get(self.schema_tag, '')
+        for prefix, path in grouper(schema_tag_list.split()):
+            if '#' not in path:
+                path = path + '#'
+            self.schema_locations[prefix] = Ecore.EProxy(path, self)
 
         for root in real_roots:
             modelroot = self._init_modelroot(root)

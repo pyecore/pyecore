@@ -378,3 +378,11 @@ def test_load_xsi_schemaLocation_error():
     b_file = path.join('tests', 'xmi', 'xmi-tests', 'b7.xmi')
     with pytest.raises(Exception):
         rset.get_resource(b_file)
+
+
+def test_load_xsi_schemaLocation_no_fragment():
+    rset = ResourceSet()
+    schema_file = path.join('tests', 'xmi', 'xmi-tests', 'test_schema.xmi')
+    resource = rset.get_resource(schema_file)
+
+    assert len(resource.contents) == 1
