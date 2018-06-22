@@ -345,3 +345,18 @@ def test_resource_normalize_unknown_protocol():
 
     u = URI('platform:/test')
     assert u.normalize() == u.plain
+
+
+def test_resource_normalize_change_protocol():
+    r = Resource(path.join('..', 'test'))
+    r.uri = 'pathmap://test'
+
+    assert r.uri.normalize() == r.uri.plain
+    assert r.uri.plain == 'pathmap://test'
+
+
+def test_resource_normalize_with_protocol():
+    u1 = URI('test/toto.xmi')
+    u2 = URI('pathmap://UML_METAMODELS/UML.metamodel.uml')
+
+    assert u1.relative_from_me(u2) == u2.plain

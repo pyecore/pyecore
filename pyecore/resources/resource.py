@@ -180,12 +180,13 @@ class URI(object):
             return self._uri_norm.get(self.protocol, lambda x: x)(self.plain)
         return path.abspath(self.plain)
 
-    def relative_from_me(self, uri):
+    def relative_from_me(self, other_uri):
         normalized = path.dirname(self.normalize())
-        other = uri
-        if isinstance(uri, URI):
-            other = uri.normalize()
-        return path.relpath(other, normalized)
+        if isinstance(other_uri, URI):
+            other_normalized = other_uri.normalize()
+            if other_uri.protocol:
+                return other_normalized
+        return path.relpath(other_normalized, normalized)
 
     def apply_relative_from_me(self, relative_path):
         parent_path = path.dirname(self.normalize())
