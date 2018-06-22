@@ -141,22 +141,26 @@ class XMIResource(Resource):
         return modelroot
 
     @staticmethod
-    def _decode_eattribute_value(eobject, eattribute, value):
-        if eattribute.many:
+    def _decode_eattribute_value(eobject, eattribute, value, from_tag=False):
+        if eattribute.many and not from_tag:
             values = value.split()
-            results = [eattribute.eType.from_string(x) for x in values]
+            from_string = eattribute.eType.from_string
+            results = [from_string(x) for x in values]
             eobject.__getattribute__(eattribute.name).extend(results)
+        elif eattribute.many:
+            value = eattribute.eType.from_string(value)
+            eobject.__getattribute__(eattribute.name).append(value)
         else:
             val = eattribute.eType.from_string(value)
             eobject.__setattr__(eattribute.name, val)
 
     def _decode_eobject(self, current_node, parent_eobj):
         eobject_info = self._decode_node(parent_eobj, current_node)
-        feat_container, eobject, eatts, erefs = eobject_info
+        feat_container, eobject, eatts, erefs, from_tag = eobject_info
 
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
-            self._decode_eattribute_value(eobject, eattribute, value)
+            self._decode_eattribute_value(eobject, eattribute, value, from_tag)
 
         if erefs:
             self._later.append((eobject, erefs))
@@ -179,7 +183,7 @@ class XMIResource(Resource):
 
     def _decode_node(self, parent_eobj, node):
         if node.tag == 'eGenericType':  # Special case, TODO
-            return (None, None, [], [])
+            return (None, None, [], [], False)
         _, node_tag = self.extract_namespace(node.tag)
         feature_container = self._find_in_metacache(parent_eobj, node_tag)
         if not feature_container:
@@ -189,11 +193,11 @@ class XMIResource(Resource):
                                      node.sourceline,))
         if self._is_none_node(node):
             parent_eobj.__setattr__(feature_container.name, None)
-            return (None, None, [], [])
+            return (None, None, [], [], False)
         if node.get('href'):
             ref = node.get('href')
             proxy = Ecore.EProxy(path=ref, resource=self)
-            return (feature_container, proxy, [], [])
+            return (feature_container, proxy, [], [], False)
         if self._type_attribute(node):
             prefix, _type = self._type_attribute(node).split(':')
             if not prefix:
@@ -222,16 +226,17 @@ class XMIResource(Resource):
                 if hasattr(container, 'python_class'):
                     container = container.python_class
                 container.__doc__ = annotation_value
-            return (None, None, tuple(), tuple())
+            return (None, None, tuple(), tuple(), False)
         elif node.text and node.text.strip():
             key = node.tag
             value = node.text
             feature = self._decode_attribute(parent_eobj, key, value)
-            return (None, parent_eobj, ((feature, value),), tuple())
+            return (None, parent_eobj, ((feature, value),), tuple(), True)
         else:
             # idref = node.get('{{{}}}idref'.format(XMI_URL))
             # if idref:
-            #     return (None, parent_eobj, [], [(feature_container, idref)])
+            #     return (None, parent_eobj, [],
+            #             [(feature_container, idref)], True)
             eobject = etype()
 
         # we sort the node feature (no containments)
@@ -248,7 +253,7 @@ class XMIResource(Resource):
             else:
                 erefs.append((feature, value))
         self._resolve_mem[eobject.eURIFragment()] = eobject
-        return (feature_container, eobject, eatts, erefs)
+        return (feature_container, eobject, eatts, erefs, False)
 
     def _decode_attribute(self, owner, key, value):
         namespace, att_name = self.extract_namespace(key)
@@ -418,7 +423,20 @@ class XMIResource(Resource):
             elif isinstance(feat, Ecore.EAttribute):
                 etype = feat.eType
                 if feat.many and value:
-                    node.attrib[feat_name] = ' '.join(etype.to_string(value))
+                    to_str = etype.to_string
+                    has_special_char = False
+                    result_list = []
+                    for v in value:
+                        string = to_str(v)
+                        if any(x.isspace() for x in string):
+                            has_special_char = True
+                        result_list.append(string)
+                    if has_special_char:
+                        for v in result_list:
+                            sub = etree.SubElement(node, feat_name)
+                            sub.text = v
+                    else:
+                        node.attrib[feat_name] = ' '.join(result_list)
                     continue
                 default_value = feat.get_default_value()
                 if value != default_value or serialize_default:
