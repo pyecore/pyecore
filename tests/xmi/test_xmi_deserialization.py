@@ -2,7 +2,7 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource, XMIOptions
-from pyecore.resources.resource import HttpURI
+from pyecore.resources.resource import HttpURI, Resource
 from pyecore.utils import DynamicEPackage
 from os import path
 
@@ -32,7 +32,6 @@ def test_uri_simple():
 
 
 def test_xmiresource_load_ecore_testEMF():
-    global_registry[Ecore.nsURI] = Ecore
     xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
     resource = XMIResource(URI(xmi_file))
     resource.load()
@@ -58,7 +57,6 @@ def test_xmiresource_load_ecore_testEMF():
 
 
 def test_resourceset_getresource_ecore_My():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -76,7 +74,6 @@ def test_resourceset_getresource_ecore_My():
 
 
 def test_resourceset_getresource_instance_MyRoot():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     # register the My.ecore metamodel in the resource set (could be in the global_registry)
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
@@ -97,7 +94,6 @@ def test_resourceset_getresource_instance_MyRoot():
 
 def test_resourceset_getresource_ecore_Ecore():
      # load the ecore metamodel first
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'Ecore.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -111,19 +107,21 @@ def test_resourceset_getresource_ecore_Ecore():
 
 
 def test_resourceset_getresource_ecore_UML():
-    global_registry[Ecore.nsURI] = Ecore
     rset = ResourceSet()
-    # UMLPrimitiveTypes Metaclasses Creation
-    umltypes = Ecore.EPackage('umltypes')
-    String = Ecore.EDataType('String', str)
-    Boolean = Ecore.EDataType('Boolean', bool, False)
-    Integer = Ecore.EDataType('Integer', int, 0)
-    UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
-    Real = Ecore.EDataType('Real', float, 0.0)
-    umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
-    rset.resources['platform:/plugin/org.eclipse.uml2.types/model/Types.ecore'] = umltypes
+    # # UMLPrimitiveTypes Metaclasses Creation
+    # umltypes = Ecore.EPackage('umltypes')
+    # String = Ecore.EDataType('String', str)
+    # Boolean = Ecore.EDataType('Boolean', bool, False)
+    # Integer = Ecore.EDataType('Integer', int, 0)
+    # UnlimitedNatural = Ecore.EDataType('UnlimitedNatural', int, 0)
+    # Real = Ecore.EDataType('Real', float, 0.0)
+    # umltypes.eClassifiers.extend([String, Boolean, Integer, UnlimitedNatural, Real])
+    # type_resource = rset.create_resource('platform:/plugin/org.eclipse.uml2.types/model/Types.ecore')
+    # type_resource.append(umltypes)
     # Register Ecore metamodel as a model
-    rset.resources['platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore'] = Ecore
+    ecore_resource = rset.create_resource('platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore')
+    ecore_resource.append(Ecore.eClass)
+    print(rset.resources)
     # Load the UML metamodel
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -341,3 +339,50 @@ def test_load_multipleroot_with_refs():
     assert root1.name == 'root1'
     assert root2.name == 'root2'
     assert root1.contains.name == 'inner'
+
+
+def test_load_xmi_node_attribute():
+    rset = ResourceSet()
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    b_ecore_root = rset.get_resource(b_ecore).contents[0]
+    rset.metamodel_registry[b_ecore_root.nsURI] = b_ecore_root
+
+    b4_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b4.xmi')
+    root = rset.get_resource(b4_xmi).contents[0]
+    assert root.names == ['abc', 'def']
+
+
+def test_load_xmi_missing_attribute():
+    rset = ResourceSet()
+    b_ecore = path.join('tests', 'xmi', 'xmi-tests', 'B.ecore')
+    b_ecore_root = rset.get_resource(b_ecore).contents[0]
+    rset.metamodel_registry[b_ecore_root.nsURI] = b_ecore_root
+
+    b5_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b5.xmi')
+    with pytest.raises(Exception):
+        root = rset.get_resource(b5_xmi).contents[0]
+
+
+def test_load_xsi_schemaLocation():
+    rset = ResourceSet()
+
+    b_file = path.join('tests', 'xmi', 'xmi-tests', 'b6.xmi')
+    resource = rset.get_resource(b_file)
+
+    assert len(resource.contents) == 1
+
+
+def test_load_xsi_schemaLocation_error():
+    rset = ResourceSet()
+
+    b_file = path.join('tests', 'xmi', 'xmi-tests', 'b7.xmi')
+    with pytest.raises(Exception):
+        rset.get_resource(b_file)
+
+
+def test_load_xsi_schemaLocation_no_fragment():
+    rset = ResourceSet()
+    schema_file = path.join('tests', 'xmi', 'xmi-tests', 'test_schema.xmi')
+    resource = rset.get_resource(schema_file)
+
+    assert len(resource.contents) == 1

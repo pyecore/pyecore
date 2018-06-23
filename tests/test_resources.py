@@ -1,7 +1,7 @@
 import pytest
 import pyecore.ecore as Ecore
 from pyecore.ecore import *
-from pyecore.resources import *
+from pyecore.resources import ResourceSet, URI, Resource, global_registry
 from pyecore.resources.resource import Global_URI_decoder
 from pyecore.resources.resource import HttpURI
 from pyecore.resources.xmi import XMIResource
@@ -317,3 +317,46 @@ def test_resource_extract_rootnum_and_frag():
     num, frag = Resource.extract_rootnum_and_frag('/234/a/b/c/d')
     assert num == 234
     assert frag == '/a/b/c/d'
+
+
+def test_resource_update_URI():
+    resource = Resource(uri=URI('test_uri'))
+    assert resource.uri.plain == 'test_uri'
+
+    resource.uri = URI('http://new_URI')
+    assert resource.uri.plain == 'http://new_URI'
+
+    resource.uri = 'http://newnewURI'
+    assert resource.uri.plain == 'http://newnewURI'
+
+    rset = ResourceSet()
+    resource = rset.create_resource('http://test_URI')
+    assert resource.uri.plain == 'http://test_URI'
+
+    resource.uri = 'http://newURI'
+    assert 'http://newURI' in rset.resources
+    assert 'http://test_URI' not in rset.resources
+    assert resource.uri.plain == 'http://newURI'
+
+
+def test_resource_normalize_unknown_protocol():
+    u = URI('pathmap://test')
+    assert u.normalize() == u.plain
+
+    u = URI('platform:/test')
+    assert u.normalize() == u.plain
+
+
+def test_resource_normalize_change_protocol():
+    r = Resource(path.join('..', 'test'))
+    r.uri = 'pathmap://test'
+
+    assert r.uri.normalize() == r.uri.plain
+    assert r.uri.plain == 'pathmap://test'
+
+
+def test_resource_normalize_with_protocol():
+    u1 = URI('test/toto.xmi')
+    u2 = URI('pathmap://UML_METAMODELS/UML.metamodel.uml')
+
+    assert u1.relative_from_me(u2) == u2.plain

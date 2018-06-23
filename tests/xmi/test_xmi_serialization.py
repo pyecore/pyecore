@@ -85,6 +85,7 @@ eClass = Ecore.EPackage(name='test', nsURI='http://test/1.0',
 class A(object):
     name = Ecore.EAttribute('name', Ecore.EString)
     age = Ecore.EAttribute('age', Ecore.EInt)
+    names = Ecore.EAttribute(eType=Ecore.EString, upper=-1)
 
 
 def test_xmi_ecore_save_load(tmpdir):
@@ -283,3 +284,38 @@ def test_xmi_save_load_EDate(tmpdir):
     rset.metamodel_registry[pack.nsURI] = pack
     resource = rset.get_resource(URI(str(f)))
     assert resource.contents[0].date == date
+
+
+def test_xmi_many_string_serialization(tmpdir):
+    rset = ResourceSet()
+    rset.metamodel_registry[eClass.nsURI] = eClass
+
+    f = tmpdir.mkdir('pyecore-tmp').join('many_string_no_whitespace.xmi')
+    a1 = A()
+    a1.names.append('test1')
+    a1.names.append('test2')
+    a1.names.append('test3')
+    resource = rset.create_resource(str(f))
+    resource.append(a1)
+    resource.save()
+    rset.resources.clear()
+    assert rset.resources == {}
+    root = rset.get_resource(str(f)).contents[0]
+    assert 'test1' == root.names[0]
+    assert 'test2' == root.names[1]
+    assert 'test3' == root.names[2]
+
+    f = tmpdir.join('pyecore-tmp', 'many_string_whitespace.xmi')
+    a1 = A()
+    a1.names.append('test 1')
+    a1.names.append('test 2')
+    a1.names.append('test3"')
+    resource = rset.create_resource(str(f))
+    resource.append(a1)
+    resource.save()
+    rset.resources.clear()
+    assert rset.resources == {}
+    root = rset.get_resource(str(f)).contents[0]
+    assert 'test 1' == root.names[0]
+    assert 'test 2' == root.names[1]
+    assert 'test3"' == root.names[2]

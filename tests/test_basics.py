@@ -170,3 +170,28 @@ def test_typedelement_lower_upper():
     ref.lowerBound = 0
     assert ref.upper == 1
     assert ref.lower == 0
+
+
+def test_subclass():
+    @EMetaclass
+    class A(object):
+        pass
+
+    class B(A):
+        pass
+
+    assert issubclass(B, A)
+
+    C = EClass('C', superclass=(A.eClass,))
+    assert issubclass(C, A)
+
+    D = EClass('D', superclass=(C,))
+    assert issubclass(D, C)
+
+    class E(D.python_class):
+        pass
+
+    assert issubclass(E, C)
+    with pytest.raises(Exception):
+        c = C()
+        assert issubclass(c, A)

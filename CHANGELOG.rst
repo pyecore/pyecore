@@ -1,6 +1,25 @@
 Changelog
 ---------
 
+0.8.3
++++++
+
+**Features**
+
+- Add support for ``tag`` attributes in XMI.
+- Add ``URI`` change support for ``Resource``.
+- Add patch for ``issubclass`` so the test works regardless the input parameters
+  are ``EClass`` instances or not.
+- Add ``xsi:schemaLocation`` deserialization support.
+
+**Bugfixes**
+
+- Fix bad containment feature value for ``contents`` on ``EAnnotation``.
+- Fix resource resolving for non-trivial ``URI``.
+- Fix bad crossreferences serialization for "many" features (collections).
+- Fix issue for strings serialization in 'many' ``EAttribute``. Issue where
+  happening when whitespaces were in a String for 'many' ``EAttribute``.
+
 0.8.2
 +++++
 

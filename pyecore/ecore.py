@@ -786,6 +786,9 @@ class EClass(EClassifier):
     def __instancecheck__(self, instance):
         return isinstance(instance, self.python_class)
 
+    def __subclasscheck__(self, cls):
+        return issubclass(cls, self.python_class)
+
 
 # Meta methods for static EClass
 class MetaEClass(type):
@@ -980,7 +983,8 @@ EAnnotation.eModelElement = EReference('eModelElement', EModelElement,
 EAnnotation.source = EAttribute('source', EString)
 EAnnotation.details = EAttribute('details', EStringToStringMapEntry)
 EAnnotation.references = EReference('references', EObject, upper=-1)
-EAnnotation.contents = EReference('contents', EObject, upper=-1)
+EAnnotation.contents = EReference('contents', EObject, upper=-1,
+                                  containment=True)
 
 ETypedElement.ordered = EAttribute('ordered', EBoolean, default_value=True)
 ETypedElement.unique = EAttribute('unique', EBoolean, default_value=True)
