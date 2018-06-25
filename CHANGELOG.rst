@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.8.4
++++++
+
+**Bugfixes**
+
+- Fix issue with empty strings in XMI for 'many' ``EAttribute``. 
+
 0.8.3
 +++++
 
