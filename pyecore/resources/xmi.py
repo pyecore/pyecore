@@ -210,6 +210,8 @@ class XMIResource(Resource):
                                  .format(_type, epackage, node.tag))
         else:
             etype = feature_container.eType
+            if isinstance(etype, Ecore.EProxy):
+                etype.force_resolve()
 
         # we create the instance
         if etype is Ecore.EClass or etype is Ecore.EClass.eClass:
@@ -227,9 +229,9 @@ class XMIResource(Resource):
                     container = container.python_class
                 container.__doc__ = annotation_value
             return (None, None, tuple(), tuple(), False)
-        elif node.text and node.text.strip():
+        elif isinstance(etype, Ecore.EDataType):
             key = node.tag
-            value = node.text
+            value = node.text if node.text else ''
             feature = self._decode_attribute(parent_eobj, key, value)
             return (None, parent_eobj, ((feature, value),), tuple(), True)
         else:

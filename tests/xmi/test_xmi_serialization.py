@@ -310,6 +310,8 @@ def test_xmi_many_string_serialization(tmpdir):
     a1.names.append('test 1')
     a1.names.append('test 2')
     a1.names.append('test3"')
+    a1.names.append('')
+    a1.names.append('    ')
     resource = rset.create_resource(str(f))
     resource.append(a1)
     resource.save()
@@ -319,3 +321,5 @@ def test_xmi_many_string_serialization(tmpdir):
     assert 'test 1' == root.names[0]
     assert 'test 2' == root.names[1]
     assert 'test3"' == root.names[2]
+    assert '' == root.names[3]
+    assert '    ' == root.names[4]

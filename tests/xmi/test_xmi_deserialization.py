@@ -349,7 +349,7 @@ def test_load_xmi_node_attribute():
 
     b4_xmi = path.join('tests', 'xmi', 'xmi-tests', 'b4.xmi')
     root = rset.get_resource(b4_xmi).contents[0]
-    assert root.names == ['abc', 'def']
+    assert root.names == ['abc', 'def', '', '    ']
 
 
 def test_load_xmi_missing_attribute():
