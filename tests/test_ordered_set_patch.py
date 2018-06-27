@@ -91,3 +91,12 @@ def test_orderedset_setitem_slice():
 
     with pytest.raises(KeyError):
         o[:] = [4, 5]
+
+    assert o[:] == [1, 2, 3]
+    assert o[1:] == [2, 3]
+
+
+def test_orderedset_built_from_generator():
+    o = OrderedSet(x for x in ['a', 'b', 'c', 3])
+
+    assert o == ['a', 'b', 'c', 3]

@@ -327,6 +327,12 @@ class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
         super().update(others)
         self._orderedset_update = False
 
+    def copy(self):
+        return ordered_set.OrderedSet(self)
+
+    def subcopy(self, sublist):
+        return ordered_set.OrderedSet(sublist)
+
 
 class ESet(EOrderedSet):
     pass
