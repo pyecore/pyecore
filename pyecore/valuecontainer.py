@@ -330,7 +330,8 @@ class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
     def copy(self):
         return ordered_set.OrderedSet(self)
 
-    def subcopy(self, sublist):
+    @staticmethod
+    def subcopy(sublist):
         return ordered_set.OrderedSet(sublist)
 
 
