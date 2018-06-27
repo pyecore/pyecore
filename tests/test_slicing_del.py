@@ -15,6 +15,7 @@ def simplemm():
     A.eStructuralFeatures.append(EAttribute('ints', EInt, upper=-1, unique=False))
     A.eStructuralFeatures.append(EReference('inners', B, upper=-1, unique=False, containment=True))
     A.eStructuralFeatures.append(EReference('cols', B, upper=-1, unique=False))
+    A.eStructuralFeatures.append(EAttribute('values', EString, upper=-1))
     pack = EPackage('pack', nsURI='http://pack/1.0', nsPrefix='pack')
     pack.eClassifiers.extend([A, B])
     return DynamicEPackage(pack)
@@ -198,3 +199,15 @@ def test_del_multiple_reference(simplemm):
 
     del a.inners
     assert a.inners == default_value
+
+
+def test_slicing_simple_types(simplemm):
+    a = simplemm.A()
+    a.values.extend(['a', 'b', 'c', 'd'])
+
+    assert a.values[:] == ['a', 'b', 'c', 'd']
+    assert a.values[1:] == ['b', 'c', 'd']
+    assert a.values[[1, 0, 3]] == ['b', 'a', 'd']
+
+    with pytest.raises(Exception):
+        a.values['2']

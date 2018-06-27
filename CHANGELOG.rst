@@ -1,12 +1,24 @@
 Changelog
 ---------
 
+0.8.5
++++++
+
+**Bugfixes**
+
+- Fix issue with the new version of the ``ordered-set`` dependency. The new
+  version introduces a change in the way the sublist returned from a slices
+  is managed. The fix proposed in PyEcore introduces a patch for the
+  ``OrderedSet`` class that proposes the same behavior from the new version
+  while letting the opportunity to change it when subclassing ``OrderedSet``.
+
+
 0.8.4
 +++++
 
 **Bugfixes**
 
-- Fix issue with empty strings in XMI for 'many' ``EAttribute``. 
+- Fix issue with empty strings in XMI for 'many' ``EAttribute``.
 
 0.8.3
 +++++
