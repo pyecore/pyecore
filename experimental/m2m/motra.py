@@ -36,13 +36,13 @@ class EObjectProxy(object):
 
 
 def objects(resource):
-    for elt in list(resource.contents):
+    for elt in resource.contents:
         yield elt
         yield from elt.eAllContents()
 
 
 def objects_of_kind(resource, type):
-    for elt in list(resource.contents):
+    for elt in resource.contents:
         if isinstance(elt, type):
             yield elt
         for x in elt.eAllContents():
@@ -136,7 +136,7 @@ class Transformation(object):
                 index = f.__code__.co_varnames.index(self_var_name)
                 result = kwargs.get(self_var_name, args[index])
             elif f.result_eclass is Ecore.EClass:
-                result = f.result_eclass('TMP')
+                result = f.result_eclass('')
             else:
                 result = f.result_eclass()
             inputs = [a for a in args if isinstance(a, Ecore.EObject)]
@@ -153,7 +153,7 @@ class Transformation(object):
 
             for key, value in kwargs.items():
                 if isinstance(value, Ecore.EObject):
-                    kwargs[key] = EObjectProxy(obj)
+                    kwargs[key] = EObjectProxy(value)
             try:
                 f(*new_args, **kwargs)
             finally:
