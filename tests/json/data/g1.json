@@ -1,0 +1,55 @@
+{
+    "eClass": "http://mytest/1.0#//A",
+    "uuid": "a5debb3b-11d7-403b-b8cf-6d80a2051be8",
+    "name": "a1",
+    "children": [
+        {
+            "uuid": "3ec960b5-d47d-49ab-ab6e-b00de24a16ca",
+            "eClass": "http://mytest/1.0#//A",
+            "name": "a2",
+            "parent": {
+                "$ref": "a5debb3b-11d7-403b-b8cf-6d80a2051be8",
+                "eClass": "http://mytest/1.0#//A"
+            },
+            "children": [
+                {
+                    "uuid": "4ad0a8ba-9aa0-4e3d-bc12-2a41c8e5ec35",
+                    "eClass": "http://mytest/1.0#//B",
+                    "name": "b1",        
+                    "parent": {
+                        "$ref": "3ec960b5-d47d-49ab-ab6e-b00de24a16ca",
+                        "eClass": "http://mytest/1.0#//A"        
+                    },
+                    "myC1": {
+                        "$ref": "bbc6c80d-7f2a-42c4-8bf2-bac767818ea6",
+                        "eClass": "http://mytest/1.0#//C"
+                    },
+                    "myC2": {
+                        "$ref": "b938feca-d15e-429a-a254-f137e7d5dc53",
+                        "eClass": "http://mytest/1.0#//C"
+                    }
+                }    
+            ]        
+        },
+        {
+            "uuid": "bbc6c80d-7f2a-42c4-8bf2-bac767818ea6",
+            "eClass": "http://mytest/1.0#//C",
+            "name": "c1",
+            "parent": {
+                "$ref": "a5debb3b-11d7-403b-b8cf-6d80a2051be8",
+                "eClass": "http://mytest/1.0#//A"
+            },
+            "children": []        
+        },
+        {
+            "uuid": "b938feca-d15e-429a-a254-f137e7d5dc53",
+            "eClass": "http://mytest/1.0#//C",
+            "name": "c2",
+            "parent": {
+                "$ref": "a5debb3b-11d7-403b-b8cf-6d80a2051be8",
+                "eClass": "http://mytest/1.0#//A"
+            },
+            "children": []        
+        }
+    ]
+}
