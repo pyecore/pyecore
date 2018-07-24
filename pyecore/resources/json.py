@@ -157,11 +157,11 @@ class JsonResource(Resource):
                                  .format(key, eclass))
             if isinstance(feature, Ecore.EAttribute):
                 eattributes.append((feature, value))
-            elif isinstance(feature, Ecore.EReference):
+            else:
                 if feature.containment:
                     containments.append((feature, value))
-                else:
-                    ereferences.append((feature, value))
+                elif feature.eOpposite is not owning_feature:
+                        ereferences.append((feature, value))
         self.process_inst(inst, eattributes)
         self.process_inst(inst, containments, owning_feature)
         self._load_href[inst] = ereferences
@@ -170,20 +170,13 @@ class JsonResource(Resource):
     def process_inst(self, inst, features, owning_feature=None):
         for feature, value in features:
             if isinstance(value, dict):
-                # if inst.eGet(feature):
-                #     return
                 element = self.to_obj(value, owning_feature=feature)
-                if feature.eOpposite is None or \
-                        feature.eOpposite is not owning_feature:
-                    inst.eSet(feature, element)
+                inst.eSet(feature, element)
             elif isinstance(value, list):
                 elements = [self.to_obj(x, owning_feature=feature)
                             for x in value]
                 elements = [x for x in elements if x is not None]
-                collection = inst.eGet(feature)
-                if feature.eOpposite is None or \
-                        feature.eOpposite is not owning_feature:
-                    collection.extend(elements)
+                inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
                 inst.eSet(feature, feature.eType.from_string(value))
             else:

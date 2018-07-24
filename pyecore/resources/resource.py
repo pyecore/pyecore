@@ -68,7 +68,7 @@ class ResourceSet(object):
     def remove_resource(self, resource):
         if not resource:
             return
-        for key, value in list(self.resources.items()):
+        for key, value in dict(self.resources).items():
             if value is resource:
                 del self.resources[key]
 
@@ -91,12 +91,11 @@ class ResourceSet(object):
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.rsplit('#', maxsplit=1)
         nb_fragments = len(fragment)
+        uri_str = ''
         if nb_fragments == 2:
             uri_str, fragment = fragment
             if uri_str in self.resources:
                 return True
-        else:
-            uri_str = ''
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))

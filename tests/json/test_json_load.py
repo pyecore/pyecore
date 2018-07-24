@@ -56,13 +56,6 @@ def test__jsonresource_load_simple_ecore(rset):
     resource = rset.get_resource(json_file)
     root = resource.contents[0]
     assert isinstance(root, Ecore.EPackage)
-
-
-def test__jsonresource_load_simple_ecore(rset):
-    json_file = path.join('tests', 'json', 'data', 'simple.json')
-    resource = rset.get_resource(json_file)
-    root = resource.contents[0]
-    assert isinstance(root, Ecore.EPackage)
     assert root.name == 'pack'
 
 
@@ -106,7 +99,7 @@ def test__jsonresource_load_mm_instance(rset, mm):
 
     a4 = a2.children[0]
     assert a4.parent is a2 and a4.name == 'a4'
-    
+
 
 def test__jsonresource_load_mm_moderate_instance(rset, mm):
     mm_file = path.join('tests', 'json', 'data', 'moderate.ecore')
@@ -121,7 +114,8 @@ def test__jsonresource_load_mm_moderate_instance(rset, mm):
     a2 = root.children[0]
 
     assert a1.name == 'a1'
-    assert a2.parent == a1
+    assert a2.parent is a1
+    assert len(list(root.eAllContents())) == 4
 
 
 def test__jsonresource_load_mm_errors(rset, mm):
@@ -180,4 +174,3 @@ def test__jsonresource_load_multiple_root(rset):
 
     assert len(resource.contents) == 2
     assert resource.contents[0] != resource.contents[1]
-

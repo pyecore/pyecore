@@ -6,6 +6,22 @@ Changelog
 
 **Bugfixes**
 
+- Fix issue with URI spliting during json deserialization.
+- Fix issue with redundant attributes in json format (Thanks `@TerryKingston <https://github.com/TerryKingston>`_!).
+  Having redundant attributes for opposite containment relationship in the json
+  serialized resource introduced the installation of a new proxy instead of the
+  proper object resolution.
+
+**Miscellaneous**
+
+- Add performances improvement in json deserialization.
+
+
+0.8.5
++++++
+
+**Bugfixes**
+
 - Fix issue with the new version of the ``ordered-set`` dependency. The new
   version introduces a change in the way the sublist returned from a slices
   is managed. The fix proposed in PyEcore introduces a patch for the
