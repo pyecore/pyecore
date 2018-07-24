@@ -34,6 +34,7 @@ class JsonResource(Resource):
         for inst, refs in self._load_href.items():
             self.process_inst(inst, refs)
         self._load_href.clear()
+        self._feature_cache.clear()
 
     def save(self, output=None, options=None):
         self.options = options or {}
@@ -150,7 +151,7 @@ class JsonResource(Resource):
         for key, value in d.items():
             if key in excludes:
                 continue
-            feature = eclass.findEStructuralFeature(key)
+            feature = self._find_feature(eclass, key)
             if not feature:
                 raise ValueError('Unknown feature {} for object "{}"'
                                  .format(key, eclass))
@@ -169,6 +170,8 @@ class JsonResource(Resource):
     def process_inst(self, inst, features, owning_feature=None):
         for feature, value in features:
             if isinstance(value, dict):
+                # if inst.eGet(feature):
+                #     return
                 element = self.to_obj(value, owning_feature=feature)
                 if feature.eOpposite is None or \
                         feature.eOpposite is not owning_feature:

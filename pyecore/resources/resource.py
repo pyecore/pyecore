@@ -93,8 +93,10 @@ class ResourceSet(object):
         nb_fragments = len(fragment)
         if nb_fragments == 2:
             uri_str, fragment = fragment
-        if uri_str in self.resources:
-            return True
+            if uri_str in self.resources:
+                return True
+        else:
+            uri_str = ''
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
@@ -281,6 +283,7 @@ class Resource(object):
         self._decoders = list(Resource._decoders)
         self.contents = []
         self._resolve_mem = {}
+        self._feature_cache = {}
 
     @property
     def uri(self):
@@ -498,3 +501,12 @@ class Resource(object):
         append = self.append
         for x in values:
             append(x)
+
+    def _find_feature(self, eclass, name):
+        fname = eclass.name + '#' + name
+        try:
+            return self._feature_cache[fname]
+        except KeyError:
+            feature = eclass.findEStructuralFeature(name)
+            self._feature_cache[fname] = feature
+            return feature
