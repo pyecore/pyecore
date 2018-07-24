@@ -1,6 +1,22 @@
 Changelog
 ---------
 
+0.8.6
++++++
+
+**Bugfixes**
+
+- Fix issue with URI spliting during json deserialization.
+- Fix issue with redundant attributes in json format (Thanks `@TerryKingston <https://github.com/TerryKingston>`_!).
+  Having redundant attributes for opposite containment relationship in the json
+  serialized resource introduced the installation of a new proxy instead of the
+  proper object resolution.
+
+**Miscellaneous**
+
+- Add performances improvement in json deserialization.
+
+
 0.8.5
 +++++
 

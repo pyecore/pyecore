@@ -15,7 +15,6 @@ generation is not required).
 In addition, ``@EMetaclass`` annotation and ``MetaEClass`` metaclass are
 used for static metamodels definition.
 """
-from functools import partial
 import sys
 import keyword
 import inspect
@@ -111,8 +110,8 @@ class Core(object):
         if not hasattr(epackage, 'eClassifiers'):
             eclassifs = {}
             epackage.eClassifiers = eclassifs
-            epackage.getEClassifier = partial(getEClassifier,
-                                              searchspace=eclassifs)
+            epackage.getEClassifier = \
+                lambda x: getEClassifier(x, searchspace=eclassifs)
         if not hasattr(epackage, 'eClass'):
             pack_name = (epackage.__name__ if epackage.__name__ != '__main__'
                          else 'default_package')

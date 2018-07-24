@@ -68,7 +68,7 @@ class ResourceSet(object):
     def remove_resource(self, resource):
         if not resource:
             return
-        for key, value in list(self.resources.items()):
+        for key, value in dict(self.resources).items():
             if value is resource:
                 del self.resources[key]
 
@@ -91,10 +91,11 @@ class ResourceSet(object):
         uri_path = Resource.normalize(uri_path)
         fragment = uri_path.rsplit('#', maxsplit=1)
         nb_fragments = len(fragment)
+        uri_str = ''
         if nb_fragments == 2:
             uri_str, fragment = fragment
-        if uri_str in self.resources:
-            return True
+            if uri_str in self.resources:
+                return True
         start = from_resource.uri.normalize() if from_resource else '.'
         apath = path.dirname(start)
         uri = URI(path.join(apath, uri_str))
@@ -281,6 +282,7 @@ class Resource(object):
         self._decoders = list(Resource._decoders)
         self.contents = []
         self._resolve_mem = {}
+        self._feature_cache = {}
 
     @property
     def uri(self):
@@ -498,3 +500,12 @@ class Resource(object):
         append = self.append
         for x in values:
             append(x)
+
+    def _find_feature(self, eclass, name):
+        fname = eclass.name + '#' + name
+        try:
+            return self._feature_cache[fname]
+        except KeyError:
+            feature = eclass.findEStructuralFeature(name)
+            self._feature_cache[fname] = feature
+            return feature

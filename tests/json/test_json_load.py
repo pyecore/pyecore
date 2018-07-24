@@ -56,13 +56,6 @@ def test__jsonresource_load_simple_ecore(rset):
     resource = rset.get_resource(json_file)
     root = resource.contents[0]
     assert isinstance(root, Ecore.EPackage)
-
-
-def test__jsonresource_load_simple_ecore(rset):
-    json_file = path.join('tests', 'json', 'data', 'simple.json')
-    resource = rset.get_resource(json_file)
-    root = resource.contents[0]
-    assert isinstance(root, Ecore.EPackage)
     assert root.name == 'pack'
 
 
@@ -108,6 +101,23 @@ def test__jsonresource_load_mm_instance(rset, mm):
     assert a4.parent is a2 and a4.name == 'a4'
 
 
+def test__jsonresource_load_mm_moderate_instance(rset, mm):
+    mm_file = path.join('tests', 'json', 'data', 'moderate.ecore')
+    mm = rset.get_resource(mm_file).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    json_file = path.join('tests', 'json', 'data', 'g1.json')
+    resource = rset.get_resource(json_file)
+    root = resource.contents[0]
+    a1 = root
+    assert root.children
+    a2 = root.children[0]
+
+    assert a1.name == 'a1'
+    assert a2.parent is a1
+    assert len(list(root.eAllContents())) == 4
+
+
 def test__jsonresource_load_mm_errors(rset, mm):
     rset.metamodel_registry[mm.nsURI] = mm
 
@@ -144,6 +154,16 @@ def test__jsonresource_load_enum_incomplete_eclassrefs(rset):
 
 
 def test__jsonresource_load_multiple_root(rset):
+    A = Ecore.EClass('A')
+    pack = Ecore.EPackage('pack', 'packuri', 'pack')
+    pack.eClassifiers.append(A)
+
+    rset.metamodel_registry[pack.nsURI] = pack
+    json_file = path.join('tests', 'json', 'data', 'multiple_root.json')
+    resource = rset.get_resource(json_file)
+
+    assert len(resource.contents) == 2
+    assert resource.contents[0] != resource.contents[1]
     A = Ecore.EClass('A')
     pack = Ecore.EPackage('pack', 'packuri', 'pack')
     pack.eClassifiers.append(A)
