@@ -4,6 +4,8 @@ The json module introduces JSON resource and JSON parsing.
 from enum import unique, Enum
 from functools import lru_cache
 import json
+
+from pyecore.ecore import EReference
 from .resource import Resource
 from .. import ecore as Ecore
 
@@ -161,7 +163,7 @@ class JsonResource(Resource):
                 if feature.containment:
                     containments.append((feature, value))
                 elif feature.eOpposite is not owning_feature:
-                        ereferences.append((feature, value))
+                    ereferences.append((feature, value))
         self.process_inst(inst, eattributes)
         self.process_inst(inst, containments, owning_feature)
         self._load_href[inst] = ereferences
@@ -174,7 +176,8 @@ class JsonResource(Resource):
                 inst.eSet(feature, element)
             elif isinstance(value, list):
                 elements = [self.to_obj(x, owning_feature=feature)
-                            for x in value]
+                            if isinstance(feature, EReference)
+                            else feature.eType.from_string(x) for x in value]
                 elements = [x for x in elements if x is not None]
                 inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
