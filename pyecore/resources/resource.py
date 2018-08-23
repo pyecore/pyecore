@@ -62,7 +62,7 @@ class ResourceSet(object):
             resource = self.resource_factory['*'](uri)
         self.resources[uri.normalize()] = resource
         resource.resource_set = self
-        resource._decoders.insert(0, self)
+        resource.decoders.insert(0, self)
         return resource
 
     def remove_resource(self, resource):
@@ -271,7 +271,7 @@ class LocalMetamodelDecoder(object):
 
 
 class Resource(object):
-    _decoders = [LocalMetamodelDecoder, Global_URI_decoder]
+    decoders = [LocalMetamodelDecoder, Global_URI_decoder]
 
     def __init__(self, uri=None, use_uuid=False):
         self.uuid_dict = {}
@@ -279,7 +279,7 @@ class Resource(object):
         self.prefixes = {}
         self._uri = uri
         self.resource_set = None
-        self._decoders = list(Resource._decoders)
+        self.decoders = list(Resource.decoders)
         self.contents = []
         self._resolve_mem = {}
         self._feature_cache = {}
@@ -363,7 +363,7 @@ class Resource(object):
         return uri, fragment
 
     def _get_href_decoder(self, path):
-        decoder = next((x for x in self._decoders
+        decoder = next((x for x in self.decoders
                         if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
         if not decoder and uri:
@@ -431,7 +431,8 @@ class Resource(object):
         if isinstance(obj, type):
             obj = obj.eClass
 
-        if isinstance(obj, Ecore.EProxy) and not obj.resolved:
+        # if isinstance(obj, Ecore.EProxy) and not obj.resolved:
+        if not getattr(obj, 'resolved', True):
             return (obj._proxy_path, True)
 
         if obj.eResource != self:

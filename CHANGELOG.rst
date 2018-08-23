@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.8.7
++++++
+
+**Miscellaneous**
+
+- Add some performance improvements in resources deserialization.
+
+
 0.8.6
 +++++
 
