@@ -231,5 +231,5 @@ Additional Resources
 ====================
 
 * `This article <http://modeling-languages.com/pyecore-python-eclipse-modeling-framework>`_
-  on the blog of the Professor Jordie Cabot gives more information and
+  on the blog of the Professor Jordi Cabot gives more information and
   implementations details about PyEcore.
