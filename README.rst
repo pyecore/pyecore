@@ -180,13 +180,13 @@ In the current state, the project implements:
 * introduce behavior @runtime,
 * resources auto-load for some cross-references,
 * derived collections,
-* multiple roots ressources.
+* multiple roots ressources,
+* ``xsi:schemaLocation`` support for XMI resources.
 
 The things that are in the roadmap:
 
 * new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
 * new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
-* ``xsi:schemaLocation`` support for XMI resources,
 * URI mapper,
 * improve documentation,
 * copy/paste (?).
@@ -221,10 +221,15 @@ Contributors
 
 Thanks for making PyEcore better!
 
-* Mike Pagel (`@moltob <https://github.com/moltob>`_)
+* Mike Pagel (`@moltob <https://github.com/moltob>`_), which is also the author
+  of `pyecoregen <https://github.com/pyecore/pyecoregen>`_ and `pymultigen <https://github.com/moltob/pymultigen>`_ (on which pyecoregen is based)
+* TerryKingston (`@TerryKingston <https://github.com/TerryKingston>`_)
+* Afonso Pinto (`@afonsobspinto <https://github.com/afonsobspinto>`_)
+
 
 Additional Resources
 ====================
 
-* The article at this address: http://modeling-languages.com/pyecore-python-eclipse-modeling-framework
-  gives more information and implementations details about PyEcore.
+* `This article <http://modeling-languages.com/pyecore-python-eclipse-modeling-framework>`_
+  on the blog of the Professor Jordi Cabot gives more information and
+  implementations details about PyEcore.

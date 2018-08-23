@@ -20,6 +20,7 @@ class A(object):
     name = Ecore.EAttribute(eType=Ecore.EString)
     children = Ecore.EReference(upper=-1, containment=True)
     parent = Ecore.EReference(eOpposite=children)
+    values = Ecore.EAttribute(eType=Ecore.EInt, upper=-1)
 
     def __init__(self, name=None, children=None):
         if children:
@@ -174,3 +175,15 @@ def test__jsonresource_load_multiple_root(rset):
 
     assert len(resource.contents) == 2
     assert resource.contents[0] != resource.contents[1]
+
+
+def test__jsonresource_load_multiple_values_loading(rset, mm):
+    json_file = path.join('tests', 'json', 'data', 'multiple_values.json')
+    rset.metamodel_registry[mm.nsURI] = mm
+    resource = rset.get_resource(json_file)
+    root = resource.contents[0]
+
+    assert root.values
+    assert 1 in root.values
+    assert 2 in root.values
+    assert 3 in root.values

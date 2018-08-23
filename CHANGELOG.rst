@@ -1,6 +1,20 @@
 Changelog
 ---------
 
+0.8.7
++++++
+
+**Bugfixes**
+
+- Fix Json resource deserialization for primitive collections (Thanks `@afonsobspinto <https://github.com/afonsobspinto>`_). The Json deserialization
+  was always assuming that when a collection was found in the Json, it always
+  was a collection of ``EObject`` whereas they could also be primitive values.
+
+**Miscellaneous**
+
+- Add some performance improvements in resources deserialization.
+
+
 0.8.6
 +++++
 

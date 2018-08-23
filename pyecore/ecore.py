@@ -275,7 +275,7 @@ class EModelElement(EObject):
             else:
                 return '#/{}'.format(self.eResource.contents.index(self))
         parent = self.eContainer()
-        if getattr(self, 'name', None):
+        if hasattr(self, 'name'):
             return '{0}/{1}'.format(parent.eURIFragment(), self.name)
         else:
             return super().eURIFragment()
@@ -384,10 +384,7 @@ class EParameter(ETypedElement):
     def to_code(self):
         if self.required:
             return "{0}".format(self.name)
-        if hasattr(self.eType, 'default_value'):
-            default_value = self.eType.default_value
-        else:
-            default_value = None
+        default_value = getattr(self.eType, 'default_value', None)
         return "{0}={1}".format(self.name, default_value)
 
 

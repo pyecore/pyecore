@@ -119,7 +119,7 @@ def test_resourceset_createresource_simple():
     rpath = path.abspath('simpleuri')
     assert rpath in rset.resources
     assert rset.resources[rpath] is resource
-    assert rset in resource._decoders
+    assert rset in resource.decoders
     assert isinstance(resource, rset.resource_factory['*']('').__class__)
 
 
@@ -129,7 +129,7 @@ def test_resourceset_createresource_ecore():
     rpath = path.abspath('simple.ecore')
     assert rpath in rset.resources
     assert rset.resources[rpath] is resource
-    assert rset in resource._decoders
+    assert rset in resource.decoders
     assert isinstance(resource, rset.resource_factory['ecore']('').__class__)
 
 
@@ -139,7 +139,7 @@ def test_resourceset_createresource_xmi():
     rpath = path.abspath('simple.xmi')
     assert rpath in rset.resources
     assert rset.resources[rpath] is resource
-    assert rset in resource._decoders
+    assert rset in resource.decoders
     assert isinstance(resource, rset.resource_factory['xmi']('').__class__)
 
 
