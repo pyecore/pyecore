@@ -173,11 +173,12 @@ class JsonResource(Resource):
                 element = self.to_obj(value, owning_feature=feature)
                 inst.eSet(feature, element)
             elif isinstance(value, list):
-                elements = [self.to_obj(x, owning_feature=feature)
-                            for x in value] \
-                    if isinstance(feature, Ecore.EReference) \
-                    else [feature.eType.from_string(x) for x in value]
-                elements = [x for x in elements if x is not None]
+                if isinstance(feature, Ecore.EReference):
+                    elements = [self.to_obj(x, owning_feature=feature)
+                                for x in value]
+                    elements = [x for x in elements if x is not None]
+                else:
+                    elements = [feature.eType.from_string(x) for x in value]
                 inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
                 inst.eSet(feature, feature.eType.from_string(value))
