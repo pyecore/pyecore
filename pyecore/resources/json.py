@@ -47,6 +47,7 @@ class JsonResource(Resource):
 
         stream.write(json.dumps(dict_list, indent=self.indent)
                      .encode('utf-8'))
+        stream.flush()
         self.uri.close_stream()
         self.options = None
 
