@@ -223,8 +223,9 @@ Thanks for making PyEcore better!
 
 * Mike Pagel (`@moltob <https://github.com/moltob>`_), which is also the author
   of `pyecoregen <https://github.com/pyecore/pyecoregen>`_ and `pymultigen <https://github.com/moltob/pymultigen>`_ (on which pyecoregen is based)
-* TerryKingston (`@TerryKingston <https://github.com/TerryKingston>`_)
+* Terry Kingston (`@TerryKingston <https://github.com/TerryKingston>`_)
 * Afonso Pinto (`@afonsobspinto <https://github.com/afonsobspinto>`_)
+* Andy (`@CFAndy <https://github.com/CFAndy>`_)
 
 
 Additional Resources
