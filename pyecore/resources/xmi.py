@@ -366,6 +366,7 @@ class XMIResource(Resource):
                    pretty_print=True,
                    xml_declaration=True,
                    encoding=tree.docinfo.encoding)
+        output.flush()
         self.uri.close_stream()
 
     def _add_explicit_type(self, node, obj):
