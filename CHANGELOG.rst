@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.8.8
++++++
+
+**Bugfixes**
+
+- Fix out of sync XMI/JSON serialization (Thanks `@CFAndy <https://github.com/CFAndy>`_).
+  When multiple XMI/JSON are serialized at the end of a program, some files are
+  not serialized properly. To avoid this behavior, a flush of the produced file
+  is performed at the end of the ``save()`` method for each ``Resource``.
+
 0.8.7
 +++++
 
