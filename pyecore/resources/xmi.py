@@ -274,6 +274,7 @@ class XMIResource(Resource):
                    pretty_print=True,
                    xml_declaration=True,
                    encoding=tree.docinfo.encoding)
+        output.flush()
         self.uri.close_stream()
 
     def _go_across(self, obj):
