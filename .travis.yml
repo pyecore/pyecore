@@ -1,24 +1,25 @@
 sudo: false
 language: python
 python:
-    - "3.4"
-    - "3.5"
-    - "3.6"
+- '3.4'
+- '3.5'
+- '3.6'
 install:
-  - pip install -U pip setuptools
-  - pip install tox-travis coveralls
+- pip install -U pip setuptools
+- pip install tox-travis coveralls
 script: tox
 after_success: coveralls
 branches:
   only:
-    - develop
-    - master
-    - /^\d+.\d+.\d+$/
+  - develop
+  - master
+  - "/^\\d+.\\d+.\\d+$/"
 deploy:
   provider: pypi
-  user: $PYPI_USER
-  password: $PYPI_PASSWORD
-  distributions: "sdist bdist_wheel"
+  user: pyecore
+  password:
+    secure: JNLGrHxy2yoct7GJmrRPkJWzIcavChEibvaMvrcJGzHS3hcjihp+Wcx2YNPFgc4njFtpaXWf9KwCtz7CqsOBescLEntbsfU/roKKuxDEm9FoWNbq52dgdlqvxDget3TF3kFjhCkhR/e/IT+0l89mRTCk8KdMqhs8YAbH+Jh56jquNBmf/tcpB9Xr0fUk6XJ44t0Pb26nq6NKSRcvwyE9ZUJ/sDGo0CCAX6xzibj8JbtnAxyuYGTbQFuoOsDSzgUgvIqcWwWGI08+fCWXsbVYBF1KFC1QyOVX4CZv1oVCHqR/HKUsUaxzMKm0CZ+Q6JZGnuOgLhJsn18aLSy9Cxs4SD1FrLrZiZaWS6s3XHY1kIFerRX5Fs9kO5qMTQW4vok1Up7PtO9GTz+/i7CDGrbdS2aP91POs1DaHxQ1VxWsTH4UF6oj7+Oav24y2UaOPzCbwqtRraskB+mEWLE4LL7K23T75g9XXmyXyces7SkY6dRIpM6FY81zpG0UD2MI0+s9eopC6n2wD0z7SvPjaazDIoIZQr7pkx5+pJ7imJcstwwBYZzsVB3Uhiyg2XxK0CK3FGhs3q6zvz7FkkzLXTlmGlODZHXdCOPD9FuXwNMZftlVwD0GIfCpTQcsGWGc9NE2HzP98RHR3kI7AYql0/68IzBXECZvfo9bXazJ8ThjcnU=
+  distributions: sdist bdist_wheel
   on:
     tags: true
     python: 3.6
