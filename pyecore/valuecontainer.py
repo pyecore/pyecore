@@ -1,7 +1,7 @@
 from .ecore import EReference, EProxy
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
-from collections import MutableSet, MutableSequence
+from collections.abc import MutableSet, MutableSequence
 
 
 class BadValueError(TypeError):
