@@ -94,9 +94,9 @@ some instances:
 
     A = EClass('A')
     A.eStructuralFeatures.append(EReference('container1', containment=True,
-                                            upper=-1))
+                                            eType=A, upper=-1))
     A.eStructuralFeatures.append(EReference('container2', containment=True,
-                                            upper=-1))
+                                            eType=A, upper=-1))
 
     # we create an element hierarchie which looks like this:
     # +- a1
