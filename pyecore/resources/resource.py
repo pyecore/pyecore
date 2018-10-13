@@ -40,6 +40,7 @@ class ResourceSet(object):
     def __init__(self):
         self.resources = {}
         self.metamodel_registry = ChainMap({}, global_registry)
+        self.metamodel_registry.uri_mapper = {}
         self.resource_factory = dict(ResourceSet.resource_factory)
 
     def create_resource(self, uri):
@@ -262,7 +263,24 @@ class LocalMetamodelDecoder(object):
         if from_resource is None or from_resource.resource_set is None:
             return False
         rset = from_resource.resource_set
-        return MetamodelDecoder.can_resolve(path, rset.metamodel_registry)
+        result = MetamodelDecoder.can_resolve(path, rset.metamodel_registry)
+        if result:
+            return result
+        for key, value in rset.metamodel_registry.uri_mapper.items():
+            if path.startswith(key):
+                newpath = path.replace(key, value)
+                try:
+                    proxy = Ecore.EProxy(newpath, from_resource)
+                    proxy.force_resolve()
+                except Exception:
+                    return False
+                if isinstance(proxy, Ecore.EPackage):
+                    rset.metamodel_registry[path] = proxy
+                else:
+                    uri, _ = MetamodelDecoder.split_path(path)
+                    rset.metamodel_registry[uri] = proxy.ePackage
+                return True
+        return False
 
     @staticmethod
     def resolve(path, from_resource=None):

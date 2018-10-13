@@ -303,8 +303,11 @@ class XMIResource(Resource):
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if uri:
-            proxy = Ecore.EProxy(path=path, resource=self)
-            self._resolve_mem[fragment] = proxy
+            cleaned_uri = uri + '#' + fragment
+            if cleaned_uri in self._resolve_mem:
+                return self._resolve_mem[cleaned_uri]
+            proxy = Ecore.EProxy(path=cleaned_uri, resource=self)
+            self._resolve_mem[cleaned_uri] = proxy
             return proxy
         return self.resolve(fragment)
 

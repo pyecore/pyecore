@@ -323,3 +323,36 @@ def test_xmi_many_string_serialization(tmpdir):
     assert 'test3"' == root.names[2]
     assert '' == root.names[3]
     assert '    ' == root.names[4]
+
+
+
+def test_xmi_save_urimapper(tmpdir):
+    import pyecore.type as types
+    rset = ResourceSet()
+    rset.metamodel_registry[types.nsURI] = types
+
+    uri_mapper = rset.metamodel_registry.uri_mapper
+    uri_mapper['plateforme://eclipse.stuff'] = 'http://www.eclipse.org/emf/2002'
+    uri_mapper['plateforme://test'] = os.path.join('..', 'xmi-tests', 'A-mapper.ecore')
+    uri_mapper['plateforme://sibling'] = os.path.join('.')
+
+    xmi_file = os.path.join('tests', 'xmi', 'xmi-tests', 'A-mapper2.ecore')
+    resource = rset.get_resource(xmi_file)
+    root = resource.contents[0]
+
+    f = tmpdir.mkdir('pyecore-tmp').join('mapper.xmi')
+    resource = rset.create_resource(str(f))
+    resource.append(root)
+    resource.save()
+    rset.remove_resource(resource)
+
+    resource = rset.get_resource(str(f))
+    assert len(resource.contents) == 1
+
+    root = resource.contents[0]
+    assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'B'
+    assert root.eClassifiers[1].eStructuralFeatures[0].eType.name == 'EString'
+    assert root.eClassifiers[2].eStructuralFeatures[0].eType.name == 'A'
+
+    with pytest.raises(Exception):
+        root.eClassifiers[2].eStructuralFeatures[1].eType.name
