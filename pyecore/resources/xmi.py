@@ -106,8 +106,7 @@ class XMIResource(Resource):
         erefs = []
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
-            prefix = self.reverse_nsmap[namespace] if namespace else None
-            if prefix == 'xmi' and att_name == 'id':
+            if key == self.xmiid:
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
             # Do stuff with this
@@ -244,14 +243,13 @@ class XMIResource(Resource):
                 eatts.append((feature, value))
             else:
                 erefs.append((feature, value))
-        self._resolve_mem[eobject.eURIFragment()] = eobject
         return (feature_container, eobject, eatts, erefs, False)
 
     def _decode_attribute(self, owner, key, value):
         namespace, att_name = self.extract_namespace(key)
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
-        if prefix == 'xmi' and att_name == 'id':
+        if key == self.xmiid:
             owner._internal_id = value
             self.uuid_dict[value] = owner
         elif prefix in ('xsi', 'xmi') and att_name == 'type':
