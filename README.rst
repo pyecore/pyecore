@@ -181,13 +181,13 @@ In the current state, the project implements:
 * resources auto-load for some cross-references,
 * derived collections,
 * multiple roots ressources,
-* ``xsi:schemaLocation`` support for XMI resources.
+* ``xsi:schemaLocation`` support for XMI resources,
+* URI mapper like.
 
 The things that are in the roadmap:
 
 * new implementation of ``EOrderedSet``, ``EList``, ``ESet`` and ``EBag``,
 * new implementation of ``EStringToStringMapEntry`` and ``EFeatureMapEntry``,
-* URI mapper,
 * improve documentation,
 * copy/paste (?).
 
