@@ -1,6 +1,35 @@
 Changelog
 ---------
 
+0.9.0
++++++
+
+**Features**
+
+- Add URI mapper like support. This mapper allows you to map a new URI or an
+  URI start that can be later resolved if required. The typical use case is When
+  dealing with Eclipse XMI where there is some ``plateforme://xxx/yyy`` uri.
+
+
+**Bugfixes**
+
+- Fix issue with resolved fragment in resource when loading it. This bug was
+  affecting resources with crossrefs towards different resources but whith the
+  same fragment (eg: ``my-uri1#//A`` and ``my-uri2#//A``). In this case, the
+  first resolved fragment were always returned, even if it was said as part of
+  another resource.
+
+- Add missing registration of ``ELong`` datatype.
+
+
+**Miscellaneous**
+
+- Use a common 'uuid format' for XMI resources.
+- Switch from 'collection' to 'collection.abc' for Python 3.7.
+- Update documentation fixing missing ``eType`` in example
+
+
+
 0.8.8
 +++++
 
