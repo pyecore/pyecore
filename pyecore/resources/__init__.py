@@ -1,4 +1,5 @@
-from .resource import ResourceSet, Resource, URI, global_registry
+from .resource import ResourceSet, Resource, URI, global_registry, \
+                      global_uri_mapper
 from . import xmi
 from .. import ecore as Ecore
 
@@ -9,4 +10,5 @@ ResourceSet.resource_factory = {'xmi': xmi.XMIResource,
 
 global_registry[Ecore.nsURI] = Ecore
 
-__all__ = ['ResourceSet', 'Resource', 'URI', 'global_registry']
+__all__ = ['ResourceSet', 'Resource', 'URI', 'global_registry',
+           'global_uri_mapper']

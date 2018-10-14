@@ -392,7 +392,9 @@ def test_load_xmi_metamodel_uri_mapper():
     uri_mapper = rset.uri_mapper
     uri_mapper['plateforme://eclipse.stuff'] = 'http://www.eclipse.org/emf/2002'
     uri_mapper['plateforme://test'] = path.join('..', 'xmi-tests', 'A-mapper.ecore')
-    uri_mapper['plateforme://sibling'] = path.join('.')
+
+    from pyecore.resources import global_uri_mapper
+    global_uri_mapper['plateforme://sibling'] = path.join('.')
 
     xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'A-mapper.ecore')
     resource = rset.get_resource(xmi_file)
