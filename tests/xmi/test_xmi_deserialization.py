@@ -389,7 +389,7 @@ def test_load_xsi_schemaLocation_no_fragment():
 
 def test_load_xmi_metamodel_uri_mapper():
     rset = ResourceSet()
-    uri_mapper = rset.metamodel_registry.uri_mapper
+    uri_mapper = rset.uri_mapper
     uri_mapper['plateforme://eclipse.stuff'] = 'http://www.eclipse.org/emf/2002'
     uri_mapper['plateforme://test'] = path.join('..', 'xmi-tests', 'A-mapper.ecore')
     uri_mapper['plateforme://sibling'] = path.join('.')

@@ -8,7 +8,7 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType plateforme://eclipse.stuff/Ecore#//EString"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="C">
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="toa" eType="ecore:EDataType plateforme://sibling/A.ecore#//A"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tobug" eType="ecore:EDataType plateforme://sib/A.ecore#//A"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="toa" eType="ecore:EClass plateforme://sibling/A.ecore#//A"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="tobug" eType="ecore:EClass plateforme://sib/A.ecore#//A"/>
   </eClassifiers>
 </ecore:EPackage>

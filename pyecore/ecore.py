@@ -840,8 +840,7 @@ class EProxy(EObject):
         if self.resolved:
             return
         resource = self._proxy_resource
-        decoders = resource._get_href_decoder(self._proxy_path)
-        decoded = decoders.resolve(self._proxy_path, resource)
+        decoded = resource.resolve_object(self._proxy_path)
         if not hasattr(decoded, '_inverse_rels'):
             self._wrapped = decoded.eClass
         else:
@@ -889,8 +888,7 @@ class EProxy(EObject):
             if name in ('__class__', '_inverse_rels', '__name__'):
                 return super().__getattribute__(name)
             resource = self._proxy_resource
-            decoders = resource._get_href_decoder(self._proxy_path)
-            decoded = decoders.resolve(self._proxy_path, resource)
+            decoded = resource.resolve_object(self._proxy_path)
             if not hasattr(decoded, '_inverse_rels'):
                 self._wrapped = decoded.eClass
             else:
@@ -907,8 +905,7 @@ class EProxy(EObject):
         resolved = self.resolved
         if not resolved:
             resource = self._proxy_resource
-            decoders = resource._get_href_decoder(self._proxy_path)
-            decoded = decoders.resolve(self._proxy_path, resource)
+            decoded = resource.resolve_object(self._proxy_path)
             if not hasattr(decoded, '_inverse_rels'):
                 self._wrapped = decoded.eClass
             else:
