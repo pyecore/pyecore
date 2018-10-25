@@ -365,7 +365,7 @@ class EOperation(ETypedElement):
     def normalized_name(self):
         name = self.name
         if keyword.iskeyword(name):
-            name = '_' + name
+            name = name + '_'
         return name
 
     def to_code(self):
