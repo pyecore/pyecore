@@ -21,8 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
-from RestrictedPython import compile_restricted
-from RestrictedPython import safe_builtins
+from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
 
