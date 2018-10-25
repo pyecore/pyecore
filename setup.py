@@ -27,7 +27,7 @@ setup(
     install_requires=['ordered-set',
                       'lxml',
                       'defusedxml',
-                      'restrictedpython==4.0b6'],
+                      'restrictedpython>=4.0b6'],
     tests_require=['pytest'],
     license='BSD 3-Clause',
     classifiers=[
