@@ -10,6 +10,13 @@ Changelog
   URI start that can be later resolved if required. The typical use case is When
   dealing with Eclipse XMI where there is some ``plateforme://xxx/yyy`` uri.
 
+- Add ``iD`` attribute support for ``EAttribute`` in XMI serialization. This
+  feature ensure that if an ``EAttribute`` is defined in an ``EClass`` with its
+  ``iD`` attribute set to ``True``, then, this attribute value will be used in
+  the XMI serialization in order to save the reference towards the element.
+  However, if an ``xmi:id`` is set to the element, the reference will use this
+  xmi id no matter what.
+
 
 **Bugfixes**
 
@@ -24,10 +31,9 @@ Changelog
 
 **Miscellaneous**
 
-- Use a common 'uuid format' for XMI resources.
+- Use a common 'uuid format' for XMI resources (easily overrideable).
 - Switch from 'collection' to 'collection.abc' for Python 3.7.
-- Update documentation fixing missing ``eType`` in example
-
+- Update documentation fixing missing ``eType`` in example.
 
 
 0.8.8

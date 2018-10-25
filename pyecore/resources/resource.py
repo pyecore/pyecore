@@ -455,6 +455,12 @@ class Resource(object):
                                None)
         return obj
 
+    @staticmethod
+    def get_id_attribute(eclass):
+        for attribute in eclass.eAllAttributes():
+            if attribute.__dict__.get('iD', False):
+                return attribute
+
     # Refactor me
     def _build_path_from(self, obj):
         if isinstance(obj, type):
@@ -476,6 +482,10 @@ class Resource(object):
                 if obj.eResource.use_uuid:
                     self._assign_uuid(obj)
                     uri_fragment = obj._internal_id
+                else:
+                    id_attribute = self.get_id_attribute(eclass)
+                    if id_attribute:
+                        uri_fragment = obj.eGet(id_attribute)
             else:
                 uri = ''
                 root = obj.eRoot()
@@ -499,6 +509,12 @@ class Resource(object):
         if self.use_uuid:
             self._assign_uuid(obj)
             return (obj._internal_id, False)
+        id_attribute = self.get_id_attribute(obj.eClass)
+        if id_attribute:
+            etype = id_attribute.eType
+            id_att_value = etype.to_string(obj.eGet(id_attribute))
+            if id_att_value is not None:
+                return (etype.to_string(id_att_value), False)
         return (obj.eURIFragment(), False)
 
     def _assign_uuid(self, obj):

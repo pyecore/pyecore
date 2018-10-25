@@ -241,6 +241,8 @@ class XMIResource(Resource):
                 continue  # we skip the name for metamodel import
             if isinstance(feature, Ecore.EAttribute):
                 eatts.append((feature, value))
+                if feature.iD:
+                    self.uuid_dict[value] = eobject
             else:
                 erefs.append((feature, value))
         return (feature_container, eobject, eatts, erefs, False)
