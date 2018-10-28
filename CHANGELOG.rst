@@ -17,6 +17,13 @@ Changelog
   However, if an ``xmi:id`` is set to the element, the reference will use this
   xmi id no matter what.
 
+- Add safe compilation of generated ``EOperation`` using ``RestrictedPython``
+  (Thanks `@CFAndy <https://github.com/CFAndy>`_). The compilation of generated
+  method is now performed using a 'safe' context. Even is the current generated
+  code does not use special methods or functions, in future version, it is
+  planed that PyEcore will be able to fetch behaviors that could be directly
+  added to the ``.ecore``.
+
 
 **Bugfixes**
 
