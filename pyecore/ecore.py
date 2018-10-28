@@ -21,6 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
+from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
 
@@ -365,7 +366,7 @@ class EOperation(ETypedElement):
     def normalized_name(self):
         name = self.name
         if keyword.iskeyword(name):
-            name = '_' + name
+            name = name + '_'
         return name
 
     def to_code(self):
@@ -708,8 +709,10 @@ class EClass(EClassifier):
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()
         namespace = {}
-        code = compile(eoperation.to_code(), "<str>", "exec")
-        exec(code, namespace)
+        # code = compile(eoperation.to_code(), "<str>", "exec")
+        # exec(code, namespace)
+        code = compile_restricted(eoperation.to_code(), '<inline>', 'exec')
+        exec(code, safe_builtins, namespace)
         setattr(self.python_class, name, namespace[name])
 
     def __compute_supertypes(self):
