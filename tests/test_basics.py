@@ -195,3 +195,23 @@ def test_subclass():
     with pytest.raises(Exception):
         c = C()
         assert issubclass(c, A)
+
+
+def test_container():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('first', A, containment=True))
+    A.eStructuralFeatures.append(EReference('second', A, containment=True,
+                                            upper=-1))
+    root, a1 = A(), A()
+    root.first = a1
+
+    assert root.first is a1
+    assert a1 not in root.second
+
+    root.second.append(a1)
+    assert root.first is None
+    assert a1 in root.second
+
+    root.first = a1
+    assert root.first is a1
+    assert a1 not in root.second
