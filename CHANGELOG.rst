@@ -35,6 +35,13 @@ Changelog
 
 - Add missing registration of ``ELong`` datatype.
 
+- Fix issue when an object is moved to another container. An issue was occuring
+  when an object moved from a container to another container. Currently, the
+  object properly saw that it moved to another container, but the container
+  collection/attribute was not aware that the object migrated to another
+  container.
+
+
 
 **Miscellaneous**
 
