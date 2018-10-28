@@ -1016,7 +1016,7 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
 EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                          upper=-1, containment=True)
-EClassifier.instanceClassName = EAttribute('instanceTypeName', EString)
+EClassifier.instanceTypeName = EAttribute('instanceTypeName', EString)
 EClassifier.instanceClass = EAttribute('instanceClass', EJavaClass)
 EClassifier.defaultValue = EAttribute('defaultValue', EJavaObject)
 EClassifier.instanceTypeName = EAttribute('instanceTypeName', EString,
