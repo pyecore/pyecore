@@ -12,6 +12,7 @@ from .. import ecore as Ecore
 from ..innerutils import ignored
 
 global_registry = {}
+global_uri_mapper = {}
 
 
 class ResourceSet(object):
@@ -40,6 +41,7 @@ class ResourceSet(object):
     def __init__(self):
         self.resources = {}
         self.metamodel_registry = ChainMap({}, global_registry)
+        self.uri_mapper = ChainMap({}, global_uri_mapper)
         self.resource_factory = dict(ResourceSet.resource_factory)
 
     def create_resource(self, uri):
@@ -102,7 +104,7 @@ class ResourceSet(object):
         return uri.normalize() in self.resources
 
     def resolve(self, uri, from_resource=None):
-        upath = Resource.normalize(uri)
+        upath = URIConverter.convert(Resource.normalize(uri), from_resource)
         uri_str, fragment = upath.rsplit('#', maxsplit=1)
         if uri_str in self.resources:
             root = self.resources[uri_str]
@@ -253,7 +255,20 @@ class Global_URI_decoder(object):
 
     @staticmethod
     def resolve(path, from_resource=None):
+        path = URIConverter.convert(path, from_resource)
         return MetamodelDecoder.resolve(path, global_registry)
+
+
+class URIConverter(object):
+    @staticmethod
+    def convert(path, from_resource=None):
+        if from_resource is None or from_resource.resource_set is None:
+            return path
+        rset = from_resource.resource_set
+        for key, value in rset.uri_mapper.items():
+            if path.startswith(key):
+                return path.replace(key, value)
+        return path
 
 
 class LocalMetamodelDecoder(object):
@@ -267,6 +282,7 @@ class LocalMetamodelDecoder(object):
     @staticmethod
     def resolve(path, from_resource=None):
         rset = from_resource.resource_set
+        path = URIConverter.convert(path, from_resource)
         return MetamodelDecoder.resolve(path, rset.metamodel_registry)
 
 
@@ -318,6 +334,15 @@ class Resource(object):
             self._resolve_mem[fragment] = result
             return result
 
+    def resolve_object(self, path):
+        decoder = next((x for x in self.decoders
+                        if x.can_resolve(path, self)), None)
+        if decoder:
+            return decoder.resolve(path, self)
+        newpath = URIConverter.convert(path, self)
+        decoder = self._get_href_decoder(newpath, path)
+        return decoder.resolve(newpath, self)
+
     @staticmethod
     def extract_rootnum_and_frag(fragment):
         if re.match(r'^/\d+.*', fragment):
@@ -362,19 +387,23 @@ class Resource(object):
                          if '#' in path else (None, path))
         return uri, fragment
 
-    def _get_href_decoder(self, path):
+    def _get_href_decoder(self, path, original_path):
         decoder = next((x for x in self.decoders
                         if x.can_resolve(path, self)), None)
         uri, _ = self._is_external(path)
+        original_uri, _ = self._is_external(original_path)
         if not decoder and uri:
-            decoder = self._try_resource_autoload(uri)
+            decoder = self._try_resource_autoload(uri, original_uri)
         return decoder if decoder else self
 
-    def _try_resource_autoload(self, uri):
+    def _try_resource_autoload(self, uri, original_uri):
         try:
+            rset = self.resource_set
             external_uri = URI(self.uri.apply_relative_from_me(uri))
-            self.resource_set.get_resource(external_uri)
-            return self.resource_set
+            resource = rset.get_resource(external_uri)
+            if uri != original_uri:
+                rset.resources[original_uri] = resource
+            return rset
         except Exception:
             raise TypeError('Resource "{0}" cannot be resolved'
                             .format(uri))
@@ -426,6 +455,17 @@ class Resource(object):
                                None)
         return obj
 
+    @staticmethod
+    def get_id_attribute(eclass):
+        for attribute in eclass.eAllAttributes():
+            id_attr = attribute.__dict__.get('iD', False)
+            try:
+                res = id_attr._get()
+            except Exception:
+                res = id_attr
+            if res:
+                return attribute
+
     # Refactor me
     def _build_path_from(self, obj):
         if isinstance(obj, type):
@@ -447,6 +487,10 @@ class Resource(object):
                 if obj.eResource.use_uuid:
                     self._assign_uuid(obj)
                     uri_fragment = obj._internal_id
+                else:
+                    id_attribute = self.get_id_attribute(eclass)
+                    if id_attribute:
+                        uri_fragment = obj.eGet(id_attribute)
             else:
                 uri = ''
                 root = obj.eRoot()
@@ -470,6 +514,12 @@ class Resource(object):
         if self.use_uuid:
             self._assign_uuid(obj)
             return (obj._internal_id, False)
+        id_attribute = self.get_id_attribute(obj.eClass)
+        if id_attribute:
+            etype = id_attribute.eType
+            id_att_value = obj.eGet(id_attribute)
+            if id_att_value is not None:
+                return (etype.to_string(id_att_value), False)
         return (obj.eURIFragment(), False)
 
     def _assign_uuid(self, obj):

@@ -106,8 +106,7 @@ class XMIResource(Resource):
         erefs = []
         for key, value in xmlroot.attrib.items():
             namespace, att_name = self.extract_namespace(key)
-            prefix = self.reverse_nsmap[namespace] if namespace else None
-            if prefix == 'xmi' and att_name == 'id':
+            if key == self.xmiid:
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
             # Do stuff with this
@@ -132,12 +131,13 @@ class XMIResource(Resource):
 
     @staticmethod
     def _decode_eattribute_value(eobject, eattribute, value, from_tag=False):
-        if eattribute.many and not from_tag:
+        is_many = eattribute.many
+        if is_many and not from_tag:
             values = value.split()
             from_string = eattribute.eType.from_string
             results = [from_string(x) for x in values]
             eobject.__getattribute__(eattribute.name).extend(results)
-        elif eattribute.many:
+        elif is_many:
             value = eattribute.eType.from_string(value)
             eobject.__getattribute__(eattribute.name).append(value)
         else:
@@ -242,16 +242,17 @@ class XMIResource(Resource):
                 continue  # we skip the name for metamodel import
             if isinstance(feature, Ecore.EAttribute):
                 eatts.append((feature, value))
+                if feature.iD:
+                    self.uuid_dict[value] = eobject
             else:
                 erefs.append((feature, value))
-        self._resolve_mem[eobject.eURIFragment()] = eobject
         return (feature_container, eobject, eatts, erefs, False)
 
     def _decode_attribute(self, owner, key, value):
         namespace, att_name = self.extract_namespace(key)
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
-        if prefix == 'xmi' and att_name == 'id':
+        if key == self.xmiid:
             owner._internal_id = value
             self.uuid_dict[value] = owner
         elif prefix in ('xsi', 'xmi') and att_name == 'type':
@@ -303,8 +304,11 @@ class XMIResource(Resource):
         if fragment in self._resolve_mem:
             return self._resolve_mem[fragment]
         if uri:
-            proxy = Ecore.EProxy(path=path, resource=self)
-            self._resolve_mem[fragment] = proxy
+            cleaned_uri = uri + '#' + fragment
+            if cleaned_uri in self._resolve_mem:
+                return self._resolve_mem[cleaned_uri]
+            proxy = Ecore.EProxy(path=cleaned_uri, resource=self)
+            self._resolve_mem[cleaned_uri] = proxy
             return proxy
         return self.resolve(fragment)
 

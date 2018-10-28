@@ -122,8 +122,8 @@ def test_notification_add_many(lib):
 
     o.calls = 0
     root.ne_set.extend([a1, a2])
-    assert o.calls == 1 and o.kind is Kind.ADD_MANY and a1 in o.value and a2 in o.value
+    assert o.calls == 3 and o.kind is Kind.ADD_MANY and a1 in o.value and a2 in o.value
 
     o.calls = 0
     root.ne_oset.extend([a1, a2])
-    assert o.calls == 1 and o.kind is Kind.ADD_MANY and a1 in o.value and a2 in o.value
+    assert o.calls == 3 and o.kind is Kind.ADD_MANY and a1 in o.value and a2 in o.value

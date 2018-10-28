@@ -117,8 +117,7 @@ class JsonResource(Resource):
 
     @lru_cache()
     def resolve_eclass(self, uri_eclass):
-        decoders = self._get_href_decoder(uri_eclass)
-        return decoders.resolve(uri_eclass, self)
+        return self.resolve_object(uri_eclass)
 
     def to_obj(self, d, owning_feature=None, first=False):
         is_ref = self.ref_tag in d

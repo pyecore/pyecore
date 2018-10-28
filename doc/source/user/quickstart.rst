@@ -94,9 +94,9 @@ some instances:
 
     A = EClass('A')
     A.eStructuralFeatures.append(EReference('container1', containment=True,
-                                            upper=-1))
+                                            eType=A, upper=-1))
     A.eStructuralFeatures.append(EReference('container2', containment=True,
-                                            upper=-1))
+                                            eType=A, upper=-1))
 
     # we create an element hierarchie which looks like this:
     # +- a1
@@ -822,6 +822,44 @@ in the file. You can alter this behavior by passing the
 
 This option will also introduce the special XML node ``xsi:nil="true"`` when
 an attribute or a reference is explicitly set to ``None``.
+
+
+Mapping URI to a different location/URI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes, it can be necessary to 'convert' an URI from the format found in the
+XMI to a new one that could be easily understood. This is typically the case for
+some Eclipse URI that can be part of the XMI resource
+(eg: ``plateform://eclipse.org/xxx/yyy``). For these kind of URI, as PyEcore is
+not aware of the Eclipse plateforme, it cannot directly resolve them. The solution
+that comes at this point is to explain to PyEcore how to translate the URI.
+To do so, the URI mapper comes in the game.
+
+.. code-block:: python
+
+    # let say we have a resource 'foo.xmi' that have references to a metamodel
+    # 'plateform://eclipse.org/ecore/Ecore' and contains references to elements
+    # that are like this: 'plateform://eclipse.org/ecore/Ecore#//A'
+    # moreover, we have references to a resource which look like this:
+    # 'resources://COMMON/files/bar.xmi#//' and 'bar.xmi' is set in './files'
+    # in our system.
+    from pyecore.resources import ResourceSet
+
+    rset = ResourceSet()
+
+    # Here is the mapper setup
+    rset.uri_mapper['plateform://eclipse.org/ecore/Ecore'] = 'http://www.eclipse.org/emf/2002/Ecore'
+    # or
+    # rset.uri_mapper['plateform://eclipse.org/ecore'] = 'http://www.eclipse.org/emf/2002'
+    rset.uri_mapper['resources://COMMON'] = '.'
+
+    # we then load the resource
+    resource = rset.get_resource(URI('foo.xmi'))
+
+
+  Please note that as the object resolution is lazy in many cases, the mapper
+  setup could have been made after the resource loading.
+
 
 Dealing with JSON Resources
 ---------------------------

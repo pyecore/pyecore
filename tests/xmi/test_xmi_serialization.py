@@ -4,6 +4,7 @@ from lxml import etree
 import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource, XMIOptions, XMI_URL
+from pyecore.utils import DynamicEPackage
 
 
 @pytest.fixture(scope='module')
@@ -323,3 +324,79 @@ def test_xmi_many_string_serialization(tmpdir):
     assert 'test3"' == root.names[2]
     assert '' == root.names[3]
     assert '    ' == root.names[4]
+
+
+
+def test_xmi_save_urimapper(tmpdir):
+    import pyecore.type as types
+    rset = ResourceSet()
+    rset.metamodel_registry[types.nsURI] = types
+
+    uri_mapper = rset.uri_mapper
+    uri_mapper['plateforme://eclipse.stuff'] = 'http://www.eclipse.org/emf/2002'
+    uri_mapper['plateforme://test'] = os.path.join('..', 'xmi-tests', 'A-mapper.ecore')
+    uri_mapper['plateforme://sibling'] = os.path.join('.')
+
+    xmi_file = os.path.join('tests', 'xmi', 'xmi-tests', 'A-mapper2.ecore')
+    resource = rset.get_resource(xmi_file)
+    root = resource.contents[0]
+
+    f = tmpdir.mkdir('pyecore-tmp').join('mapper.xmi')
+    resource = rset.create_resource(str(f))
+    resource.append(root)
+    resource.save()
+    rset.remove_resource(resource)
+
+    resource = rset.get_resource(str(f))
+    assert len(resource.contents) == 1
+
+    root = resource.contents[0]
+    # assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'B'
+    # assert root.eClassifiers[1].eStructuralFeatures[0].eType.name == 'EString'
+    # assert root.eClassifiers[2].eStructuralFeatures[0].eType.name == 'A'
+    #
+    # with pytest.raises(Exception):
+    #     root.eClassifiers[2].eStructuralFeatures[1].eType.name
+
+
+def test_xmi_with_iD_attribute(tmpdir):
+    mm_file = os.path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(mm_file).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    mm_dyn = DynamicEPackage(mm)
+    root = mm_dyn.Root()
+    a = mm_dyn.A()
+    b = mm_dyn.B()
+    b.nameID = 'uniqueNameForB'
+    a.tob = b
+
+    root.a.append(a)
+    root.b.append(b)
+
+    localdir = tmpdir.mkdir('pyecore-tmp')
+    f1 = localdir.join('model_iD_simple.xmi')
+    resource = rset.create_resource(str(f1))
+    resource.append(root)
+    resource.save()
+
+    root2 = mm_dyn.Root()
+    root2.b.append(b)
+
+    f2 = localdir.join('model_iD.xmi')
+    f3 = localdir.join('model_iD.xmi')
+    resource = rset.create_resource(str(f2))
+    resource2 = rset.create_resource(str(f3))
+
+    resource.append(root)
+    resource2.append(root2)
+
+    resource2.save()
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[mm.nsURI] = mm
+    rset.get_resource(str(f1))
+    rset.get_resource(str(f2))
+    rset.get_resource(str(f3))

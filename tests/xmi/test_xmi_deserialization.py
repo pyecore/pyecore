@@ -121,7 +121,6 @@ def test_resourceset_getresource_ecore_UML():
     # Register Ecore metamodel as a model
     ecore_resource = rset.create_resource('platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore')
     ecore_resource.append(Ecore.eClass)
-    print(rset.resources)
     # Load the UML metamodel
     ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'UML.ecore')
     resource = rset.get_resource(URI(ecore_file))
@@ -386,3 +385,52 @@ def test_load_xsi_schemaLocation_no_fragment():
     resource = rset.get_resource(schema_file)
 
     assert len(resource.contents) == 1
+
+
+def test_load_xmi_metamodel_uri_mapper():
+    rset = ResourceSet()
+    uri_mapper = rset.uri_mapper
+    uri_mapper['plateforme://eclipse.stuff'] = 'http://www.eclipse.org/emf/2002'
+    uri_mapper['plateforme://test'] = path.join('..', 'xmi-tests', 'A-mapper.ecore')
+
+    from pyecore.resources import global_uri_mapper
+    global_uri_mapper['plateforme://sibling'] = path.join('.')
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'A-mapper.ecore')
+    resource = rset.get_resource(xmi_file)
+
+    assert len(resource.contents) == 1
+
+    root = resource.contents[0]
+    assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'B'
+    assert root.eClassifiers[1].eStructuralFeatures[0].eType.name == 'EString'
+    assert root.eClassifiers[2].eStructuralFeatures[0].eType.name == 'A'
+
+    with pytest.raises(Exception):
+        root.eClassifiers[2].eStructuralFeatures[1].eType.name
+
+
+def test_load_xmi_simple_iD():
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(a_ecore).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'model_iD_simple.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+    assert len(root.a) == 1
+    assert len(root.b) == 1
+    assert root.a[0].tob.nameID == 'uniqueNameForB'
+
+
+def test_load_xmi_iD_multiple():
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(a_ecore).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'model1_iD.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+    assert len(root.a) == 1
+    assert len(root.b) == 0
+    assert root.a[0].tob.nameID == 'uniqueNameForB'

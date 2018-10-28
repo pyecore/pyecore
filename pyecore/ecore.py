@@ -21,6 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
+from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
 
@@ -365,7 +366,7 @@ class EOperation(ETypedElement):
     def normalized_name(self):
         name = self.name
         if keyword.iskeyword(name):
-            name = '_' + name
+            name = name + '_'
         return name
 
     def to_code(self):
@@ -708,8 +709,10 @@ class EClass(EClassifier):
     def __create_fun(self, eoperation):
         name = eoperation.normalized_name()
         namespace = {}
-        code = compile(eoperation.to_code(), "<str>", "exec")
-        exec(code, namespace)
+        # code = compile(eoperation.to_code(), "<str>", "exec")
+        # exec(code, namespace)
+        code = compile_restricted(eoperation.to_code(), '<inline>', 'exec')
+        exec(code, safe_builtins, namespace)
         setattr(self.python_class, name, namespace[name])
 
     def __compute_supertypes(self):
@@ -840,8 +843,7 @@ class EProxy(EObject):
         if self.resolved:
             return
         resource = self._proxy_resource
-        decoders = resource._get_href_decoder(self._proxy_path)
-        decoded = decoders.resolve(self._proxy_path, resource)
+        decoded = resource.resolve_object(self._proxy_path)
         if not hasattr(decoded, '_inverse_rels'):
             self._wrapped = decoded.eClass
         else:
@@ -889,8 +891,7 @@ class EProxy(EObject):
             if name in ('__class__', '_inverse_rels', '__name__'):
                 return super().__getattribute__(name)
             resource = self._proxy_resource
-            decoders = resource._get_href_decoder(self._proxy_path)
-            decoded = decoders.resolve(self._proxy_path, resource)
+            decoded = resource.resolve_object(self._proxy_path)
             if not hasattr(decoded, '_inverse_rels'):
                 self._wrapped = decoded.eClass
             else:
@@ -907,8 +908,7 @@ class EProxy(EObject):
         resolved = self.resolved
         if not resolved:
             resource = self._proxy_resource
-            decoders = resource._get_href_decoder(self._proxy_path)
-            decoded = decoders.resolve(self._proxy_path, resource)
+            decoded = resource.resolve_object(self._proxy_path)
             if not hasattr(decoded, '_inverse_rels'):
                 self._wrapped = decoded.eClass
             else:
@@ -1016,7 +1016,7 @@ EClassifier.ePackage = EReference('ePackage', EPackage,
                                   eOpposite=EPackage.eClassifiers)
 EClassifier.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                          upper=-1, containment=True)
-EClassifier.instanceClassName = EAttribute('instanceTypeName', EString)
+EClassifier.instanceTypeName = EAttribute('instanceTypeName', EString)
 EClassifier.instanceClass = EAttribute('instanceClass', EJavaClass)
 EClassifier.defaultValue = EAttribute('defaultValue', EJavaObject)
 EClassifier.instanceTypeName = EAttribute('instanceTypeName', EString,
@@ -1109,6 +1109,7 @@ Core.register_classifier(EDate)
 Core.register_classifier(EBigDecimal)
 Core.register_classifier(EBooleanObject)
 Core.register_classifier(ELongObject)
+Core.register_classifier(ELong)
 Core.register_classifier(EByte)
 Core.register_classifier(EByteObject)
 Core.register_classifier(EByteArray)

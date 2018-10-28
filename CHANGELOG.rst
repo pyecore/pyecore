@@ -1,6 +1,55 @@
 Changelog
 ---------
 
+0.9.0
++++++
+
+**Features**
+
+- Add URI mapper like support. This mapper allows you to map a new URI or an
+  URI start that can be later resolved if required. The typical use case is When
+  dealing with Eclipse XMI where there is some ``plateforme://xxx/yyy`` uri.
+
+- Add ``iD`` attribute support for ``EAttribute`` in XMI serialization. This
+  feature ensure that if an ``EAttribute`` is defined in an ``EClass`` with its
+  ``iD`` attribute set to ``True``, then, this attribute value will be used in
+  the XMI serialization in order to save the reference towards the element.
+  However, if an ``xmi:id`` is set to the element, the reference will use this
+  xmi id no matter what.
+
+- Add safe compilation of generated ``EOperation`` using ``RestrictedPython``
+  (Thanks `@CFAndy <https://github.com/CFAndy>`_). The compilation of generated
+  method is now performed using a 'safe' context. Even is the current generated
+  code does not use special methods or functions, in future version, it is
+  planed that PyEcore will be able to fetch behaviors that could be directly
+  added to the ``.ecore``.
+
+
+**Bugfixes**
+
+- Fix issue with resolved fragment in resource when loading it. This bug was
+  affecting resources with crossrefs towards different resources but whith the
+  same fragment (eg: ``my-uri1#//A`` and ``my-uri2#//A``). In this case, the
+  first resolved fragment were always returned, even if it was said as part of
+  another resource.
+
+- Add missing registration of ``ELong`` datatype.
+
+- Fix issue when an object is moved to another container. An issue was occuring
+  when an object moved from a container to another container. Currently, the
+  object properly saw that it moved to another container, but the container
+  collection/attribute was not aware that the object migrated to another
+  container.
+
+
+
+**Miscellaneous**
+
+- Use a common 'uuid format' for XMI resources (easily overrideable).
+- Switch from 'collection' to 'collection.abc' for Python 3.7.
+- Update documentation fixing missing ``eType`` in example.
+
+
 0.8.8
 +++++
 

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<a:Root xmlns:a="http://A/1.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmi:version="2.0">
+  <a>
+    <tob href="model2_iD.xmi#uniqueNameForB" xsi:type="a:B"/>
+  </a>
+</a:Root>
