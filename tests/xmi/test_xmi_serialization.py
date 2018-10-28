@@ -4,6 +4,7 @@ from lxml import etree
 import pyecore.ecore as Ecore
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource, XMIOptions, XMI_URL
+from pyecore.utils import DynamicEPackage
 
 
 @pytest.fixture(scope='module')
@@ -356,3 +357,46 @@ def test_xmi_save_urimapper(tmpdir):
     #
     # with pytest.raises(Exception):
     #     root.eClassifiers[2].eStructuralFeatures[1].eType.name
+
+
+def test_xmi_with_iD_attribute(tmpdir):
+    mm_file = os.path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(mm_file).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    mm_dyn = DynamicEPackage(mm)
+    root = mm_dyn.Root()
+    a = mm_dyn.A()
+    b = mm_dyn.B()
+    b.nameID = 'uniqueNameForB'
+    a.tob = b
+
+    root.a.append(a)
+    root.b.append(b)
+
+    localdir = tmpdir.mkdir('pyecore-tmp')
+    f1 = localdir.join('model_iD_simple.xmi')
+    resource = rset.create_resource(str(f1))
+    resource.append(root)
+    resource.save()
+
+    root2 = mm_dyn.Root()
+    root2.b.append(b)
+
+    f2 = localdir.join('model_iD.xmi')
+    f3 = localdir.join('model_iD.xmi')
+    resource = rset.create_resource(str(f2))
+    resource2 = rset.create_resource(str(f3))
+
+    resource.append(root)
+    resource2.append(root2)
+
+    resource2.save()
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[mm.nsURI] = mm
+    rset.get_resource(str(f1))
+    rset.get_resource(str(f2))
+    rset.get_resource(str(f3))

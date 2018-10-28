@@ -408,3 +408,29 @@ def test_load_xmi_metamodel_uri_mapper():
 
     with pytest.raises(Exception):
         root.eClassifiers[2].eStructuralFeatures[1].eType.name
+
+
+def test_load_xmi_simple_iD():
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(a_ecore).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'model_iD_simple.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+    assert len(root.a) == 1
+    assert len(root.b) == 1
+    assert root.a[0].tob.nameID == 'uniqueNameForB'
+
+
+def test_load_xmi_iD_multiple():
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'A.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(a_ecore).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'model1_iD.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+    assert len(root.a) == 1
+    assert len(root.b) == 0
+    assert root.a[0].tob.nameID == 'uniqueNameForB'

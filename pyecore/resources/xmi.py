@@ -131,12 +131,13 @@ class XMIResource(Resource):
 
     @staticmethod
     def _decode_eattribute_value(eobject, eattribute, value, from_tag=False):
-        if eattribute.many and not from_tag:
+        is_many = eattribute.many
+        if is_many and not from_tag:
             values = value.split()
             from_string = eattribute.eType.from_string
             results = [from_string(x) for x in values]
             eobject.__getattribute__(eattribute.name).extend(results)
-        elif eattribute.many:
+        elif is_many:
             value = eattribute.eType.from_string(value)
             eobject.__getattribute__(eattribute.name).append(value)
         else:

@@ -458,7 +458,12 @@ class Resource(object):
     @staticmethod
     def get_id_attribute(eclass):
         for attribute in eclass.eAllAttributes():
-            if attribute.__dict__.get('iD', False):
+            id_attr = attribute.__dict__.get('iD', False)
+            try:
+                res = id_attr._get()
+            except Exception:
+                res = id_attr
+            if res:
                 return attribute
 
     # Refactor me
@@ -512,7 +517,7 @@ class Resource(object):
         id_attribute = self.get_id_attribute(obj.eClass)
         if id_attribute:
             etype = id_attribute.eType
-            id_att_value = etype.to_string(obj.eGet(id_attribute))
+            id_att_value = obj.eGet(id_attribute)
             if id_att_value is not None:
                 return (etype.to_string(id_att_value), False)
         return (obj.eURIFragment(), False)
