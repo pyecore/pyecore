@@ -991,6 +991,8 @@ ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eType = EReference('eType', EClassifier)
 ENamedElement.name._isset.add(ETypedElement.eType)  # special case
+ETypedElement.eGenericType = EReference('eGenericType', EGenericType,
+                                        containment=True)
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -1064,6 +1066,8 @@ EOperation.eParameters = EReference('eParameters', EParameter, upper=-1,
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                         upper=-1, containment=True)
+EOperation.eGenericExceptions = EReference('eGenericExceptions', EGenericType,
+                                           upper=-1)
 
 EParameter.eOperation = EReference('eOperation', EOperation,
                                    eOpposite=EOperation.eParameters)

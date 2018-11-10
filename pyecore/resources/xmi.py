@@ -172,8 +172,6 @@ class XMIResource(Resource):
         return '{{{}}}nil'.format(self.prefixes.get(XSI)) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
-        if node.tag == 'eGenericType':  # Special case, TODO
-            return (None, None, [], [], False)
         _, node_tag = self.extract_namespace(node.tag)
         feature_container = self._find_feature(parent_eobj.eClass, node_tag)
         if not feature_container:
