@@ -1,6 +1,15 @@
 Changelog
 ---------
 
+0.9.1
++++++
+
+**Bugfixes**
+
+- Fix missing ``EGenericType`` features like ``eTypeParameter``. These
+  attributes were missing from the Ecore metamodel leading to errors when
+  ecore models using them were deserialized.
+
 0.9.0
 +++++
 

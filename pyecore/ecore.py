@@ -1029,6 +1029,8 @@ EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
+EClass.eGenericSuperTypes = EReference('eGenericSuperTypes', EGenericType,
+                                       containment=True, upper=-1)
 EClass.eAttributes_ = EReference('eAttributes', EAttribute,
                                  upper=-1, derived=True)
 EClass.eReferences_ = EReference('eReferences', EReference,
@@ -1070,6 +1072,11 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
                                     upper=-1, containment=True)
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
+EGenericType.eClassifier = EReference('eClassifier', EClassifier)
+EGenericType.eTypeArguments = EReference('eTypeArguments', EGenericType,
+                                         containment=True, upper=-1)
+EGenericType.eTypeParameter = EReference('eTypeParameter', ETypeParameter,
+                                         eOpposite=ETypeParameter.eGenericType)
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 Core.register_classifier(EObject, promote=True)

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="testecore" nsURI="http://www.example.org/testecore" nsPrefix="testecore">
+  <eClassifiers xsi:type="ecore:EClass" name="Owner">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="buildings" upperBound="-1"
+        eType="#//Building"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Building" abstract="true">
+    <eTypeParameters name="T"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="test" upperBound="-1" containment="true">
+      <eGenericType eTypeParameter="#//Building/T"/>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="House" eSuperTypes="#//Building">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rooms" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Test">
+    <eTypeParameters name="T"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="hallo" upperBound="-1"
+        containment="true">
+      <eGenericType eTypeParameter="#//Test/T"/>
+    </eStructuralFeatures>
+    <eGenericSuperTypes eClassifier="#//Building">
+      <eTypeArguments eTypeParameter="#//Test/T"/>
+    </eGenericSuperTypes>
+  </eClassifiers>
+</ecore:EPackage>
