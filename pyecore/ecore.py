@@ -393,9 +393,14 @@ class ETypeParameter(ENamedElement):
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
 
+    def __instancecheck__(self, instance):
+        return isinstance(instance, EObject)  # tmp
+
 
 class EGenericType(EObject):
-    pass
+    def __init__(self, eTypeParameter=None, **kwargs):
+        super().__init__(**kwargs)
+        self.eTypeParameter = eTypeParameter
 
 
 class EClassifier(ENamedElement):
@@ -989,10 +994,10 @@ ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
 ETypedElement._upper = EAttribute('upper', EInteger, derived=True)
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
-ETypedElement.eType = EReference('eType', EClassifier)
-ENamedElement.name._isset.add(ETypedElement.eType)  # special case
 ETypedElement.eGenericType = EReference('eGenericType', EGenericType,
                                         containment=True)
+ETypedElement.eType = EReference('eType', EClassifier)
+ENamedElement.name._isset.add(ETypedElement.eType)  # special case
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)
@@ -1081,6 +1086,8 @@ EGenericType.eTypeArguments = EReference('eTypeArguments', EGenericType,
                                          containment=True, upper=-1)
 EGenericType.eTypeParameter = EReference('eTypeParameter', ETypeParameter,
                                          eOpposite=ETypeParameter.eGenericType)
+EGenericType.eUpperBound = EReference('eUpperBound', EGenericType)
+EGenericType.eLowerBound = EReference('eLowerBound', EGenericType)
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 Core.register_classifier(EObject, promote=True)
