@@ -85,3 +85,13 @@ class original_issubclass(object):
 
     def __exit__(self, type, value, traceback):
         builtins.issubclass = self.pyecore_issubclass
+
+
+def alias(name, feature=None, eclass=None):
+    if eclass is None:
+        eclass = feature.eContainingClass
+    if isinstance(eclass, EClass):
+        setattr(eclass.python_class, name, feature)
+    else:
+        feature.name = name
+        setattr(eclass, name, feature)

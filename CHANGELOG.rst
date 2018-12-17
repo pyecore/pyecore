@@ -13,6 +13,7 @@ Changelog
 **Miscellaneous**
 
 - Add context manager to unpatch the ``issubclass`` builtin function.
+- Add ``alias`` function to inject alias features that have reserved names.
 
 0.9.0
 +++++
