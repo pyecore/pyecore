@@ -1,6 +1,7 @@
 import pytest
 from pyecore.ecore import *
-from pyecore.utils import DynamicEPackage
+from pyecore.utils import DynamicEPackage, original_issubclass
+import builtins
 
 
 @pytest.fixture(scope='module')
@@ -72,3 +73,10 @@ def test_dynamic_removal_eclasses(complexmm):
     complexmm.eClassifiers[0].delete()
     with pytest.raises(AttributeError):
         ComplexMM.A
+
+
+def test_original_issubclass():
+    issub = builtins.issubclass
+    with original_issubclass():
+        assert builtins.issubclass is not issub
+    assert builtins.issubclass is issub
