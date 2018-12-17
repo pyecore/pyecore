@@ -10,6 +10,10 @@ Changelog
   attributes were missing from the Ecore metamodel leading to errors when
   ecore models using them were deserialized.
 
+**Miscellaneous**
+
+- Add context manager to unpatch the ``issubclass`` builtin function.
+
 0.9.0
 +++++
 

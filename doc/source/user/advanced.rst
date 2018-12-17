@@ -495,3 +495,21 @@ EClass:
 
 To be able to propose a dynamic empty implementation of the operation, PyEcore
 relies on Python code generation at runtime.
+
+Tips and Tricks
+---------------
+
+Unpatching the ``issubclass`` builtin function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyEcore patches the ``issubclass`` builtin function, mainly for the PyUML2
+Project and its UML profile support. The patch should be transparent, but in
+case it introduce issues in your code, PyEcore provides a context manager that
+allows you to temporarily unpatch ``issubclass``:
+
+.. code-block:: python
+
+    from pyecore.utils import original_issubclass
+
+    with original_issubclass():
+        # your code here that uses the original issubclass
