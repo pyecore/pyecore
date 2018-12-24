@@ -87,7 +87,7 @@ class original_issubclass(object):
         builtins.issubclass = self.pyecore_issubclass
 
 
-def alias(name, feature=None, eclass=None):
+def alias(name, feature, eclass=None):
     if eclass is None:
         eclass = feature.eContainingClass
     if isinstance(eclass, EClass):
