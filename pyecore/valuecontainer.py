@@ -43,8 +43,15 @@ class PyEcoreValue(object):
         self.is_ref = isinstance(efeature, EReference)
 
     def check(self, value):
-        if not EcoreUtils.isinstance(value, self.feature.eType):
-            raise BadValueError(value, self.feature.eType)
+        etype = self.feature.eType
+        if not etype:
+            try:
+                etype = self.feature.eGenericType.eRawType
+            except Exception:
+                raise AttributeError('Feature {} has no type'
+                                     'nor generic'.format(etype))
+        if not EcoreUtils.isinstance(value, etype):
+            raise BadValueError(value, etype)
 
     def _update_container(self, value, previous_value=None):
         if not self.is_ref:

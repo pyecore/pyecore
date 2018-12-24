@@ -1,8 +1,16 @@
 Changelog
 ---------
 
-0.9.1
-+++++
+0.10.0
+++++++
+
+**Features**
+
+- Add first support for ``EGenerics``. This implementation is currently
+  incomplete as it is not possible to express dedicated types for instances.
+  This capability will be added in future versions. The current version is able
+  to catch only a part of the generic semantic, but at least it does not
+  prevent from opening files and models that uses them (it should not).
 
 **Bugfixes**
 

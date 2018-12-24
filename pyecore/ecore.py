@@ -80,11 +80,16 @@ class Core(object):
                 eSuperTypes_add(_cls.eClass)
         # init eclass by reflection
         eStructuralFeatures_add = rcls.eClass.eStructuralFeatures.append
+        eTypeParameters_add = rcls.eClass.eTypeParameters.add
         for k, feature in rcls.__dict__.items():
             if isinstance(feature, EStructuralFeature):
                 if not feature.name:
                     feature.name = k
                 eStructuralFeatures_add(feature)
+            elif isinstance(feature, ETypeParameter):
+                if not feature.name:
+                    feature.name = k
+                eTypeParameters_add(feature)
             elif inspect.isfunction(feature):
                 if k.startswith('__'):
                     continue
@@ -320,7 +325,8 @@ class EPackage(ENamedElement):
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False, **kwargs):
+                 lower=0, upper=1, required=False, eGenericType=None,
+                 **kwargs):
         super().__init__(name, **kwargs)
         self.eType = eType
         self.lowerBound = int(lower)
@@ -328,6 +334,8 @@ class ETypedElement(ENamedElement):
         self.ordered = ordered
         self.unique = unique
         self.required = required
+        if eGenericType:
+            self.eGenericType = eGenericType
         self._many_cache = self._compute_many()
         self._eternal_listener.append(self)
 
@@ -390,17 +398,37 @@ class EParameter(ETypedElement):
 
 
 class ETypeParameter(ENamedElement):
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, eBounds=None, **kwargs):
         super().__init__(name, **kwargs)
+        if eBounds:
+            self.eBounds.extend(eBounds)
+
+    def raw_types(self):
+        raw_types = tuple(x.eRawType for x in self.eBounds)
+        if not raw_types:
+            raw_types = object
+        return raw_types
 
     def __instancecheck__(self, instance):
-        return isinstance(instance, EObject)  # tmp
+        raw_types = self.raw_types()
+        return isinstance(instance, raw_types)
+
+    def __str__(self):
+        raw_types = self.raw_types()
+        return '<{}[{}] object at {}>'.format(self.__class__.__name__,
+                                           raw_types,
+                                           hex(id(self)))
 
 
 class EGenericType(EObject):
-    def __init__(self, eTypeParameter=None, **kwargs):
+    def __init__(self, eTypeParameter=None, eClassifier=None, **kwargs):
         super().__init__(**kwargs)
         self.eTypeParameter = eTypeParameter
+        self.eClassifier = eClassifier
+
+    @property
+    def eRawType(self):
+        return self.eClassifier or self.eTypeParameter
 
 
 class EClassifier(ENamedElement):
