@@ -182,7 +182,8 @@ In the current state, the project implements:
 * derived collections,
 * multiple roots ressources,
 * ``xsi:schemaLocation`` support for XMI resources,
-* URI mapper like.
+* URI mapper like,
+* ``EGeneric`` support (first simple version)
 
 The things that are in the roadmap:
 
