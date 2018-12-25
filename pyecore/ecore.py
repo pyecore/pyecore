@@ -416,8 +416,8 @@ class ETypeParameter(ENamedElement):
     def __str__(self):
         raw_types = self.raw_types()
         return '<{}[{}] object at {}>'.format(self.__class__.__name__,
-                                           raw_types,
-                                           hex(id(self)))
+                                              raw_types,
+                                              hex(id(self)))
 
 
 class EGenericType(EObject):

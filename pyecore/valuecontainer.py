@@ -41,12 +41,14 @@ class PyEcoreValue(object):
         self.owner = owner
         self.feature = efeature
         self.is_ref = isinstance(efeature, EReference)
+        self.generic_type = None
 
     def check(self, value):
-        etype = self.feature.eType
+        etype = self.generic_type or self.feature.eType
         if not etype:
             try:
                 etype = self.feature.eGenericType.eRawType
+                self.generic_type = etype
             except Exception:
                 raise AttributeError('Feature {} has no type'
                                      'nor generic'.format(etype))
