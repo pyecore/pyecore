@@ -105,7 +105,7 @@ class XMIResource(Resource):
         self.contents.append(modelroot)
         erefs = []
         for key, value in xmlroot.attrib.items():
-            namespace, att_name = self.extract_namespace(key)
+            namespace, _ = self.extract_namespace(key)
             if key == self.xmiid:
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
