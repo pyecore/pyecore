@@ -462,12 +462,10 @@ class EDataType(EClassifier):
         if to_string:
             self.to_string = to_string
 
-    @staticmethod
-    def from_string(value):
+    def from_string(self, value):
         return value
 
-    @staticmethod
-    def to_string(value):
+    def to_string(self, value):
         return str(value)
 
     def __instancecheck__(self, instance):
