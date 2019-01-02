@@ -105,9 +105,9 @@ class Set(AbstractCommand):
         self.owner.eSet(self.feature, self.value)
 
     def do_execute(self):
-        object = self.owner
-        self.previous_value = object.eGet(self.feature)
-        object.eSet(self.feature, self.value)
+        object_ = self.owner
+        self.previous_value = object_.eGet(self.feature)
+        object_.eSet(self.feature, self.value)
 
 
 class Add(AbstractCommand):

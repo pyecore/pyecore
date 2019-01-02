@@ -25,7 +25,7 @@ class JsonResource(Resource):
     def load(self, options=None):
         json_value = self.uri.create_instream()
         d = json.loads(json_value.read().decode('utf-8'))
-        if type(d) is list:
+        if isinstance(d, list):
             for x in d:
                 self.to_obj(x, first=True)
         else:
@@ -62,7 +62,8 @@ class JsonResource(Resource):
         else:
             return obj.eURIFragment()
 
-    def serialize_eclass(self, eclass):
+    @staticmethod
+    def serialize_eclass(eclass):
         return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
 
     def _to_ref_from_obj(self, obj):

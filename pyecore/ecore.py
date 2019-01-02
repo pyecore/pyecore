@@ -462,10 +462,12 @@ class EDataType(EClassifier):
         if to_string:
             self.to_string = to_string
 
-    def from_string(self, value):
+    @staticmethod
+    def from_string(value):
         return value
 
-    def to_string(self, value):
+    @staticmethod
+    def to_string(value):
         return str(value)
 
     def __instancecheck__(self, instance):
@@ -490,8 +492,8 @@ class EDataType(EClassifier):
     def instanceClassName(self, name):
         self._instanceClassName = name
         default_type = (object, True, None)
-        type, type_as_factory, default = self.transmap.get(name, default_type)
-        self.eType = type
+        type_, type_as_factory, default = self.transmap.get(name, default_type)
+        self.eType = type_
         self.type_as_factory = type_as_factory
         self.default_value = default
 
@@ -660,7 +662,8 @@ class EReference(EStructuralFeature):
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
             self.eType = eType.eClass
 
-    def get_default_value(self):
+    @staticmethod
+    def get_default_value():
         return None
 
     @property
@@ -676,7 +679,7 @@ class EReference(EStructuralFeature):
 
 class EClass(EClassifier):
     def __new__(cls, name=None, superclass=None, metainstance=None, **kwargs):
-        if type(name) is not str:
+        if not isinstance(name, str):
             raise BadValueError(got=name, expected=str)
         instance = super().__new__(cls)
         if isinstance(superclass, tuple):

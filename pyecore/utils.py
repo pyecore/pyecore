@@ -83,7 +83,7 @@ class original_issubclass(object):
     def __enter__(self):
         builtins.issubclass = self.pyecore_issubclass.original
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         builtins.issubclass = self.pyecore_issubclass
 
 
