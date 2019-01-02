@@ -234,3 +234,8 @@ Additional Resources
 * `This article <http://modeling-languages.com/pyecore-python-eclipse-modeling-framework>`_
   on the blog of the Professor Jordi Cabot gives more information and
   implementations details about PyEcore.
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/44011308e623416d8177e63af2cb3ed6
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/aranega/pyecore?utm_source=github.com&utm_medium=referral&utm_content=pyecore/pyecore&utm_campaign=Badge_Grade_Dashboard
