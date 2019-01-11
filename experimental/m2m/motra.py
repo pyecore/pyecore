@@ -78,7 +78,7 @@ class Transformation(object):
         self._main = fun
         return fun
 
-    def run(self, **kwargs):
+    def run(self, clean_mappings_cache=True, **kwargs):
         self.inputs = Parameters(self, self.inputs_def)
         self.outputs = Parameters(self, self.outputs_def)
         params = {}
@@ -110,6 +110,9 @@ class Transformation(object):
             params[out_model] = resource
         self.primary_output = self.outputs[0]
         self._main(**params)
+        if clean_mappings_cache:
+            for mapping in self.registed_mapping:
+                mapping.cache.cache_clear()
 
     def mapping(self, f=None, output_model=None, when=None):
         if not f:
@@ -172,7 +175,9 @@ class Transformation(object):
                 if when(*args, **kwargs):
                     return inner(*args, **kwargs)
             return when_inner
-        return functools.lru_cache()(inner)
+        cached_fun = functools.lru_cache()(inner)
+        f.cache = cached_fun
+        return cached_fun
 
     def disjunct(self, f=None, mappings=None):
         if not f:
