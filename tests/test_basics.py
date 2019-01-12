@@ -215,3 +215,27 @@ def test_container():
     root.first = a1
     assert root.first is a1
     assert a1 not in root.second
+
+
+def test_collection_comprehension():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, upper=-1))
+    A.eStructuralFeatures.append(EAttribute('stuffs', EString, upper=-1))
+
+    root = A()
+    a, b = A(), A()
+
+    previous = root.toa
+    root.toa = [a, b]
+
+    assert previous is root.toa
+    assert a in root.toa
+    assert b in root.toa
+
+    previous = root.stuffs
+    root.stuffs = [a for a in ('abc', 'def', 'ghi')]
+
+    assert previous is root.stuffs
+    assert 'abc' in root.stuffs
+    assert 'def' in root.stuffs
+    assert 'ghi' in root.stuffs

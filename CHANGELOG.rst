@@ -12,6 +12,14 @@ Changelog
   to catch only a part of the generic semantic, but at least it does not
   prevent from opening files and models that uses them (it should not).
 
+- Add support for item addition from another collection. If an iterable (beside
+  strings) is passed as redefinition of a collection (eg: ``a.b = [2, 3]``),
+  the previous behavior was to raise an error for incompatible type. This new
+  version just throws all the previous element from the ``a.b`` collection and
+  place all elements from the other one in it. This behavior will introduce
+  easier handling for model transformations.
+
+
 **Bugfixes**
 
 - Fix missing ``EGenericType`` features like ``eTypeParameter``. These
