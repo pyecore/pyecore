@@ -1,8 +1,10 @@
 """Definition of meta model 'type' for XMLTypes."""
 from functools import partial
+from collections import UserDict, UserList
 import pyecore.ecore as Ecore
 from pyecore.ecore import EPackage, EDataType, EObject, MetaEClass, \
-                          EAttribute, EFeatureMapEntry, EReference
+                          EAttribute, EFeatureMapEntry, EReference, \
+                          EDerivedCollection
 
 
 name = 'type'
@@ -176,27 +178,22 @@ UnsignedShortObject = EDataType('UnsignedShortObject',
                                 from_string=int)
 
 
-# mixed, any and anyAttribute should have upper=-1 (but dict this implies)
-# modifications on the EFeatureMapEntry data type which currently considered
-# as dict.
+class DerivedAny(UserDict, EDerivedCollection):
+    def __init__(self, owner, feature=None):
+        UserDict.__init__(self)
+        EDerivedCollection.__init__(self, owner, feature)
+
+
 # As consequence, in the constructor, 'extend' is not called anymore, but
 # 'update' is called instead.
 class AnyType(EObject, metaclass=MetaEClass):
 
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
                        iD=False, upper=1)
-    _any = EAttribute(eType=EFeatureMapEntry, derived=True,
-                      changeable=True, iD=False, upper=1, name='any')
+    any = EAttribute(eType=EFeatureMapEntry, derived=True, changeable=True,
+                     upper=-1, transient=True, derived_class=DerivedAny)
     anyAttribute = EAttribute(eType=EFeatureMapEntry, derived=False,
                               changeable=True, iD=False, upper=1)
-
-    @property
-    def any(self):
-        return self._any
-
-    @any.setter
-    def any(self, value):
-        self._any = value
 
     def __init__(self, *, mixed=None, any=None, anyAttribute=None, **kwargs):
         if kwargs:
@@ -216,8 +213,8 @@ class AnyType(EObject, metaclass=MetaEClass):
 
 class ProcessingInstruction(EObject, metaclass=MetaEClass):
 
-    data = EAttribute(eType=String, derived=False, changeable=True, iD=False)
-    target = EAttribute(eType=String, derived=False, changeable=True, iD=False)
+    data = EAttribute(eType=String, derived=False, changeable=True)
+    target = EAttribute(eType=String, derived=False, changeable=True)
 
     def __init__(self, *, data=None, target=None, **kwargs):
         if kwargs:
@@ -232,6 +229,30 @@ class ProcessingInstruction(EObject, metaclass=MetaEClass):
             self.target = target
 
 
+class DerivedCdata(UserList, EDerivedCollection):
+    def __init__(self, owner, feature=None):
+        UserList.__init__(self)
+        EDerivedCollection.__init__(self, owner, feature)
+
+
+class DerivedComment(UserList, EDerivedCollection):
+    def __init__(self, owner, feature=None):
+        UserList.__init__(self)
+        EDerivedCollection.__init__(self, owner, feature)
+
+
+class DerivedProcessinginstruction(UserList, EDerivedCollection):
+    def __init__(self, owner, feature=None):
+        UserList.__init__(self)
+        EDerivedCollection.__init__(self, owner, feature)
+
+
+class DerivedText(UserList, EDerivedCollection):
+    def __init__(self, owner, feature=None):
+        UserList.__init__(self)
+        EDerivedCollection.__init__(self, owner, feature)
+
+
 # mixed, xMLNSPrefixMap, xSISchemaLocation should have upper=-1 (but dict this
 # implies) modifications on the EFeatureMapEntry data type which currently
 # considered as dict.
@@ -241,41 +262,19 @@ class ProcessingInstruction(EObject, metaclass=MetaEClass):
 class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
 
     mixed = EAttribute(eType=EFeatureMapEntry, derived=False, changeable=True,
-                       iD=False, upper=1)
-    _cDATA = EAttribute(eType=String, derived=True, changeable=True,
-                        iD=False, upper=-1, name='cDATA')
-    _comment = EAttribute(eType=String, derived=True, changeable=True,
-                          iD=False, upper=-1, name='comment')
-    _text = EAttribute(eType=String, derived=True, changeable=True, iD=False,
-                       upper=-1, name='text')
+                       upper=1)
+    cDATA = EAttribute(eType=String, derived=True, changeable=True,
+                       upper=-1, transient=True, derived_class=DerivedCdata)
+    comment = EAttribute(eType=String, derived=True, changeable=True, upper=-
+                         1, transient=True, derived_class=DerivedComment)
+    text = EAttribute(eType=String, derived=True, changeable=True,
+                      upper=-1, transient=True, derived_class=DerivedText)
     xMLNSPrefixMap = EAttribute(ordered=True, unique=True, upper=1)
     xSISchemaLocation = EAttribute(ordered=True, unique=True, upper=1)
-    processingInstruction = EReference(ordered=True, unique=True,
-                                       containment=True, upper=-1)
-
-    @property
-    def cDATA(self):
-        return self._cDATA
-
-    @cDATA.setter
-    def cDATA(self, value):
-        self._cDATA = value
-
-    @property
-    def comment(self):
-        return self._comment
-
-    @comment.setter
-    def comment(self, value):
-        self._comment = value
-
-    @property
-    def text(self):
-        return self._text
-
-    @text.setter
-    def text(self, value):
-        self._text = value
+    processingInstruction = EReference(
+            ordered=True, unique=True, containment=True, derived=True,
+            upper=-1, transient=True,
+            derived_class=DerivedProcessinginstruction)
 
     def __init__(self, *, mixed=None, xMLNSPrefixMap=None,
                  xSISchemaLocation=None, cDATA=None, comment=None,
@@ -310,9 +309,9 @@ class XMLTypeDocumentRoot(EObject, metaclass=MetaEClass):
 class SimpleAnyType(AnyType):
 
     _rawValue = EAttribute(eType=String, derived=True, changeable=True,
-                           iD=False, name='rawValue')
+                           name='rawValue', transient=True)
     _value = EAttribute(eType=AnySimpleType, derived=True, changeable=True,
-                        iD=False, name='value')
+                        name='value', transient=True)
     instanceType = EReference(ordered=True, unique=True, containment=False)
 
     @property
