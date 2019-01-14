@@ -219,23 +219,38 @@ def test_container():
 
 def test_collection_comprehension():
     A = EClass('A')
-    A.eStructuralFeatures.append(EReference('toa', A, upper=-1))
-    A.eStructuralFeatures.append(EAttribute('stuffs', EString, upper=-1))
+    A.eStructuralFeatures.append(EReference('toa', A, upper=-1, derived=True))
+    A.eStructuralFeatures.append(EAttribute('stuffs', EString, upper=-1,
+                                            derived=True))
 
     root = A()
-    a, b = A(), A()
+    assert isinstance(root.toa, EDerivedCollection)
 
-    previous = root.toa
-    root.toa = [a, b]
+    with pytest.raises(Exception):
+        root.toa.append(A())
 
-    assert previous is root.toa
-    assert a in root.toa
-    assert b in root.toa
+    assert isinstance(root.stuffs, EDerivedCollection)
+    with pytest.raises(Exception):
+        root.stuffs.append('test')
 
-    previous = root.stuffs
-    root.stuffs = [a for a in ('abc', 'def', 'ghi')]
 
-    assert previous is root.stuffs
-    assert 'abc' in root.stuffs
-    assert 'def' in root.stuffs
-    assert 'ghi' in root.stuffs
+def test_collection_affectation():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, upper=-1))
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+
+    x, y = A(), A()
+
+    a = A(name='tes')
+    with pytest.raises(BadValueError):
+        x.toa = [a]
+
+    x.toa.append(a)
+
+    with pytest.raises(AttributeError):
+        y.toa = x.toa
+
+    b = A()
+    y.toa += [b]
+    assert b in y.toa
+    assert b not in x.toa

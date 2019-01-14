@@ -24,7 +24,6 @@ from ordered_set import OrderedSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
-from .ordered_set_patch import is_iterable
 
 
 name = 'ecore'
@@ -605,21 +604,21 @@ class EStructuralFeature(ETypedElement):
     def __set__(self, instance, value):
         name = self._name
         instance_dict = instance.__dict__
-        if isinstance(value, ECollection):
-            instance_dict[name] = value
-            return
         if name not in instance_dict:
             if self.many:
                 new_value = self.derived_class.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
-        previous_value = instance_dict[name]
+            previous_value = new_value
+        else:
+            previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
-            if is_iterable(value):
-                previous_value.clear()
-                previous_value.extend(value)
+            if value is previous_value:
                 return
+            if value is not previous_value and isinstance(value, ECollection):
+                raise AttributeError('Cannot reafect an ECollection with '
+                                     'another one, even if compatible')
             raise BadValueError(got=value, expected=previous_value.__class__)
         instance_dict[name]._set(value)
 

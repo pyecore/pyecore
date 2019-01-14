@@ -12,12 +12,8 @@ Changelog
   to catch only a part of the generic semantic, but at least it does not
   prevent from opening files and models that uses them (it should not).
 
-- Add support for item addition from another collection. If an iterable (beside
-  strings) is passed as redefinition of a collection (eg: ``a.b = [2, 3]``),
-  the previous behavior was to raise an error for incompatible type. This new
-  version just throws all the previous element from the ``a.b`` collection and
-  place all elements from the other one in it. This behavior will introduce
-  easier handling for model transformations.
+- Add new XMLType metamodel generation. This new version makes a better use
+  of derived collections and fixes some oddities of the previous one.
 
 
 **Bugfixes**
@@ -25,6 +21,11 @@ Changelog
 - Fix missing ``EGenericType`` features like ``eTypeParameter``. These
   attributes were missing from the Ecore metamodel leading to errors when
   ecore models using them were deserialized.
+
+- Fix collection reaffectation. These kind of reaffectation (e.g:
+  ``x.foo = y.bar``, where ``foo`` and ``bar`` are ``EStructuralFeature``
+  instances) now raises and error. The previous implementation could cause
+  side-effects which were hard to anticipate.
 
 **Miscellaneous**
 
