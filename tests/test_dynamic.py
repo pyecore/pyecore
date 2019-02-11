@@ -761,6 +761,8 @@ def test_eattribute_edate():
 def test_edatatype_edate():
     assert EDate.from_string('2019-01-29T09:50:55.370908') is not None
     assert EDate.to_string(datetime.now())
+    with pytest.raises(ValueError):
+        EDate.from_string('019-01-29T')
 
 
 def test_eoperation_multiplicity():
