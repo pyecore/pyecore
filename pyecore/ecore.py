@@ -23,7 +23,7 @@ from datetime import datetime
 from ordered_set import OrderedSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
-from .innerutils import ignored, javaTransMap, parse_date
+from .innerutils import ignored, javaTransMap
 
 
 name = 'ecore'
@@ -999,7 +999,9 @@ EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
-EDate = EDataType('EDate', datetime, from_string=parse_date)
+EDate = EDataType('EDate', datetime,
+                  from_string=datetime.fromisoformat,
+                  to_string=lambda d: d.isoformat())
 EBigDecimal = EDataType('EBigDecimal', Decimal, from_string=Decimal)
 EByte = EDataType('EByte', bytes)
 EByteObject = EDataType('EByteObject', bytes)

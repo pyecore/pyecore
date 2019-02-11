@@ -52,5 +52,5 @@ javaTransMap = {
 }
 
 
-def parse_date(str_date):
-    return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')
+# def parse_date(str_date):
+#     return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')
