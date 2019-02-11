@@ -27,6 +27,10 @@ Changelog
   instances) now raises and error. The previous implementation could cause
   side-effects which were hard to anticipate.
 
+- Fix bad format for ``EDate``. The old format that were parsed and produced
+  by PyEcore was not EMF-Java compatible. This new implementation is using the
+  iso format which seems to be the one used by default by EMF.
+
 **Miscellaneous**
 
 - Add context manager to unpatch the ``issubclass`` builtin function.
