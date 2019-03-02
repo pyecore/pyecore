@@ -21,6 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
+from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
@@ -138,6 +139,7 @@ class Core(object):
 
 class EObject(ENotifer):
     _staticEClass = True
+    _instances = WeakSet()
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
@@ -150,10 +152,19 @@ class EObject(ENotifer):
         instance._eternal_listener = []
         instance._inverse_rels = set()
         instance._staticEClass = False
+        cls._instances.add(instance)
         return instance
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    @classmethod
+    def allInstances(cls, resources=None):
+        if resources:
+            yield from (x for x in cls._instances
+                        if isinstance(x, cls) and x.eResource in resources)
+        else:
+            yield from (x for x in cls._instances if isinstance(x, cls))
 
     def eContainer(self):
         return self._container
@@ -719,6 +730,15 @@ class EClass(EClassifier):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
         return self.python_class(*args, **kwargs)
+
+    def allInstances(self=None, resources=None):
+        if self is None:
+            self = EClass
+        if resources:
+            yield from (x for x in self._instances
+                        if isinstance(x, self) and x.eResource in resources)
+        else:
+            yield from (x for x in self._instances if isinstance(x, self))
 
     def notifyChanged(self, notif):
         # We do not update in case of static metamodel (could be changed)

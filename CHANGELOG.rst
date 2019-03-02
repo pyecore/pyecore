@@ -15,6 +15,12 @@ Changelog
 - Add new XMLType metamodel generation. This new version makes a better use
   of derived collections and fixes some oddities of the previous one.
 
+- Add first implementation of ``allInstances()`` method on ``EClass`` instances.
+  This implementation can still benefits from some optimizations. The
+  ``allInstances()`` method is working by keeping track of all created PyEcore
+  objects in a ``WeakSet``. This set is then crossed and each matching
+  instances are returned as a generator. 
+
 
 **Bugfixes**
 
