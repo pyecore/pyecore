@@ -622,8 +622,8 @@ Adding External Metamodel Resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 External resources for metamodel loading should be added in the resource set.
-For example, some metamodels use the XMLType instead of the Ecore one.
-The resource creation should be done by hand first:
+For example, for resources that uses the XMLType instead of the Ecore one,
+the following datatypes could be created first by hand that way:
 
 .. code-block:: python
 
@@ -655,6 +655,10 @@ The resource creation should be done by hand first:
     resource = rset.get_resource(HttpURI('http://myadress.ecore'))
     root = resource.contents[0]
 
+Please note that in the case of XMLTypes, an implementation is provided with
+PyEcore and it is not required to create those types by hand. These types are
+only used here to highlight how new resources could be added from scratch.
+To see how to use the XMLTypes, see few section below.
 
 Metamodel References by 'File Path'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -941,6 +945,24 @@ remove it from its container. PyEcore does not serialize elements that are not
 contained by a ``Resource`` and each reference to this 'not-contained' element
 is not serialized.
 
+
+Working with XMLTypes
+---------------------
+
+PyEcore provides a partial implementation of the XMLTypes. This implementation
+is already shipped with PyEcore and can direclty be used. A classical way of
+registering it is to simply import the package.
+
+.. code-block:: python
+
+    import pyecore.type as xmltypes
+
+    # from this point, the metamodel is registered in the global registry
+    # meaning it is not mandatory to register it manually in a ResourceSet
+
+
+The current implementation is partial as some derived attributes and collections
+are still "empty", but the main part of the metamodel is usable.
 
 Traversing the Whole Model with Single Dispatch
 -----------------------------------------------
