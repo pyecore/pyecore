@@ -495,3 +495,55 @@ EClass:
 
 To be able to propose a dynamic empty implementation of the operation, PyEcore
 relies on Python code generation at runtime.
+
+
+``EStructuralFeatures`` and Aliases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyEcore is able to place aliases for structural features. These aliases give
+a new name to access a common property. Here is an example of how the feature
+alias can be used:
+
+.. .. code-block:: python
+
+  from pyecore.ecore import EClass, EAttribute, EString
+  from pyecore.utils import alias
+
+  @EMetaclass
+  class A(object):
+    name = EAttribute(eType=EString)
+
+
+  alias('surname', A.name)
+
+  instance = A()
+  instance.name = 'myName'
+  assert instance.surname == instance.name
+
+
+When an alias is set and the model is serialized, the alias attribute is not
+serialized in the ``.xmi``. A typical case study for this feature is metamodel
+compatibility. From time to time it's important to handle some attribute as
+if they were the old ones, without serializing them. In such scenario, one can
+simply set aliases and reuse old scripts/programs that where handling the old
+version of the metamodel without updating them.
+
+
+
+Tips and Tricks
+---------------
+
+Unpatching the ``issubclass`` builtin function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyEcore patches the ``issubclass`` builtin function, mainly for the PyUML2
+Project and its UML profile support. The patch should be transparent, but in
+case it introduce issues in your code, PyEcore provides a context manager that
+allows you to temporarily unpatch ``issubclass``:
+
+.. code-block:: python
+
+    from pyecore.utils import original_issubclass
+
+    with original_issubclass():
+        # your code here that uses the original issubclass

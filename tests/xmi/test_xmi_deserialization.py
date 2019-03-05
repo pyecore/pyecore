@@ -73,6 +73,13 @@ def test_resourceset_getresource_ecore_My():
     assert aRef.eOpposite is bRef
 
 
+def test_resourceset_getresource_ecore_generics():
+    rset = ResourceSet()
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'testecore.ecore')
+    resource = rset.get_resource(URI(ecore_file))
+    assert resource.contents != []
+
+
 def test_resourceset_getresource_instance_MyRoot():
     rset = ResourceSet()
     # register the My.ecore metamodel in the resource set (could be in the global_registry)

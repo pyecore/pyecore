@@ -53,4 +53,19 @@ javaTransMap = {
 
 
 def parse_date(str_date):
-    return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')
+    try:
+        return datetime.fromisoformat(str_date)
+    except Exception:
+        formats = ('%Y-%m-%dT%H:%M:%S.%f',
+                   '%Y-%m-%dT%H:%M:%S.%f',
+                   '%Y-%m-%dT%H:%M:%S',
+                   '%Y-%m-%dT%H:%M',
+                   '%Y-%m-%d %H:%M:%S.%f',
+                   '%Y-%m-%d %H:%M:%S.%f',
+                   '%Y-%m-%d %H:%M:%S',
+                   '%Y-%m-%d %H:%M',
+                   '%Y-%m-%d',)
+        for format in formats:
+            with ignored(ValueError):
+                return datetime.strptime(str_date, format)
+        raise ValueError('Date format is unknown')

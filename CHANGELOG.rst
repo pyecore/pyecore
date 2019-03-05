@@ -1,6 +1,47 @@
 Changelog
 ---------
 
+0.10.0
+++++++
+
+**Features**
+
+- Add first support for ``EGenerics``. This implementation is currently
+  incomplete as it is not possible to express dedicated types for instances.
+  This capability will be added in future versions. The current version is able
+  to catch only a part of the generic semantic, but at least it does not
+  prevent from opening files and models that uses them (it should not).
+
+- Add new XMLType metamodel generation. This new version makes a better use
+  of derived collections and fixes some oddities of the previous one.
+
+- Add first implementation of ``allInstances()`` method on ``EClass`` instances.
+  This implementation can still benefits from some optimizations. The
+  ``allInstances()`` method is working by keeping track of all created PyEcore
+  objects in a ``WeakSet``. This set is then crossed and each matching
+  instances are returned as a generator. 
+
+
+**Bugfixes**
+
+- Fix missing ``EGenericType`` features like ``eTypeParameter``. These
+  attributes were missing from the Ecore metamodel leading to errors when
+  ecore models using them were deserialized.
+
+- Fix collection reaffectation. These kind of reaffectation (e.g:
+  ``x.foo = y.bar``, where ``foo`` and ``bar`` are ``EStructuralFeature``
+  instances) now raises and error. The previous implementation could cause
+  side-effects which were hard to anticipate.
+
+- Fix bad format for ``EDate``. The old format that were parsed and produced
+  by PyEcore was not EMF-Java compatible. This new implementation is using the
+  iso format which seems to be the one used by default by EMF.
+
+**Miscellaneous**
+
+- Add context manager to unpatch the ``issubclass`` builtin function.
+- Add ``alias`` function to inject alias features that have reserved names.
+
 0.9.0
 +++++
 

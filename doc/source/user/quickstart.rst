@@ -454,6 +454,68 @@ not required, and ``super()`` can be used.
             self.tmp = tmp
 
 
+Ask for all Created Instance of an EClass
+-----------------------------------------
+
+PyEcore keeps track of all created instance. You can then ask for the created
+instances of a particular type using the ``allInstances()`` method on a an
+a metaclass. The result is a generator that contains all the instances of the
+right type:
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass
+
+    # We can ask for all the instances of an EClass
+    for x in EClass.allInstances():
+        print(x)
+
+    # We will create an EClass instance and some instance of this new metaclass
+    A = EClass('A')
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+    for x in A.allInstances():
+      print(x)    # display 3 instances
+
+    del a1
+    for x in A.allInstances():
+      print(x)    # display 2 instances only
+
+
+As all the created element are retrieved by the method, when multiple resources
+are loaded it can be difficult sometimes to only filter elements from dedicated
+resources. The ``allInstances()`` method takes an optional argument:
+``resources`` which let you explicit in which resources the instances should be
+searched.
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass
+    from pyecore.resources import ResourceSet
+
+    # We will create an EClass instance and some instance of this new metaclass
+    A = EClass('A')
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+
+    # We distribute each instance in a different resources
+    rset = ResourceSet()
+    resource1 = rset.create_resource('http://virtual1')
+    resource2 = rset.create_resource('http://virtual2')
+    resource3 = rset.create_resource('http://virtual3')
+
+    resource1.append(a1)
+    resource2.append(a2)
+    resource3.append(a3)
+
+    print(list(A.allInstances(resources=(resource1, resource2))))  # returns a1 and a2
+    print(list(A.allInstances(resources=(resource3,))))  # returns a3
+
+
 
 Programmatically Create a Metamodel and Serialize it
 ----------------------------------------------------
@@ -622,8 +684,8 @@ Adding External Metamodel Resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 External resources for metamodel loading should be added in the resource set.
-For example, some metamodels use the XMLType instead of the Ecore one.
-The resource creation should be done by hand first:
+For example, for resources that uses the XMLType instead of the Ecore one,
+the following datatypes could be created first by hand that way:
 
 .. code-block:: python
 
@@ -655,6 +717,10 @@ The resource creation should be done by hand first:
     resource = rset.get_resource(HttpURI('http://myadress.ecore'))
     root = resource.contents[0]
 
+Please note that in the case of XMLTypes, an implementation is provided with
+PyEcore and it is not required to create those types by hand. These types are
+only used here to highlight how new resources could be added from scratch.
+To see how to use the XMLTypes, see few section below.
 
 Metamodel References by 'File Path'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -941,6 +1007,24 @@ remove it from its container. PyEcore does not serialize elements that are not
 contained by a ``Resource`` and each reference to this 'not-contained' element
 is not serialized.
 
+
+Working with XMLTypes
+---------------------
+
+PyEcore provides a partial implementation of the XMLTypes. This implementation
+is already shipped with PyEcore and can direclty be used. A classical way of
+registering it is to simply import the package.
+
+.. code-block:: python
+
+    import pyecore.type as xmltypes
+
+    # from this point, the metamodel is registered in the global registry
+    # meaning it is not mandatory to register it manually in a ResourceSet
+
+
+The current implementation is partial as some derived attributes and collections
+are still "empty", but the main part of the metamodel is usable.
 
 Traversing the Whole Model with Single Dispatch
 -----------------------------------------------

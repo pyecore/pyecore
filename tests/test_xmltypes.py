@@ -1,7 +1,7 @@
 import pytest
 from pyecore.resources import global_registry
 import pyecore.type as XMLTypes
-from pyecore.ecore import BadValueError, EOrderedSet
+from pyecore.ecore import BadValueError
 
 
 def test__registration():
@@ -28,7 +28,7 @@ def test__simple_any_type():
     assert simple.any == {}
     assert simple.anyAttribute == {}
 
-    simple.any = {'test': 0}
+    simple.any['test'] = 0
     assert simple.any['test'] == 0
 
     with pytest.raises(BadValueError):
@@ -62,35 +62,19 @@ def test__XMLTypeDocumentRoot_full():
     document = XMLTypes.XMLTypeDocumentRoot(mixed={'x': 0},
                                             xMLNSPrefixMap={'y': 1},
                                             xSISchemaLocation={'z': 2},
-                                            processingInstruction=(inst,))
+                                            processingInstruction=(inst,),
+                                            cDATA=('v1',),
+                                            text=('v2',),
+                                            comment=('v3',))
     assert document.mixed['x'] == 0
     assert document.xMLNSPrefixMap['y'] == 1
     assert document.xSISchemaLocation['z'] == 2
     assert inst in document.processingInstruction
-
-    document.cDATA = EOrderedSet(document, XMLTypes.XMLTypeDocumentRoot._cDATA)
-    document.cDATA.append('v1')
     assert 'v1' in document.cDATA
-
-    document.text = EOrderedSet(document, XMLTypes.XMLTypeDocumentRoot._text)
-    document.text.append('v2')
     assert 'v2' in document.text
-
-    document.comment = EOrderedSet(document, XMLTypes.XMLTypeDocumentRoot
-                                   ._comment)
-    document.comment.append('v3')
     assert 'v3' in document.comment
 
 
 def test__XMLTypeDocumentRoot_bad_args():
     with pytest.raises(AttributeError):
         XMLTypes.XMLTypeDocumentRoot(my_arg='test')
-
-    with pytest.raises(AttributeError):
-        XMLTypes.XMLTypeDocumentRoot(cDATA=('my_data',))
-
-    with pytest.raises(AttributeError):
-        XMLTypes.XMLTypeDocumentRoot(comment=('my_comment',))
-
-    with pytest.raises(AttributeError):
-        XMLTypes.XMLTypeDocumentRoot(text=('my_text',))

@@ -21,6 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
+from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
@@ -80,11 +81,16 @@ class Core(object):
                 eSuperTypes_add(_cls.eClass)
         # init eclass by reflection
         eStructuralFeatures_add = rcls.eClass.eStructuralFeatures.append
+        eTypeParameters_add = rcls.eClass.eTypeParameters.add
         for k, feature in rcls.__dict__.items():
             if isinstance(feature, EStructuralFeature):
                 if not feature.name:
                     feature.name = k
                 eStructuralFeatures_add(feature)
+            elif isinstance(feature, ETypeParameter):
+                if not feature.name:
+                    feature.name = k
+                eTypeParameters_add(feature)
             elif inspect.isfunction(feature):
                 if k.startswith('__'):
                     continue
@@ -133,6 +139,7 @@ class Core(object):
 
 class EObject(ENotifer):
     _staticEClass = True
+    _instances = WeakSet()
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
@@ -145,10 +152,19 @@ class EObject(ENotifer):
         instance._eternal_listener = []
         instance._inverse_rels = set()
         instance._staticEClass = False
+        cls._instances.add(instance)
         return instance
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    @classmethod
+    def allInstances(cls, resources=None):
+        if resources:
+            yield from (x for x in cls._instances
+                        if isinstance(x, cls) and x.eResource in resources)
+        else:
+            yield from (x for x in cls._instances if isinstance(x, cls))
 
     def eContainer(self):
         return self._container
@@ -320,7 +336,8 @@ class EPackage(ENamedElement):
 
 class ETypedElement(ENamedElement):
     def __init__(self, name=None, eType=None, ordered=True, unique=True,
-                 lower=0, upper=1, required=False, **kwargs):
+                 lower=0, upper=1, required=False, eGenericType=None,
+                 **kwargs):
         super().__init__(name, **kwargs)
         self.eType = eType
         self.lowerBound = int(lower)
@@ -328,6 +345,8 @@ class ETypedElement(ENamedElement):
         self.ordered = ordered
         self.unique = unique
         self.required = required
+        if eGenericType:
+            self.eGenericType = eGenericType
         self._many_cache = self._compute_many()
         self._eternal_listener.append(self)
 
@@ -390,12 +409,37 @@ class EParameter(ETypedElement):
 
 
 class ETypeParameter(ENamedElement):
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, eBounds=None, **kwargs):
         super().__init__(name, **kwargs)
+        if eBounds:
+            self.eBounds.extend(eBounds)
+
+    def raw_types(self):
+        raw_types = tuple(x.eRawType for x in self.eBounds)
+        if not raw_types:
+            raw_types = object
+        return raw_types
+
+    def __instancecheck__(self, instance):
+        raw_types = self.raw_types()
+        return isinstance(instance, raw_types)
+
+    def __str__(self):
+        raw_types = self.raw_types()
+        return '<{}[{}] object at {}>'.format(self.__class__.__name__,
+                                              raw_types,
+                                              hex(id(self)))
 
 
 class EGenericType(EObject):
-    pass
+    def __init__(self, eTypeParameter=None, eClassifier=None, **kwargs):
+        super().__init__(**kwargs)
+        self.eTypeParameter = eTypeParameter
+        self.eClassifier = eClassifier
+
+    @property
+    def eRawType(self):
+        return self.eClassifier or self.eTypeParameter
 
 
 class EClassifier(ENamedElement):
@@ -457,8 +501,8 @@ class EDataType(EClassifier):
     def instanceClassName(self, name):
         self._instanceClassName = name
         default_type = (object, True, None)
-        type, type_as_factory, default = self.transmap.get(name, default_type)
-        self.eType = type
+        type_, type_as_factory, default = self.transmap.get(name, default_type)
+        self.eType = type_
         self.type_as_factory = type_as_factory
         self.default_value = default
 
@@ -571,17 +615,21 @@ class EStructuralFeature(ETypedElement):
     def __set__(self, instance, value):
         name = self._name
         instance_dict = instance.__dict__
-        if isinstance(value, ECollection):
-            instance_dict[name] = value
-            return
         if name not in instance_dict:
             if self.many:
                 new_value = self.derived_class.create(instance, self)
             else:
                 new_value = EValue(instance, self)
             instance_dict[name] = new_value
-        previous_value = instance_dict[name]
+            previous_value = new_value
+        else:
+            previous_value = instance_dict[name]
         if isinstance(previous_value, ECollection):
+            if value is previous_value:
+                return
+            if value is not previous_value and isinstance(value, ECollection):
+                raise AttributeError('Cannot reafect an ECollection with '
+                                     'another one, even if compatible')
             raise BadValueError(got=value, expected=previous_value.__class__)
         instance_dict[name]._set(value)
 
@@ -627,7 +675,8 @@ class EReference(EStructuralFeature):
         if not isinstance(eType, EClass) and hasattr(eType, 'eClass'):
             self.eType = eType.eClass
 
-    def get_default_value(self):
+    @staticmethod
+    def get_default_value():
         return None
 
     @property
@@ -643,7 +692,7 @@ class EReference(EStructuralFeature):
 
 class EClass(EClassifier):
     def __new__(cls, name=None, superclass=None, metainstance=None, **kwargs):
-        if type(name) is not str:
+        if not isinstance(name, str):
             raise BadValueError(got=name, expected=str)
         instance = super().__new__(cls)
         if isinstance(superclass, tuple):
@@ -681,6 +730,15 @@ class EClass(EClassifier):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(self.name))
         return self.python_class(*args, **kwargs)
+
+    def allInstances(self=None, resources=None):
+        if self is None:
+            self = EClass
+        if resources:
+            yield from (x for x in self._instances
+                        if isinstance(x, self) and x.eResource in resources)
+        else:
+            yield from (x for x in self._instances if isinstance(x, self))
 
     def notifyChanged(self, notif):
         # We do not update in case of static metamodel (could be changed)
@@ -961,7 +1019,9 @@ EFeatureMapEntry = EDataType('EFeatureMapEntry', dict, type_as_factory=True)
 EDiagnosticChain = EDataType('EDiagnosticChain', str)
 ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
-EDate = EDataType('EDate', datetime, from_string=parse_date)
+EDate = EDataType('EDate', datetime,
+                  from_string=parse_date,
+                  to_string=lambda d: d.isoformat())
 EBigDecimal = EDataType('EBigDecimal', Decimal, from_string=Decimal)
 EByte = EDataType('EByte', bytes)
 EByteObject = EDataType('EByteObject', bytes)
@@ -989,6 +1049,8 @@ ETypedElement.lowerBound = EAttribute('lowerBound', EInteger)
 ETypedElement._upper = EAttribute('upper', EInteger, derived=True)
 ETypedElement.upperBound = EAttribute('upperBound', EInteger, default_value=1)
 ETypedElement.required = EAttribute('required', EBoolean)
+ETypedElement.eGenericType = EReference('eGenericType', EGenericType,
+                                        containment=True)
 ETypedElement.eType = EReference('eType', EClassifier)
 ENamedElement.name._isset.add(ETypedElement.eType)  # special case
 
@@ -1029,6 +1091,8 @@ EClass.abstract = EAttribute('abstract', EBoolean)
 EClass.eStructuralFeatures = EReference('eStructuralFeatures',
                                         EStructuralFeature,
                                         upper=-1, containment=True)
+EClass.eGenericSuperTypes = EReference('eGenericSuperTypes', EGenericType,
+                                       containment=True, upper=-1)
 EClass.eAttributes_ = EReference('eAttributes', EAttribute,
                                  upper=-1, derived=True)
 EClass.eReferences_ = EReference('eReferences', EReference,
@@ -1062,6 +1126,8 @@ EOperation.eParameters = EReference('eParameters', EParameter, upper=-1,
 EOperation.eExceptions = EReference('eExceptions', EClassifier, upper=-1)
 EOperation.eTypeParameters = EReference('eTypeParameters', ETypeParameter,
                                         upper=-1, containment=True)
+EOperation.eGenericExceptions = EReference('eGenericExceptions', EGenericType,
+                                           upper=-1)
 
 EParameter.eOperation = EReference('eOperation', EOperation,
                                    eOpposite=EOperation.eParameters)
@@ -1070,6 +1136,13 @@ ETypeParameter.eBounds = EReference('eBounds', EGenericType,
                                     upper=-1, containment=True)
 ETypeParameter.eGenericType = EReference('eGenericType', EGenericType,
                                          upper=-1)
+EGenericType.eClassifier = EReference('eClassifier', EClassifier)
+EGenericType.eTypeArguments = EReference('eTypeArguments', EGenericType,
+                                         containment=True, upper=-1)
+EGenericType.eTypeParameter = EReference('eTypeParameter', ETypeParameter,
+                                         eOpposite=ETypeParameter.eGenericType)
+EGenericType.eUpperBound = EReference('eUpperBound', EGenericType)
+EGenericType.eLowerBound = EReference('eLowerBound', EGenericType)
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 Core.register_classifier(EObject, promote=True)

@@ -105,7 +105,7 @@ class XMIResource(Resource):
         self.contents.append(modelroot)
         erefs = []
         for key, value in xmlroot.attrib.items():
-            namespace, att_name = self.extract_namespace(key)
+            namespace, _ = self.extract_namespace(key)
             if key == self.xmiid:
                 modelroot._internal_id = value
                 self.uuid_dict[value] = modelroot
@@ -172,8 +172,6 @@ class XMIResource(Resource):
         return '{{{}}}nil'.format(self.prefixes.get(XSI)) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
-        if node.tag == 'eGenericType':  # Special case, TODO
-            return (None, None, [], [], False)
         _, node_tag = self.extract_namespace(node.tag)
         feature_container = self._find_feature(parent_eobj.eClass, node_tag)
         if not feature_container:

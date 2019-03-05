@@ -72,4 +72,26 @@ def install_issubclass_patch():
         if isinstance(self, EClass):
             return old_issubclass(self.python_class, cls)
         return old_issubclass(self, cls)
+    pyecore_issubclass.original = old_issubclass
     builtins.issubclass = pyecore_issubclass
+
+
+class original_issubclass(object):
+    def __init__(self):
+        self.pyecore_issubclass = builtins.issubclass
+
+    def __enter__(self):
+        builtins.issubclass = self.pyecore_issubclass.original
+
+    def __exit__(self, type_, value, traceback):
+        builtins.issubclass = self.pyecore_issubclass
+
+
+def alias(name, feature, eclass=None):
+    if eclass is None:
+        eclass = feature.eContainingClass
+    if isinstance(eclass, EClass):
+        setattr(eclass.python_class, name, feature)
+    else:
+        feature.name = name
+        setattr(eclass, name, feature)

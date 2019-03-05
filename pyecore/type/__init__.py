@@ -51,6 +51,8 @@ __all__ = ['AnySimpleType', 'AnyType', 'AnyURI', 'Base64Binary', 'Boolean',
 
 eSubpackages = []
 eSuperPackage = None
+type.eSubpackages = eSubpackages
+type.eSuperPackage = eSuperPackage
 
 SimpleAnyType.instanceType.eType = EDataType
 XMLTypeDocumentRoot.xMLNSPrefixMap.eType = EStringToStringMapEntry

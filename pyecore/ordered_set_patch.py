@@ -1,6 +1,9 @@
 import ordered_set
 
 
+is_iterable = ordered_set.is_iterable
+
+
 # monkey patching the OrderedSet implementation
 def insert(self, index, key):
     """Adds an element at a dedicated position in an OrderedSet.
@@ -77,7 +80,7 @@ def __getitem__(self, index):
             return self.subcopy(result)
         else:
             return result
-    elif ordered_set.is_iterable(index):
+    elif is_iterable(index):
         return self.subcopy(self.items[i] for i in index)
     else:
         raise TypeError("Don't know how to index an OrderedSet by %r" % index)

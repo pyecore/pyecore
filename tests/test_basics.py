@@ -215,3 +215,102 @@ def test_container():
     root.first = a1
     assert root.first is a1
     assert a1 not in root.second
+
+
+def test_collection_comprehension():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, upper=-1, derived=True))
+    A.eStructuralFeatures.append(EAttribute('stuffs', EString, upper=-1,
+                                            derived=True))
+
+    root = A()
+    assert isinstance(root.toa, EDerivedCollection)
+
+    with pytest.raises(Exception):
+        root.toa.append(A())
+
+    assert isinstance(root.stuffs, EDerivedCollection)
+    with pytest.raises(Exception):
+        root.stuffs.append('test')
+
+
+def test_collection_affectation():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, upper=-1))
+    A.eStructuralFeatures.append(EAttribute('name', EString))
+
+    x, y = A(), A()
+
+    a = A(name='tes')
+    with pytest.raises(BadValueError):
+        x.toa = [a]
+
+    x.toa.append(a)
+
+    with pytest.raises(AttributeError):
+        y.toa = x.toa
+
+    b = A()
+    y.toa += [b]
+    assert b in y.toa
+    assert b not in x.toa
+
+
+def test_allinstances_static():
+    @EMetaclass
+    class A(object):
+        pass
+
+    a = A()
+    b = A()
+    assert a in A.allInstances()
+    assert b in A.allInstances()
+
+    from pyecore.resources import ResourceSet
+    rset = ResourceSet()
+    r1 = rset.create_resource('http://test1')
+    r2 = rset.create_resource('http://test2')
+
+    r1.append(a)
+    r2.append(b)
+    assert a in A.allInstances(resources=(r1,))
+    assert a not in A.allInstances(resources=(r2,))
+    assert b in A.allInstances(resources=(r2,))
+    assert b not in A.allInstances(resources=(r1,))
+
+
+def test_allinstances_dynamic():
+    A = EClass('A')
+
+    a = A()
+    b = A()
+    assert a in A.allInstances()
+    assert b in A.allInstances()
+
+    from pyecore.resources import ResourceSet
+    rset = ResourceSet()
+    r1 = rset.create_resource('http://test1')
+    r2 = rset.create_resource('http://test2')
+
+    r1.append(a)
+    r2.append(b)
+    assert a in A.allInstances(resources=(r1,))
+    assert a not in A.allInstances(resources=(r2,))
+    assert b in A.allInstances(resources=(r2,))
+    assert b not in A.allInstances(resources=(r1,))
+
+
+def test_allinstances_ecore():
+    assert EClass.eClass in EClass.allInstances()
+
+    A = EClass('A')
+
+    @EMetaclass
+    class B(object):
+        pass
+
+    assert A in EClass.allInstances()
+    assert B.eClass in EClass.allInstances()
+
+    assert EClass.eClass in EClassifier.allInstances()
+    assert EInt in EDataType.allInstances()
