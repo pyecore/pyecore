@@ -454,6 +454,68 @@ not required, and ``super()`` can be used.
             self.tmp = tmp
 
 
+Ask for all Created Instance of an EClass
+-----------------------------------------
+
+PyEcore keeps track of all created instance. You can then ask for the created
+instances of a particular type using the ``allInstances()`` method on a an
+a metaclass. The result is a generator that contains all the instances of the
+right type:
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass
+
+    # We can ask for all the instances of an EClass
+    for x in EClass.allInstances():
+        print(x)
+
+    # We will create an EClass instance and some instance of this new metaclass
+    A = EClass('A')
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+    for x in A.allInstances():
+      print(x)    # display 3 instances
+
+    del a1
+    for x in A.allInstances():
+      print(x)    # display 2 instances only
+
+
+As all the created element are retrieved by the method, when multiple resources
+are loaded it can be difficult sometimes to only filter elements from dedicated
+resources. The ``allInstances()`` method takes an optional argument:
+``resources`` which let you explicit in which resources the instances should be
+searched.
+
+.. code-block:: python
+
+    from pyecore.ecore import EClass
+    from pyecore.resources import ResourceSet
+
+    # We will create an EClass instance and some instance of this new metaclass
+    A = EClass('A')
+
+    a1 = A()
+    a2 = A()
+    a3 = A()
+
+    # We distribute each instance in a different resources
+    rset = ResourceSet()
+    resource1 = rset.create_resource('http://virtual1')
+    resource2 = rset.create_resource('http://virtual2')
+    resource3 = rset.create_resource('http://virtual3')
+
+    resource1.append(a1)
+    resource2.append(a2)
+    resource3.append(a3)
+
+    print(list(A.allInstances(resources=(resource1, resource2))))  # returns a1 and a2
+    print(list(A.allInstances(resources=(resource3,))))  # returns a3
+
+
 
 Programmatically Create a Metamodel and Serialize it
 ----------------------------------------------------
