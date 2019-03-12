@@ -936,6 +936,18 @@ def test_eenum_defaultvalue_computed():
     assert E.to_string(A) is 'A'
 
 
+def test_eenum_eliteral_add():
+    E = EEnum('enum')
+
+    A = EEnumLiteral(name='A')
+    E.eLiterals.append(A)
+    assert E.A
+
+    E.eLiterals.remove(A)
+    with pytest.raises(AttributeError):
+        E.A
+
+
 def test_eclass_isinstance():
     A = EClass('A')
     B = EClass('B', superclass=(A,))

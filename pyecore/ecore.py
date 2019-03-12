@@ -514,15 +514,24 @@ class EDataType(EClassifier):
 class EEnum(EDataType):
     def __init__(self, name=None, default_value=None, literals=None, **kwargs):
         super().__init__(name, eType=self, **kwargs)
+        self._eternal_listener.append(self)
         if literals:
             for i, lit_name in enumerate(literals):
                 lit_name = '_' + lit_name if lit_name[:1].isnumeric() \
                                           else lit_name
                 literal = EEnumLiteral(value=i, name=lit_name)
                 self.eLiterals.append(literal)
-                self.__setattr__(lit_name, literal)
         if default_value:
             self.default_value = default_value
+
+    def notifyChanged(self, notif):
+        if notif.feature is EEnum.eLiterals:
+            if notif.kind is Kind.ADD:
+                literal = notif.new
+                self.__setattr__(literal.name, literal)
+            elif notif.kind is Kind.REMOVE:
+                literal = notif.old
+                del self.__dict__[literal.name]
 
     @property
     def default_value(self):
