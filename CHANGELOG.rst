@@ -1,6 +1,18 @@
 Changelog
 ---------
 
+0.10.1
+++++++
+
+**Bugfixes**
+
+- Fix enumeration literal addition as attribute. In the case literals where
+  added to an enumeration using the 'eLiterals' collection, this implied that
+  the ``EEnum`` instance was not updated with the required instance attribute.
+  This new implementation uses a listener to catch additions that are made to
+  the enumeration in order to either add or remove instance attributes.
+
+
 0.10.0
 ++++++
 
@@ -19,7 +31,7 @@ Changelog
   This implementation can still benefits from some optimizations. The
   ``allInstances()`` method is working by keeping track of all created PyEcore
   objects in a ``WeakSet``. This set is then crossed and each matching
-  instances are returned as a generator. 
+  instances are returned as a generator.
 
 
 **Bugfixes**
