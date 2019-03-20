@@ -518,7 +518,7 @@ class Resource(object):
         if id_attribute:
             etype = id_attribute.eType
             id_att_value = obj.eGet(id_attribute)
-            if id_att_value is not None:
+            if(id_att_value is not None) and (' ' not in id_att_value): #the check for ' ' prevents malformed ids to used as references
                 return (etype.to_string(id_att_value), False)
         return (obj.eURIFragment(), False)
 

@@ -264,7 +264,7 @@ class EObject(ENotifer):
             return '{0}/@{1}.{2}' \
                    .format(parent.eURIFragment(), name, str(index))
         else:
-            return '{0}/{1}'.format(parent.eURIFragment(), name)
+            return '{0}/@{1}'.format(parent.eURIFragment(), name)
 
     def eRoot(self):
         if not self.eContainer():
