@@ -137,7 +137,7 @@ def test_create_dynamic_simple_ereference_urifragment():
     a1 = A()
     b1 = B()
     a1.tob = b1
-    assert b1.eURIFragment() == '//tob'
+    assert b1.eURIFragment() == '//@tob'
 
 
 def test_create_dynamic_simple_ereference_wrongtype():
