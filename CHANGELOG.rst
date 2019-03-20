@@ -12,6 +12,13 @@ Changelog
   This new implementation uses a listener to catch additions that are made to
   the enumeration in order to either add or remove instance attributes.
 
+- Fix issue with XMI serialization for single element container. In those cases
+  the path towards the object was not well serialized. It results in a false
+  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+
+- Prevent ``id`` with spaces from being used. Spaces are used for separating
+  multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+
 
 0.10.0
 ++++++
