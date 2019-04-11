@@ -5,9 +5,15 @@ from collections.abc import MutableSet, MutableSequence
 
 
 class BadValueError(TypeError):
-    def __init__(self, got=None, expected=None):
-        msg = "Expected type {0}, but got type {1} with value {2} instead"
+    def __init__(self, got=None, expected=None, feature=None):
+        if isinstance(expected, EProxy):
+            expected.force_resolve()
+            expected = expected._wrapped
+        msg = "Expected type {0}, but got type {1} with value {2} instead "
         msg = msg.format(expected, type(got).__name__, got)
+        if feature:
+            msg += "for feature {} of {}".format(feature,
+                                                 feature.eContainingClass)
         super().__init__(msg)
 
 
@@ -52,9 +58,9 @@ class PyEcoreValue(object):
                 self.generic_type = etype
             except Exception:
                 raise AttributeError('Feature {} has no type'
-                                     'nor generic'.format(etype))
+                                     'nor generic'.format(self.feature))
         if not EcoreUtils.isinstance(value, etype):
-            raise BadValueError(value, etype)
+            raise BadValueError(value, etype, self.feature)
 
     def _update_container(self, value, previous_value=None):
         if not self.is_cont:
