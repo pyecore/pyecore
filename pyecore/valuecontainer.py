@@ -41,6 +41,7 @@ class PyEcoreValue(object):
         self.owner = owner
         self.feature = efeature
         self.is_ref = isinstance(efeature, EReference)
+        self.is_cont = self.is_ref and efeature.containment
         self.generic_type = None
 
     def check(self, value):
@@ -56,7 +57,7 @@ class PyEcoreValue(object):
             raise BadValueError(value, etype)
 
     def _update_container(self, value, previous_value=None):
-        if not self.feature.containment:
+        if not self.is_cont:
             return
         if value:
             resource = value.eResource
