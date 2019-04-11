@@ -20,6 +20,11 @@ Changelog
   multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
 
 
+**Miscellaneous**
+
+- Improve error message for ``BadValueError`` exception.
+
+
 0.10.0
 ++++++
 
