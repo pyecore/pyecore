@@ -523,12 +523,12 @@ class Resource(object):
                 return (etype.to_string(id_att_value), False)
         return (obj.eURIFragment(), False)
 
-    def _assign_uuid(self, obj):
+    @staticmethod
+    def _assign_uuid(obj):
         # sets an uuid if the resource should deal with
         # and obj has none yet (addition to the resource for example)
         if not obj._internal_id:
             uuid = str(uuid4())
-            self.uuid_dict[uuid] = obj
             obj._internal_id = uuid
 
     def append(self, root):
