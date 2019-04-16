@@ -9,6 +9,9 @@ class BadValueError(TypeError):
         if isinstance(expected, EProxy):
             expected.force_resolve()
             expected = expected._wrapped
+        self.got = got
+        self.expected = expected
+        self.feature = feature
         msg = "Expected type {0}, but got type {1} with value {2} instead "
         msg = msg.format(expected, type(got).__name__, got)
         if feature:
