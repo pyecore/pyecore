@@ -504,7 +504,7 @@ PyEcore is able to place aliases for structural features. These aliases give
 a new name to access a common property. Here is an example of how the feature
 alias can be used:
 
-.. .. code-block:: python
+.. code-block:: python
 
   from pyecore.ecore import EClass, EAttribute, EString
   from pyecore.utils import alias

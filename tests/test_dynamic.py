@@ -137,7 +137,7 @@ def test_create_dynamic_simple_ereference_urifragment():
     a1 = A()
     b1 = B()
     a1.tob = b1
-    assert b1.eURIFragment() == '//tob'
+    assert b1.eURIFragment() == '//@tob'
 
 
 def test_create_dynamic_simple_ereference_wrongtype():
@@ -934,6 +934,18 @@ def test_eenum_defaultvalue_computed():
 
     assert E.from_string('A') is A
     assert E.to_string(A) is 'A'
+
+
+def test_eenum_eliteral_add():
+    E = EEnum('enum')
+
+    A = EEnumLiteral(name='A')
+    E.eLiterals.append(A)
+    assert E.A
+
+    E.eLiterals.remove(A)
+    with pytest.raises(AttributeError):
+        E.A
 
 
 def test_eclass_isinstance():

@@ -314,3 +314,18 @@ def test_allinstances_ecore():
 
     assert EClass.eClass in EClassifier.allInstances()
     assert EInt in EDataType.allInstances()
+
+
+def test_eobject_egetset_badtype_exception():
+    A = EClass('A')
+    name_attribute = EAttribute('name', EProxy(wrapped=EString))
+    A.eStructuralFeatures.append(name_attribute)
+
+    a = A()
+    with pytest.raises(BadValueError) as e:
+        a.name = 32
+
+    e = e.value
+    assert e.expected is EString
+    assert e.got == 32
+    assert e.feature is name_attribute

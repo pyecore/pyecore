@@ -280,7 +280,7 @@ def test_resource_multiroot_urifragment():
 
     assert a1.eURIFragment() == '/0'
     assert a2.eURIFragment() == '/1'
-    assert a3.eURIFragment() == '/1/toa'
+    assert a3.eURIFragment() == '/1/@toa'
 
     resource.remove(a2)
     assert len(resource.contents) == 1

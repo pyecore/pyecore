@@ -1,6 +1,30 @@
 Changelog
 ---------
 
+0.10.1
+++++++
+
+**Bugfixes**
+
+- Fix enumeration literal addition as attribute. In the case literals where
+  added to an enumeration using the 'eLiterals' collection, this implied that
+  the ``EEnum`` instance was not updated with the required instance attribute.
+  This new implementation uses a listener to catch additions that are made to
+  the enumeration in order to either add or remove instance attributes.
+
+- Fix issue with XMI serialization for single element container. In those cases
+  the path towards the object was not well serialized. It results in a false
+  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+
+- Prevent ``id`` with spaces from being used. Spaces are used for separating
+  multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+
+
+**Miscellaneous**
+
+- Improve error message for ``BadValueError`` exception.
+
+
 0.10.0
 ++++++
 
@@ -19,7 +43,7 @@ Changelog
   This implementation can still benefits from some optimizations. The
   ``allInstances()`` method is working by keeping track of all created PyEcore
   objects in a ``WeakSet``. This set is then crossed and each matching
-  instances are returned as a generator. 
+  instances are returned as a generator.
 
 
 **Bugfixes**
