@@ -23,7 +23,7 @@ class JsonResource(Resource):
         self._load_href = {}
         self.indent = indent
         self.ref_tag = ref_tag
-        self.object_mappers = {}
+        self.mapper = None
 
     def load(self, options=None):
         json_value = self.uri.create_instream()
@@ -68,11 +68,9 @@ class JsonResource(Resource):
     @staticmethod
     def serialize_eclass(eclass):
         return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
-
-    def register_mapper(self, eclass, mapper_class):
-        if hasattr(eclass, 'python_class'):
-            eclass = eclass.python_class
-        self.object_mappers[eclass] = mapper_class
+    
+    def extend_mapper(self, mapper):
+        self.mapper =  mapper
 
     def object_uri(self, obj):
         if obj.eResource == self:
@@ -92,16 +90,14 @@ class JsonResource(Resource):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
-                cls = obj.eClass.python_class
-                mapper = self.object_mappers.get(cls, DefaultObjectMapper)()
+                mapper = self.mapper or DefaultObjectMapper
                 fun = mapper.to_dict_from_obj
             return fun(obj, self.options, self.use_uuid, self)
         elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
-                cls = obj.python_class
-                mapper = self.object_mappers.get(cls, DefaultObjectMapper)()
+                mapper = self.mapper or DefaultObjectMapper
                 fun = mapper.to_dict_from_obj
             return fun(obj.eClass, self.options, self.use_uuid, self)
         elif isinstance(obj, Ecore.ECollection):
@@ -209,7 +205,7 @@ class DefaultObjectMapper(object):
                 continue
             write_object = resource.to_dict(value, is_ref=is_ref)
             if write_object is not NO_OBJECT:
-                d[attr.name] = resource.to_dict(value, is_ref=is_ref)
+                d[attr.name] = write_object
             if use_uuid:
                 resource._assign_uuid(obj)
                 d['uuid'] = obj._internal_id
