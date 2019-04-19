@@ -23,7 +23,8 @@ class JsonResource(Resource):
         self._load_href = {}
         self.indent = indent
         self.ref_tag = ref_tag
-        self.mapper = None
+        self.mappers = {}
+        self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
         json_value = self.uri.create_instream()
@@ -68,9 +69,11 @@ class JsonResource(Resource):
     @staticmethod
     def serialize_eclass(eclass):
         return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
-    
-    def extend_mapper(self, mapper):
-        self.mapper =  mapper
+
+    def register_mapper(self, eclass, mapper_class):
+        if hasattr(eclass, 'python_class'):
+            eclass = eclass.python_class
+        self.mappers[eclass] = mapper_class
 
     def object_uri(self, obj):
         if obj.eResource == self:
@@ -90,14 +93,16 @@ class JsonResource(Resource):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
-                mapper = self.mapper or DefaultObjectMapper
+                cls = obj.eClass.python_class
+                mapper = self.mappers.get(cls, self.default_mapper)
                 fun = mapper.to_dict_from_obj
             return fun(obj, self.options, self.use_uuid, self)
         elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
-                mapper = self.mapper or DefaultObjectMapper
+                cls = obj.python_class
+                mapper = self.mappers.get(cls, self.default_mapper)
                 fun = mapper.to_dict_from_obj
             return fun(obj.eClass, self.options, self.use_uuid, self)
         elif isinstance(obj, Ecore.ECollection):
