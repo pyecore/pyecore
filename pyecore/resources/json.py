@@ -89,7 +89,16 @@ class JsonResource(Resource):
         return ref
 
     def to_dict(self, obj, is_ref=False):
-        if isinstance(obj, Ecore.EObject):
+        if isinstance(obj, type) and issubclass(obj, Ecore.EObject):
+            if is_ref:
+                fun = self._to_ref_from_obj
+                return fun(obj.eClass, self.options, self.use_uuid, self)
+            # else:
+            #     cls = obj.python_class
+            #     mapper = next((self.mappers[k] for k in self.mappers
+            #                    if issubclass(cls, k)), self.default_mapper)
+            #     fun = mapper.to_dict_from_obj
+        elif isinstance(obj, Ecore.EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
@@ -98,15 +107,7 @@ class JsonResource(Resource):
                                if issubclass(cls, k)), self.default_mapper)
                 fun = mapper.to_dict_from_obj
             return fun(obj, self.options, self.use_uuid, self)
-        elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
-            if is_ref:
-                fun = self._to_ref_from_obj
-            else:
-                cls = obj.python_class
-                mapper = next((self.mappers[k] for k in self.mappers
-                               if issubclass(cls, k)), self.default_mapper)
-                fun = mapper.to_dict_from_obj
-            return fun(obj.eClass, self.options, self.use_uuid, self)
+
         elif isinstance(obj, Ecore.ECollection):
             fun = self._to_ref_from_obj if is_ref else self.to_dict
             result = []
