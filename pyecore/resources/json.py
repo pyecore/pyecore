@@ -94,7 +94,8 @@ class JsonResource(Resource):
                 fun = self._to_ref_from_obj
             else:
                 cls = obj.eClass.python_class
-                mapper = self.mappers.get(cls, self.default_mapper)
+                mapper = next((self.mappers[k] for k in self.mappers
+                               if issubclass(cls, k)), self.default_mapper)
                 fun = mapper.to_dict_from_obj
             return fun(obj, self.options, self.use_uuid, self)
         elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
@@ -102,7 +103,8 @@ class JsonResource(Resource):
                 fun = self._to_ref_from_obj
             else:
                 cls = obj.python_class
-                mapper = self.mappers.get(cls, self.default_mapper)
+                mapper = next((self.mappers[k] for k in self.mappers
+                               if issubclass(cls, k)), self.default_mapper)
                 fun = mapper.to_dict_from_obj
             return fun(obj.eClass, self.options, self.use_uuid, self)
         elif isinstance(obj, Ecore.ECollection):

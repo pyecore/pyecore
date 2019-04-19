@@ -232,6 +232,7 @@ Thanks for making PyEcore better!
 * Andy (`@CFAndy <https://github.com/CFAndy>`_)
 * annighoefer (`@annighoefer  <https://github.com/annighoefer>`_)
 * Rodriguez Facundo (`@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_)
+* Filippo Ledda (`@filippometacell   <https://github.com/filippometacell>`_)
 
 
 Additional Resources
