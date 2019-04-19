@@ -1,6 +1,15 @@
 Changelog
 ---------
 
+0.10.2
+++++++
+
+**Miscellaneous**
+
+- Add custom JSON serializer support. This support is not yet documented and
+  will perhaps never be.
+
+
 0.10.1
 ++++++
 
