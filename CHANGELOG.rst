@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.10.2
+++++++
+
+**Miscellaneous**
+
+- Add custom JSON serializer support
+ (Thanks `@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_ and `@filippometacell   <https://github.com/filippometacell>`_)
+ This support is not yet documented and will perhaps never be.
+
+
 0.10.1
 ++++++
 

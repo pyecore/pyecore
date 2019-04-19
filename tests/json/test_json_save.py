@@ -3,7 +3,7 @@ import os
 import json
 import pyecore.ecore as Ecore
 from pyecore.resources import *
-from pyecore.resources.json import JsonResource, JsonOptions
+from pyecore.resources.json import JsonResource, JsonOptions, DefaultObjectMapper, NO_OBJECT
 
 
 @pytest.fixture(scope='module')
@@ -203,3 +203,85 @@ def test_json_save_multiple_roots_roundtrip(tmpdir):
     assert resource.contents[0].name == 'root1'
     assert resource.contents[1].name == 'root2'
     del global_registry[pack.nsURI]
+
+
+def test_json_custom_mapper(tmpdir):
+    class MyMapper(object):
+        def to_dict_from_obj(self, obj, options, use_uuid, resource):
+            d = {
+                'name_custom': str(obj.name) + '_custom'
+            }
+            return d
+
+    class MyRootMapper(DefaultObjectMapper):
+        def to_dict_from_obj(self, obj, options, use_uuid, resource):
+            d = super().to_dict_from_obj(obj, options, use_uuid, resource)
+            d['name_custom'] = str(obj.name) + '_custom'
+            return d
+
+    @Ecore.EMetaclass
+    class A(object):
+        name = Ecore.EAttribute(eType=Ecore.EString)
+
+        def __init__(self, name):
+            self.name = name
+
+    @Ecore.EMetaclass
+    class B(A):
+        pass
+
+
+    @Ecore.EMetaclass
+    class Root(object):
+        name = Ecore.EAttribute(eType=Ecore.EString)
+        many_a = Ecore.EReference(eType=A, upper=-1, containment=True)
+        eclasses = Ecore.EReference(eType=Ecore.EClass, upper=-1, containment=True)
+
+    root = Root()
+    root.many_a.append(A('test1'))
+    root.many_a.append(B('test2'))
+    root.eclasses.append(Ecore.EClass('test3'))
+
+    f = tmpdir.mkdir('pyecore-tmp').join('custom.json')
+    resource = JsonResource(URI(str(f)))
+    resource.register_mapper(A, MyMapper())
+    resource.register_mapper(Ecore.EClass.eClass, MyMapper())
+    resource.register_mapper(Root.eClass, MyRootMapper())
+    resource.append(root)
+    resource.save()
+
+    dct = json.load(open(str(f)))
+    assert dct['many_a'][0]['name_custom'] == 'test1_custom'
+    assert dct['many_a'][1]['name_custom'] == 'test2_custom'
+    assert dct['eclasses'][0]['name_custom'] == 'test3_custom'
+
+def test_json_custom_no_mapping(tmpdir):
+    class MyMapper(object):
+        def to_dict_from_obj(self, obj, options, use_uuid, resource):
+            return NO_OBJECT
+
+    @Ecore.EMetaclass
+    class A(object):
+        pass
+
+    @Ecore.EMetaclass
+    class B(A):
+        pass
+
+    @Ecore.EMetaclass
+    class Root(object):
+        many_a = Ecore.EReference(eType=A, upper=-1, containment=True)
+
+    root = Root()
+    root.many_a.append(A())
+    root.many_a.append(B())
+
+    f = tmpdir.mkdir('pyecore-tmp').join('nomapping.json')
+    resource = JsonResource(URI(str(f)))
+    resource.register_mapper(A, MyMapper())
+    resource.append(root)
+    resource.save()
+
+    dct = json.load(open(str(f)))
+    print(dct)
+    assert dct['many_a'] == []
