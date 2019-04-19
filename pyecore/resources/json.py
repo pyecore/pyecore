@@ -13,14 +13,18 @@ class JsonOptions(Enum):
     SERIALIZE_DEFAULT_VALUES = 0
 
 
+NO_OBJECT = object()
+
+
 class JsonResource(Resource):
     def __init__(self, uri=None, use_uuid=False, indent=None, ref_tag='$ref'):
         super().__init__(uri, use_uuid)
         self._resolve_later = []
-        self._already_saved = []
         self._load_href = {}
         self.indent = indent
         self.ref_tag = ref_tag
+        self.mappers = {}
+        self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
         json_value = self.uri.create_instream()
@@ -66,53 +70,53 @@ class JsonResource(Resource):
     def serialize_eclass(eclass):
         return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
 
-    def _to_ref_from_obj(self, obj):
-        uri = self.serialize_eclass(obj.eClass)
-        ref = {'eClass': uri}
+    def register_mapper(self, eclass, mapper_class):
+        if hasattr(eclass, 'python_class'):
+            eclass = eclass.python_class
+        self.mappers[eclass] = mapper_class
+
+    def object_uri(self, obj):
         if obj.eResource == self:
             resource_uri = ''
         else:
             resource_uri = obj.eResource.uri if obj.eResource else ''
-        ref[self.ref_tag] = '{}{}'.format(resource_uri,
-                                          self._uri_fragment(obj))
+        return '{}{}'.format(resource_uri, self._uri_fragment(obj))
+
+    def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None):
+        uri = self.serialize_eclass(obj.eClass)
+        ref = {'eClass': uri}
+        ref[self.ref_tag] = self.object_uri(obj)
         return ref
 
-    def _to_dict_from_obj(self, obj):
-        d = {}
-        containingFeature = obj.eContainmentFeature()
-        if not containingFeature or obj.eClass is not containingFeature.eType:
-            uri = self.serialize_eclass(obj.eClass)
-            d['eClass'] = uri
-        for attr in obj._isset:
-            if attr.derived or attr.transient:
-                continue
-            is_ereference = isinstance(attr, Ecore.EReference)
-            is_ref = is_ereference and not attr.containment
-            if is_ereference and attr.eOpposite:
-                if attr.eOpposite is containingFeature:
-                    continue
-            value = obj.eGet(attr)
-            serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
-            if (not self.options.get(serialize_default_option, False)
-                    and value == attr.get_default_value()):
-                continue
-            d[attr.name] = self.to_dict(value, is_ref=is_ref)
-            if self.use_uuid:
-                self._assign_uuid(obj)
-                d['uuid'] = obj._internal_id
-        self._already_saved.append(obj)
-        return d
-
     def to_dict(self, obj, is_ref=False):
-        if isinstance(obj, Ecore.EObject):
-            fun = self._to_ref_from_obj if is_ref else self._to_dict_from_obj
-            return fun(obj)
-        elif isinstance(obj, type) and issubclass(obj, Ecore.EObject):
-            fun = self._to_ref_from_obj if is_ref else self._to_dict_from_obj
-            return fun(obj.eClass)
+        if isinstance(obj, type) and issubclass(obj, Ecore.EObject):
+            if is_ref:
+                fun = self._to_ref_from_obj
+                return fun(obj.eClass, self.options, self.use_uuid, self)
+            # else:
+            #     cls = obj.python_class
+            #     mapper = next((self.mappers[k] for k in self.mappers
+            #                    if issubclass(cls, k)), self.default_mapper)
+            #     fun = mapper.to_dict_from_obj
+        elif isinstance(obj, Ecore.EObject):
+            if is_ref:
+                fun = self._to_ref_from_obj
+            else:
+                cls = obj.eClass.python_class
+                mapper = next((self.mappers[k] for k in self.mappers
+                               if issubclass(cls, k)), self.default_mapper)
+                fun = mapper.to_dict_from_obj
+            return fun(obj, self.options, self.use_uuid, self)
+
         elif isinstance(obj, Ecore.ECollection):
             fun = self._to_ref_from_obj if is_ref else self.to_dict
-            return [fun(x) for x in obj]
+            result = []
+            for x in obj:
+                write_object = fun(x)
+                if write_object is NO_OBJECT:
+                    continue
+                result.append(write_object)
+            return result
         else:
             return obj
 
@@ -185,3 +189,32 @@ class JsonResource(Resource):
                 inst.eSet(feature, feature.eType.from_string(value))
             else:
                 inst.eSet(feature, value)
+
+
+class DefaultObjectMapper(object):
+    def to_dict_from_obj(self, obj, options, use_uuid, resource):
+        d = {}
+        containingFeature = obj.eContainmentFeature()
+        if not containingFeature or obj.eClass is not containingFeature.eType:
+            uri = resource.serialize_eclass(obj.eClass)
+            d['eClass'] = uri
+        for attr in obj._isset:
+            if attr.derived or attr.transient:
+                continue
+            is_ereference = isinstance(attr, Ecore.EReference)
+            is_ref = is_ereference and not attr.containment
+            if is_ereference and attr.eOpposite:
+                if attr.eOpposite is containingFeature:
+                    continue
+            value = obj.eGet(attr)
+            serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
+            if (not options.get(serialize_default_option, False)
+                    and value == attr.get_default_value()):
+                continue
+            write_object = resource.to_dict(value, is_ref=is_ref)
+            if write_object is not NO_OBJECT:
+                d[attr.name] = write_object
+            if use_uuid:
+                resource._assign_uuid(obj)
+                d['uuid'] = obj._internal_id
+        return d
