@@ -230,7 +230,8 @@ Thanks for making PyEcore better!
 * Terry Kingston (`@TerryKingston <https://github.com/TerryKingston>`_)
 * Afonso Pinto (`@afonsobspinto <https://github.com/afonsobspinto>`_)
 * Andy (`@CFAndy <https://github.com/CFAndy>`_)
-* annighoefer (`@annighoefer  <https://github.com/annighoefer >`_)
+* annighoefer (`@annighoefer  <https://github.com/annighoefer>`_)
+* Rodriguez Facundo (`@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_)
 
 
 Additional Resources
