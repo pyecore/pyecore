@@ -67,6 +67,12 @@ class Parameters(object):
         return getattr(self, self.parameter_names[item])
 
 
+def load_model(model_path):
+    rset = ResourceSet()
+    resource = rset.get_resource(model_path)
+    return resource
+
+
 class Transformation(object):
     def __init__(self, name, inputs, outputs, resource_set=None):
         self.name = name
