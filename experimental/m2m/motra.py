@@ -24,6 +24,12 @@ class EObjectProxy(object):
             print('access', name, ':', result, 'for', wrapped)
         return result
 
+    def __eq__(self, other):
+        return object.__getattribute__(self, 'wrapped').__eq__(other)
+
+    def __hash__(self):
+        return object.__getattribute__(self, 'wrapped').__hash__()
+
     def __setattr__(self, name, value):
         wrapped = object.__getattribute__(self, 'wrapped')
         if isinstance(value, EObjectProxy):
