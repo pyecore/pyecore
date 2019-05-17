@@ -174,7 +174,7 @@ class Transformation(object):
             def when_inner(*args, **kwargs):
                 if when(*args, **kwargs):
                     return inner(*args, **kwargs)
-            return when_inner
+                return when_inner
         cached_fun = functools.lru_cache()(inner)
         f.cache = cached_fun
         return cached_fun
