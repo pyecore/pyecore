@@ -56,11 +56,11 @@ def parse_date(str_date):
     try:
         return datetime.fromisoformat(str_date)
     except Exception:
-        formats = ('%Y-%m-%dT%H:%M:%S.%f',
+        formats = ('%Y-%m-%dT%H:%M:%S.%f%z',
                    '%Y-%m-%dT%H:%M:%S.%f',
                    '%Y-%m-%dT%H:%M:%S',
                    '%Y-%m-%dT%H:%M',
-                   '%Y-%m-%d %H:%M:%S.%f',
+                   '%Y-%m-%d %H:%M:%S.%f%z',
                    '%Y-%m-%d %H:%M:%S.%f',
                    '%Y-%m-%d %H:%M:%S',
                    '%Y-%m-%d %H:%M',
