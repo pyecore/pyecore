@@ -1,13 +1,30 @@
 Changelog
 ---------
 
+0.10.3
+++++++
+
+**Bugfixes**
+
+- Fix EDate serialization (Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_!).
+This patch provides a solution to the issues with time zone information in dates.
+It makes the parsing and serialization of dates compatible with how EMF currently
+handles dates and UTC offsets.
+
+- Fix xmi empty references refer to root (Thanks `@annighoefer  <https://github.com/annighoefer >`_!).
+Deleted objects that were also referred by non-containment references elsewhere were serialized in xmi
+as `ref=""`, introducing a `BadValueError` when loading the file again as the root of the model was found as reference.
+The fix solves the loading issue by skiping empty references.
+
+
+
 0.10.2
 ++++++
 
 **Miscellaneous**
 
 - Add custom JSON serializer support
- (Thanks `@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_ and `@filippometacell   <https://github.com/filippometacell>`_)
+ (Thanks `@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_ and `@filippometacell   <https://github.com/filippometacell>`_!)
  This support is not yet documented and will perhaps never be.
 
 
