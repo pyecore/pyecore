@@ -1030,7 +1030,7 @@ ENativeType = EDataType('ENativeType', object)
 EJavaObject = EDataType('EJavaObject', object)
 EDate = EDataType('EDate', datetime,
                   from_string=parse_date,
-                  to_string=lambda d: d.isoformat())
+                  to_string=lambda d: d.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
 EBigDecimal = EDataType('EBigDecimal', Decimal, from_string=Decimal)
 EByte = EDataType('EByte', bytes)
 EByteObject = EDataType('EByteObject', bytes)

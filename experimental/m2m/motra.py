@@ -4,6 +4,7 @@ from pyecore.resources import ResourceSet, URI, Resource
 import functools
 from pyecore.notification import EObserver
 import inspect
+import TransformationTrace as trace
 
 
 class ResultObserver(EObserver):
@@ -23,6 +24,12 @@ class EObjectProxy(object):
         if eClass.findEStructuralFeature(name):
             print('access', name, ':', result, 'for', wrapped)
         return result
+
+    def __eq__(self, other):
+        return object.__getattribute__(self, 'wrapped').__eq__(other)
+
+    def __hash__(self):
+        return object.__getattribute__(self, 'wrapped').__hash__()
 
     def __setattr__(self, name, value):
         wrapped = object.__getattribute__(self, 'wrapped')
@@ -59,6 +66,12 @@ class Parameters(object):
         if type(item) is str:
             return getattr(self, item)
         return getattr(self, self.parameter_names[item])
+
+
+def load_model(model_path):
+    rset = ResourceSet()
+    resource = rset.get_resource(model_path)
+    return resource
 
 
 class Transformation(object):
@@ -113,6 +126,7 @@ class Transformation(object):
         if clean_mappings_cache:
             for mapping in self.registed_mapping:
                 mapping.cache.cache_clear()
+        return self
 
     def mapping(self, f=None, output_model=None, when=None):
         if not f:
@@ -144,6 +158,7 @@ class Transformation(object):
                 result = f.result_eclass()
             inputs = [a for a in args if isinstance(a, Ecore.EObject)]
             print('CREATE', result, 'FROM', inputs, 'BY', f.__name__)
+            # Create object for the trace
             g = f.__globals__
             marker = object()
             oldvalue = g.get(result_var_name, marker)
@@ -174,7 +189,7 @@ class Transformation(object):
             def when_inner(*args, **kwargs):
                 if when(*args, **kwargs):
                     return inner(*args, **kwargs)
-            return when_inner
+                return when_inner
         cached_fun = functools.lru_cache()(inner)
         f.cache = cached_fun
         return cached_fun
