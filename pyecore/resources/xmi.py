@@ -280,16 +280,17 @@ class XMIResource(Resource):
                 else:
                     values = [value]
                 for value in values:
-                    resolved_value = self._resolve_nonhref(value)
-                    if not resolved_value:
-                        raise ValueError('EObject for {0} is unknown'
-                                         .format(value))
-                    if not hasattr(resolved_value, '_inverse_rels'):
-                        resolved_value = resolved_value.eClass
-                    if ref.many:
-                        eobject.__getattribute__(name).append(resolved_value)
-                    else:
-                        eobject.__setattr__(name, resolved_value)
+                    if(value): #BA: Skip empty references
+                        resolved_value = self._resolve_nonhref(value)
+                        if not resolved_value:
+                            raise ValueError('EObject for {0} is unknown'
+                                             .format(value))
+                        if not hasattr(resolved_value, '_inverse_rels'):
+                            resolved_value = resolved_value.eClass
+                        if ref.many:
+                            eobject.__getattribute__(name).append(resolved_value)
+                        else:
+                            eobject.__setattr__(name, resolved_value)
 
         for eobject, ref, value in opposite:
             resolved_value = self._resolve_nonhref(value)
