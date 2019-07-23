@@ -4,6 +4,7 @@ from pyecore.resources import ResourceSet, URI, Resource
 import functools
 from pyecore.notification import EObserver
 import inspect
+import TransformationTrace as trace
 
 
 class ResultObserver(EObserver):
@@ -125,6 +126,7 @@ class Transformation(object):
         if clean_mappings_cache:
             for mapping in self.registed_mapping:
                 mapping.cache.cache_clear()
+        return self
 
     def mapping(self, f=None, output_model=None, when=None):
         if not f:
@@ -156,6 +158,7 @@ class Transformation(object):
                 result = f.result_eclass()
             inputs = [a for a in args if isinstance(a, Ecore.EObject)]
             print('CREATE', result, 'FROM', inputs, 'BY', f.__name__)
+            # Create object for the trace
             g = f.__globals__
             marker = object()
             oldvalue = g.get(result_var_name, marker)
