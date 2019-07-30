@@ -490,7 +490,9 @@ class Resource(object):
                 else:
                     id_attribute = self.get_id_attribute(eclass)
                     if id_attribute:
-                        uri_fragment = obj.eGet(id_attribute)
+                        id_value = obj.eGet(id_attribute)
+                        if(id_value): #id attributes shall not be used if the value is unset
+                            uri_fragment = id_value
             else:
                 uri = ''
                 root = obj.eRoot()
