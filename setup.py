@@ -3,8 +3,16 @@
 import sys
 from setuptools import setup
 
-if sys.version_info < (3, 3):
+
+version = tuple(sys.version_info[:2])
+
+if version < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
+
+if version == (3, 4):
+    lxml_version = 'lxml<4.4.0'
+else:
+    lxml_version = 'lxml'
 
 packages = ['pyecore',
             'pyecore.resources',
@@ -25,7 +33,7 @@ setup(
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
     install_requires=['ordered-set',
-                      'lxml',
+                      lxml_version,
                       'defusedxml',
                       'restrictedpython>=4.0b6'],
     tests_require=['pytest'],
