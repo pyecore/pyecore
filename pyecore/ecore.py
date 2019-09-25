@@ -377,7 +377,7 @@ class EOperation(ETypedElement):
                  **kwargs):
         super().__init__(name, eType, **kwargs)
         if params:
-                self.eParameters.extend(params)
+            self.eParameters.extend(params)
         if exceptions:
             for exception in exceptions:
                 self.eExceptions.append(exception)
