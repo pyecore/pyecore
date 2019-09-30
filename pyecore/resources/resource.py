@@ -192,8 +192,6 @@ class URI(object):
         return path.relpath(other_normalized, normalized)
 
     def apply_relative_from_me(self, relative_path):
-        if relative_path[:4] == 'http':
-            return relative_path  # no transformation for http(s)-based URI's
         parent_path = path.dirname(self.normalize())
         return path.join(parent_path, relative_path)
 
@@ -401,11 +399,10 @@ class Resource(object):
     def _try_resource_autoload(self, uri, original_uri):
         try:
             rset = self.resource_set
-            rel_uri = self.uri.apply_relative_from_me(uri)
-            if rel_uri[:4] == 'http':
-                external_uri = HttpURI(rel_uri)
+            if uri[:4] == 'http':
+                external_uri = HttpURI(uri)
             else:
-                external_uri = URI(rel_uri)
+                external_uri = URI(self.uri.apply_relative_from_me(uri))
             resource = rset.get_resource(external_uri)
             if uri != original_uri:
                 rset.resources[original_uri] = resource
