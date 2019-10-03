@@ -108,7 +108,7 @@ class ResourceSet(object):
         return uri.normalize() in self.resources
 
     def resolve(self, uri, from_resource=None):
-        upath = URITranslator.convert(Resource.normalize(uri), from_resource)
+        upath = URIMapper.translate(Resource.normalize(uri), from_resource)
         uri_str, fragment = upath.rsplit('#', maxsplit=1)
         if uri_str in self.resources:
             root = self.resources[uri_str]
@@ -264,13 +264,13 @@ class Global_URI_decoder(object):
 
     @staticmethod
     def resolve(path, from_resource=None):
-        path = URITranslator.convert(path, from_resource)
+        path = URIMapper.translate(path, from_resource)
         return MetamodelDecoder.resolve(path, global_registry)
 
 
-class URITranslator(object):
+class URIMapper(object):
     @staticmethod
-    def convert(path, from_resource=None):
+    def translate(path, from_resource=None):
         if from_resource is None or from_resource.resource_set is None:
             return path
         rset = from_resource.resource_set
@@ -297,12 +297,14 @@ class AbstractURIConverter(object):
     @staticmethod
     @abstractmethod
     def can_handle(uri):
-        raise NotImplementedError("can_handle(uri) should be implemented in its subclass")
+        raise NotImplementedError("can_handle(uri) should be implemented in "
+                                  "its subclass")
 
     @staticmethod
     @abstractmethod
     def convert(uri):
-        raise NotImplementedError("convert(uri) should be implemented in its subclass")
+        raise NotImplementedError("convert(uri) should be implemented in its "
+                                  "subclass")
 
 
 class HttpURIConverter(AbstractURIConverter):
@@ -326,7 +328,7 @@ class LocalMetamodelDecoder(object):
     @staticmethod
     def resolve(path, from_resource=None):
         rset = from_resource.resource_set
-        path = URITranslator.convert(path, from_resource)
+        path = URIMapper.translate(path, from_resource)
         return MetamodelDecoder.resolve(path, rset.metamodel_registry)
 
 
@@ -384,7 +386,7 @@ class Resource(object):
                         if x.can_resolve(path, self)), None)
         if decoder:
             return decoder.resolve(path, self)
-        newpath = URITranslator.convert(path, self)
+        newpath = URIMapper.translate(path, self)
         decoder = self._get_href_decoder(newpath, path)
         return decoder.resolve(newpath, self)
 
