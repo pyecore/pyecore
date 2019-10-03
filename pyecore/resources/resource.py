@@ -11,6 +11,7 @@ from itertools import chain
 from collections import ChainMap
 from .. import ecore as Ecore
 from ..innerutils import ignored
+from abc import abstractmethod
 
 global_registry = {}
 global_uri_mapper = {}
@@ -292,7 +293,19 @@ class URIConverter(object):
         return uri
 
 
-class HttpURIConverter(object):
+class AbstractURIConverter(object):
+    @staticmethod
+    @abstractmethod
+    def can_handle(uri):
+        raise NotImplementedError("can_handle(uri) should be implemented in its subclass")
+
+    @staticmethod
+    @abstractmethod
+    def convert(uri):
+        raise NotImplementedError("convert(uri) should be implemented in its subclass")
+
+
+class HttpURIConverter(AbstractURIConverter):
     @staticmethod
     def can_handle(uri):
         return uri.protocol == 'http' or uri.protocol == 'https'
