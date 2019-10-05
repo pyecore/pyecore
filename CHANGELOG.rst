@@ -1,6 +1,27 @@
 Changelog
 ---------
 
+0.11.0
+++++++
+
+**Features**
+
+- Add an ``URIConverter`` to transform ``URIs`` to  custom one (Thanks
+`@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the issue and the
+pull requests!).
+Each new converter can be isolated by ``ResourceSet`` or globaly for every
+``Resource``.
+
+**Bugfixes**
+
+- Fix empty valued id attributes to be used as keys in reference links when saving a resource (Thanks `@annighoefer  <https://github.com/annighoefer >`_!).
+
+**Miscellaneous**
+
+- Remove dependency on deprecated defusedxml.lxml
+
+
+
 0.10.3
 ++++++
 
