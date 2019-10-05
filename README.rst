@@ -186,7 +186,8 @@ In the current state, the project implements:
 * multiple roots ressources,
 * ``xsi:schemaLocation`` support for XMI resources,
 * URI mapper like,
-* ``EGeneric`` support (first simple version)
+* ``EGeneric`` support (first simple version),
+* URI converter like
 
 The things that are in the roadmap:
 

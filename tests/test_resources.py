@@ -2,6 +2,7 @@ import pytest
 import pyecore.ecore as Ecore
 from pyecore.ecore import *
 from pyecore.resources import ResourceSet, URI, Resource, global_registry
+from pyecore.resources import global_uri_converter, AbstractURIConverter
 from pyecore.resources.resource import Global_URI_decoder
 from pyecore.resources.resource import HttpURI
 from pyecore.resources.xmi import XMIResource
@@ -103,6 +104,8 @@ def test_uri_normalize_relative():
 def test_uri_normalize_httpuri():
     uri = HttpURI('http://www.test.org/path/xmi')
     assert uri.normalize() == 'http://www.test.org/path/xmi'
+
+    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/path/xmi'
 
 
 def test_resourceset_default_decoders():
@@ -360,3 +363,38 @@ def test_resource_normalize_with_protocol():
     u2 = URI('pathmap://UML_METAMODELS/UML.metamodel.uml')
 
     assert u1.relative_from_me(u2) == u2.plain
+
+
+def test__resource_uriconverter_abstract():
+    a = AbstractURIConverter()
+    u = URI('test')
+
+    with pytest.raises(NotImplementedError):
+        a.convert(u)
+
+    with pytest.raises(NotImplementedError):
+        a.can_handle(u)
+
+
+def test__resource_uriconverter_simple():
+    class MyURI(URI):
+        pass
+
+    class MyURIConverter(AbstractURIConverter):
+        @staticmethod
+        def can_handle(uri):
+            return uri.protocol == 'myuri'
+
+        @staticmethod
+        def convert(uri):
+            new_path = uri.plain.replace('myuri://', '')
+            return MyURI(new_path)
+
+    rset = ResourceSet()
+    rset.uri_converter.append(MyURIConverter)
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'C.ecore')
+    resource = rset.get_resource(xmi_file)
+    root = resource.contents[0]
+    assert root.eClassifiers[0]
+    assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'SuperStuff'

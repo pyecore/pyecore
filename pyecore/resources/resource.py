@@ -7,12 +7,15 @@ from uuid import uuid4
 import urllib.request
 import re
 from os import path
+from itertools import chain
 from collections import ChainMap
 from .. import ecore as Ecore
 from ..innerutils import ignored
+from abc import abstractmethod
 
 global_registry = {}
 global_uri_mapper = {}
+global_uri_converter = []
 
 
 class ResourceSet(object):
@@ -42,6 +45,7 @@ class ResourceSet(object):
         self.resources = {}
         self.metamodel_registry = ChainMap({}, global_registry)
         self.uri_mapper = ChainMap({}, global_uri_mapper)
+        self.uri_converter = []
         self.resource_factory = dict(ResourceSet.resource_factory)
 
     def create_resource(self, uri):
@@ -57,7 +61,7 @@ class ResourceSet(object):
         .. seealso:: URI, Resource, XMIResource
         """
         if isinstance(uri, str):
-            uri = URI(uri)
+            uri = URIConverter.convert(URI(uri))
         try:
             resource = self.resource_factory[uri.extension](uri)
         except KeyError:
@@ -76,7 +80,7 @@ class ResourceSet(object):
 
     def get_resource(self, uri, options=None):
         if isinstance(uri, str):
-            uri = URI(uri)
+            uri = URIConverter.convert(URI(uri))
         # We check first if the resource already exists in the ResourceSet
         if uri.normalize() in self.resources:
             return self.resources[uri.normalize()]
@@ -104,7 +108,7 @@ class ResourceSet(object):
         return uri.normalize() in self.resources
 
     def resolve(self, uri, from_resource=None):
-        upath = URIConverter.convert(Resource.normalize(uri), from_resource)
+        upath = URIMapper.translate(Resource.normalize(uri), from_resource)
         uri_str, fragment = upath.rsplit('#', maxsplit=1)
         if uri_str in self.resources:
             root = self.resources[uri_str]
@@ -132,10 +136,10 @@ class URI(object):
         if uri is None:
             raise TypeError('URI cannot be None')
         self.plain = uri
-        self.__split()
+        self._split()
         self.__stream = None
 
-    def __split(self):
+    def _split(self):
         if '://' in self.plain:
             self._protocol, rest = self.plain.split('://', maxsplit=1)
         elif ':/' in self.plain:
@@ -192,6 +196,8 @@ class URI(object):
         return path.relpath(other_normalized, normalized)
 
     def apply_relative_from_me(self, relative_path):
+        if '://' in relative_path:
+            return relative_path
         parent_path = path.dirname(self.normalize())
         return path.join(parent_path, relative_path)
 
@@ -206,6 +212,9 @@ class HttpURI(URI):
 
     def create_outstream(self):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
+
+    def apply_relative_from_me(self, relative_path):
+        return self.plain
 
 
 # class StdioURI(URI):
@@ -255,13 +264,13 @@ class Global_URI_decoder(object):
 
     @staticmethod
     def resolve(path, from_resource=None):
-        path = URIConverter.convert(path, from_resource)
+        path = URIMapper.translate(path, from_resource)
         return MetamodelDecoder.resolve(path, global_registry)
 
 
-class URIConverter(object):
+class URIMapper(object):
     @staticmethod
-    def convert(path, from_resource=None):
+    def translate(path, from_resource=None):
         if from_resource is None or from_resource.resource_set is None:
             return path
         rset = from_resource.resource_set
@@ -269,6 +278,43 @@ class URIConverter(object):
             if path.startswith(key):
                 return path.replace(key, value)
         return path
+
+
+class URIConverter(object):
+    @classmethod
+    def convert(cls, uri, resource_set=None):
+        iter_from = global_uri_converter
+        if resource_set:
+            iter_from = chain(resource_set.uri_converter, global_uri_converter)
+
+        for converter in iter_from:
+            if converter.can_handle(uri):
+                return converter.convert(uri)
+        return uri
+
+
+class AbstractURIConverter(object):
+    @staticmethod
+    @abstractmethod
+    def can_handle(uri):
+        raise NotImplementedError("can_handle(uri) should be implemented in "
+                                  "its subclass")
+
+    @staticmethod
+    @abstractmethod
+    def convert(uri):
+        raise NotImplementedError("convert(uri) should be implemented in its "
+                                  "subclass")
+
+
+class HttpURIConverter(AbstractURIConverter):
+    @staticmethod
+    def can_handle(uri):
+        return uri.protocol == 'http' or uri.protocol == 'https'
+
+    @staticmethod
+    def convert(uri):
+        return HttpURI(uri.plain)
 
 
 class LocalMetamodelDecoder(object):
@@ -282,7 +328,7 @@ class LocalMetamodelDecoder(object):
     @staticmethod
     def resolve(path, from_resource=None):
         rset = from_resource.resource_set
-        path = URIConverter.convert(path, from_resource)
+        path = URIMapper.translate(path, from_resource)
         return MetamodelDecoder.resolve(path, rset.metamodel_registry)
 
 
@@ -308,12 +354,13 @@ class Resource(object):
     def uri(self, value):
         uri = value
         if isinstance(value, str):
-            uri = URI(value)
+            uri = URIConverter.convert(URI(value))
         if self.resource_set:
             old_uri = self._uri.normalize()
             resources = self.resource_set.resources
-            resources[uri.normalize()] = resources[old_uri]
+            old_resource = resources[old_uri]
             del resources[old_uri]
+            resources[uri.normalize()] = old_resource
         self._uri = uri
 
     def resolve(self, fragment, resource=None):
@@ -339,7 +386,7 @@ class Resource(object):
                         if x.can_resolve(path, self)), None)
         if decoder:
             return decoder.resolve(path, self)
-        newpath = URIConverter.convert(path, self)
+        newpath = URIMapper.translate(path, self)
         decoder = self._get_href_decoder(newpath, path)
         return decoder.resolve(newpath, self)
 
@@ -399,9 +446,13 @@ class Resource(object):
     def _try_resource_autoload(self, uri, original_uri):
         try:
             rset = self.resource_set
-            external_uri = URI(self.uri.apply_relative_from_me(uri))
+            tmp_uri = URI(self.uri.apply_relative_from_me(uri))
+            external_uri = URIConverter.convert(tmp_uri, self.resource_set)
+            norm_plain = self.uri.apply_relative_from_me(external_uri.plain)
+            external_uri.plain = norm_plain
+            external_uri._split()
             resource = rset.get_resource(external_uri)
-            if uri != original_uri:
+            if external_uri.plain != original_uri:
                 rset.resources[original_uri] = resource
             return rset
         except Exception:
@@ -490,7 +541,10 @@ class Resource(object):
                 else:
                     id_attribute = self.get_id_attribute(eclass)
                     if id_attribute:
-                        uri_fragment = obj.eGet(id_attribute)
+                        id_value = obj.eGet(id_attribute)
+                        # id attributes shall not be used if the value is unset
+                        if id_value:
+                            uri_fragment = id_value
             else:
                 uri = ''
                 root = obj.eRoot()

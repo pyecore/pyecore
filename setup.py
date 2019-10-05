@@ -3,8 +3,16 @@
 import sys
 from setuptools import setup
 
-if sys.version_info < (3, 3):
+
+version = tuple(sys.version_info[:2])
+
+if version < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
+
+if version == (3, 4):
+    lxml_version = 'lxml<4.4.0'
+else:
+    lxml_version = 'lxml'
 
 packages = ['pyecore',
             'pyecore.resources',
@@ -12,7 +20,7 @@ packages = ['pyecore',
 
 setup(
     name='pyecore',
-    version='0.10.3',
+    version='0.11.0',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
@@ -25,8 +33,7 @@ setup(
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
     install_requires=['ordered-set',
-                      'lxml',
-                      'defusedxml',
+                      lxml_version,
                       'restrictedpython>=4.0b6'],
     tests_require=['pytest'],
     license='BSD 3-Clause',
