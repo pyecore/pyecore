@@ -136,10 +136,10 @@ class URI(object):
         if uri is None:
             raise TypeError('URI cannot be None')
         self.plain = uri
-        self.__split()
+        self._split()
         self.__stream = None
 
-    def __split(self):
+    def _split(self):
         if '://' in self.plain:
             self._protocol, rest = self.plain.split('://', maxsplit=1)
         elif ':/' in self.plain:
@@ -448,8 +448,11 @@ class Resource(object):
             rset = self.resource_set
             tmp_uri = URI(self.uri.apply_relative_from_me(uri))
             external_uri = URIConverter.convert(tmp_uri, self.resource_set)
+            norm_plain = self.uri.apply_relative_from_me(external_uri.plain)
+            external_uri.plain = norm_plain
+            external_uri._split()
             resource = rset.get_resource(external_uri)
-            if uri != original_uri:
+            if external_uri.plain != original_uri:
                 rset.resources[original_uri] = resource
             return rset
         except Exception:

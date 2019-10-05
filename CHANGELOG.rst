@@ -6,7 +6,7 @@ Changelog
 
 **Features**
 
-- Add an ``URIConverter`` to transform ``URIs`` to  custom one (Thanks
+- Add an ``URIConverter`` to transform ``URIs`` to custom ones (Thanks
 `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the issue and the
 pull requests!).
 Each new converter can be isolated by ``ResourceSet`` or globaly for every
