@@ -987,6 +987,21 @@ class EProxy(EObject):
         self.force_resolve()
         return self._wrapped.__instancecheck__(instance)
 
+    def __call__(self, *args, **kwargs):
+        self.force_resolve()
+        self._wrapped(*args, **kwargs)
+
+    def __hash__(self):
+        return object.__hash__(self)
+
+    def __eq__(self, other):
+        self.force_resolve()
+        return self._wrapped == other
+
+    def __ne__(self, other):
+        self.force_resolve()
+        return self._wrapped != other
+
 
 def abstract(cls):
     cls.eClass.abstract = True
