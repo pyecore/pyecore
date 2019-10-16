@@ -853,6 +853,8 @@ class EClass(EClassifier):
         return isinstance(instance, self.python_class)
 
     def __subclasscheck__(self, cls):
+        if isinstance(cls, EClass):
+            cls = cls.python_class
         return issubclass(cls, self.python_class)
 
 
@@ -868,6 +870,9 @@ class MetaEClass(type):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         return super().__call__(*args, **kwargs)
+
+    def __subclasscheck__(cls, other):
+        return False
 
 
 def EMetaclass(cls):
