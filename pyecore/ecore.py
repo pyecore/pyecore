@@ -989,7 +989,7 @@ class EProxy(EObject):
 
     def __call__(self, *args, **kwargs):
         self.force_resolve()
-        self._wrapped(*args, **kwargs)
+        return self._wrapped(*args, **kwargs)
 
     def __hash__(self):
         return object.__hash__(self)
