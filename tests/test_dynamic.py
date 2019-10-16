@@ -1047,3 +1047,14 @@ def test_structuralfeature_many_computation():
 def test_datatype_edate_serialization_deserialization():
     time = datetime.utcnow()
     assert EDate.from_string(EDate.to_string(time)) == time
+
+
+
+def test_eclasssuperchange():
+    @EMetaclass
+    class A(object):
+        pass
+
+    B = EClass('B', superclass=(EObject.eClass, A.eClass))
+
+    assert issubclass(B, EObject)

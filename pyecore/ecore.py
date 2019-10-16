@@ -137,7 +137,14 @@ class Core(object):
             rcls.eClass._container = epackage
 
 
-class EObject(ENotifer):
+class Metasubinstance(type):
+    def __subclasscheck__(cls, other):
+        if isinstance(other, EClass):
+            other = other.python_class
+        return type.__subclasscheck__(cls, other)
+
+
+class EObject(ENotifer, metaclass=Metasubinstance):
     _staticEClass = True
     _instances = WeakSet()
 
@@ -787,7 +794,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            if EObject.eClass in eSuperTypes:
+            if len(eSuperTypes) > 1 and EObject.eClass in eSuperTypes:
                 eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
 
@@ -857,7 +864,7 @@ class EClass(EClassifier):
 
 
 # Meta methods for static EClass
-class MetaEClass(type):
+class MetaEClass(Metasubinstance):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
         Core.register_classifier(cls, promote=True)
@@ -986,6 +993,21 @@ class EProxy(EObject):
     def __instancecheck__(self, instance):
         self.force_resolve()
         return self._wrapped.__instancecheck__(instance)
+
+    def __call__(self, *args, **kwargs):
+        self.force_resolve()
+        return self._wrapped(*args, **kwargs)
+
+    def __hash__(self):
+        return object.__hash__(self)
+
+    def __eq__(self, other):
+        self.force_resolve()
+        return self._wrapped == other
+
+    def __ne__(self, other):
+        self.force_resolve()
+        return self._wrapped != other
 
 
 def abstract(cls):
