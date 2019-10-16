@@ -75,11 +75,11 @@ def test_dynamic_removal_eclasses(complexmm):
         ComplexMM.A
 
 
-def test_original_issubclass():
-    issub = builtins.issubclass
-    with original_issubclass():
-        assert builtins.issubclass is not issub
-    assert builtins.issubclass is issub
+# def test_original_issubclass():
+#     issub = builtins.issubclass
+#     with original_issubclass():
+#         assert builtins.issubclass is not issub
+#     assert builtins.issubclass is issub
 
 
 def test_alias_function_static():
