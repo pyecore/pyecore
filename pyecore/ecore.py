@@ -853,8 +853,6 @@ class EClass(EClassifier):
         return isinstance(instance, self.python_class)
 
     def __subclasscheck__(self, cls):
-        if isinstance(cls, EClass):
-            cls = cls.python_class
         return issubclass(cls, self.python_class)
 
 
@@ -872,7 +870,9 @@ class MetaEClass(type):
         return super().__call__(*args, **kwargs)
 
     def __subclasscheck__(cls, other):
-        return False
+        if isinstance(other, EClass):
+            other = other.python_class
+        return type.__subclasscheck__(cls, other)
 
 
 def EMetaclass(cls):
