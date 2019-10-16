@@ -137,7 +137,14 @@ class Core(object):
             rcls.eClass._container = epackage
 
 
-class EObject(ENotifer):
+class Metasubinstance(type):
+    def __subclasscheck__(cls, other):
+        if isinstance(other, EClass):
+            other = other.python_class
+        return type.__subclasscheck__(cls, other)
+
+
+class EObject(ENotifer, metaclass=Metasubinstance):
     _staticEClass = True
     _instances = WeakSet()
 
@@ -857,7 +864,7 @@ class EClass(EClassifier):
 
 
 # Meta methods for static EClass
-class MetaEClass(type):
+class MetaEClass(Metasubinstance):
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
         Core.register_classifier(cls, promote=True)
@@ -868,11 +875,6 @@ class MetaEClass(type):
             raise TypeError("Can't instantiate abstract EClass {0}"
                             .format(cls.eClass.name))
         return super().__call__(*args, **kwargs)
-
-    def __subclasscheck__(cls, other):
-        if isinstance(other, EClass):
-            other = other.python_class
-        return type.__subclasscheck__(cls, other)
 
 
 def EMetaclass(cls):
