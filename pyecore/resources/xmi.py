@@ -344,8 +344,7 @@ class XMIResource(Resource):
         serialize_default = \
             self.options.get(XMIOptions.SERIALIZE_DEFAULT_VALUES,
                              False)
-        nsmap = {XMI: XMI_URL,
-                 XSI: XSI_URL}
+        nsmap = {XMI: XMI_URL}
 
         if len(self.contents) == 1:
             root = self.contents[0]
@@ -374,6 +373,7 @@ class XMIResource(Resource):
         self.uri.close_stream()
 
     def _add_explicit_type(self, node, obj):
+        self.prefixes[XSI] = XSI_URL
         xsi_type = QName(self.xsi_type_url(), 'type')
         uri = obj.eClass.ePackage.nsURI
         if uri not in self.reverse_nsmap:
@@ -389,7 +389,6 @@ class XMIResource(Resource):
         return sub
 
     def _go_across(self, obj, serialize_default=False):
-        self.register_eobject_epackage(obj)
         eclass = obj.eClass
         if not obj.eContainmentFeature():  # obj is the root
             epackage = eclass.ePackage
