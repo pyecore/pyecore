@@ -787,7 +787,7 @@ class EClass(EClassifier):
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
-            if EObject.eClass in eSuperTypes:
+            if len(eSuperTypes) > 1 and EObject.eClass in eSuperTypes:
                 eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
 
