@@ -1,7 +1,6 @@
 import pytest
 from pyecore.ecore import *
-from pyecore.utils import DynamicEPackage, original_issubclass, alias
-import builtins
+from pyecore.utils import DynamicEPackage, alias
 
 
 @pytest.fixture(scope='module')
