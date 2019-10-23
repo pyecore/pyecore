@@ -1,6 +1,20 @@
 Changelog
 ---------
 
+0.11.1
+++++++
+
+**Bugfixes**
+
+- Fix XMI serialization compatibility when a proxy to a metaclass is used (typically when a metamodel reference another).
+Thanks `@stefanq <https://github.com/stefanq>`_ for the simple demo/example/test!
+
+
+**Miscellaneous**
+
+- Remove ``issubclass`` patch, the new version remove this requirement and still assure the same behavior.
+
+
 0.11.0
 ++++++
 

@@ -329,3 +329,21 @@ def test_eobject_egetset_badtype_exception():
     assert e.expected is EString
     assert e.got == 32
     assert e.feature is name_attribute
+
+
+
+def test_eobject_eproxy_basicoperations():
+    A = EClass('A')
+    B = EClass('B')
+    aProxy = EProxy(wrapped=A)
+    bProxy = EProxy(wrapped=B)
+    cProxy = EProxy(wrapped=A)
+
+    assert aProxy == aProxy
+    assert aProxy == cProxy
+    assert aProxy != bProxy
+    assert bProxy != cProxy
+    assert hash(aProxy) != hash(A)
+
+    a = aProxy()
+    assert isinstance(a, aProxy)
