@@ -400,3 +400,44 @@ def test_xmi_with_iD_attribute(tmpdir):
     rset.get_resource(str(f1))
     rset.get_resource(str(f2))
     rset.get_resource(str(f3))
+
+
+def test_serialization_proxyin_metamodel(tmpdir):
+    def register(rset, pkg):
+      rset.metamodel_registry[ pkg.nsURI ] = pkg
+      for sub in pkg.eSubpackages:
+        register( rset, sub )
+
+    def importMetaModel(rset, filename):
+        pkg = rset.get_resource( URI( filename ) ).contents[0]
+        register( rset, pkg )
+        return DynamicEPackage( pkg )
+
+    def setup(rset):
+        mm_file = os.path.join('tests', 'xmi', 'xmi-tests', 'root.ecore')
+        root = importMetaModel( rset, mm_file )
+
+        mm_file = os.path.join('tests', 'xmi', 'xmi-tests', 'model.ecore')
+        root.model = importMetaModel( rset, mm_file )
+        return root
+
+    rset = ResourceSet()
+    mm = setup( rset )
+
+    assert mm.A.eStructuralFeatures[0].eType.name == 'B'
+
+    a = mm.A()
+    a.b = mm.model.B()
+    f = tmpdir.mkdir('pyecore-tmp').join('pyecore.root.xmi')
+    res = rset.create_resource(URI(str(f)))
+    res.append(a)
+    res.save()
+
+    # Ty loading a virtually identical model
+    # which has been serialized in Eclipse.
+    ecl_file = os.path.join('tests', 'xmi', 'xmi-tests', 'eclipse.root.xmi')
+    res = rset.create_resource(URI(ecl_file))
+    res.load()
+    m = res.contents[0]
+    assert m
+    assert m.b is not None
