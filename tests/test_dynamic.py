@@ -591,6 +591,11 @@ def test_get_eattribute():
     name = EAttribute('name', EString)
     A.eStructuralFeatures.append(name)
     eref = EReference('child', A, containment=True)
+    assert eref.is_attribute is False
+    assert name.is_attribute is True
+    assert eref.is_reference is True
+    assert name.is_reference is False
+
     A.eStructuralFeatures.append(eref)
     assert A.eAttributes
     assert len(A.eAttributes) == 1

@@ -25,5 +25,9 @@ print(transfo.inputs.ghmde_model.contents[0])
 print(transfo.outputs.graph_model.contents)
 print(transfo.outputs.graph_model.contents[0].nodes)
 
+print(transfo.trace)
+for rule in transfo.trace.rules:
+    print('*', rule.name)
+
 # # run transfo (single direct root)
 # transfo.run(ghmde=a)

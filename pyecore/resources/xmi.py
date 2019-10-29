@@ -4,7 +4,8 @@ The xmi module introduces XMI resource and XMI parsing.
 from enum import unique, Enum
 from lxml.etree import parse, QName, Element, SubElement, ElementTree
 from .resource import Resource
-from .. import ecore as Ecore
+from ..ecore import EClass, EStringToStringMapEntry, EAnnotation, EProxy, \
+                    EDataType
 
 XSI = 'xsi'
 XSI_URL = 'http://www.w3.org/2001/XMLSchema-instance'
@@ -52,7 +53,7 @@ class XMIResource(Resource):
         for prefix, path in grouper(schema_tag_list.split()):
             if '#' not in path:
                 path = path + '#'
-            self.schema_locations[prefix] = Ecore.EProxy(path, self)
+            self.schema_locations[prefix] = EProxy(path, self)
 
         for root in real_roots:
             modelroot = self._init_modelroot(root)
@@ -121,7 +122,7 @@ class XMIResource(Resource):
                 feature = self._find_feature(modelroot.eClass, key)
                 if not feature:
                     continue
-                if isinstance(feature, Ecore.EAttribute):
+                if feature.is_attribute:
                     self._decode_eattribute_value(modelroot, feature, value)
                 else:
                     erefs.append((feature, value))
@@ -184,7 +185,7 @@ class XMIResource(Resource):
             return (None, None, [], [], False)
         if node.get('href'):
             ref = node.get('href')
-            proxy = Ecore.EProxy(path=ref, resource=self)
+            proxy = EProxy(path=ref, resource=self)
             return (feature_container, proxy, [], [], False)
         if self._type_attribute(node):
             prefix, _type = self._type_attribute(node).split(':')
@@ -198,16 +199,16 @@ class XMIResource(Resource):
                                  .format(_type, epackage, node.tag))
         else:
             etype = feature_container.eType
-            if isinstance(etype, Ecore.EProxy):
+            if isinstance(etype, EProxy):
                 etype.force_resolve()
 
         # we create the instance
-        if etype is Ecore.EClass or etype is Ecore.EClass.eClass:
+        if etype is EClass or etype is EClass.eClass:
             name = node.get('name')
             eobject = etype(name)
-        elif (etype is Ecore.EStringToStringMapEntry
-              or etype is Ecore.EStringToStringMapEntry.eClass) \
-                and feature_container is Ecore.EAnnotation.details:
+        elif (etype is EStringToStringMapEntry
+              or etype is EStringToStringMapEntry.eClass) \
+                and feature_container is EAnnotation.details:
             annotation_key = node.get('key')
             annotation_value = node.get('value')
             parent_eobj.details[annotation_key] = annotation_value
@@ -217,7 +218,7 @@ class XMIResource(Resource):
                     container = container.python_class
                 container.__doc__ = annotation_value
             return (None, None, tuple(), tuple(), False)
-        elif isinstance(etype, Ecore.EDataType):
+        elif isinstance(etype, EDataType):
             key = node.tag
             value = node.text if node.text else ''
             feature = self._decode_attribute(parent_eobj, key, value)
@@ -236,9 +237,9 @@ class XMIResource(Resource):
             feature = self._decode_attribute(eobject, key, value)
             if not feature:
                 continue  # we skip the unknown features
-            if etype is Ecore.EClass and feature.name == 'name':
+            if etype is EClass and feature.name == 'name':
                 continue  # we skip the name for metamodel import
-            if isinstance(feature, Ecore.EAttribute):
+            if feature.is_attribute:
                 eatts.append((feature, value))
                 if feature.iD:
                     self.uuid_dict[value] = eobject
@@ -307,7 +308,7 @@ class XMIResource(Resource):
             cleaned_uri = uri + '#' + fragment
             if cleaned_uri in self._resolve_mem:
                 return self._resolve_mem[cleaned_uri]
-            proxy = Ecore.EProxy(path=cleaned_uri, resource=self)
+            proxy = EProxy(path=cleaned_uri, resource=self)
             self._resolve_mem[cleaned_uri] = proxy
             return proxy
         return self.resolve(fragment)
@@ -416,7 +417,7 @@ class XMIResource(Resource):
                     entry.attrib['key'] = key
                     entry.attrib['value'] = val
                     node.append(entry)
-            elif isinstance(feat, Ecore.EAttribute):
+            elif feat.is_attribute:
                 etype = feat.eType
                 if feat.many and value:
                     to_str = etype.to_string
@@ -442,11 +443,10 @@ class XMIResource(Resource):
                         node.attrib[feat_name] = etype.to_string(value)
                 continue
 
-            elif isinstance(feat, Ecore.EReference) and \
+            elif feat.is_reference and \
                     feat.eOpposite and feat.eOpposite.containment:
                 continue
-            elif isinstance(feat, Ecore.EReference) \
-                    and not feat.containment:
+            elif feat.is_reference and not feat.containment:
                 if not value:
                     if serialize_default and value is None:
                         node.append(self._build_none_node(feat_name))
@@ -477,7 +477,7 @@ class XMIResource(Resource):
                     else:
                         node.attrib[feat_name] = frag
 
-            if isinstance(feat, Ecore.EReference) and feat.containment:
+            if feat.is_reference and feat.containment:
                 children = obj.__getattribute__(feat_name)
                 children = children if feat.many else [children]
                 for child in children:

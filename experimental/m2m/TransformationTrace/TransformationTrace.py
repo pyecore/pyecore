@@ -31,14 +31,18 @@ class Artefact(EObject, metaclass=MetaEClass):
 
 class Rule(EObject, metaclass=MetaEClass):
 
+    name = EAttribute(eType=EString)
     records = EReference(ordered=True, unique=True, containment=True, derived=False, upper=-1)
     transformation = EReference(ordered=True, unique=True, containment=False, derived=False)
 
-    def __init__(self, *, records=None, transformation=None, **kwargs):
+    def __init__(self, *, name=None, records=None, transformation=None, **kwargs):
         if kwargs:
             raise AttributeError('unexpected arguments: {}'.format(kwargs))
 
         super().__init__()
+
+        if name is not None:
+            self.name = name
 
         if records:
             self.records.extend(records)
@@ -82,6 +86,14 @@ class TransformationTrace(EObject, metaclass=MetaEClass):
         if rules:
             self.rules.extend(rules)
 
+    def __getitem__(self, rulename):
+        rule = next((x for x in self.rules if x.name == rulename), None)
+        if rule:
+            return rule
+        rule = Rule(name=rulename)
+        self.rules.append(rule)
+        return rule
+
 
 class ObjectReference(Artefact):
 
@@ -101,8 +113,8 @@ class ObjectReference(Artefact):
 
 class Attribute(Artefact):
 
-    old_value = EAttribute(eType=EString, derived=False, changeable=True)
-    new_value = EAttribute(eType=EString, derived=False, changeable=True)
+    old_value = EAttribute(eType=ENativeType, derived=False, changeable=True)
+    new_value = EAttribute(eType=ENativeType, derived=False, changeable=True)
 
     def __init__(self, *, old_value=None, new_value=None, **kwargs):
 
