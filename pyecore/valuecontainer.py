@@ -74,10 +74,9 @@ class PyEcoreValue(object):
                 resource.remove(value)
             prev_container = value._container
             prev_feature = value._containment_feature
-            #if prev_feature != self.feature \ #BA fix: feature is the same for objects being instances of the same class
-            if (prev_container != self.owner \
+            if (prev_container != self.owner
                     or prev_feature != self.feature) \
-                    and isinstance(prev_container, EObject): #BA fix end.
+                    and isinstance(prev_container, EObject):
                 prev_container.__dict__[prev_feature.name] \
                               .remove_or_unset(value)
             value._container = self.owner

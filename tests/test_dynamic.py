@@ -471,6 +471,41 @@ def test_create_dynamic_contaiment_containmentfeature_many_unset():
     assert b1.eContainmentFeature() is None
 
 
+def test_containment_changecontaineir():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EReference('toa', A, containment=True))
+    A.eStructuralFeatures.append(EReference('toa_multi', A, containment=True, upper=-1))
+
+    a1, a2 = A(), A()
+    cont = A()
+
+    a1.toa = cont
+    assert cont is a1.toa
+    assert a1.toa_multi == []
+    assert a2.toa is None
+    assert a2.toa_multi == []
+
+    a2.toa = cont
+    assert a1.toa is None
+    assert a1.toa_multi == []
+    assert a2.toa is cont
+    assert a2.toa_multi == []
+
+    a1.toa_multi.append(cont)
+    assert a1.toa is None
+    assert cont in a1.toa_multi
+    assert a2.toa is None
+    assert a2.toa_multi == []
+
+    a2.toa_multi.append(cont)
+    assert a1.toa is None
+    assert a1.toa_multi == []
+    assert a2.toa is None
+    assert cont in a2.toa_multi
+
+
+
+
 def test_dynamic_extend_ecore():
     A = EClass('A')
     A.eSuperTypes.append(EModelElement.eClass)  # A now extends EModelElement
