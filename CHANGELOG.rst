@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.11.2
+++++++
+
+**Bugfixes**
+
+- Fix change of container of an objet when the reference is single.
+Thanks `@annighoefer  <https://github.com/annighoefer >`_ for the fix!
+The issue came when an object was moved from a single relationship container to another one from the same class, the contained object was contained by the two containers.
+
+
 0.11.1
 ++++++
 
