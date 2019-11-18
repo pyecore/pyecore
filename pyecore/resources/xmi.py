@@ -124,6 +124,8 @@ class XMIResource(Resource):
                     continue
                 if feature.is_attribute:
                     self._decode_eattribute_value(modelroot, feature, value)
+                    if feature.iD:
+                        self.uuid_dict[value] = modelroot
                 else:
                     erefs.append((feature, value))
         if erefs:
