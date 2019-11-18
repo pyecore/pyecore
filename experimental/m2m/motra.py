@@ -94,6 +94,7 @@ class Transformation(object):
     def run(self, clean_mappings_cache=True, **kwargs):
         self.inputs = Parameters(self, self.inputs_def)
         self.outputs = Parameters(self, self.outputs_def)
+
         params = {}
         for in_model in self.inputs_def:
             try:
@@ -159,6 +160,7 @@ class Transformation(object):
             inputs = [a for a in args if isinstance(a, Ecore.EObject)]
             print('CREATE', result, 'FROM', inputs, 'BY', f.__name__)
             # Create object for the trace
+            rule = self.trace[f.__name__]
             g = f.__globals__
             marker = object()
             oldvalue = g.get(result_var_name, marker)
@@ -207,3 +209,10 @@ class Transformation(object):
             f(*args, **kwargs)
             return result
         return inner
+
+
+class TransformationExecution(object):
+    def __init__(self, input_def, output_def):
+        self.trace = trace.TransformationTrace()
+        self.inputs = Parameters(self, inputs_def)
+        self.outputs = Parameters(self, outputs_def)

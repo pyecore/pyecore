@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+0.11.2
+++++++
+
+**Bugfixes**
+
+- Fix change of container of an objet when the reference is single.
+Thanks `@annighoefer  <https://github.com/annighoefer >`_ for the fix!
+The issue came when an object was moved from a single relationship container to another one from the same class, the contained object was contained by the two containers.
+
+- Fix Fix root element id not added to uuid_dict if its feature.ID is set.
+Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the fix!
+The root node's ``ID`` was not referenced in the ``uuid_dict`` even if the root node had the ``ID`` feature set.
+
 0.11.1
 ++++++
 

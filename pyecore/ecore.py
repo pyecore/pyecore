@@ -681,6 +681,14 @@ class EAttribute(EStructuralFeature):
             return object()
         return etype.default_value
 
+    @property
+    def is_reference(self):
+        return False
+
+    @property
+    def is_attribute(self):
+        return True
+
 
 class EReference(EStructuralFeature):
     def __init__(self, name=None, eType=None, containment=False,
@@ -704,6 +712,14 @@ class EReference(EStructuralFeature):
         self._eopposite = value
         if value:
             value._eopposite = self
+
+    @property
+    def is_reference(self):
+        return True
+
+    @property
+    def is_attribute(self):
+        return False
 
 
 class EClass(EClassifier):
@@ -804,12 +820,12 @@ class EClass(EClassifier):
     @property
     def eAttributes(self):
         return [x for x in self.eStructuralFeatures
-                if isinstance(x, EAttribute)]
+                if x.is_attribute]
 
     @property
     def eReferences(self):
         return [x for x in self.eStructuralFeatures
-                if isinstance(x, EReference)]
+                if x.is_reference]
 
     def findEStructuralFeature(self, name):
         return next((f for f in self._eAllStructuralFeatures_gen()
@@ -837,11 +853,11 @@ class EClass(EClassifier):
 
     def eAllReferences(self):
         return set((x for x in self._eAllStructuralFeatures_gen()
-                    if isinstance(x, EReference)))
+                    if x.is_reference))
 
     def eAllAttributes(self):
         return set((x for x in self._eAllStructuralFeatures_gen()
-                    if isinstance(x, EAttribute)))
+                    if x.is_attribute))
 
     def _eAllOperations_gen(self):
         for x in self.eOperations:

@@ -5,7 +5,7 @@ from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource
-from .. import ecore as Ecore
+from ..ecore import EObject, EProxy, ECollection, EClass
 
 
 @unique
@@ -89,7 +89,7 @@ class JsonResource(Resource):
         return ref
 
     def to_dict(self, obj, is_ref=False):
-        if isinstance(obj, type) and issubclass(obj, Ecore.EObject):
+        if isinstance(obj, type) and issubclass(obj, EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
                 return fun(obj.eClass, self.options, self.use_uuid, self)
@@ -98,7 +98,7 @@ class JsonResource(Resource):
             #     mapper = next((self.mappers[k] for k in self.mappers
             #                    if issubclass(cls, k)), self.default_mapper)
             #     fun = mapper.to_dict_from_obj
-        elif isinstance(obj, Ecore.EObject):
+        elif isinstance(obj, EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
             else:
@@ -108,7 +108,7 @@ class JsonResource(Resource):
                 fun = mapper.to_dict_from_obj
             return fun(obj, self.options, self.use_uuid, self)
 
-        elif isinstance(obj, Ecore.ECollection):
+        elif isinstance(obj, ECollection):
             fun = self._to_ref_from_obj if is_ref else self.to_dict
             result = []
             for x in obj:
@@ -127,7 +127,7 @@ class JsonResource(Resource):
     def to_obj(self, d, owning_feature=None, first=False):
         is_ref = self.ref_tag in d
         if is_ref:
-            return Ecore.EProxy(path=d[self.ref_tag], resource=self)
+            return EProxy(path=d[self.ref_tag], resource=self)
         excludes = ['eClass', self.ref_tag, 'uuid']
         if 'eClass' in d:
             uri_eclass = d['eClass']
@@ -137,7 +137,7 @@ class JsonResource(Resource):
         if not eclass:
             raise ValueError('Unknown metaclass for uri "{}"'
                              .format(uri_eclass))
-        if eclass in (Ecore.EClass.eClass, Ecore.EClass):
+        if eclass in (EClass.eClass, EClass):
             inst = eclass(d['name'])
             excludes.append('name')
         else:
@@ -160,7 +160,7 @@ class JsonResource(Resource):
             if not feature:
                 raise ValueError('Unknown feature {} for object "{}"'
                                  .format(key, eclass))
-            if isinstance(feature, Ecore.EAttribute):
+            if feature.is_attribute:
                 eattributes.append((feature, value))
             else:
                 if feature.containment:
@@ -178,7 +178,7 @@ class JsonResource(Resource):
                 element = self.to_obj(value, owning_feature=feature)
                 inst.eSet(feature, element)
             elif isinstance(value, list):
-                if isinstance(feature, Ecore.EReference):
+                if feature.is_reference:
                     elements = [self.to_obj(x, owning_feature=feature)
                                 for x in value]
                     elements = [x for x in elements if x is not None]
@@ -201,7 +201,7 @@ class DefaultObjectMapper(object):
         for attr in obj._isset:
             if attr.derived or attr.transient:
                 continue
-            is_ereference = isinstance(attr, Ecore.EReference)
+            is_ereference = attr.is_reference
             is_ref = is_ereference and not attr.containment
             if is_ereference and attr.eOpposite:
                 if attr.eOpposite is containingFeature:

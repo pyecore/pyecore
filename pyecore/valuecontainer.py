@@ -1,4 +1,4 @@
-from .ecore import EReference, EProxy, EObject
+from .ecore import EProxy, EObject
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
 from collections.abc import MutableSet, MutableSequence
@@ -49,7 +49,7 @@ class PyEcoreValue(object):
         super().__init__()
         self.owner = owner
         self.feature = efeature
-        self.is_ref = isinstance(efeature, EReference)
+        self.is_ref = efeature and efeature.is_reference
         self.is_cont = self.is_ref and efeature.containment
         self.generic_type = None
 
@@ -74,7 +74,8 @@ class PyEcoreValue(object):
                 resource.remove(value)
             prev_container = value._container
             prev_feature = value._containment_feature
-            if prev_feature != self.feature \
+            if (prev_container != self.owner
+                    or prev_feature != self.feature) \
                     and isinstance(prev_container, EObject):
                 prev_container.__dict__[prev_feature.name] \
                               .remove_or_unset(value)
