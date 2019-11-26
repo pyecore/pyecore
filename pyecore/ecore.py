@@ -252,8 +252,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     def eAllContents(self):
         contents = self.eContents
-        for x in contents:
-            yield x
+        yield from contents
         for x in contents:
             yield from x.eAllContents()
 
@@ -306,10 +305,7 @@ class EModelElement(EObject):
 
     def getEAnnotation(self, source):
         """Return the annotation with a matching source attribute."""
-        for annotation in self.eAnnotations:
-            if annotation.source == source:
-                return annotation
-        return None
+        return next((a for a in self.eAnnotations if a.source == source), None)
 
 
 class EAnnotation(EModelElement):
@@ -393,8 +389,7 @@ class EOperation(ETypedElement):
         if params:
             self.eParameters.extend(params)
         if exceptions:
-            for exception in exceptions:
-                self.eExceptions.append(exception)
+            self.eExceptions.extend(exceptions)
 
     def normalized_name(self):
         name = self.name
@@ -743,9 +738,7 @@ class EClass(EClassifier):
             raise BadValueError(got=name, expected=str)
         instance = super().__new__(cls)
         if isinstance(superclass, tuple):
-            eSuperType_append = instance.eSuperTypes.append
-            for x in superclass:
-                eSuperType_append(x)
+            instance.eSuperTypes.extend(superclass)
         elif isinstance(superclass, EClass):
             instance.eSuperTypes.append(superclass)
         if metainstance:
@@ -925,8 +918,7 @@ def EMetaclass(cls):
     if slots is not None:
         if isinstance(slots, str):
             slots = [slots]
-        for slots_var in slots:
-            orig_vars.pop(slots_var)
+        [orig_vars.pop(x) for x in slots]
     orig_vars.pop('__dict__', None)
     orig_vars.pop('__weakref__', None)
     return MetaEClass(cls.__name__, superclass, orig_vars)
@@ -959,8 +951,9 @@ class EProxy(EObject):
 
     def delete(self, recursive=True):
         if recursive and self.resolved:
-            for obj in self.eAllContents():
-                obj.delete()
+            [obj.delete() for obj in self.eAllContents()]
+            # for obj in self.eAllContents():
+            #     obj.delete()
 
         seek = set(self._inverse_rels)
         if self.resolved:
