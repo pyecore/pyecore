@@ -842,8 +842,7 @@ class EClass(EClassifier):
 
     def _eAllSuperTypes_gen(self):
         super_types = self.eSuperTypes
-        for x in super_types:
-            yield x
+        yield from self.eSuperTypes
         for x in super_types:
             yield from x._eAllSuperTypes_gen()
 
@@ -851,8 +850,7 @@ class EClass(EClassifier):
         return OrderedSet(self._eAllSuperTypes_gen())
 
     def _eAllStructuralFeatures_gen(self):
-        for x in self.eStructuralFeatures:
-            yield x
+        yield from self.eStructuralFeatures
         for parent in self.eSuperTypes:
             yield from parent._eAllStructuralFeatures_gen()
 
@@ -868,8 +866,7 @@ class EClass(EClassifier):
                     if x.is_attribute))
 
     def _eAllOperations_gen(self):
-        for x in self.eOperations:
-            yield x
+        yield from self.eOperations
         for parent in self.eSuperTypes:
             yield from parent._eAllOperations_gen()
 
