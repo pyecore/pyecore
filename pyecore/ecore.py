@@ -325,7 +325,14 @@ class ENamedElement(EModelElement):
         self.name = name
 
 
-class EPackage(ENamedElement):
+class SpecialEPackage(Metasubinstance):
+    def __instancecheck__(cls, instance):
+        if inspect.ismodule(instance) and hasattr(instance, 'nsURI'):
+            return True
+        return type.__instancecheck__(cls, instance)
+
+
+class EPackage(ENamedElement, metaclass=SpecialEPackage):
     def __init__(self, name=None, nsURI=None, nsPrefix=None, **kwargs):
         super().__init__(name, **kwargs)
         self.nsURI = nsURI
@@ -334,11 +341,11 @@ class EPackage(ENamedElement):
     def getEClassifier(self, name):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
-    @staticmethod
-    def __isinstance__(self, instance=None):
-        return (instance is None
-                and (isinstance(self, EPackage)
-                     or inspect.ismodule(self) and hasattr(self, 'nsURI')))
+    # @staticmethod
+    # def __isinstance__(self, instance=None):
+    #     return (instance is None
+    #             and (isinstance(self, EPackage)
+    #                  or inspect.ismodule(self) and hasattr(self, 'nsURI')))
 
 
 class ETypedElement(ENamedElement):
@@ -447,6 +454,14 @@ class EGenericType(EObject):
     @property
     def eRawType(self):
         return self.eClassifier or self.eTypeParameter
+
+
+# class SpecialEClassifier(Metasubinstance):
+#     def __instancecheck__(cls, instance):
+#         if cls is not EClassifier:
+#             return type.__instancecheck__(cls, instance)
+#         return isinstance(instance, Metasubinstance) or \
+#               isinstance(instance, (EClass, EDataType, EPackage))
 
 
 class EClassifier(ENamedElement):

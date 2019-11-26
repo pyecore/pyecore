@@ -158,9 +158,9 @@ def test_static_init_bad_argument():
         library.Book(unknown=None)
 
 
-def test_static_init_dynamicEPackage_bad_value():
-    with pytest.raises(BadValueError):
-        DynamicEPackage(library)
+def test_static_init_dynamicEPackage_from_static_epackage():
+    dyn = DynamicEPackage(library)
+    assert library.Writer.eClass is dyn.Writer 
 
 
 def test_static_edatatype_epackage():
@@ -169,3 +169,7 @@ def test_static_edatatype_epackage():
 
 def test_static_eclass_name():
     assert library.Book.eClass.__name__ == 'Book'
+
+
+def test_static_epackage():
+    assert isinstance(library, Ecore.EPackage)
