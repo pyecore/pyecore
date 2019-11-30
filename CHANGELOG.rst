@@ -1,13 +1,21 @@
 Changelog
 ---------
 
+0.11.3
+++++++
+
+**Bugfixes**
+
+- Fix issue with ``None`` object serialization for containment features. This happened when a ``None`` is explicitly written in a containment reference and the ``XMIOptions`` for default value serialization is activated. In that case a special ``nil`` object was supposed to be written, but it was not the case here.
+
+
 0.11.2
 ++++++
 
 **Bugfixes**
 
 - Fix change of container of an objet when the reference is single.
-Thanks `@annighoefer  <https://github.com/annighoefer >`_ for the fix!
+Thanks `@annighoefer  <https://github.com/annighoefer>`_ for the fix!
 The issue came when an object was moved from a single relationship container to another one from the same class, the contained object was contained by the two containers.
 
 - Fix Fix root element id not added to uuid_dict if its feature.ID is set.
@@ -41,7 +49,7 @@ Each new converter can be isolated by ``ResourceSet`` or globaly for every
 
 **Bugfixes**
 
-- Fix empty valued id attributes to be used as keys in reference links when saving a resource (Thanks `@annighoefer  <https://github.com/annighoefer >`_!).
+- Fix empty valued id attributes to be used as keys in reference links when saving a resource (Thanks `@annighoefer  <https://github.com/annighoefer>`_!).
 
 **Miscellaneous**
 
@@ -59,7 +67,7 @@ This patch provides a solution to the issues with time zone information in dates
 It makes the parsing and serialization of dates compatible with how EMF currently
 handles dates and UTC offsets.
 
-- Fix xmi empty references refer to root (Thanks `@annighoefer  <https://github.com/annighoefer >`_!).
+- Fix xmi empty references refer to root (Thanks `@annighoefer  <https://github.com/annighoefer>`_!).
 Deleted objects that were also referred by non-containment references elsewhere were serialized in xmi
 as `ref=""`, introducing a `BadValueError` when loading the file again as the root of the model was found as reference.
 The fix solves the loading issue by skiping empty references.
@@ -89,10 +97,10 @@ The fix solves the loading issue by skiping empty references.
 
 - Fix issue with XMI serialization for single element container. In those cases
   the path towards the object was not well serialized. It results in a false
-  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer  <https://github.com/annighoefer>`_!)
 
 - Prevent ``id`` with spaces from being used. Spaces are used for separating
-  multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer >`_!)
+  multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer>`_!)
 
 
 **Miscellaneous**

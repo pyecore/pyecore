@@ -5,6 +5,7 @@ model manipulation.
 from .ecore import EPackage, EObject, BadValueError, EClass
 from .notification import EObserver, Kind
 from functools import singledispatch, update_wrapper
+from inspect import ismodule
 
 
 class DynamicEPackage(EObserver):
@@ -25,6 +26,8 @@ class DynamicEPackage(EObserver):
     def __init__(self, package):
         if not isinstance(package, EPackage):
             raise BadValueError(got=package, expected=EPackage)
+        if ismodule(package):
+            package = package.eClass
         super().__init__(notifier=package)
 
         for eclass in package.eClassifiers:

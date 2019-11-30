@@ -172,7 +172,7 @@ class XMIResource(Resource):
             self._decode_eobject(child, eobject)
 
     def _is_none_node(self, node):
-        return '{{{}}}nil'.format(self.prefixes.get(XSI)) in node.attrib
+        return '{{{}}}nil'.format(XSI_URL) in node.attrib
 
     def _decode_node(self, parent_eobj, node):
         _, node_tag = self.extract_namespace(node.tag)
@@ -413,6 +413,10 @@ class XMIResource(Resource):
                 continue
             feat_name = feat.name
             value = obj.__getattribute__(feat_name)
+            if value is None:
+                if serialize_default:
+                    node.append(self._build_none_node(feat_name))
+                continue
             if hasattr(feat.eType, 'eType') and feat.eType.eType is dict:
                 for key, val in value.items():
                     entry = Element(feat_name)
@@ -439,20 +443,13 @@ class XMIResource(Resource):
                     continue
                 default_value = feat.get_default_value()
                 if value != default_value or serialize_default:
-                    if value is None:
-                        node.append(self._build_none_node(feat_name))
-                    else:
-                        node.attrib[feat_name] = etype.to_string(value)
+                    node.attrib[feat_name] = etype.to_string(value)
                 continue
 
             elif feat.is_reference and \
                     feat.eOpposite and feat.eOpposite.containment:
                 continue
             elif feat.is_reference and not feat.containment:
-                if not value:
-                    if serialize_default and value is None:
-                        node.append(self._build_none_node(feat_name))
-                    continue
                 if feat.many:
                     results = [self._build_path_from(x) for x in value]
                     embedded = []
@@ -480,8 +477,7 @@ class XMIResource(Resource):
                         node.attrib[feat_name] = frag
 
             if feat.is_reference and feat.containment:
-                children = obj.__getattribute__(feat_name)
-                children = children if feat.many else [children]
+                children = value if feat.many else [value]
                 for child in children:
                     node.append(self._go_across(child, serialize_default))
         return node

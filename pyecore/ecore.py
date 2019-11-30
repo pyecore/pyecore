@@ -252,8 +252,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     def eAllContents(self):
         contents = self.eContents
-        for x in contents:
-            yield x
+        yield from contents
         for x in contents:
             yield from x.eAllContents()
 
@@ -306,10 +305,7 @@ class EModelElement(EObject):
 
     def getEAnnotation(self, source):
         """Return the annotation with a matching source attribute."""
-        for annotation in self.eAnnotations:
-            if annotation.source == source:
-                return annotation
-        return None
+        return next((a for a in self.eAnnotations if a.source == source), None)
 
 
 class EAnnotation(EModelElement):
@@ -325,7 +321,14 @@ class ENamedElement(EModelElement):
         self.name = name
 
 
-class EPackage(ENamedElement):
+class SpecialEPackage(Metasubinstance):
+    def __instancecheck__(cls, instance):
+        if inspect.ismodule(instance) and hasattr(instance, 'nsURI'):
+            return True
+        return type.__instancecheck__(cls, instance)
+
+
+class EPackage(ENamedElement, metaclass=SpecialEPackage):
     def __init__(self, name=None, nsURI=None, nsPrefix=None, **kwargs):
         super().__init__(name, **kwargs)
         self.nsURI = nsURI
@@ -334,11 +337,11 @@ class EPackage(ENamedElement):
     def getEClassifier(self, name):
         return next((c for c in self.eClassifiers if c.name == name), None)
 
-    @staticmethod
-    def __isinstance__(self, instance=None):
-        return (instance is None
-                and (isinstance(self, EPackage)
-                     or inspect.ismodule(self) and hasattr(self, 'nsURI')))
+    # @staticmethod
+    # def __isinstance__(self, instance=None):
+    #     return (instance is None
+    #             and (isinstance(self, EPackage)
+    #                  or inspect.ismodule(self) and hasattr(self, 'nsURI')))
 
 
 class ETypedElement(ENamedElement):
@@ -386,8 +389,7 @@ class EOperation(ETypedElement):
         if params:
             self.eParameters.extend(params)
         if exceptions:
-            for exception in exceptions:
-                self.eExceptions.append(exception)
+            self.eExceptions.extend(exceptions)
 
     def normalized_name(self):
         name = self.name
@@ -447,6 +449,14 @@ class EGenericType(EObject):
     @property
     def eRawType(self):
         return self.eClassifier or self.eTypeParameter
+
+
+# class SpecialEClassifier(Metasubinstance):
+#     def __instancecheck__(cls, instance):
+#         if cls is not EClassifier:
+#             return type.__instancecheck__(cls, instance)
+#         return isinstance(instance, Metasubinstance) or \
+#               isinstance(instance, (EClass, EDataType, EPackage))
 
 
 class EClassifier(ENamedElement):
@@ -728,9 +738,7 @@ class EClass(EClassifier):
             raise BadValueError(got=name, expected=str)
         instance = super().__new__(cls)
         if isinstance(superclass, tuple):
-            eSuperType_append = instance.eSuperTypes.append
-            for x in superclass:
-                eSuperType_append(x)
+            instance.eSuperTypes.extend(superclass)
         elif isinstance(superclass, EClass):
             instance.eSuperTypes.append(superclass)
         if metainstance:
@@ -834,8 +842,7 @@ class EClass(EClassifier):
 
     def _eAllSuperTypes_gen(self):
         super_types = self.eSuperTypes
-        for x in super_types:
-            yield x
+        yield from self.eSuperTypes
         for x in super_types:
             yield from x._eAllSuperTypes_gen()
 
@@ -843,8 +850,7 @@ class EClass(EClassifier):
         return OrderedSet(self._eAllSuperTypes_gen())
 
     def _eAllStructuralFeatures_gen(self):
-        for x in self.eStructuralFeatures:
-            yield x
+        yield from self.eStructuralFeatures
         for parent in self.eSuperTypes:
             yield from parent._eAllStructuralFeatures_gen()
 
@@ -860,8 +866,7 @@ class EClass(EClassifier):
                     if x.is_attribute))
 
     def _eAllOperations_gen(self):
-        for x in self.eOperations:
-            yield x
+        yield from self.eOperations
         for parent in self.eSuperTypes:
             yield from parent._eAllOperations_gen()
 
@@ -910,8 +915,7 @@ def EMetaclass(cls):
     if slots is not None:
         if isinstance(slots, str):
             slots = [slots]
-        for slots_var in slots:
-            orig_vars.pop(slots_var)
+        [orig_vars.pop(x) for x in slots]
     orig_vars.pop('__dict__', None)
     orig_vars.pop('__weakref__', None)
     return MetaEClass(cls.__name__, superclass, orig_vars)
@@ -944,8 +948,9 @@ class EProxy(EObject):
 
     def delete(self, recursive=True):
         if recursive and self.resolved:
-            for obj in self.eAllContents():
-                obj.delete()
+            [obj.delete() for obj in self.eAllContents()]
+            # for obj in self.eAllContents():
+            #     obj.delete()
 
         seek = set(self._inverse_rels)
         if self.resolved:
