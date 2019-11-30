@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.11.3
+++++++
+
+**Bugfixes**
+
+- Fix issue with ``None`` object serialization for containment features. This happened when a ``None`` is explicitly written in a containment reference and the ``XMIOptions`` for default value serialization is activated. In that case a special ``nil`` object was supposed to be written, but it was not the case here.
+
+
 0.11.2
 ++++++
 

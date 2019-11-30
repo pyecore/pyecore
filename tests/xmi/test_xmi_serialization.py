@@ -140,12 +140,14 @@ def test_xmi_ecore_save_heterogeneous_metamodel(tmpdir):
 
     rset = ResourceSet()
 
-    resource = rset.get_resource('tests/xmi/xmi-tests/My.ecore')
+    ecore_path = os.path.join('tests', 'xmi', 'xmi-tests', 'My.ecore')
+    resource = rset.get_resource(ecore_path)
     root = resource.contents[0]
     rset.metamodel_registry[root.nsURI] = root
 
     # We open a first model with a special metamodel
-    resource = rset.get_resource('tests/xmi/xmi-tests/MyRoot.xmi')
+    xmi_path = os.path.join('tests', 'xmi', 'xmi-tests', 'MyRoot.xmi')
+    resource = rset.get_resource(xmi_path)
     root1 = resource.contents[0]
 
     r = Root(element=root1)
@@ -441,3 +443,42 @@ def test_serialization_proxyin_metamodel(tmpdir):
     m = res.contents[0]
     assert m
     assert m.b is not None
+
+
+def test_xmi_save_none_value_for_containement(tmpdir):
+    rset = ResourceSet()
+    ecore_path = os.path.join('tests', 'xmi', 'xmi-tests', 'root.ecore')
+    resource = rset.get_resource(ecore_path)
+    root = resource.contents[0]
+    rset.metamodel_registry[root.nsURI] = root
+    mm = DynamicEPackage(root)
+
+    a = mm.A()
+    a.b = None
+
+    f =  tmpdir.mkdir('pyecore-tmp').join('none_in_containment.xmi')
+    resource = rset.create_resource(URI(str(f)))
+    resource.append(a)
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[root.nsURI] = root
+    resource = rset.get_resource(URI(str(f)))
+
+    assert resource.contents[0] is not None
+    assert resource.contents[0].b is None
+    assert len(resource.contents[0]._isset) == 0
+
+    # We save with the explicit option fo saving none values
+    resource = rset.create_resource(URI(str(f)))
+    resource.append(a)
+    resource.save()
+    resource.save(options={XMIOptions.SERIALIZE_DEFAULT_VALUES: True})
+
+    rset = ResourceSet()
+    rset.metamodel_registry[root.nsURI] = root
+    resource = rset.get_resource(URI(str(f)))
+
+    assert resource.contents[0] is not None
+    assert resource.contents[0].b is None
+    assert len(resource.contents[0]._isset) == 1
