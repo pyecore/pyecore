@@ -104,6 +104,7 @@ User Documentation
    user/install
    user/quickstart
    user/advanced
+   user/gmf_notation
    example/fsm_executable
 
 Indices and tables
