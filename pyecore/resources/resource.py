@@ -455,9 +455,10 @@ class Resource(object):
             if external_uri.plain != original_uri:
                 rset.resources[original_uri] = resource
             return rset
-        except Exception:
-            raise TypeError('Resource "{0}" cannot be resolved'
-                            .format(uri))
+        except Exception as e:
+            raise TypeError('Resource "{0}" cannot be resolved '
+                            'problem with "{1}"'
+                            .format(uri, e))
 
     @staticmethod
     def is_fragment_uuid(fragment):
