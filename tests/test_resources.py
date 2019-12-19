@@ -398,3 +398,43 @@ def test__resource_uriconverter_simple():
     root = resource.contents[0]
     assert root.eClassifiers[0]
     assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'SuperStuff'
+
+
+def test_resource_containment_proxy():
+    @EMetaclass
+    class B(object):
+        contained = EReference()
+
+    @EMetaclass
+    class A(object):
+        tob_cont = EReference(eType=B, upper=-1, containment=True, eOpposite=B.contained)
+
+    B.contained.eType = A
+
+    rset = ResourceSet()
+    r1 = rset.create_resource('http://r1')
+    a1 = A()
+    r1.append(a1)
+
+    r2 = rset.create_resource('http://r2')
+    a2 = A()
+    b = B()
+    a2.tob_cont.append(b)
+    r2.append(a2)
+
+    assert b.contained is a2
+
+    prox = EProxy(path="http://r2#//@tob_cont.0", resource=r1)
+    a1.tob_cont.append(prox)
+    resolved = a1.tob_cont[0].resolved_object
+
+    # the contained proxy stays in place and the eContainer()
+    assert a1.tob_cont[0]._wrapped is b
+    assert a1.tob_cont[0]._wrapped.eContainer() is a2
+    assert a1.tob_cont[0].eContainer() is a2
+    assert a1.tob_cont[0]._container is a2
+    assert b.contained is a2
+    assert b.eContainer() is a2
+    assert b.eResource is r2
+    assert resolved is b
+

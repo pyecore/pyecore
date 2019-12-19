@@ -184,6 +184,9 @@ class EObject(ENotifer, metaclass=Metasubinstance):
             feature = self.eClass.findEStructuralFeature(feature)
         return feature in self._isset
 
+    def eIsProxy(self):
+        return False
+
     @property
     def eResource(self):
         if self.eContainer():
@@ -933,6 +936,15 @@ class EProxy(EObject):
         super().__setattr__('_proxy_resource', resource)
         super().__setattr__('_inverse_rels', set())
 
+    def eIsProxy(self):
+        return True
+
+    @property
+    def resolved_object(self):
+        if not self.resolved:
+            self.force_resolve()
+        return self._wrapped
+
     def force_resolve(self):
         if self.resolved:
             return
@@ -979,7 +991,7 @@ class EProxy(EObject):
 
     def __getattribute__(self, name):
         if name in ('_wrapped', '_proxy_path', '_proxy_resource', 'resolved',
-                    'force_resolve', 'delete'):
+                    'force_resolve', 'delete', 'eIsProxy', 'resolved_object'):
             return super().__getattribute__(name)
         resolved = super().__getattribute__('resolved')
         if not resolved:
@@ -997,7 +1009,8 @@ class EProxy(EObject):
         return self._wrapped.__getattribute__(name)
 
     def __setattr__(self, name, value):
-        if name in ('_wrapped', '_proxy_path', 'resolved', '_proxy_resource'):
+        if name in ('_wrapped', '_proxy_path', 'resolved', '_proxy_resource',
+                    '_container', '_containment_feature'):
             super().__setattr__(name, value)
             return
         resolved = self.resolved

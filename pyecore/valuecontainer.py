@@ -68,7 +68,7 @@ class PyEcoreValue(object):
     def _update_container(self, value, previous_value=None):
         if not self.is_cont:
             return
-        if value:
+        if value and (not value.eIsProxy() or value.eContainer() is None):
             resource = value.eResource
             if resource and value in resource.contents:
                 resource.remove(value)
@@ -78,7 +78,7 @@ class PyEcoreValue(object):
                     or prev_feature != self.feature) \
                     and isinstance(prev_container, EObject):
                 prev_container.__dict__[prev_feature.name] \
-                              .remove_or_unset(value)
+                            .remove_or_unset(value)
             value._container = self.owner
             value._containment_feature = self.feature
         if previous_value:
@@ -179,6 +179,8 @@ class ECollection(PyEcoreValue):
                 owner._inverse_rels.remove(couple)
             else:
                 owner._inverse_rels.add(couple)
+            return
+        if owner.eIsProxy() and owner.resolved and owner._container and self.feature.containment:
             return
 
         opposite_name = eOpposite.name
