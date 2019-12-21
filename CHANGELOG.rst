@@ -1,6 +1,26 @@
 Changelog
 ---------
 
+0.11.4
+++++++
+
+**Bugfixes**
+
+- Fix issue with xmi ecore supertype references. When an ecore model has two elements A and B and that B inheriths from
+A which is another element in a second ecore model, then, as their name
+are equivalent, the resolution could, sometimes have problems in
+resolving the elements, mistaking A from the first ecore with A from the
+second one. In the case the wrong ecore was referenced, it implied a
+circular reference for inheritency that caused the ecore file loading to
+fail.
+
+- Fix issue with weird URI (``plateform:/``). Weird uri that does not contains ``://`` provoques problems in the
+automatic object resolving. This fix avoid that the relative uri
+computation adds the relative path to the external uri it tries to
+resolve.
+
+
+
 0.11.3
 ++++++
 
