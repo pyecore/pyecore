@@ -8,24 +8,24 @@ Advanced Usage
 Adding Behavior: Executable Models
 ----------------------------------
 
-Using the Python dynamic nature, PyEcore allows you to add any kind of behavior
-to your metamodel that will be launch on your model instance. You can add to
-any metamodel, static **and** dynamic metamodel new behavior. The added
+Using Python's dynamic nature, PyEcore allows you to add any kind of behavior
+to your metamodel that will be launched on your model instance. You can add
+static **and** dynamic behavior to any metamodel, . The added
 behavior can be the implementation of an ``EOperation`` defined in your
-metamodel or a new operation. Also, as PyEcore allows you to dynamically
+metamodel, or a new operation. Also, as PyEcore allows you to dynamically
 add new attributes to your class/metaclasses, you have the ability to add
-information that are not directly defined in your metamodel.
+information that is not directly defined in your metamodel.
 
 For Static and Dynamic Metamodels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The way of adding a new behavior to your ``EClass`` is pretty forward. This
+The way of adding new behavior to your ``EClass`` is pretty straightforward. This
 example shows how to do it on a dynamic metamodel built on-the-fly:
 
 .. code-block:: python
 
-    from pyecore.ecore import EClass, EAttribute
-    import pyecore.behavior as behavior # We need to import the 'behavior' package
+    from pyecore.ecore import EClass, EAttribute, EString
+    import pyecore.behavior # This import adds the behavior decorator to EClass
 
     HelloWorld = EClass('HelloWorld')
     HelloWorld.eStructuralFeatures.append(EAttribute('name', EString))
@@ -35,10 +35,8 @@ example shows how to do it on a dynamic metamodel built on-the-fly:
         print('Hello World and', self.name)
 
 
-If we sum up, the ``behavior`` is imported and a new ``EClass`` defined.
-To this new ``EClass``, we added the ``greeting`` behavior. You can see that
-the behavior addition is made directly using the ``EClass`` through the
-``@HelloWorld.behavior`` annotation.
+This example shows a new EClass being created.  After it is created, an additional
+attribute (``name``) and additional behavior (``greeting``) is added to the class.
 
 Now that our behavior is implemented, we can build an example model and launch
 it:
@@ -51,12 +49,12 @@ it:
     # prints 'Hello World and guys'
 
 
-The exact same process can be applied to static metamodel. Considering that
+The exact same process can be applied to a static metamodel. Considering that
 we have a generated metamodel named ``hello``, the previous code becomes:
 
 .. code-block:: python
 
-    import pyecore.behavior as behavior
+    import pyecore.behavior # This import adds the behavior decorator to EClass
     import hello
 
     @hello.HelloWorld.behavior
@@ -67,12 +65,12 @@ we have a generated metamodel named ``hello``, the previous code becomes:
 That's all, the model creation/execution remains the same. The interesting
 thing about this is when you read your model from an XMI, your behavior is
 automatically added to your model. Also, using closure, you can conditionally
-inject a behavior or another to a model element, to sum up, you can dynamically
-change your model behavior if you need.
+inject a behavior or attribute to a model element.  This provides the ability
+to dynamically change your model behavior if needed.
 
-**Caution:** if you only need to add a single behavior on static metamodel,
+**Caution:** If you only need to add a single behavior on a static metamodel,
 a prefered solution is to use the mixin generation proposed by ``pyecoregen``.
-The mixin generation propose a strong and solid way of adding a dedicated
+The mixin generation proposes a strong and solid way of adding dedicated
 behavior to your metamodel.
 
 
@@ -80,15 +78,15 @@ For Dynamic Metamodels Read from an Ecore File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With the same flexibility, you can add behavior to your existing ``.ecore``. To
-ease all of this, you can make use of the ``DynamicEPackage`` helper. Here is
-an example of how to use it. We consider that we have an existing
-``hello.ecore`` file, with the same metamodel than before:
+simplify this, you can make use of the ``DynamicEPackage`` helper. Here is
+an example of how to use it. Consider that we have an existing
+``hello.ecore`` file, with the same metamodel as before:
 
 .. code-block:: python
 
     from pyecore.resources import ResourceSet, URI
     from pyecore.utils import DynamicEPackage
-    import pyecore.behavior as behavior
+    import pyecore.behavior # This import adds the behavior decorator to EClass
 
     # Read the metamodel first
     rset = ResourceSet()
@@ -118,13 +116,13 @@ model. Assuming we have a ``model.xmi`` file:
 Defining an Entry Point to your Executable Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the previous section, we saw that it becomes possible to add behavior to
-your metamodel and launch it by calling the one of the defined behavior.
-However, this implies a knowledge of the added behavior in order to run the
-adequat one. PyEcore provides a way of defining the main entry point of your
-model. Currently, this entry point must be added to your root metaclass (i.e:
-the ``EClass`` that will provide the root of your model). The following
-example takes the same previous ``HelloWorld`` example, and add the entry
+In the previous section, we saw that it is possible to add behavior to
+your metamodel and launch it by calling the defined behavior.
+However, this requires knowledge of the added behavior in order to run the
+appropriate one. PyEcore provides a way of defining the main entry point of your
+model. Currently, this entry point must be added to your root metaclass --
+the ``EClass`` that will provide the root of your model. The following
+example takes the same previous ``HelloWorld`` example, and adds an entry
 point:
 
 .. code-block:: python
@@ -135,7 +133,7 @@ point:
         self.greeting()
 
 
-The entry point is defined by the ``@beavior.main`` annotation on a function.
+The entry point is defined by the ``@behavior.main`` annotation on a function.
 This function must also be marked as a ``behavior``. One you've defined an
 entry point, you can use the ``run()`` method from the ``pyecore.behavior``
 module to run your executable model:
@@ -172,14 +170,14 @@ Modifying Elements Using Commands
 ---------------------------------
 
 PyEcore objects can be modified as shown previously, using basic Python
-operators, but these mofifications cannot be undone. To do so, it is required to
-use ``Command`` and a ``CommandStack``. Each command represent a basic action
+operators, but these modifications cannot be undone. To do so, it is required to
+use ``Command`` and ``CommandStack``. Each command represent a basic action
 that can be performed on an element (set/add/remove/move/delete):
 
 .. code-block:: python
 
     >>> from pyecore.commands import Set
-    >>> # we assume have a metamodel with an A EClass that owns a 'name' feature
+    >>> # we assume have a metamodel with an EClass 'A' that owns a 'name' feature
     >>> a = A()
     >>> set = Set(owner=a, feature='name', value='myname')
     >>> if set.can_execute:
@@ -187,7 +185,7 @@ that can be performed on an element (set/add/remove/move/delete):
     >>> a.name
     myname
 
-If you use a simple command withtout ``CommandStack``, the ``can_execute`` call
+If you use a simple command without ``CommandStack``, the ``can_execute`` call
 is mandatory! It performs some prior computation before the actual command
 execution. Each executed command also supports 'undo' and 'redo':
 
@@ -199,11 +197,11 @@ execution. Each executed command also supports 'undo' and 'redo':
     >>> set.redo()
     >>> assert a.name == 'myname'
 
-As for the ``execute()`` method, the ``can_undo`` call must be done before
+As with the ``execute()`` method, the ``can_undo`` call must be done before
 calling the ``undo()`` method. However, there is no ``can_redo``, the ``redo()``
-call can be mad right away after an undo.
+call can be made right away after an undo.
 
-To compose all of these commands, a ``Compound`` can be used. Basically, a
+To compose all of these commands, a ``Compound`` is used. Basically, a
 ``Compound`` acts as a list with extra methods (``execute``, ``undo``,
 ``redo``...):
 
@@ -245,20 +243,20 @@ Here is a quick review of each command:
 * ``Add`` --> adds a ``value`` object to a ``feature`` collection from an ``owner`` object (``Add(owner=a, feature='collection', value=b)``). This command can also add a ``value`` at a dedicated ``index`` (``Add(owner=a, feature='collection', value=b, index=0)``)
 * ``Remove`` --> removes a ``value`` object from a ``feature`` collection from an ``owner`` (``Remove(owner=a, feature='collection', value=b)``). This command can also remove an object located at an ``index`` (``Remove(owner=a, feature='collection', index=0)``)
 * ``Move`` --> moves a ``value`` to a ``to_index`` position inside a ``feature`` collection (``Move(owner=a, feature='collection', value=b, to_index=1)``). This command can also move an element from a ``from_index`` to a ``to_index`` in a collection (``Move(owner=a, feature='collection', from_index=0, to_index=1)``)
-* ``Delete`` --> deletes an elements and its contained elements (``Delete(owner=a)``)
+* ``Delete`` --> deletes an element and its contained elements (``Delete(owner=a)``)
 
 
 Creating Your own URI
 ---------------------
 
-PyEcore uses ``URI`` to deal with 'stream' opening/reading/writing/closing.
-An ``URI`` is used to give a file-like object to a ``Resource``. By default,
-the basic ``URI`` provides a way to read and write to files on your system (if
-the path used is a file system path, abstract paths or logical ones are not
-serialized onto the disk). Another, ``HttpURI`` opens a file-like object from
-a remote URL, but does not give the ability to write to a remote URL.
+PyEcore uses ``URI`` to deal with opening, reading, writing and closing 'streams'.
+A ``URI`` is used to give a file-like object to a ``Resource``.
+The basic ``URI`` provides a way to read and write files on your system, which
+assumes the path used is a file system path.  Abstract or logical paths are not
+serialized onto the disk.  The class ``HttpURI`` opens a file-like object from
+a remote URL, but does not provide write operations.
 
-As example, in this section, we will create a ``StringURI`` that gives the
+As an example, in this section, we will create a ``StringURI`` that gives the
 resource the ability to read/write from/to a Python String.
 
 .. code-block:: python
@@ -289,10 +287,10 @@ The constructor builds a new ``StringIO`` instance if a text is passed to this
 the ``create_instream()`` method is used to provide the ``__stream`` to read
 from. In this case, it only returns the stream created in the constructor.
 
-The ``create_outstream()`` methods is used to create the output stream. In this
+The ``create_outstream()`` method is used to create the output stream. In this
 case, a simple ``StringIO`` instance is created.
 
-In complement, the ``getvalue()`` method provides a way of getting the result
+Finally, the ``getvalue()`` method provides a way of getting the result
 of the load/save operation. The following code illustrate how the ``StringURI``
 can be used:
 
@@ -314,7 +312,7 @@ can be used:
 Dynamically Extending PyEcore Base Classes
 ------------------------------------------
 
-PyEcore is extensible and there is two ways of modifying it: either by extending
+PyEcore is extensible and there are two ways of modifying it: either by extending
 the basic concepts (as ``EClass``, ``EStructuralFeature``...), or by directly
 modifying the same concepts.
 
@@ -354,7 +352,7 @@ twist:
 Modifying PyEcore Base Classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyEcore let you dynamically add new features to the base class and thus
+PyEcore lets you dynamically add new features to the base class and thus
 introduce new feature for base classes instances:
 
 .. code-block:: python
@@ -373,12 +371,12 @@ Deep Journey Inside PyEcore
 
 This section will provide some explanation of how PyEcore works.
 
-EClasse Instances as Factories
+EClass Instances as Factories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The most noticeable difference between PyEcore and Java-EMF implementation is
-the fact that there is no factories (as you probably already seen). Each EClass
-instance is in itself a factory. This allows you to do this kind of tricks:
+the fact that there are no factories (as you probably already seen). Each EClass
+instance is itself a factory. This allows you to do this kind of tricks:
 
 .. code-block:: python
 
@@ -392,9 +390,9 @@ instance is in itself a factory. This allows you to do this kind of tricks:
     >>> assert EcoreUtils.isinstance(eobject2, A)
 
 
-In fact, each EClass instance create a new Python ``class`` named after the
-EClass name and keep a strong relationship towards it. Moreover, EClass
-implements is a ``callable`` and each time ``()`` is called on an EClass
+In fact, each EClass instance creates a new Python ``class`` named after the
+EClass name with a strong relationship to it. Moreover, EClass
+is a ``callable`` and each time ``()`` is called on an EClass
 instance, an instance of the associated Python ``class`` is created. Here is a
 small example:
 
@@ -420,11 +418,11 @@ small example:
     >>> assert myclass_instance.__class__.eClass is myclass_instance.eClass
 
 
-The Python class hierarchie (inheritance tree) associated to the EClass instance
+The Python class hierarchy (inheritance tree) associated with the EClass instance
 
 .. code-block:: python
 
-    >>> B = EClass('B')  # in complement, we create a new B metaclass
+    >>> B = EClass('B')  # create a new B metaclass
     >>> list(B.eAllSuperTypes())
     []
     >>> B.eSuperTypes.append(A)  # B inherits from A
@@ -441,17 +439,17 @@ The Python class hierarchie (inheritance tree) associated to the EClass instance
     >>> assert EcoreUtils.isinstance(b_instance, A)
 
 
-Static/Dynamic ``EOperation``, Behind the Scene
+Static/Dynamic ``EOperation``, Behind the Scenes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyEcore also support ``EOperation`` definition for static and dynamic metamodel.
-For static metamodel, the solution is simple, a simple method with the code is
+PyEcore also supports ``EOperation`` definition for static and dynamic metamodels.
+For static metamodels, the solution is simple -- a simple method with the code is
 added inside the defined class. The corresponding ``EOperation`` is created on
-the fly. Theire is still some "requirements" for this. In order to be understood
-as an ``EOperation`` candidate, the defined method must have at least one
+the fly. There are some requirements for this. In order to be understood
+as an ``EOperation``, the defined method must have at least one
 parameter and the first parameter must always be named ``self``.
 
-For dynamic metamodels, the simple fact of adding an ``EOperation`` instance in
+For dynamic metamodels, simply adding an ``EOperation`` instance in
 the ``EClass`` instance, adds an "empty" implementation:
 
 .. code-block:: python
@@ -471,7 +469,7 @@ the ``EClass`` instance, adds an "empty" implementation:
     ...
     NotImplementedError: Method myoperation(param1) is not yet implemented
 
-For each ``EParameter``, the ``required`` parameter express the fact that the
+For each ``EParameter``, the ``required`` parameter expresses the fact that the
 parameter is required or not in the produced operation:
 
 .. code-block:: python
@@ -500,7 +498,7 @@ relies on Python code generation at runtime.
 ``EStructuralFeatures`` and Aliases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyEcore is able to place aliases for structural features. These aliases give
+PyEcore is able to assign aliases to structural features. These aliases give
 a new name to access a common property. Here is an example of how the feature
 alias can be used:
 
@@ -523,10 +521,10 @@ alias can be used:
 
 When an alias is set and the model is serialized, the alias attribute is not
 serialized in the ``.xmi``. A typical case study for this feature is metamodel
-compatibility. From time to time it's important to handle some attribute as
-if they were the old ones, without serializing them. In such scenario, one can
-simply set aliases and reuse old scripts/programs that where handling the old
-version of the metamodel without updating them.
+compatibility. From time to time it is important to handle some attribute as
+if they were the old ones, without serializing them. In such a scenario, one can
+set aliases and reuse old scripts/programs that were handling the old
+version of the metamodel, without changes to the scripts or programs.
 
 
 

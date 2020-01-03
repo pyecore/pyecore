@@ -21,23 +21,23 @@ PyEcore Documentation
     :target: https://raw.githubusercontent.com/pyecore/pyecore/master/LICENSE
 
 PyEcore is a Model Driven Engineering (MDE) framework written for Python.
-Precisely, it is an implementation of `EMF/Ecore
-<https://www.eclipse.org/modeling/emf/>`_ for Python, and it tries to give an
-API which is compatible with the original EMF Java implementation.
+It is an implementation of `EMF/Ecore
+<https://www.eclipse.org/modeling/emf/>`_ for Python, and tries to give an
+API compatible with the original EMF Java implementation.
 
-PyEcore allows you to handle models and metamodels (structured data model), and
-gives the key you need for building MDE-based tools and other applications based
-on a structured data model. It supports out-of-the-box:
+PyEcore allows you to create, load, modify, save and interact with models and metamodels,
+to provide a framework to build MDE-based tools and other applications based
+on a structured data model. It supports:
 
-* Data inheritance,
-* Two-ways relationship management (opposite references),
-* XMI (de)serialization,
-* JSON (de)serialization,
-* Notification system,
-* Reflexive API...
+* Data inheritance
+* Two-way relationship management (opposite references)
+* XMI serialization and deserialization
+* JSON serialization and deserialization
+* Notification system
+* Reflexive API
 
-Let see how to create on a very simple "dynamic" metamodel (in opposite to
-static ones, see the "User Documentation"):
+This example shows creation of simple "dynamic" metamodel (in contrast to
+a static metamodel, as shown in "User Documentation"):
 
 .. code-block:: python
 
@@ -58,10 +58,10 @@ static ones, see the "User Documentation"):
     >>> Node.eStructuralFeatures.append(EReference('owned_by', Graph, eOpposite=contains_nodes))
 
 With this code, we have defined two concepts: ``Graph`` and ``Node``. Both have
-a ``name``, and it exists a containment relationship between them. This relation
+a ``name``, and there exists a containment relationship between them. This relation
 is bi-directionnal, which means that each time a ``Node`` object is added to the
 ``nodes`` relationship of a ``Graph``, the ``owned_by`` relation of the ``Node``
-is updated also (it also work in the other way).
+is also updated also.  The reverse is also true, if a Graph were added to Node.owned_by.
 
 Let's create some instances of our freshly created metamodel:
 
@@ -90,7 +90,7 @@ Let's create some instances of our freshly created metamodel:
     <pyecore.ecore.Graph at 0x7f0055554dd8>
 
 
-This example gives a quick overview of some of the features you get for free
+This example gives a quick overview of some of the features you get
 when using PyEcore.
 
 
