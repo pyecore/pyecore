@@ -3,35 +3,33 @@
 Executable Model Example: Fine State Machine
 ============================================
 
-As example, this page re-implrement the Fine State Machine (FSM) example as
+As an example, this description re-implements the Finite State Machine (FSM) example as
 described in the `ALE tutorial page <http://gemoc.org/ale-lang/tutorial.html>`_.
-ALE is a domain specific language designed for EMF Java that provides (extract
-from ALE homepage):
+ALE is a domain specific language designed for EMF Java that provides (_extracted
+from the ALE homepage_):
 
 - Metamodel extension: The very same mechanism can be used to extend existing
   Ecore metamodels and insert new features (eg. attributes) in a non-intrusive
   way
 - Executable metamodeling: Re-open existing EClasses to insert new methods
   with their implementations
-- Interpreted: No need to deploy Eclipse plugins, just run the behavior on
-  a model directly in your modeling environment
-- Extensible: If ALE doesn’t fit your needs, register Java classes as services
+- Interpreted: Just run the behavior on a model directly in your modeling environment
+- Extensible: If ALE doesn’t fit your needs, register classes as services
   and invoke them inside your implementations of EOperations.
 
-PyEcore provides the exact same ability in a full Python fashion (beside the
-Eclipse relation and the Java invokation, Python is invoked instead). You can
-find more information about how to add behavior to your metamodel in the
+PyEcore provides the exact same capability to use ALE in a Python environment.
+You can find more information about how to add behavior to your metamodel in the
 ":ref:`behavior`" section of the advanced User Documentation.
 
-The following code gives you the full code for the FSM example of the ALE
+The following gives you the full code for the FSM example of the ALE
 tutorial page, but in a pure Python style using PyEcore. The script:
 
 - opens the FSM Ecore metamodel from a remote location
-- register the FSM Ecore metamodel in the metamodel registry
-- defines additional behavior for each metaclasses from the FSM Ecore metamodel
+- registers the FSM Ecore metamodel in the metamodel registry
+- defines additional behavior for each metaclass from the FSM Ecore metamodel
 - defines an entry point
 - opens a FSM XMI model from a remote location
-- execute the loaded metamodel
+- executes the loaded metamodel
 
 .. code-block:: python
 
@@ -50,7 +48,7 @@ tutorial page, but in a pure Python style using PyEcore. The script:
     fsm = DynamicEPackage(package_root)
 
 
-    # Code for each overriden/added methods
+    # Code for each overridden/added method
     @fsm.Transition.behavior
     def is_activated(self):
         return (self.fsm.currentEvent == self.event

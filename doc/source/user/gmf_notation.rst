@@ -3,9 +3,11 @@
 GMF Notation Model for Python
 =============================
 
-This little tutorial shows "in depth" how to generate Python/PyEcore code for
-the `GMF-Notation <http://www.eclipse.org/modeling/gmp/?project=gmf-notation>`_
-metamodel using `pyecoregen <https://github.com/pyecore/pyecoregen>`_.
+GMF is the Graphical Modeling Framework, that allows modeling purely graphical
+information associated with a diagram of a model.  See `GMF-Notation <https://www.eclipse.org/modeling/gmp/?project=gmf-notation>`_.
+
+This tutorial shows how to generate Python/PyEcore code for
+the GMF metamodel using `pyecoregen <https://github.com/pyecore/pyecoregen>`_.
 
 Generating the Metamodel Code
 -----------------------------
@@ -16,20 +18,20 @@ hierarchy as well as the EMF source code. Actually, only the folder hierarchy
 and the ``.ecore`` contained in the different projects are required.
 
 Using ``pyecoregen``, the code generation is really easy, and it is performed like
-this (under Linux, but the process should be the same for Windows/MacOS):
+this (under Linux, but the process should be similar for Windows/MacOS):
 
 .. code-block:: bash
 
   $ pyecoregen -e notation.ecore -o .
 
 Here, we assume that the ``notation.ecore`` is in the current directory, and the
-generated code will be set in the same directory.
+generated code will be created in the same directory.
 
 Modifying the GMF Notation Metamodel Code
 -----------------------------------------
 
-Currently, there is a small restriction in PyEcore/pyecoregen that "forgot" to
-add a metaclass for one of the generated ``EClass``. This case is very specific
+Currently, there is a issue in PyEcore/pyecoregen that prevents generating
+a metaclass for one of the generated ``EClass`` instances. This case is very specific
 and cannot be detected at the moment, so a manual modification is required.
 
 The modification implies the addition of ``metaclass=MetaEClass`` at line 353:
@@ -63,7 +65,7 @@ behaviors are  defined dynamically in the generated Java code. Consequently, in
 order to match the serialization/deserialization behavior, it is required to
 add the same behavior to the generated Python code.
 
-First, there is some relations that are dynamically renamed in the code. Thus
+First, there are some relations that are dynamically renamed in the code. Thus
 ``persistedChildren`` becomes ``children`` and ``persistedEdges`` becomes ``edges``.
 This can be expressed in PyEcore with the following code:
 
@@ -78,9 +80,9 @@ This can be expressed in PyEcore with the following code:
 
 
 Then, if we must add a dedicated serialization/deserialization for the
-``RelativeBendpointList`` datatype. On the original code, this datatype is a list
-that contains many kind of ``BendPoint`` (this type is not expressed in the
-metamodel, consequently, we need to add it manually).
+``RelativeBendpointList`` datatype. In the original code, this datatype is a list
+that contains many elements of kind ``BendPoint``. This type is not expressed in the
+metamodel, consequently, we need to add it manually.
 
 .. code-block:: python
 
@@ -105,31 +107,25 @@ is how a list of ``BendPoint`` is serialized:
     <bendpoints ... points="[4, 0, 56, 53]$[4, -24, 56, 29]$[-62, -24, -10, 29]$[-62, -53, -10, 0]"/>
 
 
-Each ``BendPoint`` is separated by a ``$``, and each number in between ``[...]``
-represents the `source x, source y, target x, target y` coordinate. The function
-that will take this string and create a list of ``BendPoint`` is the following:
+Each ``BendPoint`` is separated by a ``$``, and the numbers in ``[...]``
+represents the `source x, source y, target x, target y` coordinates. One possible
+function that will take this string and create a list of ``BendPoint`` is then:
 
 .. code-block:: python
-
+    # import json
     def from_str(s):
-        result = []
-        for line in s.split('$'):
-            v = [int(i) for i in line[1:-1].split(',')]
-            result.append(BendPoint(v[0], v[1], v[2], v[3]))
-        return result
+        return [ Bendpoint(*json.loads(term)) for term in s.split('$') ]
 
 
-And the code required for serializing an existing list of ``BendPoint`` is the
-following:
+And a function to serializing an existing list of ``BendPoint`` is then:
 
 .. code-block:: python
 
-    def to_str(o):
-        s = '{o!r}'.format(o=o)
-        return s.replace('], [', ']$[')[1:-1]
+    def to_str(bp_list):
+    	return '$'.join([repr(bp) for bp in bp_list])
 
 
-Then, these function are registered as custom serializer/deserializer for the
+Then, these functions are registered as custom serializer/deserializer for the
 ``RelativeBendpointList`` datatype:
 
 .. code-block:: python
@@ -140,15 +136,14 @@ Then, these function are registered as custom serializer/deserializer for the
 Loading a GMF Notation Model
 ----------------------------
 
-Loading an existing GMF Notation Model is then quite easy and uses the basic
-PyEcore API:
+Loading an existing GMF Notation Model is then quite easy using the PyEcore API:
 
 .. code-block:: python
 
     from pyecore.resources import ResourceSet
     import notation
 
-    # insert here the code with the custom serializer/deserializer...etc
+    # insert code with the custom serializer/deserializer...etc
 
     rset = ResourceSet()
     rset.metamodel_registry[notation.nsURI] = notation  # register the notation metamodel
@@ -161,7 +156,7 @@ Now, ``root`` contains the root of your GMF Notation model.
 
 ## Modifying a GMF Notation Model
 
-You can now modify the model, add elements... using the default PyEcore API:
+You can now modify the model, add elements, etc. using the PyEcore API:
 
 .. code-block:: python
 
@@ -172,9 +167,9 @@ You can now modify the model, add elements... using the default PyEcore API:
 Saving the Modified Model
 -------------------------
 
-When you need to save your modified model. If your original model serializes
-it's type using the ``xsi:type`` field and you want to keep the same behavior,
-you need to add a dedicated option.
+When you need to save your modified model, if your original model serializes
+its type using the ``xsi:type`` field and you want to keep the same behavior,
+you need to add an option as shown here.
 
 .. code-block:: python
 
