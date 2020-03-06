@@ -484,6 +484,10 @@ class Resource(object):
                 except IndexError:
                     raise ValueError('Index in path is not the collection,'
                                      ' broken proxy?')
+                except ValueError:
+                    # If index is not numeric it may be given as a name.
+                    if index:
+                        obj = tmp_obj.select(lambda x: x.name == index )[0]
             elif key.startswith('%'):
                 key = key[1:-1]
                 obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
