@@ -139,7 +139,10 @@ class EValue(PyEcoreValue):
             else:
                 object.__setattr__(previous_value, opposite_name, None)
         else:
-            previous_value = value.__getattribute__(opposite_name)
+            if value.eIsProxy() and not value.resolved:
+                return
+            else:
+                previous_value = value.__getattribute__(opposite_name)
             if eOpposite.many:
                 previous_value.append(owner, update_opposite=False)
             else:

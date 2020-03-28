@@ -162,10 +162,15 @@ class XMIResource(Resource):
             return
 
         # attach the new eobject to the parent one
+        # if eobject.eIsProxy() and eobject._proxy_path == '../ccd.uml#_DZ798j6uEeCAHY6aowfd8Q':
+        #     import ipdb; ipdb.set_trace()
         if feat_container.many:
             parent_eobj.__getattribute__(feat_container.name).append(eobject)
         else:
-            parent_eobj.__setattr__(feat_container.name, eobject)
+            if eobject.eIsProxy():
+                parent_eobj.__setattr__(feat_container.name, eobject)
+            else:
+                parent_eobj.__setattr__(feat_container.name, eobject)
 
         # iterate on children
         for child in current_node:
