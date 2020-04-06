@@ -363,7 +363,7 @@ class ETypedElement(ENamedElement):
     def _compute_many(self):
         upper = self.upperBound
         lower = self.lowerBound
-        return upper < 0 or upper > 1 and upper - lower > 1
+        return upper < 0 or upper > 1
 
     def notifyChanged(self, notif):
         if notif.feature is ETypedElement.upperBound:

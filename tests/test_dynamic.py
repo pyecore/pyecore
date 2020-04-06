@@ -1081,7 +1081,9 @@ def test_structuralfeature_many_computation():
     assert attrib.many is True
 
     attrib.upperBound = attrib.lowerBound
-    assert attrib.many is False
+    assert attrib.upperBound > 1
+    assert attrib.lowerBound > 1
+    assert attrib.many is True
 
 
 def test_datatype_edate_serialization_deserialization():

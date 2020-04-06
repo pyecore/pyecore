@@ -196,7 +196,7 @@ class URI(object):
         return path.relpath(other_normalized, normalized)
 
     def apply_relative_from_me(self, relative_path):
-        if '://' in relative_path:
+        if ':/' in relative_path:
             return relative_path
         parent_path = path.dirname(self.normalize())
         return path.join(parent_path, relative_path)
@@ -455,9 +455,10 @@ class Resource(object):
             if external_uri.plain != original_uri:
                 rset.resources[original_uri] = resource
             return rset
-        except Exception:
-            raise TypeError('Resource "{0}" cannot be resolved'
-                            .format(uri))
+        except Exception as e:
+            raise TypeError('Resource "{0}" cannot be resolved '
+                            'problem with "{1}"'
+                            .format(uri, e))
 
     @staticmethod
     def is_fragment_uuid(fragment):
@@ -483,6 +484,10 @@ class Resource(object):
                 except IndexError:
                     raise ValueError('Index in path is not the collection,'
                                      ' broken proxy?')
+                except ValueError:
+                    # If index is not numeric it may be given as a name.
+                    if index:
+                        obj = tmp_obj.select(lambda x: x.name == index )[0]
             elif key.startswith('%'):
                 key = key[1:-1]
                 obj = obj.eAnnotations.select(lambda x: x.source == key)[0]

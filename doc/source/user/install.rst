@@ -16,7 +16,7 @@ To install PyEcore, simply run this simple command in your terminal of choice::
 From the Source Code
 --------------------
 
-Requests is actively developed on `Github <https://github.com/pyecore/pyecore>`_.
+PyEcore is actively developed on `Github <https://github.com/pyecore/pyecore>`_.
 
 You can either clone the public repository::
 

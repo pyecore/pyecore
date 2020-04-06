@@ -256,6 +256,21 @@ def test_collection_affectation():
     assert b not in x.toa
 
 
+def test_many_references_non_0_or_minu1():
+    @EMetaclass
+    class Wheel(object):
+        pass
+
+    @EMetaclass
+    class Car(object):
+        names = EAttribute(eType=EString, upper=4, lower=4)
+        wheels = EReference(eType=Wheel, upper=2, lower=2)
+
+    c = Car()
+    assert len(c.wheels) == 0
+    assert len(c.names) == 0
+
+
 def test_allinstances_static():
     @EMetaclass
     class A(object):
