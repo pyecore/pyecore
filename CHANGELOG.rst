@@ -19,7 +19,8 @@ automatic object resolving. This fix avoid that the relative uri
 computation adds the relative path to the external uri it tries to
 resolve.
 
-
+- Fix issue with computation of ``many`` feature. The "algo" used to compute the ``many`` feature was wrong and introduced non-logical behavior when a reference or an attribute was having its lower and upper bound set to a same value higher than ``0`` (e.g.: ``2..2``).Thanks
+`@jorensips <https://github.com/jorensips>`_ for the issue.
 
 0.11.3
 ++++++
