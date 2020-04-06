@@ -746,6 +746,14 @@ class EClass(EClassifier):
             instance.__name__ = metainstance.__name__
         else:
             def new_init(self, *args, **kwargs):
+                #first initialize default values...
+                eattrs = self.eClass.eAllAttributes()
+                for eattr in eattrs:
+                    if(eattr.defaultValueLiteral):
+                        name = eattr.name
+                        value = eattr.eType.from_string(eattr.defaultValueLiteral)
+                        setattr(self, name, value)
+                #...then copy given values
                 for name, value in kwargs.items():
                     setattr(self, name, value)
             attr_dict = {
