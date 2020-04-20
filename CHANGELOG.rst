@@ -9,7 +9,8 @@ Changelog
 - Fix issue with default value computation using ``defaultValueLiteral``. PyEcore
 was providing it's own "default value" mechanism that had an higher priority than
 the one usually used by EMF. This resulted in the default value not being computed
-correctly.
+correctly. Thanks `@annighoefer  <https://github.com/annighoefer>`_ for the PR
+and pointing out the issue.
 
 
 
