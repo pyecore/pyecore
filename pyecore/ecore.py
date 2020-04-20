@@ -362,7 +362,6 @@ class ETypedElement(ENamedElement):
 
     def _compute_many(self):
         upper = self.upperBound
-        lower = self.lowerBound
         return upper < 0 or upper > 1
 
     def notifyChanged(self, notif):
@@ -675,20 +674,24 @@ class EStructuralFeature(ETypedElement):
 
 class EAttribute(EStructuralFeature):
     def __init__(self, name=None, eType=None, default_value=None, iD=False,
-                 **kwargs):
+                 defaultValueLiteral=None, **kwargs):
         super().__init__(name, eType, **kwargs)
         self.iD = iD
         self.default_value = default_value
-        if self.default_value is None and isinstance(eType, EDataType):
+        self.defaultValueLiteral = defaultValueLiteral
+        if default_value is None and isinstance(eType, EDataType):
             self.default_value = eType.default_value
 
     def get_default_value(self):
-        if self.default_value is not None:
-            return self.default_value
         etype = self.eType
         if etype is None:
             self.eType = ENativeType
             return object()
+        default_literal = self.defaultValueLiteral
+        if default_literal is not None:
+            return self.eType.from_string(default_literal)
+        if self.default_value is not None:
+            return self.default_value
         return etype.default_value
 
     @property
