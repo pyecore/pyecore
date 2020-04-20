@@ -362,3 +362,11 @@ def test_eobject_eproxy_basicoperations():
 
     a = aProxy()
     assert isinstance(a, aProxy)
+
+
+def test_eattribute_defaultvalueliteral_dynamic():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('age', EInt,
+                                            defaultValueLiteral='42'))
+    a = A()
+    assert a.age == 42
