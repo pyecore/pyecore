@@ -2,6 +2,7 @@ from .ecore import EProxy, EObject
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
 from collections.abc import MutableSet, MutableSequence
+from typing import Iterable
 
 
 class BadValueError(TypeError):
@@ -237,7 +238,7 @@ class ECollection(PyEcoreValue):
         return [x for x in self if not f(x)]
 
     def __iadd__(self, items):
-        if ordered_set.is_iterable(items):
+        if isinstance(items, Iterable):
             self.extend(items)
         else:
             self.append(items)
@@ -277,7 +278,7 @@ class EList(ECollection, list):
         self.owner._isset.add(self.feature)
 
     def __setitem__(self, i, y):
-        is_collection = ordered_set.is_iterable(y)
+        is_collection = isinstance(y, Iterable)
         if isinstance(i, slice) and is_collection:
             sliced_elements = self.__getitem__(i)
             if self.is_ref:

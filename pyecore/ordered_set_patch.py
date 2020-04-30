@@ -1,7 +1,8 @@
 import ordered_set
+from typing import Iterable
 
 
-is_iterable = ordered_set.is_iterable
+SLICE_ALL = ordered_set.SLICE_ALL
 
 
 # monkey patching the OrderedSet implementation
@@ -72,26 +73,21 @@ def __setitem__(self, index, item):
 
 
 def __getitem__(self, index):
-    if index == ordered_set.SLICE_ALL:
+    if isinstance(index, slice) and index == SLICE_ALL:
         return self.copy()
-    elif hasattr(index, "__index__") or isinstance(index, slice):
+    elif isinstance(index, Iterable):
+        return list(self.items[i] for i in index)
+    elif isinstance(index, slice) or hasattr(index, "__index__"):
         result = self.items[index]
         if isinstance(result, list):
-            return self.subcopy(result)
+            return list(result)
         else:
             return result
-    elif is_iterable(index):
-        return self.subcopy(self.items[i] for i in index)
     else:
         raise TypeError("Don't know how to index an OrderedSet by %r" % index)
-
-
-def subcopy(self, sublist):
-    return self.__class__(sublist)
 
 
 ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 ordered_set.OrderedSet.__setitem__ = __setitem__
 ordered_set.OrderedSet.__getitem__ = __getitem__
-ordered_set.OrderedSet.subcopy = subcopy
