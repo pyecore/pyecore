@@ -211,3 +211,5 @@ def test_slicing_simple_types(simplemm):
 
     with pytest.raises(Exception):
         a.values['2']
+    with pytest.raises(TypeError):
+        a.values[a]

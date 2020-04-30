@@ -20,7 +20,7 @@ packages = ['pyecore',
 
 setup(
     name='pyecore',
-    version='0.11.5',
+    version='0.11.6',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
@@ -32,7 +32,7 @@ setup(
     packages=packages,
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
-    install_requires=['ordered-set',
+    install_requires=['ordered-set>=4.0.1',
                       lxml_version,
                       'restrictedpython>=4.0b6'],
     tests_require=['pytest'],
@@ -40,9 +40,10 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Topic :: Software Development',
