@@ -76,18 +76,25 @@ def __getitem__(self, index):
     if isinstance(index, slice) and index == SLICE_ALL:
         return self.copy()
     elif isinstance(index, Iterable):
-        return list(self.items[i] for i in index)
+        return self.subcopy(self.items[i] for i in index)
     elif isinstance(index, slice) or hasattr(index, "__index__"):
         result = self.items[index]
         if isinstance(result, list):
-            return list(result)
+            return self.subcopy(result)
         else:
             return result
     else:
         raise TypeError("Don't know how to index an OrderedSet by %r" % index)
 
 
+def subcopy(self, subitems):
+    """
+    This method is here mainly for overriding
+    """
+    return self.__class__(subitems)
+
 ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 ordered_set.OrderedSet.__setitem__ = __setitem__
 ordered_set.OrderedSet.__getitem__ = __getitem__
+ordered_set.OrderedSet.subcopy = subcopy
