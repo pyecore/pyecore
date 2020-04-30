@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.11.6
+++++++
+
+**Bugfixes**
+
+- Fix issue with new ``ordered_set`` version. This new version removed some
+parts functions about iterables. Thanks `@fgro93  <https://github.com/fgro93>`_
+for the issue.
+
+
 0.11.5
 ++++++
 
@@ -11,7 +21,6 @@ was providing it's own "default value" mechanism that had an higher priority tha
 the one usually used by EMF. This resulted in the default value not being computed
 correctly. Thanks `@annighoefer  <https://github.com/annighoefer>`_ for the PR
 and pointing out the issue.
-
 
 
 0.11.4
