@@ -93,6 +93,7 @@ def subcopy(self, subitems):
     """
     return self.__class__(subitems)
 
+
 ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 ordered_set.OrderedSet.__setitem__ = __setitem__

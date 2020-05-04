@@ -262,21 +262,24 @@ class EList(ECollection, list):
         self.owner._isset.add(self.feature)
 
     def extend(self, sublist):
-          check = self.check
-          all(check(value) for value in sublist)
-          if self.is_ref:
-              _update_container = self._update_container
-              _update_opposite = self._update_opposite
-              owner = self.owner
-              for value in sublist:
-                  _update_container(value)
-                  _update_opposite(value, owner)
+        check = self.check
+        if self.is_ref:
+            _update_container = self._update_container
+            _update_opposite = self._update_opposite
+            owner = self.owner
+            for value in sublist:
+                check(value)
+                _update_container(value)
+                _update_opposite(value, owner)
+        else:
+            for value in sublist:
+                check(value)
 
-          super().extend(sublist)
-          self.owner.notify(Notification(new=sublist,
-                                         feature=self.feature,
-                                         kind=Kind.ADD_MANY))
-          self.owner._isset.add(self.feature)
+        super().extend(sublist)
+        self.owner.notify(Notification(new=sublist,
+                                       feature=self.feature,
+                                       kind=Kind.ADD_MANY))
+        self.owner._isset.add(self.feature)
 
     update = extend
 
@@ -331,9 +334,6 @@ class EAbstractSet(ECollection):
         super().__init__(owner, efeature)
         self._orderedset_update = False
 
-    def append(self, value, update_opposite=True):
-        self.add(value, update_opposite)
-
     def add(self, value, update_opposite=True):
         self.check(value)
         if self.is_ref:
@@ -341,44 +341,33 @@ class EAbstractSet(ECollection):
             if update_opposite:
                 self._update_opposite(value, self.owner)
         super().add(value)
-        if not self._orderedset_update:
-            self.owner.notify(Notification(new=value,
-                                           feature=self.feature,
-                                           kind=Kind.ADD))
+        self.owner.notify(Notification(new=value,
+                                       feature=self.feature,
+                                       kind=Kind.ADD))
         self.owner._isset.add(self.feature)
 
-    def extend(self, sublist):
-        self.update(sublist)
+    append = add
 
-    # def update(self, others):
-    #     if self.is_ref:
-    #         for value in others:
-    #             self.check(value)
-    #             self._update_container(value)
-    #             self._update_opposite(value, self.owner)
-    #     else:
-    #         for value in others:
-    #             self.check(value)
-    #     super().update(others)
-    #     self.owner.notify(Notification(new=others,
-    #                                    feature=self.feature,
-    #                                    kind=Kind.ADD_MANY))
-    #     self.owner._isset.add(self.feature)
+    def update(self, others):
+        check = self.check
+        add = super().add
+        for value in others:
+            check(value)
+            if self.is_ref:
+                self._update_container(value)
+                self._update_opposite(value, self.owner)
+            add(value)
+        self.owner._isset.add(self.feature)
+        self.owner.notify(Notification(new=others,
+                                       feature=self.feature,
+                                       kind=Kind.ADD_MANY))
+    extend = update
 
 
 class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
         ordered_set.OrderedSet.__init__(self)
-
-    def update(self, others):
-        self._orderedset_update = True
-        for value in others:
-            super().add(value)
-        self.owner.notify(Notification(new=others,
-                                       feature=self.feature,
-                                       kind=Kind.ADD_MANY))
-        self._orderedset_update = False
 
     def copy(self):
         return ordered_set.OrderedSet(self)
