@@ -3,6 +3,7 @@ from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
 from collections.abc import MutableSet, MutableSequence
 from typing import Iterable
+from functools import lru_cache
 
 
 class BadValueError(TypeError):
@@ -26,12 +27,12 @@ class EcoreUtils(object):
     def isinstance(obj, _type):
         if obj is None:
             return True
-        elif type(obj) is _type:
+        elif obj.__class__ is _type:
             return True
-        elif type(_type) is EDataType and type(obj) is _type.eType:
+        elif _type.__class__ is EDataType and obj.__class__ is _type.eType:
             return True
         elif isinstance(obj, EProxy) and not obj.resolved:
-            return True
+            return not obj.resolved
         elif isinstance(obj, _type):
             return True
         try:
