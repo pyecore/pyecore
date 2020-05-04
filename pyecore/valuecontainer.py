@@ -1,4 +1,4 @@
-from .ecore import EProxy, EObject
+from .ecore import EProxy, EObject, EDataType
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
 from collections.abc import MutableSet, MutableSequence
@@ -25,6 +25,10 @@ class EcoreUtils(object):
     @staticmethod
     def isinstance(obj, _type):
         if obj is None:
+            return True
+        elif type(obj) is _type:
+            return True
+        elif type(_type) is EDataType and type(obj) is _type.eType:
             return True
         elif isinstance(obj, EProxy) and not obj.resolved:
             return True
