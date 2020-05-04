@@ -262,20 +262,23 @@ class EList(ECollection, list):
         self.owner._isset.add(self.feature)
 
     def extend(self, sublist):
-        if self.is_ref:
-            for value in sublist:
-                self.check(value)
-                self._update_container(value)
-                self._update_opposite(value, self.owner)
-        else:
-            for value in sublist:
-                self.check(value)
+          check = self.check
+          all(check(value) for value in sublist)
+          if self.is_ref:
+              _update_container = self._update_container
+              _update_opposite = self._update_opposite
+              owner = self.owner
+              for value in sublist:
+                  _update_container(value)
+                  _update_opposite(value, owner)
 
-        super().extend(sublist)
-        self.owner.notify(Notification(new=sublist,
-                                       feature=self.feature,
-                                       kind=Kind.ADD_MANY))
-        self.owner._isset.add(self.feature)
+          super().extend(sublist)
+          self.owner.notify(Notification(new=sublist,
+                                         feature=self.feature,
+                                         kind=Kind.ADD_MANY))
+          self.owner._isset.add(self.feature)
+
+    update = extend
 
     def __setitem__(self, i, y):
         is_collection = isinstance(y, Iterable)
