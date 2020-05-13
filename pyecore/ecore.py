@@ -756,9 +756,16 @@ class EClass(EClassifier):
                 '_staticEClass': instance._staticEClass,
                 '__init__': new_init
             }
-            instance.python_class = type(name,
-                                         instance.__compute_supertypes(),
-                                         attr_dict)
+            super_types = instance.__compute_supertypes()
+            try:
+                instance.python_class = type(name, super_types, attr_dict)
+            except Exception:
+                sort_fun = lambda x: len(x.eClass.eAllSuperTypes())
+                super_types = sorted(super_types, key=sort_fun, reverse=True)
+                instance.python_class = type(name,
+                                             tuple(super_types),
+                                             attr_dict)
+
         instance.__name__ = name
         return instance
 

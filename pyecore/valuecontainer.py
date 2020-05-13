@@ -3,7 +3,6 @@ from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
 from collections.abc import MutableSet, MutableSequence
 from typing import Iterable
-from functools import lru_cache
 
 
 class BadValueError(TypeError):

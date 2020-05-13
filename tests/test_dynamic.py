@@ -1100,3 +1100,14 @@ def test_eclasssuperchange():
     B = EClass('B', superclass=(EObject.eClass, A.eClass))
 
     assert issubclass(B, EObject)
+
+
+def test_create_dynamic_inheritances_inconsistent():
+    A = EClass('A')
+    B = EClass('B', superclass=(A,))
+    C = EClass('C', superclass=(A, B))
+
+    assert A in C.eSuperTypes
+    assert B in C.eSuperTypes
+    assert A.python_class in C.python_class.__bases__
+    assert B.python_class in C.python_class.__bases__
