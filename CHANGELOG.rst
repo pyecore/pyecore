@@ -1,14 +1,23 @@
 Changelog
 ---------
 
+0.11.7
+++++++
+
+**Bugfixes**
+
+- Fix issue with MRO calculation. This happend when the Ecore inheritence tree is not compatible with Python C3 linearization algorithm. Thanks `@mn3mos https://github.com/mn3mos`_ for the issue.
+
+- Fix non-serializable ``EDataType`` ``instanceClassName``. The property was not serialized by the XMI resource. Thanks `@4ekin https://github.com/4ekin`_ for the pull requests.
+
+
 0.11.6
 ++++++
 
 **Bugfixes**
 
 - Fix issue with new ``ordered_set`` version. This new version removed some
-parts functions about iterables. Thanks `@fgro93  <https://github.com/fgro93>`_
-for the issue.
+parts functions about iterables. Thanks `@fgro93  <https://github.com/fgro93>`_ for the issue.
 
 
 0.11.5
