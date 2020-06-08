@@ -483,7 +483,7 @@ class EDataType(EClassifier):
         if instanceClassName:
             self.instanceClassName = instanceClassName
         else:
-            self._instanceClassName = None
+            self.instanceClassName_ = None
         if from_string:
             self.from_string = from_string
         if to_string:
@@ -511,11 +511,11 @@ class EDataType(EClassifier):
 
     @property
     def instanceClassName(self):
-        return self._instanceClassName
+        return self.instanceClassName_
 
     @instanceClassName.setter
     def instanceClassName(self, name):
-        self._instanceClassName = name
+        self.instanceClassName_ = name
         default_type = (object, True, None)
         type_, type_as_factory, default = self.transmap.get(name, default_type)
         self.eType = type_
@@ -756,9 +756,18 @@ class EClass(EClassifier):
                 '_staticEClass': instance._staticEClass,
                 '__init__': new_init
             }
-            instance.python_class = type(name,
-                                         instance.__compute_supertypes(),
-                                         attr_dict)
+            super_types = instance.__compute_supertypes()
+            try:
+                instance.python_class = type(name, super_types, attr_dict)
+            except Exception:
+                super_types = sorted(super_types,
+                                     key=lambda x: len(x.eClass
+                                                        .eAllSuperTypes()),
+                                     reverse=True)
+                instance.python_class = type(name,
+                                             tuple(super_types),
+                                             attr_dict)
+
         instance.__name__ = name
         return instance
 

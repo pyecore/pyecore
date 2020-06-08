@@ -2,6 +2,7 @@ import pytest
 import os
 from lxml import etree
 import pyecore.ecore as Ecore
+import pyecore.type as xmltypes
 from pyecore.resources import *
 from pyecore.resources.xmi import XMIResource, XMIOptions, XMI_URL
 from pyecore.utils import DynamicEPackage
@@ -482,3 +483,27 @@ def test_xmi_save_none_value_for_containement(tmpdir):
     assert resource.contents[0] is not None
     assert resource.contents[0].b is None
     assert len(resource.contents[0]._isset) == 1
+
+
+def test_xmi_instanceclass_(tmpdir):
+    testDT = Ecore.EDataType('TestDT', instanceClassName='int')
+    Ecore.eClass.eClassifiers.append(Ecore.EDataType.eClass)  # Fix unknown why
+
+    my_ecore_schema = Ecore.EPackage('my_ecore', nsURI='http://myecore/1.0', nsPrefix='myecore')
+    my_ecore_schema.eClassifiers.append(testDT)
+
+    rset = ResourceSet()
+    rset.metamodel_registry[Ecore.nsURI] = Ecore
+    ecore_path = tmpdir.mkdir('pyecore-tmp').join('instanceClassName.xmi')
+    resource = rset.create_resource(URI(str(ecore_path)))
+    resource.append(my_ecore_schema)
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[Ecore.nsURI] = Ecore
+    resource = rset.get_resource(URI(str(ecore_path)))
+    root = resource.contents[0]
+
+    assert root.eClassifiers is not None
+    assert root.eClassifiers[0].instanceClassName == 'int'
+    assert root.eClassifiers[0].eType is int
