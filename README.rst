@@ -235,7 +235,7 @@ Thanks for making PyEcore better!
 * Rodriguez Facundo (`@rodriguez-facundo <https://github.com/rodriguez-facundo>`_)
 * Filippo Ledda (`@filippometacell <https://github.com/filippometacell>`_)
 * Ewoud Werkman (`@ewoudwerkman <https://github.com/ewoudwerkman>`_)
-* Eugene (`@4ekin https://github.com/4ekin`_)
+* Eugene (`@4ekin <https://github.com/4ekin>`_)
 
 
 
