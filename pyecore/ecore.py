@@ -613,29 +613,33 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
         self.derived_class = derived_class or ECollection
         self._name = name
+        self._eType = eType
 
     def notifyChanged(self, notif):
         super().notifyChanged(notif)
         if notif.feature is ENamedElement.name:
             self._name = notif.new
+        if notif.feature is ETypedElement.eType:
+            self._eType = notif.new
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
         name = self._name
         instance_dict = instance.__dict__
-        if name not in instance_dict:
-            if self.many:
-                new_value = self.derived_class.create(instance, self)
-            else:
-                new_value = EValue(instance, self)
-            instance_dict[name] = new_value
-            return new_value._get()
-        value = instance_dict[name]
-        try:
-            return value._get()
-        except AttributeError:
-            return value
+        if name in instance_dict:
+            value = instance_dict[name]
+            try:
+                return value._get()
+            except AttributeError:
+                return value
+        if self.many:
+            new_value = self.derived_class.create(instance, self)
+        else:
+            new_value = EValue(instance, self)
+        instance_dict[name] = new_value
+        return new_value._get()
+
 
     def __set__(self, instance, value):
         name = self._name
@@ -683,13 +687,13 @@ class EAttribute(EStructuralFeature):
             self.default_value = eType.default_value
 
     def get_default_value(self):
-        etype = self.eType
+        etype = self._eType
         if etype is None:
             self.eType = ENativeType
             return object()
         default_literal = self.defaultValueLiteral
         if default_literal is not None:
-            return self.eType.from_string(default_literal)
+            return etype.from_string(default_literal)
         if self.default_value is not None:
             return self.default_value
         return etype.default_value

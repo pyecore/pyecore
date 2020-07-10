@@ -59,16 +59,17 @@ class PyEcoreValue(object):
         self.generic_type = None
 
     def check(self, value, _isinstance=EcoreUtils.isinstance):
-        etype = self.generic_type or self.feature.eType
+        feature = self.feature
+        etype = self.generic_type or feature._eType
         if not etype:
             try:
-                etype = self.feature.eGenericType.eRawType
+                etype = feature.eGenericType.eRawType
                 self.generic_type = etype
             except Exception:
                 raise AttributeError('Feature {} has no type'
-                                     'nor generic'.format(self.feature))
+                                     'nor generic'.format(feature))
         if not _isinstance(value, etype):
-            raise BadValueError(value, etype, self.feature)
+            raise BadValueError(value, etype, feature)
 
     def _update_container(self, value, previous_value=None):
         if not self.is_cont:
@@ -95,6 +96,7 @@ class EValue(PyEcoreValue):
     def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
         self._value = efeature.get_default_value()
+        # self._value = val
 
     def remove_or_unset(self, value, update_opposite=True):
         self._set(None, update_opposite)
