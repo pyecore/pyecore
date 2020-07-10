@@ -23,16 +23,16 @@ class BadValueError(TypeError):
 
 class EcoreUtils(object):
     @staticmethod
-    def isinstance(obj, _type):
+    def isinstance(obj, _type, _isinstance=isinstance):
         if obj is None:
             return True
         elif obj.__class__ is _type:
             return True
         elif _type.__class__ is EDataType and obj.__class__ is _type.eType:
             return True
-        elif isinstance(obj, EProxy) and not obj.resolved:
+        elif _isinstance(obj, EProxy) and not obj.resolved:
             return not obj.resolved
-        elif isinstance(obj, _type):
+        elif _isinstance(obj, _type):
             return True
         try:
             return _type.__isinstance__(obj)
@@ -58,7 +58,7 @@ class PyEcoreValue(object):
         self.is_cont = self.is_ref and efeature.containment
         self.generic_type = None
 
-    def check(self, value):
+    def check(self, value, _isinstance=EcoreUtils.isinstance):
         etype = self.generic_type or self.feature.eType
         if not etype:
             try:
@@ -67,7 +67,7 @@ class PyEcoreValue(object):
             except Exception:
                 raise AttributeError('Feature {} has no type'
                                      'nor generic'.format(self.feature))
-        if not EcoreUtils.isinstance(value, etype):
+        if not _isinstance(value, etype):
             raise BadValueError(value, etype, self.feature)
 
     def _update_container(self, value, previous_value=None):
