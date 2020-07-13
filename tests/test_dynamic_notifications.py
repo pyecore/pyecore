@@ -80,21 +80,21 @@ def test_notification_attribute(lib):
     a1 = lib.A()
     notify = lambda x: assert_wrap(x.kind is Kind.SET
                                    and x.old is None
-                                   and x.new is 'test'
+                                   and x.new == 'test'
                                    and x.feature.name == 'name'
                                    and x.notifier is a1)
     o1 = EObserver(a1, notifyChanged=notify)
     a1.name = 'test'
 
     o1.notifyChanged = lambda x: assert_wrap(x.kind is Kind.SET
-                                             and x.old is 'test'
-                                             and x.new is 'test2'
+                                             and x.old == 'test'
+                                             and x.new == 'test2'
                                              and x.feature.name == 'name'
                                              and x.notifier is a1)
     a1.name = 'test2'
 
     o1.notifyChanged = lambda x: assert_wrap(x.kind is Kind.UNSET
-                                             and x.old is 'test2'
+                                             and x.old == 'test2'
                                              and x.new is None
                                              and x.feature.name == 'name'
                                              and x.notifier is a1)
