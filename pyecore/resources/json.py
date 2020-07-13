@@ -133,7 +133,7 @@ class JsonResource(Resource):
             uri_eclass = d['eClass']
             eclass = self.resolve_eclass(uri_eclass)
         else:
-            eclass = owning_feature.eType
+            eclass = owning_feature._eType
         if not eclass:
             raise ValueError('Unknown metaclass for uri "{}"'
                              .format(uri_eclass))
@@ -183,10 +183,10 @@ class JsonResource(Resource):
                                 for x in value]
                     elements = [x for x in elements if x is not None]
                 else:
-                    elements = [feature.eType.from_string(x) for x in value]
+                    elements = [feature._eType.from_string(x) for x in value]
                 inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
-                inst.eSet(feature, feature.eType.from_string(value))
+                inst.eSet(feature, feature._eType.from_string(value))
             else:
                 inst.eSet(feature, value)
 
@@ -195,7 +195,7 @@ class DefaultObjectMapper(object):
     def to_dict_from_obj(self, obj, options, use_uuid, resource):
         d = {}
         containingFeature = obj.eContainmentFeature()
-        if not containingFeature or obj.eClass is not containingFeature.eType:
+        if not containingFeature or obj.eClass is not containingFeature._eType:
             uri = resource.serialize_eclass(obj.eClass)
             d['eClass'] = uri
         for attr in obj._isset:

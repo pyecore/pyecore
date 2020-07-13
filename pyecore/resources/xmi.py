@@ -137,14 +137,14 @@ class XMIResource(Resource):
         is_many = eattribute.many
         if is_many and not from_tag:
             values = value.split()
-            from_string = eattribute.eType.from_string
+            from_string = eattribute._eType.from_string
             results = [from_string(x) for x in values]
             eobject.__getattribute__(eattribute.name).extend(results)
         elif is_many:
-            value = eattribute.eType.from_string(value)
+            value = eattribute._eType.from_string(value)
             eobject.__getattribute__(eattribute.name).append(value)
         else:
-            val = eattribute.eType.from_string(value)
+            val = eattribute._eType.from_string(value)
             eobject.__setattr__(eattribute.name, val)
 
     def _decode_eobject(self, current_node, parent_eobj):
@@ -200,7 +200,7 @@ class XMIResource(Resource):
                 raise ValueError('Type {0} is unknown in {1}, line{2}'
                                  .format(_type, epackage, node.tag))
         else:
-            etype = feature_container.eType
+            etype = feature_container._eType
             if isinstance(etype, EProxy):
                 etype.force_resolve()
 
@@ -400,7 +400,7 @@ class XMIResource(Resource):
             node = Element(tag)
         else:
             node = Element(obj.eContainmentFeature().name)
-            if obj.eContainmentFeature().eType != eclass:
+            if obj.eContainmentFeature()._eType != eclass:
                 self._add_explicit_type(node, obj)
 
         if self.use_uuid:
@@ -417,14 +417,14 @@ class XMIResource(Resource):
                 if serialize_default:
                     node.append(self._build_none_node(feat_name))
                 continue
-            if hasattr(feat.eType, 'eType') and feat.eType.eType is dict:
+            if hasattr(feat._eType, 'eType') and feat._eType.eType is dict:
                 for key, val in value.items():
                     entry = Element(feat_name)
                     entry.attrib['key'] = key
                     entry.attrib['value'] = val
                     node.append(entry)
             elif feat.is_attribute:
-                etype = feat.eType
+                etype = feat._eType
                 if feat.many and value:
                     to_str = etype.to_string
                     has_special_char = False

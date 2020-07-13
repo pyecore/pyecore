@@ -575,7 +575,7 @@ class Resource(object):
             return (obj._internal_id, False)
         id_attribute = self.get_id_attribute(obj.eClass)
         if id_attribute:
-            etype = id_attribute.eType
+            etype = id_attribute._eType
             id_att_value = obj.eGet(id_attribute)
             # the check for ' ' prevents malformed ids to used as references
             if (id_att_value is not None) and (' ' not in id_att_value):
