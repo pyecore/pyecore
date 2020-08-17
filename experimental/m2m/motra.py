@@ -4,7 +4,7 @@ from pyecore.resources import ResourceSet, URI, Resource
 import functools
 from pyecore.notification import EObserver
 import inspect
-import TransformationTrace as trace
+from . import TransformationTrace as trace
 
 
 class ResultObserver(EObserver):
@@ -75,13 +75,12 @@ def load_model(model_path):
 
 
 class Transformation(object):
-    def __init__(self, name, inputs, outputs, resource_set=None):
+    def __init__(self, name, inputs, outputs):
         self.name = name
         self.inputs_def = inputs if inputs else []
         self.outputs_def = outputs if outputs else []
         self.registed_mapping = []
         self._main = None
-        self.resource_set = resource_set if resource_set else ResourceSet()
 
     @property
     def inouts(self):
@@ -91,9 +90,10 @@ class Transformation(object):
         self._main = fun
         return fun
 
-    def run(self, clean_mappings_cache=True, **kwargs):
-        self.inputs = Parameters(self, self.inputs_def)
-        self.outputs = Parameters(self, self.outputs_def)
+    def run(self, clean_mappings_cache=True, resource_set=None, **kwargs):
+        sp = inspect.currentframe()
+        context = TransformationExecution(self, resource_set)
+        sp.f_globals["mycontext"] = context
 
         params = {}
         for in_model in self.inputs_def:
@@ -103,31 +103,31 @@ class Transformation(object):
                     if param.eResource:
                         resource = param.eResource
                     else:
-                        rset = self.resource_set
+                        rset = context.resource_set
                         resource = rset.create_resource(URI(in_model))
                         resource.append(param)
                 elif isinstance(param, Resource):
                     resource = param
                 else:
                     resource = load_model(param)
-                setattr(self.inputs, in_model, resource)
+                setattr(context.inputs, in_model, resource)
                 params[in_model] = resource
                 if in_model in self.inouts:
-                    setattr(self.outputs, in_model, resource)
+                    setattr(context.outputs, in_model, resource)
                     params[in_model] = resource
             except KeyError as e:
                 raise type(e)(str(e) + ' is a missing input model'
                               .format(in_model)) from None
         for out_model in list(set(self.outputs_def) - set(self.inouts)):
-            resource = self.resource_set.create_resource(URI(out_model))
-            setattr(self.outputs, out_model, resource)
+            resource = context.resource_set.create_resource(URI(out_model))
+            setattr(context.outputs, out_model, resource)
             params[out_model] = resource
-        self.primary_output = self.outputs[0]
+        context.primary_output = context.outputs[0]
         self._main(**params)
         if clean_mappings_cache:
             for mapping in self.registed_mapping:
                 mapping.cache.cache_clear()
-        return self
+        return context
 
     def mapping(self, f=None, output_model=None, when=None):
         if not f:
@@ -159,8 +159,25 @@ class Transformation(object):
                 result = f.result_eclass()
             inputs = [a for a in args if isinstance(a, Ecore.EObject)]
             print('CREATE', result, 'FROM', inputs, 'BY', f.__name__)
+
             # Create object for the trace
-            rule = self.trace[f.__name__]
+            sp = inspect.currentframe()
+            context = sp.f_globals["mycontext"]
+            # try:
+            #     rule = context.trace[f.__name__]
+            # except Exception:
+            #     rule = trace.Rule(transformation=context.trace, name=f.__name__)
+            # context.trace.rules.append(rule)
+            # record = trace.Record()
+            # for element in args:
+            #     if isinstance(element, Ecore.EObject):
+            #         record.inputs.append(trace.Attribute(old_value=element))
+            #     else:
+            #         record.inputs.append(trace.ObjectReference(element))
+            # record.outputs.append(trace.ObjectReference(old_value=result))
+            # rule.records.append(record)
+
+            # Inject new parameter
             g = f.__globals__
             marker = object()
             oldvalue = g.get(result_var_name, marker)
@@ -183,8 +200,8 @@ class Transformation(object):
                     g[result_var_name] = oldvalue
                 result.listeners.remove(observer)
                 if f.output_def and \
-                        result not in self.outputs[f.output_def].contents:
-                    self.outputs[f.output_def].append(result)
+                        result not in context.outputs[f.output_def].contents:
+                    context.outputs[f.output_def].append(result)
             return result
         if when:
             @functools.wraps(inner)
@@ -212,7 +229,10 @@ class Transformation(object):
 
 
 class TransformationExecution(object):
-    def __init__(self, input_def, output_def):
-        self.trace = trace.TransformationTrace()
-        self.inputs = Parameters(self, inputs_def)
-        self.outputs = Parameters(self, outputs_def)
+    def __init__(self, transfo, resource_set=None):
+        # self.trace = trace.TransformationTrace()
+        self.trace = None  # not yet supported
+        self.inputs = Parameters(transfo, transfo.inputs_def)
+        self.outputs = Parameters(transfo, transfo.outputs_def)
+        self.transformation = transfo
+        self.resource_set = resource_set if resource_set else ResourceSet()
