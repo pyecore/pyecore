@@ -640,7 +640,6 @@ class EStructuralFeature(ETypedElement):
         instance_dict[name] = new_value
         return new_value._get()
 
-
     def __set__(self, instance, value):
         name = self._name
         instance_dict = instance.__dict__
@@ -801,8 +800,15 @@ class EClass(EClassifier):
         if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
-            new_supers = self.__compute_supertypes()
-            self.python_class.__bases__ = new_supers
+            try:
+                new_supers = self.__compute_supertypes()
+                self.python_class.__bases__ = new_supers
+            except TypeError:
+                new_supers = sorted(new_supers,
+                                    key=lambda x: len(x.eClass
+                                                       .eAllSuperTypes()),
+                                    reverse=True)
+                self.python_class.__bases__ = tuple(new_supers)
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)

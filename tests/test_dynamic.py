@@ -1111,3 +1111,16 @@ def test_create_dynamic_inheritances_inconsistent():
     assert B in C.eSuperTypes
     assert A.python_class in C.python_class.__bases__
     assert B.python_class in C.python_class.__bases__
+
+
+def test_create_dynamic_inheritances_inconsistent2():
+    A = EClass('A')
+    B = EClass('B', superclass=(A,))
+    C = EClass('C')
+    C.eSuperTypes.append(A)
+    C.eSuperTypes.append(B)
+
+    assert A in C.eSuperTypes
+    assert B in C.eSuperTypes
+    assert A.python_class in C.python_class.__bases__
+    assert B.python_class in C.python_class.__bases__
