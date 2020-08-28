@@ -1103,6 +1103,7 @@ EByteArray = EDataType('EByteArray', bytearray)
 EChar = EDataType('EChar', str)
 ECharacterObject = EDataType('ECharacterObject', str)
 EShort = EDataType('EShort', int, from_string=int)
+EShortObject = EDataType('EShortObject', int, from_string=int)
 EJavaClass = EDataType('EJavaClass', type)
 
 
@@ -1263,6 +1264,7 @@ Core.register_classifier(EByteArray)
 Core.register_classifier(EChar)
 Core.register_classifier(ECharacterObject)
 Core.register_classifier(EShort)
+Core.register_classifier(EShortObject)
 Core.register_classifier(EJavaClass)
 
 
@@ -1278,4 +1280,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass', 'EMetaclass', 'EDerivedCollection']
+           'EShort', 'EShortObject', 'EJavaClass', 'EMetaclass',
+           'EDerivedCollection']
