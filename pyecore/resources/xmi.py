@@ -81,8 +81,6 @@ class XMIResource(Resource):
         if type_ is None:
             xmi_type_url = '{{{0}}}type'.format(self.prefixes.get(XMI))
             type_ = node.get(xmi_type_url)
-            if type_ is not None:
-                self.xsitype = xmi_type_url
         return type_
 
     def _get_metaclass(self, nsURI, eclass_name):
