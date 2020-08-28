@@ -1270,6 +1270,7 @@ register_classifier(EByteArray)
 register_classifier(EChar)
 register_classifier(ECharacterObject)
 register_classifier(EShort)
+register_classifier(EShortObject)
 register_classifier(EJavaClass)
 
 
@@ -1285,4 +1286,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass', 'EMetaclass', 'EDerivedCollection']
+           'EShort', 'EShortObject', 'EJavaClass', 'EMetaclass',
+           'EDerivedCollection']
