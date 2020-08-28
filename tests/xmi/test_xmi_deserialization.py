@@ -441,3 +441,14 @@ def test_load_xmi_iD_multiple():
     assert len(root.a) == 1
     assert len(root.b) == 0
     assert root.a[0].tob.nameID == 'uniqueNameForB'
+
+
+def test_load_xmi_mixed_xmixsi():
+    a_ecore = path.join('tests', 'xmi', 'xmi-tests', 'test_mix_xsixmi.ecore')
+    rset = ResourceSet()
+    mm = rset.get_resource(a_ecore).contents[0]
+
+    assert len(mm.eClassifiers) == 3
+    assert mm.eClassifiers[0].name == 'A'
+    assert mm.eClassifiers[1].name == 'B'
+    assert mm.eClassifiers[2].name == 'C'
