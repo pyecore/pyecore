@@ -800,8 +800,8 @@ class EClass(EClassifier):
         if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
+            new_supers = self.__compute_supertypes()
             try:
-                new_supers = self.__compute_supertypes()
                 self.python_class.__bases__ = new_supers
             except TypeError:
                 new_supers = sorted(new_supers,
