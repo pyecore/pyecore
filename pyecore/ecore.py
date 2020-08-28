@@ -1103,6 +1103,7 @@ EByteArray = EDataType('EByteArray', bytearray)
 EChar = EDataType('EChar', str)
 ECharacterObject = EDataType('ECharacterObject', str)
 EShort = EDataType('EShort', int, from_string=int)
+EShortObject = EDataType('EShortObject', int, from_string=int)
 EJavaClass = EDataType('EJavaClass', type)
 
 
