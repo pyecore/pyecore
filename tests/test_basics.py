@@ -152,7 +152,7 @@ def test_modelelement_annotation():
     annotation1 = EAnnotation('SOURCE1')
     annotation2 = EAnnotation('SOURCE2')
 
-    m = EModelElement()
+    m = EAttribute()
     m.eAnnotations.extend((annotation1, annotation2))
 
     assert not m.getEAnnotation(None)
