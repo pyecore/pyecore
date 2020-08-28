@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="test" nsURI="http://test/1.0" nsPrefix="test">
+  <eClassifiers xsi:type="ecore:EClass" name="A">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="tob" upperBound="-1"
+        eType="#//B"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="toc" upperBound="1"
+        eType="#//C" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EClass" name="B"/>
+  <eClassifiers xsi:type="ecore:EClass" name="C"/>
+</ecore:EPackage>
