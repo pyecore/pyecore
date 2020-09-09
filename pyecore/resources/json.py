@@ -175,7 +175,10 @@ class JsonResource(Resource):
     def process_inst(self, inst, features, owning_feature=None):
         for feature, value in features:
             if isinstance(value, dict):
-                element = self.to_obj(value, owning_feature=feature)
+                if feature.eType.eClass.name == 'EEnum':
+                    element = feature.eType.from_string(value['name'])
+                else:
+                    element = self.to_obj(value, owning_feature=feature)
                 inst.eSet(feature, element)
             elif isinstance(value, list):
                 if feature.is_reference:
