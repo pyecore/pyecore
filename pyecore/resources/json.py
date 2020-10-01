@@ -5,7 +5,7 @@ from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource
-from ..ecore import EObject, EProxy, ECollection, EClass
+from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral
 
 
 @unique
@@ -98,6 +98,8 @@ class JsonResource(Resource):
             #     mapper = next((self.mappers[k] for k in self.mappers
             #                    if issubclass(cls, k)), self.default_mapper)
             #     fun = mapper.to_dict_from_obj
+        elif isinstance(obj, EEnumLiteral):
+            return obj.name
         elif isinstance(obj, EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
