@@ -370,3 +370,18 @@ def test_eattribute_defaultvalueliteral_dynamic():
                                             defaultValueLiteral='42'))
     a = A()
     assert a.age == 42
+
+
+def test_eattribute_nonunique_clear():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('nums', EInt, upper=-1, unique=False))
+
+    a = A()
+    a.nums.append(1)
+    a.nums.append(1)
+    a.nums.append(3)
+    a.nums.append(3)
+
+    assert len(a.nums) == 4
+    a.nums.clear()
+    assert len(a.nums) == 0

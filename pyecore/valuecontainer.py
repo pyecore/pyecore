@@ -234,8 +234,8 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        for x in set(self):
-            self.remove(x)
+        while self:
+            self.pop()
 
     def select(self, f):
         return [x for x in self if f(x)]

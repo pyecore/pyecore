@@ -20,6 +20,8 @@ Changelog
 
 - Fix issue with ``EEnumLiteral`` serialization for JSON resource. Thanks `@jinhu https://github.com/jinhu`_ and Marc Hamilton for the issues and the pull request.
 
+- Fix issue with clearing non unique collections. A set operation was performed on the collection to safely iterate on it, implying that some elements were forget during a full clear. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the issue.
+
 **Miscellaneous**
 
 - Improve slightly runtime typechecking performances.
