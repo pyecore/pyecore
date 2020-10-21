@@ -6,7 +6,9 @@ Changelog
 
 **Features**
 
--
+- Add listeners on resources. A listener can be added on a resource to be notified of all the modifications performed on objects of its hierarchy.
+
+- Add new ``container`` attribute on ``EReference`` that indicates if a reference is a container (it owns an opposite which is a containment). 
 
 **Bugfixes**
 
