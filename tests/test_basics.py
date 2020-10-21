@@ -385,3 +385,16 @@ def test_eattribute_nonunique_clear():
     assert len(a.nums) == 4
     a.nums.clear()
     assert len(a.nums) == 0
+
+
+def test_container_ereference():
+    A = EClass('A')
+    B = EClass('B')
+
+    ref1 = EReference("test", eType=B, containment=True)
+    ref2 = EReference("oppo", eType=A, eOpposite=ref1)
+    
+    assert ref1.containment is True
+    assert ref1.container is False
+    assert ref2.container is True
+    assert ref2.containment is False

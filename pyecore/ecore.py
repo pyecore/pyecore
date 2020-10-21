@@ -730,6 +730,10 @@ class EReference(EStructuralFeature):
             value._eopposite = self
 
     @property
+    def container(self):
+        return self._eopposite and self._eopposite.containment
+
+    @property
     def is_reference(self):
         return True
 
