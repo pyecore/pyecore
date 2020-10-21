@@ -12,7 +12,11 @@ class ENotifer(object):
 
     def notify(self, notification):
         notification.notifier = notification.notifier or self
-        for listener in self._eternal_listener + self.listeners:
+        resource = self.eResource
+        listeners = list(resource and resource.listeners or [])
+        listeners.extend(self._eternal_listener)
+        listeners.extend(self.listeners)
+        for listener in listeners:
             listener.notifyChanged(notification)
 
 

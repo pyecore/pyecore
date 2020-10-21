@@ -343,6 +343,7 @@ class Resource(object):
         self.resource_set = None
         self.decoders = list(Resource.decoders)
         self.contents = []
+        self.listeners = []
         self._resolve_mem = {}
         self._feature_cache = {}
 
