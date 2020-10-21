@@ -186,10 +186,10 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     @property
     def eResource(self):
-        if self.eContainer():
-            with ignored(AttributeError):
-                return self.eContainer().eResource
-        return self._eresource
+        try:
+            return self._container.eResource
+        except AttributeError:
+            return self._eresource
 
     def eGet(self, feature):
         if isinstance(feature, str):
