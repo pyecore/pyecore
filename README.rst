@@ -237,7 +237,7 @@ Thanks for making PyEcore better!
 * Ewoud Werkman (`@ewoudwerkman <https://github.com/ewoudwerkman>`_)
 * Eugene (`@4ekin <https://github.com/4ekin>`_)
 * Alexandre Acebedo (`@aacebedo <https://github.com/aacebedo>`_)
-* Jinhu (`@jinhu https://github.com/jinhu`_)
+* Jinhu (`@jinhu <https://github.com/jinhu>`_)
 
 
 
