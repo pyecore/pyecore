@@ -23,16 +23,16 @@ class BadValueError(TypeError):
 
 class EcoreUtils(object):
     @staticmethod
-    def isinstance(obj, _type):
+    def isinstance(obj, _type, _isinstance=isinstance):
         if obj is None:
             return True
         elif obj.__class__ is _type:
             return True
         elif _type.__class__ is EDataType and obj.__class__ is _type.eType:
             return True
-        elif isinstance(obj, EProxy) and not obj.resolved:
+        elif _isinstance(obj, EProxy) and not obj.resolved:
             return not obj.resolved
-        elif isinstance(obj, _type):
+        elif _isinstance(obj, _type):
             return True
         try:
             return _type.__isinstance__(obj)
@@ -58,17 +58,18 @@ class PyEcoreValue(object):
         self.is_cont = self.is_ref and efeature.containment
         self.generic_type = None
 
-    def check(self, value):
-        etype = self.generic_type or self.feature.eType
+    def check(self, value, _isinstance=EcoreUtils.isinstance):
+        feature = self.feature
+        etype = self.generic_type or feature._eType
         if not etype:
             try:
-                etype = self.feature.eGenericType.eRawType
+                etype = feature.eGenericType.eRawType
                 self.generic_type = etype
             except Exception:
                 raise AttributeError('Feature {} has no type'
-                                     'nor generic'.format(self.feature))
-        if not EcoreUtils.isinstance(value, etype):
-            raise BadValueError(value, etype, self.feature)
+                                     'nor generic'.format(feature))
+        if not _isinstance(value, etype):
+            raise BadValueError(value, etype, feature)
 
     def _update_container(self, value, previous_value=None):
         if not self.is_cont:
@@ -95,6 +96,7 @@ class EValue(PyEcoreValue):
     def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
         self._value = efeature.get_default_value()
+        # self._value = val
 
     def remove_or_unset(self, value, update_opposite=True):
         self._set(None, update_opposite)
@@ -232,8 +234,8 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        for x in set(self):
-            self.remove(x)
+        while self:
+            self.pop()
 
     def select(self, f):
         return [x for x in self if f(x)]

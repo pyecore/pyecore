@@ -1,6 +1,40 @@
 Changelog
 ---------
 
+0.12.0
+++++++
+
+**Features**
+
+- Add listeners on resources. A listener can be added on a resource to be notified of all the modifications performed on objects of its hierarchy.
+
+- Add new ``container`` attribute on ``EReference`` that indicates if a reference is a container (it owns an opposite which is a containment).
+
+**Bugfixes**
+
+- Fix issue with ``xmi:type`` and ``xsi:type`` for mixed XMI. In some XMI files, the field related to type can be mixed and sometimes prefixed by ``xmi`` or ``xsi``. The flip-flop between the two mode was only performed once in the previous algorithm, now it is adaptive. Thanks `@aacebedo https://github.com/aacebedo`_ for the pull request.
+
+- Fix missing ``EShortObject``. Thanks `@aacebedo https://github.com/aacebedo`_ for the pull request.
+
+- Fix MRO problem when updating inheritance. The previous algorithm was not taking into account dynamic additions of inheritance relationship. Thanks `@mn3mos https://github.com/mn3mos`_ for the issue.
+
+- Fix issue on metamodel with ``@abstract`` decorator.
+
+- Fix issue with ``EEnumLiteral`` serialization for JSON resource. Thanks `@jinhu https://github.com/jinhu`_ and Marc Hamilton for the issues and the pull request.
+
+- Fix issue with clearing non unique collections. A set operation was performed on the collection to safely iterate on it, implying that some elements were forget during a full clear. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the issue.
+
+**Miscellaneous**
+
+- Improve slightly runtime typechecking performances.
+
+- Improve collection speed.
+
+- Improve eType computation for speed.
+
+- Disabling resolve cache for resources when a resource had been properly load. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the suggestion.
+
+
 0.11.7
 ++++++
 

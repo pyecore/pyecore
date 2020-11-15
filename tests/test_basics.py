@@ -152,7 +152,7 @@ def test_modelelement_annotation():
     annotation1 = EAnnotation('SOURCE1')
     annotation2 = EAnnotation('SOURCE2')
 
-    m = EModelElement()
+    m = EAttribute()
     m.eAnnotations.extend((annotation1, annotation2))
 
     assert not m.getEAnnotation(None)
@@ -370,3 +370,31 @@ def test_eattribute_defaultvalueliteral_dynamic():
                                             defaultValueLiteral='42'))
     a = A()
     assert a.age == 42
+
+
+def test_eattribute_nonunique_clear():
+    A = EClass('A')
+    A.eStructuralFeatures.append(EAttribute('nums', EInt, upper=-1, unique=False))
+
+    a = A()
+    a.nums.append(1)
+    a.nums.append(1)
+    a.nums.append(3)
+    a.nums.append(3)
+
+    assert len(a.nums) == 4
+    a.nums.clear()
+    assert len(a.nums) == 0
+
+
+def test_container_ereference():
+    A = EClass('A')
+    B = EClass('B')
+
+    ref1 = EReference("test", eType=B, containment=True)
+    ref2 = EReference("oppo", eType=A, eOpposite=ref1)
+    
+    assert ref1.containment is True
+    assert ref1.container is False
+    assert ref2.container is True
+    assert ref2.containment is False

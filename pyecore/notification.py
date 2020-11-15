@@ -4,6 +4,7 @@ The main class to create a new listener is "EObserver" which is triggered
 each time a modification is perfomed on an observed element.
 """
 from enum import unique, Enum
+from itertools import chain
 
 
 class ENotifer(object):
@@ -12,7 +13,15 @@ class ENotifer(object):
 
     def notify(self, notification):
         notification.notifier = notification.notifier or self
-        for listener in self._eternal_listener + self.listeners:
+        resource = self.eResource
+        resource_listeners = []
+        resource_eternals = []
+        if resource:
+            resource_listeners = resource.listeners
+            resource_eternals = resource._eternal_listener
+        listeners = chain(resource_eternals, resource_listeners,
+                          self._eternal_listener, self.listeners)
+        for listener in listeners:
             listener.notifyChanged(notification)
 
 

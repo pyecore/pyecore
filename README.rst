@@ -236,6 +236,8 @@ Thanks for making PyEcore better!
 * Filippo Ledda (`@filippometacell <https://github.com/filippometacell>`_)
 * Ewoud Werkman (`@ewoudwerkman <https://github.com/ewoudwerkman>`_)
 * Eugene (`@4ekin <https://github.com/4ekin>`_)
+* Alexandre Acebedo (`@aacebedo <https://github.com/aacebedo>`_)
+* Jinhu (`@jinhu https://github.com/jinhu`_)
 
 
 

@@ -144,6 +144,20 @@ class Metasubinstance(type):
         return type.__subclasscheck__(cls, other)
 
 
+# Meta methods for static EClass
+class MetaEClass(Metasubinstance):
+    def __init__(cls, name, bases, nmspc):
+        super().__init__(name, bases, nmspc)
+        Core.register_classifier(cls, promote=True)
+        cls._staticEClass = True
+
+    def __call__(cls, *args, **kwargs):
+        if cls.eClass.abstract:
+            raise TypeError("Can't instantiate abstract EClass {0}"
+                            .format(cls.eClass.name))
+        return super().__call__(*args, **kwargs)
+
+
 class EObject(ENotifer, metaclass=Metasubinstance):
     _staticEClass = True
     _instances = WeakSet()
@@ -186,10 +200,10 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     @property
     def eResource(self):
-        if self.eContainer():
-            with ignored(AttributeError):
-                return self.eContainer().eResource
-        return self._eresource
+        try:
+            return self._container.eResource
+        except AttributeError:
+            return self._eresource
 
     def eGet(self, feature):
         if isinstance(feature, str):
@@ -613,29 +627,32 @@ class EStructuralFeature(ETypedElement):
         self.derived = derived
         self.derived_class = derived_class or ECollection
         self._name = name
+        self._eType = eType
 
     def notifyChanged(self, notif):
         super().notifyChanged(notif)
         if notif.feature is ENamedElement.name:
             self._name = notif.new
+        if notif.feature is ETypedElement.eType:
+            self._eType = notif.new
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
         name = self._name
         instance_dict = instance.__dict__
-        if name not in instance_dict:
-            if self.many:
-                new_value = self.derived_class.create(instance, self)
-            else:
-                new_value = EValue(instance, self)
-            instance_dict[name] = new_value
-            return new_value._get()
-        value = instance_dict[name]
-        try:
-            return value._get()
-        except AttributeError:
-            return value
+        if name in instance_dict:
+            value = instance_dict[name]
+            try:
+                return value._get()
+            except AttributeError:
+                return value
+        if self.many:
+            new_value = self.derived_class.create(instance, self)
+        else:
+            new_value = EValue(instance, self)
+        instance_dict[name] = new_value
+        return new_value._get()
 
     def __set__(self, instance, value):
         name = self._name
@@ -683,13 +700,13 @@ class EAttribute(EStructuralFeature):
             self.default_value = eType.default_value
 
     def get_default_value(self):
-        etype = self.eType
+        etype = self._eType
         if etype is None:
             self.eType = ENativeType
             return object()
         default_literal = self.defaultValueLiteral
         if default_literal is not None:
-            return self.eType.from_string(default_literal)
+            return etype.from_string(default_literal)
         if self.default_value is not None:
             return self.default_value
         return etype.default_value
@@ -725,6 +742,10 @@ class EReference(EStructuralFeature):
         self._eopposite = value
         if value:
             value._eopposite = self
+
+    @property
+    def container(self):
+        return self._eopposite and self._eopposite.containment
 
     @property
     def is_reference(self):
@@ -798,7 +819,14 @@ class EClass(EClassifier):
             return
         if notif.feature is EClass.eSuperTypes:
             new_supers = self.__compute_supertypes()
-            self.python_class.__bases__ = new_supers
+            try:
+                self.python_class.__bases__ = new_supers
+            except TypeError:
+                new_supers = sorted(new_supers,
+                                    key=lambda x: len(x.eClass
+                                                       .eAllSuperTypes()),
+                                    reverse=True)
+                self.python_class.__bases__ = tuple(new_supers)
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
@@ -894,20 +922,6 @@ class EClass(EClassifier):
 
     def __subclasscheck__(self, cls):
         return issubclass(cls, self.python_class)
-
-
-# Meta methods for static EClass
-class MetaEClass(Metasubinstance):
-    def __init__(cls, name, bases, nmspc):
-        super().__init__(name, bases, nmspc)
-        Core.register_classifier(cls, promote=True)
-        cls._staticEClass = True
-
-    def __call__(cls, *args, **kwargs):
-        if cls.eClass.abstract:
-            raise TypeError("Can't instantiate abstract EClass {0}"
-                            .format(cls.eClass.name))
-        return super().__call__(*args, **kwargs)
 
 
 def EMetaclass(cls):
@@ -1093,6 +1107,7 @@ EByteArray = EDataType('EByteArray', bytearray)
 EChar = EDataType('EChar', str)
 ECharacterObject = EDataType('ECharacterObject', str)
 EShort = EDataType('EShort', int, from_string=int)
+EShortObject = EDataType('EShortObject', int, from_string=int)
 EJavaClass = EDataType('EJavaClass', type)
 
 
@@ -1208,52 +1223,60 @@ EGenericType.eTypeParameter = EReference('eTypeParameter', ETypeParameter,
 EGenericType.eUpperBound = EReference('eUpperBound', EGenericType)
 EGenericType.eLowerBound = EReference('eLowerBound', EGenericType)
 
+register_classifier = Core.register_classifier
+def register_metaclass(c, metaclass=MetaEClass, *args, **kwargs):
+    register_classifier(c, *args, **kwargs)
+    c.__class__ = metaclass
+
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
-Core.register_classifier(EObject, promote=True)
-Core.register_classifier(EModelElement, promote=True)
-Core.register_classifier(ENamedElement, promote=True)
-Core.register_classifier(EAnnotation, promote=True)
-Core.register_classifier(EPackage, promote=True)
-Core.register_classifier(EGenericType, promote=True)
-Core.register_classifier(ETypeParameter, promote=True)
-Core.register_classifier(ETypedElement, promote=True)
-Core.register_classifier(EClassifier, promote=True)
-Core.register_classifier(EDataType, promote=True)
-Core.register_classifier(EEnum, promote=True)
-Core.register_classifier(EEnumLiteral, promote=True)
-Core.register_classifier(EParameter, promote=True)
-Core.register_classifier(EOperation, promote=True)
-Core.register_classifier(EStructuralFeature, promote=True)
-Core.register_classifier(EAttribute, promote=True)
-Core.register_classifier(EReference, promote=True)
-Core.register_classifier(EClass, promote=True)
-Core.register_classifier(EString)
-Core.register_classifier(EBoolean)
-Core.register_classifier(EInteger)
-Core.register_classifier(EInt)
-Core.register_classifier(EBigInteger)
-Core.register_classifier(EIntegerObject)
-Core.register_classifier(EFloat)
-Core.register_classifier(EFloatObject)
-Core.register_classifier(EDouble)
-Core.register_classifier(EDoubleObject)
-Core.register_classifier(EStringToStringMapEntry)
-Core.register_classifier(EFeatureMapEntry)
-Core.register_classifier(EDiagnosticChain)
-Core.register_classifier(ENativeType)
-Core.register_classifier(EJavaObject)
-Core.register_classifier(EDate)
-Core.register_classifier(EBigDecimal)
-Core.register_classifier(EBooleanObject)
-Core.register_classifier(ELongObject)
-Core.register_classifier(ELong)
-Core.register_classifier(EByte)
-Core.register_classifier(EByteObject)
-Core.register_classifier(EByteArray)
-Core.register_classifier(EChar)
-Core.register_classifier(ECharacterObject)
-Core.register_classifier(EShort)
-Core.register_classifier(EJavaClass)
+register_metaclass(EObject, promote=True, abstract=True,
+                   metaclass=Metasubinstance)
+register_metaclass(EModelElement, promote=True, abstract=True)
+register_metaclass(ENamedElement, promote=True, abstract=True)
+register_metaclass(EAnnotation, promote=True)
+register_metaclass(EPackage, promote=True, metaclass=SpecialEPackage)
+register_metaclass(EGenericType, promote=True)
+register_metaclass(ETypeParameter, promote=True)
+register_metaclass(ETypedElement, promote=True)
+register_metaclass(EClassifier, promote=True, abstract=True)
+register_metaclass(EDataType, promote=True)
+register_metaclass(EEnum, promote=True)
+register_metaclass(EEnumLiteral, promote=True)
+register_metaclass(EParameter, promote=True)
+register_metaclass(EOperation, promote=True)
+register_metaclass(EStructuralFeature, promote=True, abstract=True)
+register_metaclass(EAttribute, promote=True)
+register_metaclass(EReference, promote=True)
+register_metaclass(EClass, promote=True)
+register_classifier(EString)
+register_classifier(EBoolean)
+register_classifier(EInteger)
+register_classifier(EInt)
+register_classifier(EBigInteger)
+register_classifier(EIntegerObject)
+register_classifier(EFloat)
+register_classifier(EFloatObject)
+register_classifier(EDouble)
+register_classifier(EDoubleObject)
+register_classifier(EStringToStringMapEntry)
+register_classifier(EFeatureMapEntry)
+register_classifier(EDiagnosticChain)
+register_classifier(ENativeType)
+register_classifier(EJavaObject)
+register_classifier(EDate)
+register_classifier(EBigDecimal)
+register_classifier(EBooleanObject)
+register_classifier(ELongObject)
+register_classifier(ELong)
+register_classifier(EByte)
+register_classifier(EByteObject)
+register_classifier(EByteArray)
+register_classifier(EChar)
+register_classifier(ECharacterObject)
+register_classifier(EShort)
+register_classifier(EShortObject)
+register_classifier(EJavaClass)
+eContents = eClass.eContents
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
@@ -1268,4 +1291,5 @@ __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
            'EFloatObject', 'ELong', 'EProxy', 'EBag', 'EFeatureMapEntry',
            'EDate', 'EBigDecimal', 'EBooleanObject', 'ELongObject', 'EByte',
            'EByteObject', 'EByteArray', 'EChar', 'ECharacterObject',
-           'EShort', 'EJavaClass', 'EMetaclass', 'EDerivedCollection']
+           'EShort', 'EShortObject', 'EJavaClass', 'EMetaclass',
+           'EDerivedCollection']

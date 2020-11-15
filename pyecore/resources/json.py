@@ -5,7 +5,7 @@ from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource
-from ..ecore import EObject, EProxy, ECollection, EClass
+from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral
 
 
 @unique
@@ -27,6 +27,7 @@ class JsonResource(Resource):
         self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
+        self.cache_enabled = True
         json_value = self.uri.create_instream()
         d = json.loads(json_value.read().decode('utf-8'))
         if isinstance(d, list):
@@ -39,6 +40,7 @@ class JsonResource(Resource):
             self.process_inst(inst, refs)
         self._load_href.clear()
         self._feature_cache.clear()
+        self.cache_enabled = False
 
     def save(self, output=None, options=None):
         self.options = options or {}
@@ -98,6 +100,8 @@ class JsonResource(Resource):
             #     mapper = next((self.mappers[k] for k in self.mappers
             #                    if issubclass(cls, k)), self.default_mapper)
             #     fun = mapper.to_dict_from_obj
+        elif isinstance(obj, EEnumLiteral):
+            return obj.name
         elif isinstance(obj, EObject):
             if is_ref:
                 fun = self._to_ref_from_obj
@@ -133,7 +137,7 @@ class JsonResource(Resource):
             uri_eclass = d['eClass']
             eclass = self.resolve_eclass(uri_eclass)
         else:
-            eclass = owning_feature.eType
+            eclass = owning_feature._eType
         if not eclass:
             raise ValueError('Unknown metaclass for uri "{}"'
                              .format(uri_eclass))
@@ -183,10 +187,10 @@ class JsonResource(Resource):
                                 for x in value]
                     elements = [x for x in elements if x is not None]
                 else:
-                    elements = [feature.eType.from_string(x) for x in value]
+                    elements = [feature._eType.from_string(x) for x in value]
                 inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
-                inst.eSet(feature, feature.eType.from_string(value))
+                inst.eSet(feature, feature._eType.from_string(value))
             else:
                 inst.eSet(feature, value)
 
@@ -195,7 +199,7 @@ class DefaultObjectMapper(object):
     def to_dict_from_obj(self, obj, options, use_uuid, resource):
         d = {}
         containingFeature = obj.eContainmentFeature()
-        if not containingFeature or obj.eClass is not containingFeature.eType:
+        if not containingFeature or obj.eClass is not containingFeature._eType:
             uri = resource.serialize_eclass(obj.eClass)
             d['eClass'] = uri
         for attr in obj._isset:

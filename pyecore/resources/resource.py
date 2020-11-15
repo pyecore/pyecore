@@ -343,8 +343,11 @@ class Resource(object):
         self.resource_set = None
         self.decoders = list(Resource.decoders)
         self.contents = []
+        self.listeners = []
+        self._eternal_listener = []
         self._resolve_mem = {}
         self._feature_cache = {}
+        self.cache_enabled = False
 
     @property
     def uri(self):
@@ -377,9 +380,9 @@ class Resource(object):
         root_number, fragment = self.extract_rootnum_and_frag(fragment)
         root = self.contents[root_number]
         result = self._navigate_from(fragment, root)
-        if result:
+        if self.cache_enabled and result:
             self._resolve_mem[fragment] = result
-            return result
+        return result
 
     def resolve_object(self, path):
         decoder = next((x for x in self.decoders
@@ -575,7 +578,7 @@ class Resource(object):
             return (obj._internal_id, False)
         id_attribute = self.get_id_attribute(obj.eClass)
         if id_attribute:
-            etype = id_attribute.eType
+            etype = id_attribute._eType
             id_att_value = obj.eGet(id_attribute)
             # the check for ' ' prevents malformed ids to used as references
             if (id_att_value is not None) and (' ' not in id_att_value):

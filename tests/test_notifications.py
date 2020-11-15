@@ -77,3 +77,20 @@ def test_notification_only_one_with_opposites():
 
     a.tob = b
     assert o1.calls == 1
+
+
+def test_notification_add_resource():
+    root = EPackage(name='test')
+
+    from pyecore.resources import Resource
+    resource = Resource()
+
+    o1 = ObserverCounter(resource)
+    resource.append(root)
+    assert o1.calls == 0  # does not trigger any notification
+
+    A = EClass('A')
+    root.eClassifiers.append(A)
+    assert o1.calls == 2
+    assert o1.kind == Kind.ADD
+    assert o1.feature is EPackage.eClassifiers
