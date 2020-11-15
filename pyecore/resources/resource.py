@@ -347,6 +347,7 @@ class Resource(object):
         self._eternal_listener = []
         self._resolve_mem = {}
         self._feature_cache = {}
+        self.cache_enabled = False
 
     @property
     def uri(self):
@@ -379,9 +380,9 @@ class Resource(object):
         root_number, fragment = self.extract_rootnum_and_frag(fragment)
         root = self.contents[root_number]
         result = self._navigate_from(fragment, root)
-        if result:
+        if self.cache_enabled and result:
             self._resolve_mem[fragment] = result
-            return result
+        return result
 
     def resolve_object(self, path):
         decoder = next((x for x in self.decoders

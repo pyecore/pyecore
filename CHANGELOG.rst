@@ -8,7 +8,7 @@ Changelog
 
 - Add listeners on resources. A listener can be added on a resource to be notified of all the modifications performed on objects of its hierarchy.
 
-- Add new ``container`` attribute on ``EReference`` that indicates if a reference is a container (it owns an opposite which is a containment). 
+- Add new ``container`` attribute on ``EReference`` that indicates if a reference is a container (it owns an opposite which is a containment).
 
 **Bugfixes**
 
@@ -31,6 +31,8 @@ Changelog
 - Improve collection speed.
 
 - Improve eType computation for speed.
+
+- Disabling resolve cache for resources when a resource had been properly load. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the suggestion.
 
 
 0.11.7

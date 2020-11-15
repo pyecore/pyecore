@@ -27,6 +27,7 @@ class JsonResource(Resource):
         self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
+        self.cache_enabled = True
         json_value = self.uri.create_instream()
         d = json.loads(json_value.read().decode('utf-8'))
         if isinstance(d, list):
@@ -39,6 +40,7 @@ class JsonResource(Resource):
             self.process_inst(inst, refs)
         self._load_href.clear()
         self._feature_cache.clear()
+        self.cache_enabled = False
 
     def save(self, output=None, options=None):
         self.options = options or {}

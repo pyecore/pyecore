@@ -28,6 +28,7 @@ class XMIResource(Resource):
 
     def load(self, options=None):
         self.options = options or {}
+        self.cache_enabled = True
         tree = parse(self.uri.create_instream())
         xmlroot = tree.getroot()
         self.prefixes.update(xmlroot.nsmap)
@@ -317,6 +318,7 @@ class XMIResource(Resource):
         self._later.clear()
         self._feature_cache.clear()
         self._resolve_mem.clear()
+        self.cache_enabled = False
 
     def register_nsmap(self, prefix, uri):
         if uri in self.reverse_nsmap:
