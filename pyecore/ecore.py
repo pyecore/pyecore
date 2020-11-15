@@ -144,6 +144,20 @@ class Metasubinstance(type):
         return type.__subclasscheck__(cls, other)
 
 
+# Meta methods for static EClass
+class MetaEClass(Metasubinstance):
+    def __init__(cls, name, bases, nmspc):
+        super().__init__(name, bases, nmspc)
+        Core.register_classifier(cls, promote=True)
+        cls._staticEClass = True
+
+    def __call__(cls, *args, **kwargs):
+        if cls.eClass.abstract:
+            raise TypeError("Can't instantiate abstract EClass {0}"
+                            .format(cls.eClass.name))
+        return super().__call__(*args, **kwargs)
+
+
 class EObject(ENotifer, metaclass=Metasubinstance):
     _staticEClass = True
     _instances = WeakSet()
@@ -910,20 +924,6 @@ class EClass(EClassifier):
         return issubclass(cls, self.python_class)
 
 
-# Meta methods for static EClass
-class MetaEClass(Metasubinstance):
-    def __init__(cls, name, bases, nmspc):
-        super().__init__(name, bases, nmspc)
-        Core.register_classifier(cls, promote=True)
-        cls._staticEClass = True
-
-    def __call__(cls, *args, **kwargs):
-        if cls.eClass.abstract:
-            raise TypeError("Can't instantiate abstract EClass {0}"
-                            .format(cls.eClass.name))
-        return super().__call__(*args, **kwargs)
-
-
 def EMetaclass(cls):
     """Class decorator for creating PyEcore metaclass."""
     superclass = cls.__bases__
@@ -1276,6 +1276,7 @@ register_classifier(ECharacterObject)
 register_classifier(EShort)
 register_classifier(EShortObject)
 register_classifier(EJavaClass)
+eContents = eClass.eContents
 
 
 __all__ = ['EObject', 'EModelElement', 'ENamedElement', 'EAnnotation',
