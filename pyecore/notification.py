@@ -14,9 +14,13 @@ class ENotifer(object):
     def notify(self, notification):
         notification.notifier = notification.notifier or self
         resource = self.eResource
-        resource_listeners = resource and resource.listeners or []
-        listeners = chain(resource_listeners, self._eternal_listener,
-                          self.listeners)
+        resource_listeners = []
+        resource_eternals = []
+        if resource:
+            resource_listeners = resource.listeners
+            resource_eternals = resource._eternal_listener
+        listeners = chain(resource_eternals, resource_listeners,
+                          self._eternal_listener, self.listeners)
         for listener in listeners:
             listener.notifyChanged(notification)
 
