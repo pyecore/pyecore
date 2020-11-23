@@ -214,7 +214,8 @@ class HttpURI(URI):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
 
     def apply_relative_from_me(self, relative_path):
-        return self.plain
+        # currently no relative path is calculated for HttpURI.
+        return relative_path 
 
 
 # class StdioURI(URI):
