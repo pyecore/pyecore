@@ -182,7 +182,11 @@ class XMIResource(Resource):
                                      parent_eobj.eClass.name,
                                      node.sourceline,))
         if self._is_none_node(node):
-            parent_eobj.__setattr__(feature_container.name, None)
+            if feature_container.many:
+                parent_eobj.__getattribute__(feature_container.name).append(None)
+            else:
+                parent_eobj.__setattr__(feature_container.name, None)
+
             return (None, None, [], [], False)
         if node.get('href'):
             ref = node.get('href')
@@ -220,10 +224,9 @@ class XMIResource(Resource):
                 container.__doc__ = annotation_value
             return (None, None, tuple(), tuple(), False)
         elif isinstance(etype, EDataType):
-            key = node.tag
             value = node.text if node.text else ''
-            feature = self._decode_attribute(parent_eobj, key, value)
-            return (None, parent_eobj, ((feature, value),), tuple(), True)
+            return (None, parent_eobj, ((feature_container, value),),
+                    tuple(), True)
         else:
             # idref = node.get('{{{}}}idref'.format(XMI_URL))
             # if idref:
@@ -430,14 +433,17 @@ class XMIResource(Resource):
                     has_special_char = False
                     result_list = []
                     for v in value:
-                        string = to_str(v)
-                        if any(x.isspace() for x in string):
+                        string = None if v is None else to_str(v)
+                        if not string or any(x.isspace() for x in string):
                             has_special_char = True
                         result_list.append(string)
                     if has_special_char:
                         for v in result_list:
-                            sub = SubElement(node, feat_name)
-                            sub.text = v
+                            if v is None:
+                                node.append(self._build_none_node(feat_name))
+                            else:
+                                sub = SubElement(node, feat_name)
+                                sub.text = v
                     else:
                         node.attrib[feat_name] = ' '.join(result_list)
                     continue
