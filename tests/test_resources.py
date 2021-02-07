@@ -102,10 +102,24 @@ def test_uri_normalize_relative():
 
 
 def test_uri_normalize_httpuri():
+    uri = HttpURI('http://www.test.org/path/xmi/')
+    assert uri.normalize() == 'http://www.test.org/path/xmi/'
+
+    assert uri.apply_relative_from_me('../mypath') == 'http://www.test.org/path/mypath'
+    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/mypath'
+
+    # Different URL
+    assert uri.apply_relative_from_me('http://www.other.org/path/xmi') == 'http://www.other.org/path/xmi'
+
+    # Same URL
+    assert uri.apply_relative_from_me('http://www.test.org/path/xmi2') == 'http://www.test.org/path/xmi2'
+
+    # without trailing "/"
     uri = HttpURI('http://www.test.org/path/xmi')
     assert uri.normalize() == 'http://www.test.org/path/xmi'
 
-    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/path/xmi'
+    assert uri.apply_relative_from_me('../mypath') == 'http://www.test.org/mypath'
+    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/mypath'
 
 
 def test_resourceset_default_decoders():

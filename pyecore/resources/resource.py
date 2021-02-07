@@ -12,6 +12,8 @@ from collections import ChainMap
 from .. import ecore as Ecore
 from ..innerutils import ignored
 from abc import abstractmethod
+from urllib.parse import urljoin
+
 
 global_registry = {}
 global_uri_mapper = {}
@@ -214,7 +216,7 @@ class HttpURI(URI):
         raise NotImplementedError('Cannot create an outstream for HttpURI')
 
     def apply_relative_from_me(self, relative_path):
-        return self.plain
+        return urljoin(self.normalize(), relative_path)
 
 
 # class StdioURI(URI):
