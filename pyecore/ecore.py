@@ -792,6 +792,9 @@ class EClass(EClassifier):
         instance.__name__ = name
         return instance
 
+    def __mro_entries__(self, old_base):
+        return (self.python_class, )
+
     def __init__(self, name=None, superclass=None, abstract=False,
                  metainstance=None, **kwargs):
         super().__init__(name, **kwargs)

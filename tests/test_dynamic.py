@@ -1124,3 +1124,33 @@ def test_create_dynamic_inheritances_inconsistent2():
     assert B in C.eSuperTypes
     assert A.python_class in C.python_class.__bases__
     assert B.python_class in C.python_class.__bases__
+
+
+
+def test_mix_dynamic_static_inheritance():
+    A = EClass("A")
+    A.eOperations.append(EOperation("spam"))
+    B = EClass("B")
+
+    @EMetaclass
+    class D(object):
+        ...
+
+    class E(object):
+        def egg(self):
+            return 4
+
+    class C(D, A, B, E):
+        ...
+
+    c = C()
+    assert isinstance(c, C)
+    assert isinstance(c, D)
+    assert isinstance(c, A)
+    assert isinstance(c, B)
+    assert isinstance(c, E)
+    assert isinstance(c, EObject)
+
+    with pytest.raises(NotImplementedError):
+        c.spam()
+    assert c.egg() == 4
