@@ -36,18 +36,28 @@ import inspect
 from . import ecore
 
 
-def meta_behavior(self, fun):
+def _meta_behavior(self, fun):
     setattr(self, fun.__name__, fun)
     return fun
 
 
-def behavior(self, fun):
+def _behavior(self, fun):
     setattr(self.python_class, fun.__name__, fun)
     return fun
 
 
-ecore.MetaEClass.behavior = meta_behavior
-ecore.EClass.behavior = behavior
+ecore.MetaEClass.behavior = _meta_behavior
+ecore.EClass.behavior = _behavior
+
+
+def behavior(cls):
+    def inner_decorator(fun):
+        if isinstance(cls, type):
+            setattr(cls, fun.__name__, fun)
+        else:
+            setattr(cls.python_class, fun.__name__, fun)
+        return fun
+    return inner_decorator
 
 
 def main(fun):

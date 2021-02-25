@@ -1227,9 +1227,12 @@ EGenericType.eUpperBound = EReference('eUpperBound', EGenericType)
 EGenericType.eLowerBound = EReference('eLowerBound', EGenericType)
 
 register_classifier = Core.register_classifier
+
+
 def register_metaclass(c, metaclass=MetaEClass, *args, **kwargs):
     register_classifier(c, *args, **kwargs)
     c.__class__ = metaclass
+
 
 eClass = EPackage(name=name, nsURI=nsURI, nsPrefix=nsPrefix)
 register_metaclass(EObject, promote=True, abstract=True,

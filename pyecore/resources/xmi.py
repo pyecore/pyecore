@@ -183,7 +183,8 @@ class XMIResource(Resource):
                                      node.sourceline,))
         if self._is_none_node(node):
             if feature_container.many:
-                parent_eobj.__getattribute__(feature_container.name).append(None)
+                parent_eobj.__getattribute__(feature_container.name) \
+                           .append(None)
             else:
                 parent_eobj.__setattr__(feature_container.name, None)
 
