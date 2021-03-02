@@ -22,6 +22,7 @@ from decimal import Decimal
 from datetime import datetime
 from ordered_set import OrderedSet
 from weakref import WeakSet
+from itertools import chain
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
 from .innerutils import ignored, javaTransMap, parse_date
@@ -142,6 +143,14 @@ class Metasubinstance(type):
         if isinstance(other, EClass):
             other = other.python_class
         return type.__subclasscheck__(cls, other)
+
+    def mro(cls):
+        try:
+            new_mro = super().mro()
+        except TypeError:
+            new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            new_mro = tuple(chain(new_mro, (EObject, ENotifer, object)))
+        return new_mro
 
 
 # Meta methods for static EClass
@@ -777,13 +786,16 @@ class EClass(EClassifier):
                 '_staticEClass': instance._staticEClass,
                 '__init__': new_init
             }
-            super_types = instance.__compute_supertypes()
+            super_types = instance._compute_supertypes()
             try:
                 instance.python_class = type(name, super_types, attr_dict)
             except Exception:
+                def depth(ec):
+                    if not ec.eSuperTypes:
+                        return 1
+                    return max(1 + depth(x) for x in ec.eSuperTypes)
                 super_types = sorted(super_types,
-                                     key=lambda x: len(x.eClass
-                                                        .eAllSuperTypes()),
+                                     key=lambda x: depth(x.eClass),
                                      reverse=True)
                 instance.python_class = type(name,
                                              tuple(super_types),
@@ -821,15 +833,7 @@ class EClass(EClassifier):
         if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
-            new_supers = self.__compute_supertypes()
-            try:
-                self.python_class.__bases__ = new_supers
-            except TypeError:
-                new_supers = sorted(new_supers,
-                                    key=lambda x: len(x.eClass
-                                                       .eAllSuperTypes()),
-                                    reverse=True)
-                self.python_class.__bases__ = tuple(new_supers)
+            self.python_class.__bases__ = self._compute_supertypes()
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
@@ -856,7 +860,7 @@ class EClass(EClassifier):
         exec(code, safe_builtins, namespace)
         setattr(self.python_class, name, namespace[name])
 
-    def __compute_supertypes(self):
+    def _compute_supertypes(self):
         if not self.eSuperTypes:
             return (EObject,)
         else:

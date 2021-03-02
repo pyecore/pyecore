@@ -285,6 +285,9 @@ class XMIResource(Resource):
                     values = [self.normalize(x) for x in value.split()]
                 else:
                     values = [value]
+                if len(values) == 0:
+                    return
+                resolved_values = []
                 for value in values:
                     if not value:  # BA: Skip empty references
                         continue
@@ -294,10 +297,11 @@ class XMIResource(Resource):
                                          .format(value))
                     if not hasattr(resolved_value, '_inverse_rels'):
                         resolved_value = resolved_value.eClass
-                    if ref.many:
-                        eobject.__getattribute__(name).append(resolved_value)
-                    else:
-                        eobject.__setattr__(name, resolved_value)
+                    resolved_values.append(resolved_value)
+                if ref.many:
+                    eobject.__getattribute__(name).extend(resolved_values)
+                else:
+                    eobject.__setattr__(name, resolved_values[0])
 
         for eobject, ref, value in opposite:
             resolved_value = self._resolve_nonhref(value)
