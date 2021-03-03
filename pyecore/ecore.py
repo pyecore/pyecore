@@ -148,9 +148,26 @@ class Metasubinstance(type):
         try:
             new_mro = super().mro()
         except TypeError:
-            new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            try:
+                new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            except Exception:
+                new_mro = eAllBases(cls)
             new_mro = tuple(chain(new_mro, (EObject, ENotifer, object)))
         return new_mro
+
+
+def _eAllBases_gen(self):
+    super_types = self.__bases__
+    yield from super_types
+    for x in super_types:
+        yield from _eAllBases_gen(x)
+
+def interstuff(self):
+    yield self
+    yield from _eAllBases_gen(self)
+
+def eAllBases(self):
+    return OrderedSet(interstuff(self))
 
 
 # Meta methods for static EClass
@@ -889,7 +906,7 @@ class EClass(EClassifier):
 
     def _eAllSuperTypes_gen(self):
         super_types = self.eSuperTypes
-        yield from self.eSuperTypes
+        yield from super_types
         for x in super_types:
             yield from x._eAllSuperTypes_gen()
 
