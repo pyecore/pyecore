@@ -97,7 +97,8 @@ class XMIResource(Resource):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eclass = self._get_metaclass(nsURI, eclass_name)
         if not eclass:
-            raise TypeError(f'"{eclass_name}" EClass does not exists')
+            raise TypeError(f'"{eclass_name}" EClass does not exists '
+                            f'(line {xmlroot.tag})')
         modelroot = eclass()
         modelroot._eresource = self
         self.use_uuid = xmlroot.get(self.xmiid) is not None
@@ -195,12 +196,12 @@ class XMIResource(Resource):
             prefix, _type = self._type_attribute(node).split(':')
             if not prefix:
                 raise ValueError(f'Prefix {prefix} is not registered, '
-                                 f'line {node.tag}')
+                                 f'{node.tag} line {node.sourceline}')
             epackage = self.prefix2epackage(prefix)
             etype = epackage.getEClassifier(_type)
             if not etype:
                 raise ValueError(f'Type {_type} is unknown in {epackage}, '
-                                 f'line{node.tag}')
+                                 f'{node.tag} line {node.sourceline}')
         else:
             etype = feature_container._eType
             if isinstance(etype, EProxy):
@@ -237,7 +238,7 @@ class XMIResource(Resource):
         eatts = []
         erefs = []
         for key, value in node.attrib.items():
-            feature = self._decode_attribute(eobject, key, value)
+            feature = self._decode_attribute(eobject, key, value, node)
             if not feature:
                 continue  # we skip the unknown features
             if etype is EClass and feature.name == 'name':
@@ -250,7 +251,7 @@ class XMIResource(Resource):
                 erefs.append((feature, value))
         return (feature_container, eobject, eatts, erefs, False)
 
-    def _decode_attribute(self, owner, key, value):
+    def _decode_attribute(self, owner, key, value, node):
         namespace, att_name = self.extract_namespace(key)
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
@@ -268,7 +269,8 @@ class XMIResource(Resource):
             feature = self._find_feature(owner.eClass, att_name)
             if not feature:
                 raise ValueError(f'Feature {att_name} does not exists for '
-                                 f'type {owner.eClass.name}')
+                                 f'type {owner.eClass.name} '
+                                 f'({node.tag} line {node.sourceline})')
             return feature
 
     def _decode_ereferences(self):
