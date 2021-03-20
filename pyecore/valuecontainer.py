@@ -67,7 +67,8 @@ class PyEcoreValue(object):
                 self.generic_type = etype
             except Exception:
                 raise AttributeError('Feature {} has no type'
-                                     'nor generic'.format(feature))
+                                     'nor generic for {}'
+                                     .format(feature, feature.eContainer()))
         if not _isinstance(value, etype):
             raise BadValueError(value, etype, feature)
 
