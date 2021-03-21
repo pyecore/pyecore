@@ -39,7 +39,7 @@ class JsonResource(Resource):
         for inst, refs in self._load_href.items():
             self.process_inst(inst, refs)
         self._load_href.clear()
-        self._feature_cache.clear()
+        self._find_feature.cache_clear()
         self.cache_enabled = False
 
     def save(self, output=None, options=None):

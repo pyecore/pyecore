@@ -2,6 +2,7 @@
 The xmi module introduces XMI resource and XMI parsing.
 """
 from enum import unique, Enum
+from functools import lru_cache
 from lxml.etree import parse, QName, Element, SubElement, ElementTree
 from .resource import Resource
 from ..ecore import EClass, EStringToStringMapEntry, EAnnotation, EProxy, \
@@ -304,6 +305,7 @@ class XMIResource(Resource):
                 raise ValueError(f'EObject for {value} is unknown')
             eobject.__setattr__(ref.name, resolved_value)
 
+    @lru_cache()
     def _resolve_nonhref(self, path):
         uri, fragment = self._is_external(path)
         if uri:
@@ -319,7 +321,8 @@ class XMIResource(Resource):
 
     def _clean_registers(self):
         self._later.clear()
-        self._feature_cache.clear()
+        self._find_feature.cache_clear()
+        self._resolve_nonhref.cache_clear()
         self._resolve_mem.clear()
         self.cache_enabled = False
 

@@ -13,6 +13,7 @@ from .. import ecore as Ecore
 from ..innerutils import ignored
 from abc import abstractmethod
 from urllib.parse import urljoin
+from functools import lru_cache
 
 
 global_registry = {}
@@ -348,7 +349,7 @@ class Resource(object):
         self.listeners = []
         self._eternal_listener = []
         self._resolve_mem = {}
-        self._feature_cache = {}
+        # self._feature_cache = {}
         self.cache_enabled = False
 
     @property
@@ -616,11 +617,13 @@ class Resource(object):
         for x in values:
             append(x)
 
+    @lru_cache()
     def _find_feature(self, eclass, name):
-        fname = f'{eclass.name}#{name}'
-        try:
-            return self._feature_cache[fname]
-        except KeyError:
-            feature = eclass.findEStructuralFeature(name)
-            self._feature_cache[fname] = feature
-            return feature
+        return eclass.findEStructuralFeature(name)
+        # fname = f'{eclass.name}#{name}'
+        # try:
+        #     return self._feature_cache[fname]
+        # except KeyError:
+        #     feature = eclass.findEStructuralFeature(name)
+        #     self._feature_cache[fname] = feature
+        #     return feature
