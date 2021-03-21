@@ -13,6 +13,7 @@ from .. import ecore as Ecore
 from ..innerutils import ignored
 from abc import abstractmethod
 from urllib.parse import urljoin
+from functools import lru_cache
 
 
 global_registry = {}
@@ -348,7 +349,7 @@ class Resource(object):
         self.listeners = []
         self._eternal_listener = []
         self._resolve_mem = {}
-        self._feature_cache = {}
+        # self._feature_cache = {}
         self.cache_enabled = False
 
     @property
@@ -427,7 +428,7 @@ class Resource(object):
             else:
                 return global_registry[nsuri]
         except KeyError:
-            raise KeyError('Unknown metamodel with uri: {0}'.format(nsuri))
+            raise KeyError(f'Unknown metamodel with uri: {nsuri}')
 
     @staticmethod
     def normalize(fragment):
@@ -461,9 +462,8 @@ class Resource(object):
                 rset.resources[original_uri] = resource
             return rset
         except Exception as e:
-            raise TypeError('Resource "{0}" cannot be resolved '
-                            'problem with "{1}"'
-                            .format(uri, e))
+            raise TypeError(f'Resource "{uri}" cannot be resolved '
+                            f'problem with "{e}"')
 
     @staticmethod
     def is_fragment_uuid(fragment):
@@ -539,7 +539,7 @@ class Resource(object):
         if obj.eResource != self:
             eclass = obj.eClass
             prefix = eclass.ePackage.nsPrefix
-            _type = '{0}:{1}'.format(prefix, eclass.name)
+            _type = f'{prefix}:{eclass.name}'
             uri_fragment = obj.eURIFragment()
             crossref = False
             if obj.eResource:
@@ -572,9 +572,9 @@ class Resource(object):
             if not uri_fragment.startswith('#'):
                 uri_fragment = '#' + uri_fragment
             if crossref:
-                return ('{0}{1}'.format(uri, uri_fragment), True)
+                return (f'{uri}{uri_fragment}', True)
             else:
-                return ('{0} {1}{2}'.format(_type, uri, uri_fragment), False)
+                return (f'{_type} {uri}{uri_fragment}', False)
         if self.use_uuid:
             self._assign_uuid(obj)
             return (obj._internal_id, False)
@@ -598,7 +598,7 @@ class Resource(object):
     def append(self, root):
         if not isinstance(root, Ecore.EObject):
             raise ValueError('The resource requires an EObject type, '
-                             'but received {0} instead.'.format(type(root)))
+                             f'but received {type(root)} instead.')
         self.contents.append(root)
         root._eresource = self
 
@@ -617,11 +617,13 @@ class Resource(object):
         for x in values:
             append(x)
 
+    @lru_cache()
     def _find_feature(self, eclass, name):
-        fname = eclass.name + '#' + name
-        try:
-            return self._feature_cache[fname]
-        except KeyError:
-            feature = eclass.findEStructuralFeature(name)
-            self._feature_cache[fname] = feature
-            return feature
+        return eclass.findEStructuralFeature(name)
+        # fname = f'{eclass.name}#{name}'
+        # try:
+        #     return self._feature_cache[fname]
+        # except KeyError:
+        #     feature = eclass.findEStructuralFeature(name)
+        #     self._feature_cache[fname] = feature
+        #     return feature

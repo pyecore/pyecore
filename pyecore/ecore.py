@@ -125,7 +125,7 @@ class Core(object):
                          else 'default_package')
             epackage.eClass = EPackage(name=pack_name,
                                        nsPrefix=pack_name,
-                                       nsURI='http://{}/'.format(pack_name))
+                                       nsURI=f'http://{pack_name}/')
         if not hasattr(epackage, 'eURIFragment'):
             epackage.eURIFragment = eURIFragment
         cname = rcls.name if isinstance(rcls, EClassifier) else rcls.__name__
@@ -148,22 +148,28 @@ class Metasubinstance(type):
         try:
             return super().mro()
         except TypeError:
-            # try:
-            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
-            #     return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
-            # except Exception:
-            return eAllBases(cls)
+            try:
+                new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+                return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
+            except Exception:
+                def _eAllBases_gen(self):
+                    super_types = self.__bases__
+                    yield from super_types
+                    for x in super_types:
+                        yield from _eAllBases_gen(x)
+
+                return OrderedSet(chain([cls], _eAllBases_gen(cls)))
 
 
-def _eAllBases_gen(self):
-    super_types = self.__bases__
-    yield from super_types
-    for x in super_types:
-        yield from _eAllBases_gen(x)
-
-
-def eAllBases(self):
-    return OrderedSet(chain([self], _eAllBases_gen(self)))
+# def _eAllBases_gen(self):
+#     super_types = self.__bases__
+#     yield from super_types
+#     for x in super_types:
+#         yield from _eAllBases_gen(x)
+#
+#
+# def eAllBases(self):
+#     return OrderedSet(chain([self], _eAllBases_gen(self)))
 
 
 # Meta methods for static EClass
@@ -175,8 +181,8 @@ class MetaEClass(Metasubinstance):
 
     def __call__(cls, *args, **kwargs):
         if cls.eClass.abstract:
-            raise TypeError("Can't instantiate abstract EClass {0}"
-                            .format(cls.eClass.name))
+            raise TypeError("Can't instantiate "
+                            f"abstract EClass {cls.eClass.name}")
         return super().__call__(*args, **kwargs)
 
 
@@ -297,16 +303,15 @@ class EObject(ENotifer, metaclass=Metasubinstance):
             if not self.eResource or len(self.eResource.contents) == 1:
                 return '/'
             else:
-                return '/{}'.format(self.eResource.contents.index(self))
+                return f'/{self.eResource.contents.index(self)}'
         feat = self.eContainmentFeature()
         parent = self.eContainer()
         name = feat.name
         if feat.many:
             index = parent.__getattribute__(name).index(self)
-            return '{0}/@{1}.{2}' \
-                   .format(parent.eURIFragment(), name, str(index))
+            return f'{parent.eURIFragment()}/@{name}.{index}'
         else:
-            return '{0}/@{1}'.format(parent.eURIFragment(), name)
+            return f'{parent.eURIFragment()}/@{name}'
 
     def eRoot(self):
         if not self.eContainer():
@@ -332,10 +337,10 @@ class EModelElement(EObject):
             if not self.eResource or len(self.eResource.contents) == 1:
                 return '#/'
             else:
-                return '#/{}'.format(self.eResource.contents.index(self))
+                return f'#/{self.eResource.contents.index(self)}'
         parent = self.eContainer()
         if hasattr(self, 'name'):
-            return '{0}/{1}'.format(parent.eURIFragment(), self.name)
+            return f'{parent.eURIFragment()}/{self.name}'
         else:
             return super().eURIFragment()
 
@@ -436,9 +441,11 @@ class EOperation(ETypedElement):
         parameters = [x.to_code() for x in self.eParameters]
         if len(parameters) == 0 or parameters[0] != 'self':
             parameters.insert(0, 'self')
-        return """def {0}({1}):
-        raise NotImplementedError('Method {0}({1}) is not yet implemented')
-        """.format(self.normalized_name(), ', '.join(parameters))
+        norm_name = self.normalized_name()
+        parameters = ', '.join(parameters)
+        return f"""def {norm_name}({parameters}):
+        raise NotImplementedError('Method {norm_name}({parameters}) is not yet implemented')
+        """ # noqa
 
 
 class EParameter(ETypedElement):
@@ -447,9 +454,9 @@ class EParameter(ETypedElement):
 
     def to_code(self):
         if self.required:
-            return "{0}".format(self.name)
+            return f"{self.name}"
         default_value = getattr(self.eType, 'default_value', None)
-        return "{0}={1}".format(self.name, default_value)
+        return f"{self.name}={default_value}"
 
 
 class ETypeParameter(ENamedElement):
@@ -470,9 +477,8 @@ class ETypeParameter(ENamedElement):
 
     def __str__(self):
         raw_types = self.raw_types()
-        return '<{}[{}] object at {}>'.format(self.__class__.__name__,
-                                              raw_types,
-                                              hex(id(self)))
+        return (f'<{self.__class__.__name__}[{raw_types}] object '
+                f'at {hex(id(self))}>')
 
 
 class EGenericType(EObject):
@@ -560,7 +566,7 @@ class EDataType(EClassifier):
 
     def __repr__(self):
         etype = self.eType.__name__ if self.eType else None
-        return '{0}({1})'.format(self.name, etype)
+        return f'{self.name}({etype})'
 
 
 class EEnum(EDataType):
@@ -598,8 +604,8 @@ class EEnum(EDataType):
             i = literals.index(literal)
             literals.insert(0, literals.pop(i))
         else:
-            raise AttributeError('Enumeration literal {} does not exist '
-                                 'in {}'.format(value, self))
+            raise AttributeError(f'Enumeration literal {value} does not exist '
+                                 f'in {self}')
 
     def __contains__(self, key):
         if isinstance(key, EEnumLiteral):
@@ -622,7 +628,7 @@ class EEnum(EDataType):
 
     def __repr__(self):
         name = self.name or ''
-        return '{}[{}]'.format(name, str(self.eLiterals))
+        return f'{name}[{self.eLiterals}]'
 
 
 class EEnumLiteral(ENamedElement):
@@ -631,7 +637,7 @@ class EEnumLiteral(ENamedElement):
         self.value = value
 
     def __repr__(self):
-        return '{0}={1}'.format(self.name, self.value)
+        return f'{self.name}={self.value}'
 
     def __str__(self):
         return self.name
@@ -708,7 +714,7 @@ class EStructuralFeature(ETypedElement):
     def __repr__(self):
         eType = getattr(self, 'eType', None)
         name = getattr(self, 'name', None)
-        return '<{0} {1}: {2}>'.format(self.__class__.__name__, name, eType)
+        return f'<{self.__class__.__name__} {name}: {eType}>'
 
 
 class EAttribute(EStructuralFeature):
@@ -828,8 +834,7 @@ class EClass(EClassifier):
 
     def __call__(self, *args, **kwargs):
         if self.abstract:
-            raise TypeError("Can't instantiate abstract EClass {0}"
-                            .format(self.name))
+            raise TypeError(f"Can't instantiate abstract EClass {self.name}")
         return self.python_class(*args, **kwargs)
 
     def allInstances(self=None, resources=None):
@@ -883,7 +888,7 @@ class EClass(EClassifier):
             return tuple(x.python_class for x in eSuperTypes)
 
     def __repr__(self):
-        return '<{0} name="{1}">'.format(self.__class__.__name__, self.name)
+        return f'<{self.__class__.__name__} name="{self.name}">'
 
     @property
     def eAttributes(self):

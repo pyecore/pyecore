@@ -70,5 +70,4 @@ def run(eclass, *args, **kwargs):
     for _, attr in cls.__dict__.items():
         if inspect.isfunction(attr) and getattr(attr, 'main', False):
             return attr(eclass, *args, **kwargs)
-    raise NotImplementedError('No @main entry point found for {}'
-                              .format(cls))
+    raise NotImplementedError(f'No @main entry point found for {cls}')

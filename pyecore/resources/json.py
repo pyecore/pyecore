@@ -39,7 +39,7 @@ class JsonResource(Resource):
         for inst, refs in self._load_href.items():
             self.process_inst(inst, refs)
         self._load_href.clear()
-        self._feature_cache.clear()
+        self._find_feature.cache_clear()
         self.cache_enabled = False
 
     def save(self, output=None, options=None):
@@ -70,7 +70,7 @@ class JsonResource(Resource):
 
     @staticmethod
     def serialize_eclass(eclass):
-        return '{}{}'.format(eclass.eRoot().nsURI, eclass.eURIFragment())
+        return f'{eclass.eRoot().nsURI}{eclass.eURIFragment()}'
 
     def register_mapper(self, eclass, mapper_class):
         if hasattr(eclass, 'python_class'):
@@ -82,7 +82,7 @@ class JsonResource(Resource):
             resource_uri = ''
         else:
             resource_uri = obj.eResource.uri if obj.eResource else ''
-        return '{}{}'.format(resource_uri, self._uri_fragment(obj))
+        return f'{resource_uri}{self._uri_fragment(obj)}'
 
     def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None):
         uri = self.serialize_eclass(obj.eClass)
@@ -139,8 +139,7 @@ class JsonResource(Resource):
         else:
             eclass = owning_feature._eType
         if not eclass:
-            raise ValueError('Unknown metaclass for uri "{}"'
-                             .format(uri_eclass))
+            raise ValueError(f'Unknown metaclass for uri "{uri_eclass}"')
         if eclass in (EClass.eClass, EClass):
             inst = eclass(d['name'])
             excludes.append('name')
@@ -162,8 +161,7 @@ class JsonResource(Resource):
                 continue
             feature = self._find_feature(eclass, key)
             if not feature:
-                raise ValueError('Unknown feature {} for object "{}"'
-                                 .format(key, eclass))
+                raise ValueError('Unknown feature {key} for object "{eclass}"')
             if feature.is_attribute:
                 eattributes.append((feature, value))
             else:
