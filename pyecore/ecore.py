@@ -148,17 +148,17 @@ class Metasubinstance(type):
         try:
             return super().mro()
         except TypeError:
-            try:
-                new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
-                return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
-            except Exception:
-                def _eAllBases_gen(self):
-                    super_types = self.__bases__
-                    yield from super_types
-                    for x in super_types:
-                        yield from _eAllBases_gen(x)
+            # try:
+            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            #     return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
+            # except Exception:
+            def _eAllBases_gen(self):
+                super_types = self.__bases__
+                yield from super_types
+                for x in super_types:
+                    yield from _eAllBases_gen(x)
 
-                return OrderedSet(chain([cls], _eAllBases_gen(cls)))
+            return OrderedSet(chain([cls], _eAllBases_gen(cls)))
 
 
 # def _eAllBases_gen(self):
