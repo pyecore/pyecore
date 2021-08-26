@@ -12,6 +12,8 @@ Changelog
 
 - Add inheritance mix for static/dynamic metaclass.
 
+- Fix issue with moving object from resource root to object back and forth.
+
 
 **Miscellaneous**
 
