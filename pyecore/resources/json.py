@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """
 The json module introduces JSON resource and JSON parsing.
 """

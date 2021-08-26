@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """ The resource module proposes all the concepts that are related to Resource
 handling. A Resource represents a special model container that can be
 serialized. Many ``Resource`` can be contained in a ``ResourceSet``, and
