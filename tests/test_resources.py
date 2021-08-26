@@ -412,3 +412,20 @@ def test__resource_uriconverter_simple():
     root = resource.contents[0]
     assert root.eClassifiers[0]
     assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'SuperStuff'
+
+
+def test__resource_change_container(simplemm):
+    a = simplemm.A()
+    root = simplemm.Root()
+
+    r = Resource(path.join('..', 'test', 'toto.xmi'))
+    r.append(a)
+    r.append(root)
+
+    assert len(r.contents) == 2
+    assert len(root.a) == 0
+
+    root.a.append(a)
+    assert len(root.a) == 1
+    assert root.a == [a]
+    assert len(r.contents) == 1
