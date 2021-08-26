@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from .ecore import EProxy, EObject, EDataType
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set

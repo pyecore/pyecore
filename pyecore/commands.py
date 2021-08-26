@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """ This module introduce the command system which allows to defined various
 that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.

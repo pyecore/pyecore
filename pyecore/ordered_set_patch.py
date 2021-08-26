@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import ordered_set
 from typing import Iterable
 
