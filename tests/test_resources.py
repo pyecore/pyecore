@@ -429,3 +429,7 @@ def test__resource_change_container(simplemm):
     assert len(root.a) == 1
     assert root.a == [a]
     assert len(r.contents) == 1
+
+    r.append(a)
+    assert len(root.a) == 0
+    assert len(r.contents) == 2

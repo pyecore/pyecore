@@ -602,6 +602,13 @@ class Resource(object):
                              f'but received {type(root)} instead.')
         self.contents.append(root)
         root._eresource = self
+        if root._container is not None:
+            container = root._container
+            feature = root._containment_feature
+            if feature.many:
+                container.eGet(feature).remove(root)
+            else:
+                container.eSet(feature, None)
 
     def remove(self, root):
         self.contents.remove(root)
