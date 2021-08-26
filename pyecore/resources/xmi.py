@@ -1,7 +1,9 @@
+# -*- coding: future_fstrings -*-
 """
 The xmi module introduces XMI resource and XMI parsing.
 """
 from enum import unique, Enum
+from functools import lru_cache
 from lxml.etree import parse, QName, Element, SubElement, ElementTree
 from .resource import Resource
 from ..ecore import EClass, EStringToStringMapEntry, EAnnotation, EProxy, \
@@ -34,13 +36,12 @@ class XMIResource(Resource):
         self.prefixes.update(xmlroot.nsmap)
         self.reverse_nsmap = {v: k for k, v in self.prefixes.items()}
 
-        self.xsitype = '{{{0}}}type'.format(self.prefixes.get(XSI))
-        self.xmiid = '{{{0}}}id'.format(self.prefixes.get(XMI))
-        self.schema_tag = '{{{0}}}schemaLocation'.format(
-                            self.prefixes.get(XSI))
+        self.xsitype = f'{{{self.prefixes.get(XSI)}}}type'
+        self.xmiid = f'{{{self.prefixes.get(XMI)}}}id'
+        self.schema_tag = f'{{{self.prefixes.get(XSI)}}}schemaLocation'
 
         # Decode the XMI
-        if '{{{0}}}XMI'.format(self.prefixes.get(XMI)) == xmlroot.tag:
+        if f'{{{self.prefixes.get(XMI)}}}XMI' == xmlroot.tag:
             real_roots = xmlroot
         else:
             real_roots = [xmlroot]
@@ -80,7 +81,7 @@ class XMIResource(Resource):
     def _type_attribute(self, node):
         type_ = node.get(self.xsitype)
         if type_ is None:
-            xmi_type_url = '{{{0}}}type'.format(self.prefixes.get(XMI))
+            xmi_type_url = f'{{{self.prefixes.get(XMI)}}}type'
             type_ = node.get(xmi_type_url)
         return type_
 
@@ -98,7 +99,8 @@ class XMIResource(Resource):
         nsURI, eclass_name = self.extract_namespace(xmlroot.tag)
         eclass = self._get_metaclass(nsURI, eclass_name)
         if not eclass:
-            raise TypeError('"{0}" EClass does not exists'.format(eclass_name))
+            raise TypeError(f'"{eclass_name}" EClass does not exists '
+                            f'(line {xmlroot.tag})')
         modelroot = eclass()
         modelroot._eresource = self
         self.use_uuid = xmlroot.get(self.xmiid) is not None
@@ -171,18 +173,22 @@ class XMIResource(Resource):
             self._decode_eobject(child, eobject)
 
     def _is_none_node(self, node):
-        return '{{{}}}nil'.format(XSI_URL) in node.attrib
+        return f'{{{XSI_URL}}}nil' in node.attrib
 
     def _decode_node(self, parent_eobj, node):
         _, node_tag = self.extract_namespace(node.tag)
         feature_container = self._find_feature(parent_eobj.eClass, node_tag)
         if not feature_container:
-            raise ValueError('Feature "{0}" is unknown for {1}, line {2}'
-                             .format(node_tag,
-                                     parent_eobj.eClass.name,
-                                     node.sourceline,))
+            raise ValueError(f'Feature "{node_tag}" is unknown '
+                             f'for {parent_eobj.eClass.name}, '
+                             f'line {node.sourceline}')
         if self._is_none_node(node):
-            parent_eobj.__setattr__(feature_container.name, None)
+            if feature_container.many:
+                parent_eobj.__getattribute__(feature_container.name) \
+                           .append(None)
+            else:
+                parent_eobj.__setattr__(feature_container.name, None)
+
             return (None, None, [], [], False)
         if node.get('href'):
             ref = node.get('href')
@@ -191,13 +197,13 @@ class XMIResource(Resource):
         if self._type_attribute(node):
             prefix, _type = self._type_attribute(node).split(':')
             if not prefix:
-                raise ValueError('Prefix {0} is not registered, line {1}'
-                                 .format(prefix, node.tag))
+                raise ValueError(f'Prefix {prefix} is not registered, '
+                                 f'{node.tag} line {node.sourceline}')
             epackage = self.prefix2epackage(prefix)
             etype = epackage.getEClassifier(_type)
             if not etype:
-                raise ValueError('Type {0} is unknown in {1}, line{2}'
-                                 .format(_type, epackage, node.tag))
+                raise ValueError(f'Type {_type} is unknown in {epackage}, '
+                                 f'{node.tag} line {node.sourceline}')
         else:
             etype = feature_container._eType
             if isinstance(etype, EProxy):
@@ -220,12 +226,11 @@ class XMIResource(Resource):
                 container.__doc__ = annotation_value
             return (None, None, tuple(), tuple(), False)
         elif isinstance(etype, EDataType):
-            key = node.tag
             value = node.text if node.text else ''
-            feature = self._decode_attribute(parent_eobj, key, value)
-            return (None, parent_eobj, ((feature, value),), tuple(), True)
+            return (None, parent_eobj, ((feature_container, value),),
+                    tuple(), True)
         else:
-            # idref = node.get('{{{}}}idref'.format(XMI_URL))
+            # idref = node.get(f'{{{XMI_URL}}}idref')
             # if idref:
             #     return (None, parent_eobj, [],
             #             [(feature_container, idref)], True)
@@ -235,7 +240,7 @@ class XMIResource(Resource):
         eatts = []
         erefs = []
         for key, value in node.attrib.items():
-            feature = self._decode_attribute(eobject, key, value)
+            feature = self._decode_attribute(eobject, key, value, node)
             if not feature:
                 continue  # we skip the unknown features
             if etype is EClass and feature.name == 'name':
@@ -248,7 +253,7 @@ class XMIResource(Resource):
                 erefs.append((feature, value))
         return (feature_container, eobject, eatts, erefs, False)
 
-    def _decode_attribute(self, owner, key, value):
+    def _decode_attribute(self, owner, key, value, node):
         namespace, att_name = self.extract_namespace(key)
         prefix = self.reverse_nsmap[namespace] if namespace else None
         # This is a special case, we are working with uuids
@@ -265,8 +270,9 @@ class XMIResource(Resource):
                 return
             feature = self._find_feature(owner.eClass, att_name)
             if not feature:
-                raise ValueError('Feature {0} does not exists for type {1}'
-                                 .format(att_name, owner.eClass.name))
+                raise ValueError(f'Feature {att_name} does not exists for '
+                                 f'type {owner.eClass.name} '
+                                 f'({node.tag} line {node.sourceline})')
             return feature
 
     def _decode_ereferences(self):
@@ -286,8 +292,7 @@ class XMIResource(Resource):
                         continue
                     resolved_value = self._resolve_nonhref(value)
                     if not resolved_value:
-                        raise ValueError('EObject for {0} is unknown'
-                                         .format(value))
+                        raise ValueError(f'EObject for {value} is unknown')
                     if not hasattr(resolved_value, '_inverse_rels'):
                         resolved_value = resolved_value.eClass
                     if ref.many:
@@ -298,9 +303,10 @@ class XMIResource(Resource):
         for eobject, ref, value in opposite:
             resolved_value = self._resolve_nonhref(value)
             if not resolved_value:
-                raise ValueError('EObject for {0} is unknown'.format(value))
+                raise ValueError(f'EObject for {value} is unknown')
             eobject.__setattr__(ref.name, resolved_value)
 
+    @lru_cache()
     def _resolve_nonhref(self, path):
         uri, fragment = self._is_external(path)
         if uri:
@@ -316,7 +322,8 @@ class XMIResource(Resource):
 
     def _clean_registers(self):
         self._later.clear()
-        self._feature_cache.clear()
+        self._find_feature.cache_clear()
+        self._resolve_nonhref.cache_clear()
         self._resolve_mem.clear()
         self.cache_enabled = False
 
@@ -328,7 +335,7 @@ class XMIResource(Resource):
             self.reverse_nsmap[uri] = prefix
             return
         same_prefix = [x for x in self.prefixes.keys() if x.startswith(prefix)]
-        prefix = '{0}_{1}'.format(prefix, len(same_prefix))
+        prefix = f'{prefix}_{len(same_prefix)}'
         self.prefixes[prefix] = uri
         self.reverse_nsmap[uri] = prefix
 
@@ -383,7 +390,7 @@ class XMIResource(Resource):
             epackage = self.get_metamodel(uri)
             self.register_nsmap(epackage.nsPrefix, uri)
         prefix = self.reverse_nsmap[uri]
-        node.attrib[xsi_type] = '{0}:{1}'.format(prefix, obj.eClass.name)
+        node.attrib[xsi_type] = f'{prefix}:{obj.eClass.name}'
 
     def _build_none_node(self, feature_name):
         sub = Element(feature_name)
@@ -405,7 +412,7 @@ class XMIResource(Resource):
 
         if self.use_uuid:
             self._assign_uuid(obj)
-            xmi_id = '{{{0}}}id'.format(XMI_URL)
+            xmi_id = f'{{{XMI_URL}}}id'
             node.attrib[xmi_id] = obj._internal_id
 
         for feat in obj._isset:
@@ -430,14 +437,17 @@ class XMIResource(Resource):
                     has_special_char = False
                     result_list = []
                     for v in value:
-                        string = to_str(v)
-                        if any(x.isspace() for x in string):
+                        string = None if v is None else to_str(v)
+                        if not string or any(x.isspace() for x in string):
                             has_special_char = True
                         result_list.append(string)
                     if has_special_char:
                         for v in result_list:
-                            sub = SubElement(node, feat_name)
-                            sub.text = v
+                            if v is None:
+                                node.append(self._build_none_node(feat_name))
+                            else:
+                                sub = SubElement(node, feat_name)
+                                sub.text = v
                     else:
                         node.attrib[feat_name] = ' '.join(result_list)
                     continue

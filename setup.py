@@ -9,10 +9,14 @@ version = tuple(sys.version_info[:2])
 if version < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
+requires = ['ordered-set>=4.0.1',
+            'restrictedpython>=4.0b6',
+            'future-fstrings']
+
 if version == (3, 4):
-    lxml_version = 'lxml<4.4.0'
+    requires.append('lxml<4.4.0')
 else:
-    lxml_version = 'lxml'
+    requires.append('lxml')
 
 packages = ['pyecore',
             'pyecore.resources',
@@ -20,7 +24,7 @@ packages = ['pyecore',
 
 setup(
     name='pyecore',
-    version='0.12.0',
+    version='0.12.1',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
@@ -32,9 +36,7 @@ setup(
     packages=packages,
     package_data={'': ['README.rst', 'LICENSE', 'CHANGELOG.rst']},
     include_package_data=True,
-    install_requires=['ordered-set>=4.0.1',
-                      lxml_version,
-                      'restrictedpython>=4.0b6'],
+    install_requires=requires,
     tests_require=['pytest'],
     license='BSD 3-Clause',
     classifiers=[
@@ -44,6 +46,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Topic :: Software Development',

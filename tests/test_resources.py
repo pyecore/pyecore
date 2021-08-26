@@ -102,10 +102,24 @@ def test_uri_normalize_relative():
 
 
 def test_uri_normalize_httpuri():
+    uri = HttpURI('http://www.test.org/path/xmi/')
+    assert uri.normalize() == 'http://www.test.org/path/xmi/'
+
+    assert uri.apply_relative_from_me('../mypath') == 'http://www.test.org/path/mypath'
+    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/mypath'
+
+    # Different URL
+    assert uri.apply_relative_from_me('http://www.other.org/path/xmi') == 'http://www.other.org/path/xmi'
+
+    # Same URL
+    assert uri.apply_relative_from_me('http://www.test.org/path/xmi2') == 'http://www.test.org/path/xmi2'
+
+    # without trailing "/"
     uri = HttpURI('http://www.test.org/path/xmi')
     assert uri.normalize() == 'http://www.test.org/path/xmi'
 
-    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/path/xmi'
+    assert uri.apply_relative_from_me('../mypath') == 'http://www.test.org/mypath'
+    assert uri.apply_relative_from_me('../../mypath') == 'http://www.test.org/mypath'
 
 
 def test_resourceset_default_decoders():
@@ -398,3 +412,24 @@ def test__resource_uriconverter_simple():
     root = resource.contents[0]
     assert root.eClassifiers[0]
     assert root.eClassifiers[0].eStructuralFeatures[0].eType.name == 'SuperStuff'
+
+
+def test__resource_change_container(simplemm):
+    a = simplemm.A()
+    root = simplemm.Root()
+
+    r = Resource(path.join('..', 'test', 'toto.xmi'))
+    r.append(a)
+    r.append(root)
+
+    assert len(r.contents) == 2
+    assert len(root.a) == 0
+
+    root.a.append(a)
+    assert len(root.a) == 1
+    assert root.a == [a]
+    assert len(r.contents) == 1
+
+    r.append(a)
+    assert len(root.a) == 0
+    assert len(r.contents) == 2

@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import ordered_set
 from typing import Iterable
 
@@ -63,7 +64,7 @@ def pop(self, index=None):
 def __setitem__(self, index, item):
     if isinstance(index, slice):
         raise KeyError('Item assignation using slices is not yet supported '
-                       'for {}'.format(self.__class__.__name__))
+                       f'for {self.__class__.__name__}')
     if index < 0:
         index = len(self.items) + index
         if index < 0:

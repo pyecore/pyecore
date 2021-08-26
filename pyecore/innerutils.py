@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """
 This module gives decorators, functions and variables that are shared among the
 different modules.

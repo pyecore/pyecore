@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """
 This module gives the "listener" classes for the PyEcore notification layer.
 The main class to create a new listener is "EObserver" which is triggered
@@ -46,12 +47,8 @@ class Notification(object):
         self.feature = feature
 
     def __repr__(self):
-        return ('[{0}] old={1} new={2} obj={3} #{4}'
-                .format(self.kind.name,
-                        self.old,
-                        self.new,
-                        self.notifier,
-                        self.feature))
+        return (f'[{self.kind.name}] old={self.old} new={self.new} '
+                f'obj={self.notifier} #{self.feature}')
 
 
 class EObserver(object):

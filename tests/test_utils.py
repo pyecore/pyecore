@@ -35,6 +35,13 @@ def test_dynamic_access_eclasses(simplemm):
     assert SimpleMM.B
 
 
+def test_only_epackages(simplemm):
+    SimpleMM = DynamicEPackage(simplemm)
+    assert SimpleMM.A
+    with pytest.raises(BadValueError):
+        DynamicEPackage(SimpleMM.A)
+
+
 def test_dynamic_access_innerpackage(complexmm):
     ComplexMM = DynamicEPackage(complexmm)
     assert ComplexMM.A

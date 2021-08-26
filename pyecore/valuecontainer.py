@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from .ecore import EProxy, EObject, EDataType
 from .notification import Notification, Kind
 from .ordered_set_patch import ordered_set
@@ -13,11 +14,10 @@ class BadValueError(TypeError):
         self.got = got
         self.expected = expected
         self.feature = feature
-        msg = "Expected type {0}, but got type {1} with value {2} instead "
-        msg = msg.format(expected, type(got).__name__, got)
+        msg = (f"Expected type {expected}, but got type {type(got).__name__} "
+               f"with value {got} instead ")
         if feature:
-            msg += "for feature {} of {}".format(feature,
-                                                 feature.eContainingClass)
+            msg += f"for feature {feature} of {feature.eContainingClass}"
         super().__init__(msg)
 
 
@@ -66,8 +66,8 @@ class PyEcoreValue(object):
                 etype = feature.eGenericType.eRawType
                 self.generic_type = etype
             except Exception:
-                raise AttributeError('Feature {} has no type'
-                                     'nor generic'.format(feature))
+                raise AttributeError(f'Feature {feature} has no type'
+                                     'nor generic')
         if not _isinstance(value, etype):
             raise BadValueError(value, etype, feature)
 
@@ -396,29 +396,29 @@ class EDerivedCollection(MutableSet, MutableSequence, ECollection):
         super().__init__(owner, feature)
 
     def __delitem__(self, index):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def __getitem__(self, index):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def __len__(self):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def __setitem__(self, index, item):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def add(self, value):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def discard(self, value):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')
 
     def insert(self, index, value):
-        raise AttributeError('Operation not permited for "{}" feature'
-                             .format(self.feature.name))
+        raise AttributeError('Operation not permited '
+                             f'for "{self.feature.name}" feature')

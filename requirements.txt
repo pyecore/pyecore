@@ -2,3 +2,4 @@ ordered-set
 lxml
 defusedxml
 restrictedpython>=4.0b6
+future_fstrings

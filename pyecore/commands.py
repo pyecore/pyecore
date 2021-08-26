@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 """ This module introduce the command system which allows to defined various
 that can be executed onto a commands stack. Each command can also be 'undo' and
 'redo'.
@@ -83,10 +84,8 @@ class AbstractCommand(Command):
             feature = self.feature.name
         else:
             feature = self.feature
-        return '{} {}.{} <- {}'.format(self.__class__.__name__,
-                                       self.owner,
-                                       feature,
-                                       self.value)
+        return (f'{self.__class__.__name__} '
+                f'{self.owner}.{feature} <- { self.value}')
 
 
 class Set(AbstractCommand):
@@ -258,7 +257,7 @@ class Delete(AbstractCommand):
         self.owner.delete()
 
     def __repr__(self):
-        return '{} {}'.format(self.__class__.__name__, self.owner)
+        return f'{self.__class__.__name__} {self.owner}'
 
 
 class Compound(Command, UserList):
@@ -289,7 +288,7 @@ class Compound(Command, UserList):
         return self[0] if len(self) == 1 else self
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, self.data)
+        return f'{self.__class__.__name__}({self.data})'
 
 
 class CommandStack(object):
@@ -324,7 +323,7 @@ class CommandStack(object):
                 command.execute()
                 self.top = command
             else:
-                raise ValueError('Cannot execute command {}'.format(command))
+                raise ValueError(f'Cannot execute command {command}')
 
     def undo(self):
         if not self:
@@ -352,9 +351,9 @@ class EditingDomain(object):
 
     def execute(self, cmd):
         if cmd.resource not in self.resource_set.resources.values():
-            raise ValueError("Cannot execute command '{}', the resource's "
+            raise ValueError(f"Cannot execute command '{cmd}', the resource's "
                              "command is not contained in the editing domain "
-                             "resource set.".format(cmd))
+                             "resource set.")
         self.__stack.execute(cmd)
 
     def undo(self):

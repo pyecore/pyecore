@@ -507,3 +507,40 @@ def test_xmi_instanceclass_(tmpdir):
     assert root.eClassifiers is not None
     assert root.eClassifiers[0].instanceClassName == 'int'
     assert root.eClassifiers[0].eType is int
+
+
+
+def test_xmi_save_none_and_empty_many_eattributes(tmpdir):
+    p = Ecore.EPackage(nsURI="abcdef")
+    A = Ecore.EClass('A')
+    p.eClassifiers.append(A)
+    att1 = Ecore.EAttribute('names', eType=Ecore.EString, upper=-1, unique=False)
+    att2 = Ecore.EAttribute('names2', eType=Ecore.EString, upper=-1)
+    A.eStructuralFeatures.append(att1)
+    A.eStructuralFeatures.append(att2)
+
+    inst = A()
+    inst.names.append("a")
+    inst.names.append("a")
+    inst.names.append("")
+    inst.names.append(None)
+
+    inst.names2.append("a")
+    inst.names2.append("a")
+    inst.names2.append("")
+    inst.names2.append(None)
+
+
+    xmi_path = tmpdir.mkdir('pyecore-tmp').join('emptymultiatt.xmi')
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(xmi_path)))
+    resource.append(inst)
+    resource.save()
+
+    rset = ResourceSet()
+    rset.metamodel_registry[p.nsURI] = p
+    r = rset.get_resource(URI(str(xmi_path)))
+    root = r.contents[0]
+
+    assert root.names == ["a", "a", "", None]
+    assert root.names2 == ["a", "", None]
