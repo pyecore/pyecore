@@ -1,6 +1,29 @@
 Changelog
 ---------
 
+0.12.1
+++++++
+
+**Bugfixes**
+
+- Fix issue with serialization of multiple empty strings.
+
+- Fix relative HttpURI computation.
+
+- Add inheritance mix for static/dynamic metaclass.
+
+
+**Miscellaneous**
+
+- Add better pythonic implementation of "behavior".
+
+- Add more detailed messages for XMI deserialization.
+
+- Pass to full f-strings.
+
+- Add cache for resources.
+
+
 0.12.0
 ++++++
 
