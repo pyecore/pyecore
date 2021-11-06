@@ -182,16 +182,17 @@ class JsonResource(Resource):
                 inst.eSet(feature, element)
             elif isinstance(value, list):
                 if feature.is_reference:
-                    elements = [self.to_obj(x, owning_feature=feature)
-                                for x in value]
-                    elements = [x for x in elements if x is not None]
+                    elements = (self.to_obj(x, owning_feature=feature)
+                                for x in value)
+                    elements = (x for x in elements if x is not None)
                 else:
-                    elements = [feature._eType.from_string(x) for x in value]
+                    elements = (feature._eType.from_string(x) for x in value)
                 inst.eGet(feature).extend(elements)
             elif isinstance(value, str):
                 inst.eSet(feature, feature._eType.from_string(value))
             else:
-                inst.eSet(feature, value)
+                # int, float or whatever, we aske the type to parse the value
+                inst.eSet(feature, feature._eType.from_string(value))
 
 
 class DefaultObjectMapper(object):

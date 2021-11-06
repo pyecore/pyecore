@@ -187,3 +187,23 @@ def test__jsonresource_load_multiple_values_loading(rset, mm):
     assert 1 in root.values
     assert 2 in root.values
     assert 3 in root.values
+
+
+def test__jsonresource_load_int_float_values(rset):
+    mm_file = path.join('tests', 'json', 'data', 'minimal.ecore')
+    mm = rset.get_resource(mm_file).contents[0]
+    rset.metamodel_registry[mm.nsURI] = mm
+
+    A = mm.getEClassifier('A')
+    MyEnum = mm.getEClassifier('MyEnum')
+
+    json_file = path.join('tests', 'json', 'data', 'intfloat.json')
+    root = rset.get_resource(json_file).contents[0]
+
+    a1, a2, a3 = root.aContainer
+    assert a1.intval == 12
+    assert a1.floatval == 12
+    assert a2.intval == 14
+    assert a2.floatval == 14.4
+    assert a3.intval == 42
+    assert a3.floatval == 42
