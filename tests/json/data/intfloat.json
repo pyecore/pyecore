@@ -1,0 +1,17 @@
+{
+  "eClass" : "http://mytest/1.0#//MyRoot",
+  "aContainer" : [ 
+    { 
+      "intval": 12,
+      "floatval": 12.0
+    },
+    { 
+      "intval": 14,
+      "floatval": 14.4
+    },
+    { 
+      "intval": 42,
+      "floatval": 42
+    }
+  ]
+}
