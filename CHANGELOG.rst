@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.12.2
+++++++
+
+**Bugfixes**
+
+- Fix bad deserialization of float values in JSON for value like "42" (no dot). Thanks `@pablo-campillo https://github.com/pablo-campillo`_ for the issue.
+
+
 0.12.1
 ++++++
 
