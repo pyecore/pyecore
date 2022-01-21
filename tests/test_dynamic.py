@@ -1126,7 +1126,7 @@ def test_create_dynamic_inheritances_inconsistent2():
     assert B.python_class in C.python_class.__bases__
 
 
-@pytest.mark.skip(reason="currently fails with Python 3.6, but no time to debug for this version")
+# @pytest.mark.skip(reason="currently fails with Python 3.6, but no time to debug for this version")
 def test_mix_dynamic_static_inheritance():
     A = EClass("A")
     A.eOperations.append(EOperation("spam"))

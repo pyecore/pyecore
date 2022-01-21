@@ -144,6 +144,21 @@ class Metasubinstance(type):
             other = other.python_class
         return type.__subclasscheck__(cls, other)
 
+    def _mro_alternative(cls):
+        try:
+            return super().mro()
+        except TypeError:
+            # try:
+            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            #     return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
+            # except Exception:
+            def _eAllBases_gen(self):
+                super_types = self.__bases__
+                yield from super_types
+                for x in super_types:
+                    yield from _eAllBases_gen(x)
+            return OrderedSet(chain([cls], _eAllBases_gen(cls)))
+
 
 # Meta methods for static EClass
 class MetaEClass(Metasubinstance):
@@ -179,6 +194,9 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def force_resolve(self):
+        return self
 
     @classmethod
     def allInstances(cls, resources=None):
@@ -782,13 +800,17 @@ class EClass(EClassifier):
             try:
                 instance.python_class = type(name, super_types, attr_dict)
             except Exception:
-                super_types = sorted(super_types,
-                                     key=lambda x: len(x.eClass
-                                                        .eAllSuperTypes()),
-                                     reverse=True)
-                instance.python_class = type(name,
-                                             tuple(super_types),
-                                             attr_dict)
+                try:
+                    super_types = sorted(super_types,
+                                         key=lambda x: len(x.eClass
+                                                            .eAllSuperTypes()),
+                                         reverse=True)
+                    instance.python_class = type(name,
+                                                 tuple(super_types),
+                                                 attr_dict)
+                except TypeError:
+                    print("Switch MRO computation")
+                    Metasubinstance.mro = Metasubinstance._mro_alternative
 
         instance.__name__ = name
         return instance
@@ -825,11 +847,15 @@ class EClass(EClassifier):
             try:
                 self.python_class.__bases__ = new_supers
             except TypeError:
-                new_supers = sorted(new_supers,
-                                    key=lambda x: len(x.eClass
-                                                       .eAllSuperTypes()),
-                                    reverse=True)
-                self.python_class.__bases__ = tuple(new_supers)
+                try:
+                    new_supers = sorted(new_supers,
+                                        key=lambda x: len(x.eClass
+                                                           .eAllSuperTypes()),
+                                        reverse=True)
+                    self.python_class.__bases__ = tuple(new_supers)
+                except TypeError:
+                    print("Switch MRO computation")
+                    Metasubinstance.mro = Metasubinstance._mro_alternative
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
@@ -884,9 +910,8 @@ class EClass(EClassifier):
                     None)
 
     def _eAllSuperTypes_gen(self):
-        super_types = self.eSuperTypes
-        yield from self.eSuperTypes
-        for x in super_types:
+        yield from (x.force_resolve() for x in self.eSuperTypes)
+        for x in self.eSuperTypes:
             yield from x._eAllSuperTypes_gen()
 
     def eAllSuperTypes(self):
@@ -964,7 +989,7 @@ class EProxy(EObject):
 
     def force_resolve(self):
         if self.resolved:
-            return
+            return self._wrapped
         resource = self._proxy_resource
         decoded = resource.resolve_object(self._proxy_path)
         if not hasattr(decoded, '_inverse_rels'):
@@ -974,6 +999,7 @@ class EProxy(EObject):
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
         self.resolved = True
+        return self._wrapped
 
     def delete(self, recursive=True):
         if recursive and self.resolved:
@@ -1049,6 +1075,8 @@ class EProxy(EObject):
         return self._wrapped(*args, **kwargs)
 
     def __hash__(self):
+        if self.resolved:
+            return hash(self._wrapped)
         return object.__hash__(self)
 
     def __eq__(self, other):
