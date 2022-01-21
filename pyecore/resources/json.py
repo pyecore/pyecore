@@ -81,9 +81,9 @@ class JsonResource(Resource):
     def object_uri(self, obj):
         if obj.eResource == self:
             resource_uri = ''
-        else:
-            resource_uri = obj.eResource.uri if obj.eResource else ''
-        return f'{resource_uri}{self._uri_fragment(obj)}'
+        # else:
+        #     resource_uri = self.eResource.uri if obj.eResource else ''
+        return self._build_path_from(obj)[0]
 
     def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None):
         uri = self.serialize_eclass(obj.eClass)
@@ -168,7 +168,9 @@ class JsonResource(Resource):
             else:
                 if feature.containment:
                     containments.append((feature, value))
-                elif feature.eOpposite is not owning_feature:
+                elif owning_feature and feature.eOpposite is not owning_feature:
+                    ereferences.append((feature, value))
+                elif not feature.eOpposite:
                     ereferences.append((feature, value))
         self.process_inst(inst, eattributes)
         self.process_inst(inst, containments, owning_feature)
