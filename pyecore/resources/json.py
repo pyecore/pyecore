@@ -3,7 +3,7 @@
 The json module introduces JSON resource and JSON parsing.
 """
 from enum import unique, Enum
-from functools import lru_cache
+from functools import lru_cache, singledispatchmethod
 import json
 from .resource import Resource
 from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral
@@ -90,6 +90,44 @@ class JsonResource(Resource):
         ref = {'eClass': uri}
         ref[self.ref_tag] = self.object_uri(obj)
         return ref
+
+    # @singledispatchmethod
+    # def to_dict(self, obj, is_ref=False):
+    #     return obj
+    #
+    # @to_dict.register(type)
+    # def _(self, obj, is_ref=False):
+    #     if not issubclass(obj, EObject):
+    #         return obj
+    #     if is_ref:
+    #         fun = self._to_ref_from_obj
+    #         return fun(obj.eClass, self.options, self.use_uuid, self)
+    #
+    # @to_dict.register(EEnumLiteral)
+    # def _(self, obj, is_ref=False):
+    #     return obj.name
+    #
+    # @to_dict.register(EObject)
+    # def _(self, obj, is_ref=False):
+    #     if is_ref:
+    #         fun = self._to_ref_from_obj
+    #     else:
+    #         cls = obj.eClass.python_class
+    #         mapper = next((self.mappers[k] for k in self.mappers
+    #                        if issubclass(cls, k)), self.default_mapper)
+    #         fun = mapper.to_dict_from_obj
+    #     return fun(obj, self.options, self.use_uuid, self)
+    #
+    # @to_dict.register(ECollection)
+    # def _(self, obj, is_ref=False):
+    #     fun = self._to_ref_from_obj if is_ref else self.to_dict
+    #     result = []
+    #     for x in obj:
+    #         write_object = fun(x)
+    #         if write_object is NO_OBJECT:
+    #             continue
+    #         result.append(write_object)
+    #     return result
 
     def to_dict(self, obj, is_ref=False):
         if isinstance(obj, type) and issubclass(obj, EObject):
