@@ -809,7 +809,6 @@ class EClass(EClassifier):
                                                  tuple(super_types),
                                                  attr_dict)
                 except TypeError:
-                    print("Switch MRO computation")
                     Metasubinstance.mro = Metasubinstance._mro_alternative
 
         instance.__name__ = name
@@ -854,7 +853,6 @@ class EClass(EClassifier):
                                         reverse=True)
                     self.python_class.__bases__ = tuple(new_supers)
                 except TypeError:
-                    print("Switch MRO computation")
                     Metasubinstance.mro = Metasubinstance._mro_alternative
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
