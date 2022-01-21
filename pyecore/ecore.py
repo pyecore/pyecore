@@ -466,9 +466,9 @@ class EGenericType(EObject):
         return self.eClassifier or self.eTypeParameter
 
     def notifyChanged(self, notif):
-        if (self._containment_feature is EClass.eGenericSuperTypes and
+        if (self.eContainmentFeature() is EClass.eGenericSuperTypes and
             notif.feature is EGenericType.eClassifier):
-            self._container._update_supertypes()
+            self.eContainer()._update_supertypes()
 
 
 # class SpecialEClassifier(Metasubinstance):
