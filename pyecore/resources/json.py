@@ -200,7 +200,7 @@ class JsonResource(Resource):
                 continue
             feature = self._find_feature(eclass, key)
             if not feature:
-                raise ValueError('Unknown feature {key} for object "{eclass}"')
+                raise ValueError(f'Unknown feature {key} for object "{eclass}"')
             if feature.is_attribute:
                 eattributes.append((feature, value))
             else:
