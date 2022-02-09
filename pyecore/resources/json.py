@@ -3,7 +3,7 @@
 The json module introduces JSON resource and JSON parsing.
 """
 from enum import unique, Enum
-from functools import lru_cache, singledispatchmethod
+from functools import lru_cache
 import json
 from .resource import Resource
 from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral
