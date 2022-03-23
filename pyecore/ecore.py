@@ -880,17 +880,17 @@ class EClass(EClassifier):
 
     def _update_supertypes(self):
         new_supers = self.__compute_supertypes()
+        try:
+            self.python_class.__bases__ = new_supers
+        except TypeError:
             try:
-                self.python_class.__bases__ = new_supers
+                new_supers = sorted(new_supers,
+                                    key=lambda x: len(x.eClass
+                                                       .eAllSuperTypes()),
+                                    reverse=True)
+                self.python_class.__bases__ = tuple(new_supers)
             except TypeError:
-                try:
-                    new_supers = sorted(new_supers,
-                                        key=lambda x: len(x.eClass
-                                                           .eAllSuperTypes()),
-                                        reverse=True)
-                    self.python_class.__bases__ = tuple(new_supers)
-                except TypeError:
-                    Metasubinstance.mro = Metasubinstance._mro_alternative
+                Metasubinstance.mro = Metasubinstance._mro_alternative
 
     def __compute_supertypes(self):
         if not self.eSuperTypes and not self.eGenericSuperTypes:
