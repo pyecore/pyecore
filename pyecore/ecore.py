@@ -477,10 +477,16 @@ class EGenericType(EObject):
         super().__init__(**kwargs)
         self.eTypeParameter = eTypeParameter
         self.eClassifier = eClassifier
+        self._eternal_listener.append(self)
 
     @property
     def eRawType(self):
         return self.eClassifier or self.eTypeParameter
+
+    def notifyChanged(self, notif):
+        if (self.eContainmentFeature() is EClass.eGenericSuperTypes and
+            notif.feature is EGenericType.eClassifier):
+            self.eContainer()._update_supertypes()
 
 
 # class SpecialEClassifier(Metasubinstance):
@@ -704,7 +710,10 @@ class EStructuralFeature(ETypedElement):
 
     def __repr__(self):
         eType = getattr(self, 'eType', None)
+        eGenericType = getattr(self, 'eGenericType', None)
         name = getattr(self, 'name', None)
+        if eGenericType:
+            return f'<{self.__class__.__name__} {name}: {eGenericType.eRawType.raw_types()}>'
         return f'<{self.__class__.__name__} {name}: {eType}>'
 
 
@@ -842,18 +851,7 @@ class EClass(EClassifier):
         if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
-            new_supers = self.__compute_supertypes()
-            try:
-                self.python_class.__bases__ = new_supers
-            except TypeError:
-                try:
-                    new_supers = sorted(new_supers,
-                                        key=lambda x: len(x.eClass
-                                                           .eAllSuperTypes()),
-                                        reverse=True)
-                    self.python_class.__bases__ = tuple(new_supers)
-                except TypeError:
-                    Metasubinstance.mro = Metasubinstance._mro_alternative
+            self._update_supertypes()
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
@@ -880,11 +878,26 @@ class EClass(EClassifier):
         exec(code, safe_builtins, namespace)
         setattr(self.python_class, name, namespace[name])
 
+    def _update_supertypes(self):
+        new_supers = self.__compute_supertypes()
+            try:
+                self.python_class.__bases__ = new_supers
+            except TypeError:
+                try:
+                    new_supers = sorted(new_supers,
+                                        key=lambda x: len(x.eClass
+                                                           .eAllSuperTypes()),
+                                        reverse=True)
+                    self.python_class.__bases__ = tuple(new_supers)
+                except TypeError:
+                    Metasubinstance.mro = Metasubinstance._mro_alternative
+
     def __compute_supertypes(self):
-        if not self.eSuperTypes:
+        if not self.eSuperTypes and not self.eGenericSuperTypes:
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
+            eSuperTypes.extend(x.eClassifier for x in self.eGenericSuperTypes if x.eClassifier is not None)
             if len(eSuperTypes) > 1 and EObject.eClass in eSuperTypes:
                 eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
@@ -915,10 +928,25 @@ class EClass(EClassifier):
     def eAllSuperTypes(self):
         return OrderedSet(self._eAllSuperTypes_gen())
 
+    def _eAllGenericSuperTypes_gen(self):
+        super_types = self.eGenericSuperTypes
+        yield from self.eGenericSuperTypes
+        for x in super_types:
+            yield from x.eClassifier._eAllGenericSuperTypes_gen()
+
+    def eAllGenericSuperTypes(self):
+        return OrderedSet(self._eAllGenericSuperTypes_gen())
+
+    def eAllGenericSuperTypesClassifiers(self):
+        return OrderedSet((x.eClassifier for x
+                                         in self._eAllGenericSuperTypes_gen()))
+
     def _eAllStructuralFeatures_gen(self):
         yield from self.eStructuralFeatures
         for parent in self.eSuperTypes:
             yield from parent._eAllStructuralFeatures_gen()
+        for parent in self.eGenericSuperTypes:
+            yield from parent.eClassifier._eAllStructuralFeatures_gen()
 
     def eAllStructuralFeatures(self):
         return OrderedSet(self._eAllStructuralFeatures_gen())

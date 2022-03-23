@@ -387,7 +387,8 @@ class XMIResource(Resource):
         xsi_type = QName(self.xsi_type_url(), 'type')
         uri = obj.eClass.ePackage.nsURI
         if uri not in self.reverse_nsmap:
-            epackage = self.get_metamodel(uri)
+            # epackage = self.get_metamodel(uri)
+            epackage = obj.eClass.ePackage
             self.register_nsmap(epackage.nsPrefix, uri)
         prefix = self.reverse_nsmap[uri]
         node.attrib[xsi_type] = f'{prefix}:{obj.eClass.name}'
