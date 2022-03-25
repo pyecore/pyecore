@@ -193,11 +193,12 @@ class URI(object):
 
     def relative_from_me(self, other_uri):
         normalized = path.dirname(self.normalize())
+        other_normalized = other_uri
         if isinstance(other_uri, URI):
             other_normalized = other_uri.normalize()
             if other_uri.protocol:
                 return other_normalized
-        return path.relpath(other_uri, normalized)
+        return path.relpath(other_normalized, normalized)
 
     def apply_relative_from_me(self, relative_path):
         if ':/' in relative_path:
