@@ -29,7 +29,7 @@ def insert(self, index, key):
     self.map[key] = index
 
 
-def pop(self, index=None):
+def pop(self, index=-1):
     """Removes an element at the tail of the OrderedSet or at a dedicated
     position.
 
@@ -39,22 +39,17 @@ def pop(self, index=None):
     if not self.items:
         raise KeyError('Set is empty')
 
-    def remove_index(i):
-        elem = self.items[i]
-        del self.items[i]
-        del self.map[elem]
-        return elem
-    if index is None:
-        elem = remove_index(-1)
-    else:
-        size = len(self.items)
+    size = len(self.items)
+    if index < 0:
+        index = size + index
         if index < 0:
-            index = size + index
-            if index < 0:
-                raise IndexError('assignement index out of range')
-        elif index >= size:
             raise IndexError('assignement index out of range')
-        elem = remove_index(index)
+    elif index >= size:
+        raise IndexError('assignement index out of range')
+    elem = self.items[index]
+    del self.items[index]
+    del self.map[elem]
+    if elem != -1:
         for k, v in self.map.items():
             if v >= index and v > 0:
                 self.map[k] = v - 1
@@ -88,6 +83,10 @@ def __getitem__(self, index):
         raise TypeError("Don't know how to index an OrderedSet by %r" % index)
 
 
+def __delitem__(self, index):
+    self.pop(index)
+
+
 def subcopy(self, subitems):
     """
     This method is here mainly for overriding
@@ -99,4 +98,5 @@ ordered_set.OrderedSet.insert = insert
 ordered_set.OrderedSet.pop = pop
 ordered_set.OrderedSet.__setitem__ = __setitem__
 ordered_set.OrderedSet.__getitem__ = __getitem__
+ordered_set.OrderedSet.__delitem__ = __delitem__
 ordered_set.OrderedSet.subcopy = subcopy
