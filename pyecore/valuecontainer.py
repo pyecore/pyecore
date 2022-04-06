@@ -96,7 +96,6 @@ class EValue(PyEcoreValue):
     def __init__(self, owner, efeature):
         super().__init__(owner, efeature)
         self._value = efeature.get_default_value()
-        # self._value = val
 
     def remove_or_unset(self, value, update_opposite=True):
         self._set(None, update_opposite)
@@ -220,11 +219,8 @@ class ECollection(PyEcoreValue):
                                        kind=Kind.ADD))
         self.owner._isset.add(self.feature)
 
-    def pop(self, index=None):
-        if index is None:
-            value = super().pop()
-        else:
-            value = super().pop(index)
+    def pop(self, index=-1):
+        value = super().pop(index)
         if self.is_ref:
             self._update_container(None, previous_value=value)
             self._update_opposite(value, self.owner, remove=True)
@@ -234,8 +230,18 @@ class ECollection(PyEcoreValue):
         return value
 
     def clear(self):
-        while self:
-            self.pop()
+        # while self:
+        #     self.pop()
+        if not self:
+            return
+        if self.is_ref:
+            for value in self:
+                self._update_container(None, previous_value=value)
+                self._update_opposite(value, self.owner, remove=True)
+        notif = Notification(old=list(self), new=[], feature=self.feature,
+                             kind=Kind.REMOVE_MANY)
+        super().clear()
+        self.owner.notify(notif)
 
     def select(self, f):
         return [x for x in self if f(x)]
@@ -357,12 +363,16 @@ class EAbstractSet(ECollection):
     def update(self, others):
         check = self.check
         add = super().add
-        for value in others:
-            check(value)
-            if self.is_ref:
+        if self.is_ref:
+            for value in others:
+                check(value)
+                add(value)
                 self._update_container(value)
                 self._update_opposite(value, self.owner)
-            add(value)
+        else:
+            for value in others:
+                check(value)
+                add(value)
         self.owner._isset.add(self.feature)
         self.owner.notify(Notification(new=others,
                                        feature=self.feature,

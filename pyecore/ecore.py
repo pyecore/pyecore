@@ -852,19 +852,21 @@ class EClass(EClassifier):
             return
         if notif.feature is EClass.eSuperTypes:
             self._update_supertypes()
+        elif notif.kind in (Kind.REMOVE, Kind.REMOVE_MANY):
+            if notif.kind is Kind.REMOVE:
+                delattr(self.python_class, notif.old.name)
+            elif notif.kind is Kind.REMOVE_MANY:
+                for feature in notif.old:
+                    delattr(self.python_class, feature.name)
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
-            elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.old.name)
         elif notif.feature is EClass.eStructuralFeatures:
             if notif.kind is Kind.ADD:
                 setattr(self.python_class, notif.new.name, notif.new)
             elif notif.kind is Kind.ADD_MANY:
                 for x in notif.new:
                     setattr(self.python_class, x.name, x)
-            elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.old.name)
         elif notif.feature is EClass.name and notif.kind is Kind.SET:
             self.python_class.__name__ = notif.new
             self.__name__ = notif.new

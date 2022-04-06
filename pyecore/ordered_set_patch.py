@@ -39,13 +39,6 @@ def pop(self, index=-1):
     if not self.items:
         raise KeyError('Set is empty')
 
-    size = len(self.items)
-    if index < 0:
-        index = size + index
-        if index < 0:
-            raise IndexError('assignement index out of range')
-    elif index >= size:
-        raise IndexError('assignement index out of range')
     elem = self.items[index]
     del self.items[index]
     del self.map[elem]
@@ -84,6 +77,12 @@ def __getitem__(self, index):
 
 
 def __delitem__(self, index):
+    if isinstance(index, slice) and index == SLICE_ALL:
+        self.clear()
+        return
+    elif isinstance(index, slice):
+        raise KeyError('Item deletion using slices is not yet supported '
+                       f'for {self.__class__.__name__}')
     self.pop(index)
 
 
