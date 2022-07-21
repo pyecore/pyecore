@@ -21,6 +21,7 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
+from itertools import chain
 from ordered_set import OrderedSet
 from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
