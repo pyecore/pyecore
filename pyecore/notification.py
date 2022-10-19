@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """
 This module gives the "listener" classes for the PyEcore notification layer.
 The main class to create a new listener is "EObserver" which is triggered

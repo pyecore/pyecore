@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """The exec module provides new annotations that helps to extend existing
 metamodels with behavior, and enables a full executable model experience
 in Python.

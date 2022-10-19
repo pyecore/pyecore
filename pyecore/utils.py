@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """
 This module gathers utility classes and functions that can ease metamodel and
 model manipulation.

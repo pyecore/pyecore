@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """This module is the heart of PyEcore. It defines all the basic concepts that
 are common to EMF-Java and PyEcore (EObject/EClass...).
 It defines the basic classes and behavior for PyEcore implementation:

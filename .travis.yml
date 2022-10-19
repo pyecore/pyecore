@@ -2,7 +2,6 @@ sudo: false
 language: python
 dist: focal
 python:
-  - "3.5"
   - "3.6"
   - "3.7"
   - "3.8"
@@ -30,4 +29,4 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     tags: true
-    python: 3.9
+    python: "3.10"

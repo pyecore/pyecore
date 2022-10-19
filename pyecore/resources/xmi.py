@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """
 The xmi module introduces XMI resource and XMI parsing.
 """
