@@ -26,7 +26,7 @@ from ordered_set import OrderedSet
 from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
-from .innerutils import ignored, javaTransMap, parse_date
+from .innerutils import InternalSet, ignored, javaTransMap, parse_date
 
 
 name = 'ecore'
@@ -180,7 +180,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
         instance._internal_id = None
-        instance._isset = set()
+        instance._isset = InternalSet()
         instance._container = None
         instance._containment_feature = None
         instance._eresource = None
@@ -1130,8 +1130,8 @@ from .valuecontainer import ECollection, EValue, \
 # meta-meta level
 EString = EDataType('EString', str)
 ENamedElement.name = EAttribute('name', EString)
-ENamedElement.name._isset.add(ENamedElement.name)  # special case
-EString._isset.add(ENamedElement.name)  # special case
+ENamedElement.name._isset[ENamedElement.name] = None  # special case
+EString._isset[ENamedElement.name] = None  # special case
 
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
@@ -1189,7 +1189,7 @@ ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eGenericType = EReference('eGenericType', EGenericType,
                                         containment=True)
 ETypedElement.eType = EReference('eType', EClassifier)
-ENamedElement.name._isset.add(ETypedElement.eType)  # special case
+ENamedElement.name._isset[ETypedElement.eType] = None  # special case
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)

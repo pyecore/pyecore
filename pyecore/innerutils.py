@@ -7,6 +7,10 @@ from contextlib import contextmanager
 from datetime import datetime
 
 
+class InternalSet(dict):
+    add = dict.setdefault
+
+
 @contextmanager
 def ignored(*exceptions):
     """Gives a convenient way of ignoring exceptions.

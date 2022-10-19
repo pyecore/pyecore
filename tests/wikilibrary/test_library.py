@@ -64,7 +64,7 @@ def test_wikilib_econtents():
 
 def test_instance_eisset():
     smith = wikilib.Writer()
-    assert smith._isset == set()
+    assert smith._isset == {}
     smith.name = 'SmithIsMyName'
     assert wikilib.Writer.name in smith._isset
     assert smith.eIsSet(wikilib.Writer.name)

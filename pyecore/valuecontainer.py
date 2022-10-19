@@ -83,7 +83,7 @@ class PyEcoreValue(object):
             if (prev_container != self.owner
                     or prev_feature != self.feature) \
                     and isinstance(prev_container, EObject):
-                prev_container.__dict__[prev_feature.name] \
+                prev_container.__dict__[prev_feature._name] \
                               .remove_or_unset(value)
             value._container = self.owner
             value._containment_feature = self.feature
@@ -114,7 +114,7 @@ class EValue(PyEcoreValue):
                              feature=efeature,
                              kind=Kind.UNSET if value is None else Kind.SET)
         owner.notify(notif)
-        owner._isset.add(efeature)
+        owner._isset[efeature] = None
 
         if not self.is_ref:
             return
@@ -135,7 +135,7 @@ class EValue(PyEcoreValue):
 
         eOpposite = efeature.eOpposite
         # if we are in an 'unset' context
-        opposite_name = eOpposite.name
+        opposite_name = eOpposite._name
         if value is None:
             if previous_value is None:
                 return
@@ -187,7 +187,7 @@ class ECollection(PyEcoreValue):
                 owner._inverse_rels.add(couple)
             return
 
-        opposite_name = eOpposite.name
+        opposite_name = eOpposite._name
         if eOpposite.many and not remove:
             owner.__getattribute__(opposite_name).append(new_value, False)
         elif eOpposite.many and remove:
@@ -217,7 +217,7 @@ class ECollection(PyEcoreValue):
         self.owner.notify(Notification(new=y,
                                        feature=self.feature,
                                        kind=Kind.ADD))
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
 
     def pop(self, index=-1):
         value = super().pop(index)
@@ -271,7 +271,7 @@ class EList(ECollection, list):
         self.owner.notify(Notification(new=value,
                                        feature=self.feature,
                                        kind=Kind.ADD))
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
 
     def extend(self, sublist):
         check = self.check
@@ -291,7 +291,7 @@ class EList(ECollection, list):
         self.owner.notify(Notification(new=sublist,
                                        feature=self.feature,
                                        kind=Kind.ADD_MANY))
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
 
     update = extend
 
@@ -334,7 +334,7 @@ class EList(ECollection, list):
         self.owner.notify(Notification(new=y,
                                        feature=self.feature,
                                        kind=kind))
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
 
 
 class EBag(EList):
@@ -356,7 +356,7 @@ class EAbstractSet(ECollection):
         self.owner.notify(Notification(new=value,
                                        feature=self.feature,
                                        kind=Kind.ADD))
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
 
     append = add
 
@@ -373,7 +373,7 @@ class EAbstractSet(ECollection):
             for value in others:
                 check(value)
                 add(value)
-        self.owner._isset.add(self.feature)
+        self.owner._isset[self.feature] = None
         self.owner.notify(Notification(new=others,
                                        feature=self.feature,
                                        kind=Kind.ADD_MANY))
