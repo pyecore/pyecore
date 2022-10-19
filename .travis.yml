@@ -1,5 +1,6 @@
 sudo: false
 language: python
+dist: focal
 python:
   - "3.5"
   - "3.6"
@@ -7,7 +8,9 @@ python:
   - "3.8"
   - "3.9"
   - "3.10"
+  - "3.11-dev"
   - "pypy3"
+  - "nightly"
 install:
   - pip install -U importlib-metadata
   - pip install -U pip setuptools
