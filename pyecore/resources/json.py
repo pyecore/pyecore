@@ -257,7 +257,7 @@ class DefaultObjectMapper(object):
                 continue
             write_object = resource.to_dict(value, is_ref=is_ref)
             if write_object is not NO_OBJECT:
-                d[attr.name] = write_object
+                d[attr._name] = write_object
             if use_uuid:
                 resource._assign_uuid(obj)
                 d['uuid'] = obj._internal_id

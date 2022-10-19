@@ -417,20 +417,17 @@ class Resource(object):
         try:
             nsURI = self.prefixes[prefix]
         except KeyError:
-            return None
-        try:
-            return self.resource_set.metamodel_registry[nsURI]
-        except Exception:
-            return global_registry.get(nsURI)
+            return KeyError(f'Unknown prefix: {prefix!r}')
+        return self.get_metamodel(nsURI)
 
     def get_metamodel(self, nsuri):
         try:
-            if self.resource_set:
-                return self.resource_set.metamodel_registry[nsuri]
-            else:
+            return self.resource_set.metamodel_registry[nsuri]
+        except Exception:
+            try:
                 return global_registry[nsuri]
-        except KeyError:
-            raise KeyError(f'Unknown metamodel with uri: {nsuri}')
+            except KeyError:
+                raise KeyError(f'Unknown metamodel with uri: {nsuri!r}')
 
     @staticmethod
     def normalize(fragment):
@@ -478,8 +475,8 @@ class Resource(object):
         if cls.is_fragment_uuid(path) and start_obj.eResource:
             return start_obj.eResource.uuid_dict[path]
 
-        features = [x for x in path.split('/') if x]
-        feat_info = [x.split('.') for x in features]
+        features = (x for x in path.split('/') if x)
+        feat_info = (x.split('.') for x in features)
         obj = start_obj
         annot_content = False
         for feat in feat_info:
@@ -494,14 +491,14 @@ class Resource(object):
                 except ValueError:
                     # If index is not numeric it may be given as a name.
                     if index:
-                        obj = tmp_obj.select(lambda x: x.name == index)[0]
+                        obj = next((x for x in tmp_obj if x.name == index))
             elif key.startswith('%'):
                 key = key[1:-1]
-                obj = obj.eAnnotations.select(lambda x: x.source == key)[0]
+                obj = next((x for x in obj.eAnnotations if x.source == key))
                 annot_content = True
             elif annot_content:
                 annot_content = False
-                obj = obj.contents.select(lambda x: x.name == key)[0]
+                obj = next((x for x in obj.contents if x.name == key))
             else:
                 with ignored(Exception):
                     subpack = next((p for p in obj.eSubpackages

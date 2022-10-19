@@ -139,14 +139,14 @@ class XMIResource(Resource):
         if is_many and not from_tag:
             values = value.split()
             from_string = eattribute._eType.from_string
-            results = [from_string(x) for x in values]
-            eobject.__getattribute__(eattribute.name).extend(results)
+            results = (from_string(x) for x in values)
+            eobject.__getattribute__(eattribute._name).extend(results)
         elif is_many:
             value = eattribute._eType.from_string(value)
-            eobject.__getattribute__(eattribute.name).append(value)
+            eobject.__getattribute__(eattribute._name).append(value)
         else:
             val = eattribute._eType.from_string(value)
-            eobject.__setattr__(eattribute.name, val)
+            eobject.__setattr__(eattribute._name, val)
 
     def _decode_eobject(self, current_node, parent_eobj):
         eobject_info = self._decode_node(parent_eobj, current_node)
@@ -164,9 +164,9 @@ class XMIResource(Resource):
 
         # attach the new eobject to the parent one
         if feat_container.many:
-            parent_eobj.__getattribute__(feat_container.name).append(eobject)
+            parent_eobj.__getattribute__(feat_container._name).append(eobject)
         else:
-            parent_eobj.__setattr__(feat_container.name, eobject)
+            parent_eobj.__setattr__(feat_container._name, eobject)
 
         # iterate on children
         for child in current_node:
@@ -184,10 +184,10 @@ class XMIResource(Resource):
                              f'line {node.sourceline}')
         if self._is_none_node(node):
             if feature_container.many:
-                parent_eobj.__getattribute__(feature_container.name) \
+                parent_eobj.__getattribute__(feature_container._name) \
                            .append(None)
             else:
-                parent_eobj.__setattr__(feature_container.name, None)
+                parent_eobj.__setattr__(feature_container._name, None)
 
             return (None, None, [], [], False)
         if node.get('href'):
@@ -224,11 +224,11 @@ class XMIResource(Resource):
                 if hasattr(container, 'python_class'):
                     container = container.python_class
                 container.__doc__ = annotation_value
-            return (None, None, tuple(), tuple(), False)
+            return (None, None, (), (), False)
         elif isinstance(etype, EDataType):
             value = node.text if node.text else ''
             return (None, parent_eobj, ((feature_container, value),),
-                    tuple(), True)
+                    (), True)
         else:
             # idref = node.get(f'{{{XMI_URL}}}idref')
             # if idref:
@@ -243,7 +243,7 @@ class XMIResource(Resource):
             feature = self._decode_attribute(eobject, key, value, node)
             if not feature:
                 continue  # we skip the unknown features
-            if etype is EClass and feature.name == 'name':
+            if etype is EClass and feature._name == 'name':
                 continue  # we skip the name for metamodel import
             if feature.is_attribute:
                 eatts.append((feature, value))
@@ -279,14 +279,14 @@ class XMIResource(Resource):
         opposite = []
         for eobject, erefs in self._later:
             for ref, value in erefs:
-                name = ref.name
+                name = ref._name
                 if name == 'eOpposite':
                     opposite.append((eobject, ref, value))
                     continue
                 if ref.many:
-                    values = [self.normalize(x) for x in value.split()]
+                    values = (self.normalize(x) for x in value.split())
                 else:
-                    values = [value]
+                    values = (value,)
                 for value in values:
                     if not value:  # BA: Skip empty references
                         continue
@@ -304,7 +304,7 @@ class XMIResource(Resource):
             resolved_value = self._resolve_nonhref(value)
             if not resolved_value:
                 raise ValueError(f'EObject for {value} is unknown')
-            eobject.__setattr__(ref.name, resolved_value)
+            eobject.__setattr__(ref._name, resolved_value)
 
     @lru_cache()
     def _resolve_nonhref(self, path):
@@ -401,15 +401,16 @@ class XMIResource(Resource):
 
     def _go_across(self, obj, serialize_default=False):
         eclass = obj.eClass
-        if not obj.eContainmentFeature():  # obj is the root
+        if obj.eContainmentFeature():
+            node = Element(obj.eContainmentFeature()._name)
+            if obj.eContainmentFeature()._eType != eclass:
+                self._add_explicit_type(node, obj)
+        else:
+            # obj is the root
             epackage = eclass.ePackage
             nsURI = epackage.nsURI
             tag = QName(nsURI, eclass.name) if nsURI else eclass.name
             node = Element(tag)
-        else:
-            node = Element(obj.eContainmentFeature().name)
-            if obj.eContainmentFeature()._eType != eclass:
-                self._add_explicit_type(node, obj)
 
         if self.use_uuid:
             self._assign_uuid(obj)
@@ -419,7 +420,7 @@ class XMIResource(Resource):
         for feat in obj._isset:
             if feat.derived or feat.transient:
                 continue
-            feat_name = feat.name
+            feat_name = feat._name
             value = obj.__getattribute__(feat_name)
             if value is None:
                 if serialize_default:
@@ -457,12 +458,11 @@ class XMIResource(Resource):
                     node.attrib[feat_name] = etype.to_string(value)
                 continue
 
-            elif feat.is_reference and \
-                    feat.eOpposite and feat.eOpposite.containment:
+            elif feat.eOpposite and feat.eOpposite.containment:
                 continue
-            elif feat.is_reference and not feat.containment:
+            elif not feat.containment:
                 if feat.many:
-                    results = [self._build_path_from(x) for x in value]
+                    results = (self._build_path_from(x) for x in value)
                     embedded = []
                     crossref = []
                     for i, result in enumerate(results):
@@ -487,7 +487,7 @@ class XMIResource(Resource):
                     else:
                         node.attrib[feat_name] = frag
 
-            if feat.is_reference and feat.containment:
+            else:
                 children = value if feat.many else [value]
                 for child in children:
                     node.append(self._go_across(child, serialize_default))
