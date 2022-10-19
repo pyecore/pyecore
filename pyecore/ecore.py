@@ -145,20 +145,18 @@ class Metasubinstance(type):
             other = other.python_class
         return type.__subclasscheck__(cls, other)
 
+    @classmethod
+    def _eAllBases_gen(cls):
+        super_types = cls.__bases__
+        yield from super_types
+        for x in super_types:
+            yield from cls._eAllBases_gen(x)
+
     def _mro_alternative(cls):
         try:
             return super().mro()
         except TypeError:
-            # try:
-            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
-            #     return tuple(chain([e], new_mro, (EObject, ENotifer, object)))
-            # except Exception:
-            def _eAllBases_gen(self):
-                super_types = self.__bases__
-                yield from super_types
-                for x in super_types:
-                    yield from _eAllBases_gen(x)
-            return OrderedSet(chain([cls], _eAllBases_gen(cls)))
+            return OrderedSet(chain((cls,), cls._eAllBases_gen(cls)))
 
 
 # Meta methods for static EClass
