@@ -810,12 +810,12 @@ class EClass(EClassifier):
                 instance.python_class = type(name, super_types, attr_dict)
             except Exception:
                 try:
-                    super_types = sorted(super_types,
+                    super_types = tuple(sorted(super_types,
                                          key=lambda x: len(x.eClass
-                                                            .eAllSuperTypes()),
+                                                            .eAllSuperTypes())),
                                          reverse=True)
                     instance.python_class = type(name,
-                                                 tuple(super_types),
+                                                 super_types,
                                                  attr_dict)
                 except TypeError:
                     Metasubinstance.mro = Metasubinstance._mro_alternative
