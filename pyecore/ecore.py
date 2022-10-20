@@ -148,6 +148,10 @@ class Metasubinstance(type):
         try:
             return super().mro()
         except TypeError:
+            # try:
+            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            #     return tuple(chain([cls], new_mro, (EObject, ENotifer, object)))
+            # except Exception:
             def _eAllBases_gen(self):
                 super_types = self.__bases__
                 yield from super_types
@@ -815,6 +819,7 @@ class EClass(EClassifier):
                                                  attr_dict)
                 except TypeError:
                     Metasubinstance.mro = Metasubinstance._mro_alternative
+                    instance.python_class = type(name, super_types, attr_dict)
 
         instance.__name__ = name
         return instance
@@ -882,13 +887,14 @@ class EClass(EClassifier):
             self.python_class.__bases__ = new_supers
         except TypeError:
             try:
-                new_supers = sorted(new_supers,
+                new_supers = tuple(sorted(new_supers,
                                     key=lambda x: len(x.eClass
                                                        .eAllSuperTypes()),
-                                    reverse=True)
-                self.python_class.__bases__ = tuple(new_supers)
+                                    reverse=True))
+                self.python_class.__bases__ = new_supers
             except TypeError:
                 Metasubinstance.mro = Metasubinstance._mro_alternative
+                self.python_class.__bases__ = new_supers
 
     def __compute_supertypes(self):
         if not self.eSuperTypes and not self.eGenericSuperTypes:
