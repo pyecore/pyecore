@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime
 from pyecore.ecore import *
 import pyecore.ecore as ecore
+from pyecore.ecore import Metasubinstance
 
 
 def test_eclass_meta_attribute_access():
@@ -1126,7 +1127,21 @@ def test_create_dynamic_inheritances_inconsistent2():
     assert B.python_class in C.python_class.__bases__
 
 
-@pytest.mark.skip(reason="currently fails with Python 3.6, but no time to debug for this version")
+def test_create_dynamic_inheritances_inconsistent3():
+    oldmro = Metasubinstance.mro
+    Metasubinstance.mro = Metasubinstance._mro_alternative
+    A, B, C, D, E = EClass('A'), EClass('B'), EClass('C'), EClass('D'), EClass('E')
+    B.eSuperTypes.append(A)
+    C.eSuperTypes.append(A)
+    D.eSuperTypes.append(C)
+    D.eSuperTypes.append(B)
+    E.eSuperTypes.append(C)
+    E.eSuperTypes.append(D)
+    Metasubinstance.mro = oldmro
+    assert list(E.eAllSuperTypes()) == [C, D, A, B]
+
+
+@pytest.mark.skip(reason="currently fails with Python 3.5 and 3.6, but no time to debug for this version")
 def test_mix_dynamic_static_inheritance():
     A = EClass("A")
     A.eOperations.append(EOperation("spam"))

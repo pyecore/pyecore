@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """
 This module gathers utility classes and functions that can ease metamodel and
 model manipulation.
@@ -30,7 +29,9 @@ class DynamicEPackage(EObserver):
         if ismodule(package):
             package = package.eClass
         super().__init__(notifier=package)
-
+        for eattribute in package.eClass.eAllAttributes():
+            package.eGet(eattribute)
+            setattr(self, eattribute.name, package.__dict__[eattribute.name])
         for eclass in package.eClassifiers:
             setattr(self, eclass.name, eclass)
         for subpackage in package.eSubpackages:

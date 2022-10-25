@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """
 The json module introduces JSON resource and JSON parsing.
 """
@@ -81,15 +80,53 @@ class JsonResource(Resource):
     def object_uri(self, obj):
         if obj.eResource == self:
             resource_uri = ''
-        else:
-            resource_uri = obj.eResource.uri if obj.eResource else ''
-        return f'{resource_uri}{self._uri_fragment(obj)}'
+        # else:
+        #     resource_uri = self.eResource.uri if obj.eResource else ''
+        return self._build_path_from(obj)[0]
 
     def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None):
         uri = self.serialize_eclass(obj.eClass)
         ref = {'eClass': uri}
         ref[self.ref_tag] = self.object_uri(obj)
         return ref
+
+    # @singledispatchmethod
+    # def to_dict(self, obj, is_ref=False):
+    #     return obj
+    #
+    # @to_dict.register(type)
+    # def _(self, obj, is_ref=False):
+    #     if not issubclass(obj, EObject):
+    #         return obj
+    #     if is_ref:
+    #         fun = self._to_ref_from_obj
+    #         return fun(obj.eClass, self.options, self.use_uuid, self)
+    #
+    # @to_dict.register(EEnumLiteral)
+    # def _(self, obj, is_ref=False):
+    #     return obj.name
+    #
+    # @to_dict.register(EObject)
+    # def _(self, obj, is_ref=False):
+    #     if is_ref:
+    #         fun = self._to_ref_from_obj
+    #     else:
+    #         cls = obj.eClass.python_class
+    #         mapper = next((self.mappers[k] for k in self.mappers
+    #                        if issubclass(cls, k)), self.default_mapper)
+    #         fun = mapper.to_dict_from_obj
+    #     return fun(obj, self.options, self.use_uuid, self)
+    #
+    # @to_dict.register(ECollection)
+    # def _(self, obj, is_ref=False):
+    #     fun = self._to_ref_from_obj if is_ref else self.to_dict
+    #     result = []
+    #     for x in obj:
+    #         write_object = fun(x)
+    #         if write_object is NO_OBJECT:
+    #             continue
+    #         result.append(write_object)
+    #     return result
 
     def to_dict(self, obj, is_ref=False):
         if isinstance(obj, type) and issubclass(obj, EObject):
@@ -162,13 +199,15 @@ class JsonResource(Resource):
                 continue
             feature = self._find_feature(eclass, key)
             if not feature:
-                raise ValueError('Unknown feature {key} for object "{eclass}"')
+                raise ValueError(f'Unknown feature {key} for object "{eclass}"')
             if feature.is_attribute:
                 eattributes.append((feature, value))
             else:
                 if feature.containment:
                     containments.append((feature, value))
-                elif feature.eOpposite is not owning_feature:
+                elif owning_feature and feature.eOpposite is not owning_feature:
+                    ereferences.append((feature, value))
+                elif not feature.eOpposite:
                     ereferences.append((feature, value))
         self.process_inst(inst, eattributes)
         self.process_inst(inst, containments, owning_feature)
@@ -217,7 +256,7 @@ class DefaultObjectMapper(object):
                 continue
             write_object = resource.to_dict(value, is_ref=is_ref)
             if write_object is not NO_OBJECT:
-                d[attr.name] = write_object
+                d[attr._name] = write_object
             if use_uuid:
                 resource._assign_uuid(obj)
                 d['uuid'] = obj._internal_id

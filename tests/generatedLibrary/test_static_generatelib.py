@@ -85,7 +85,7 @@ def test_library_econtents_generated():
 
 def test_instance_eisset_generated():
     smith = library.Writer()
-    assert smith._isset == set()
+    assert smith._isset == {}
     smith.name = 'SmithIsMyName'
     assert library.Writer.name in smith._isset
     assert smith.eIsSet(library.Writer.name)
@@ -160,7 +160,7 @@ def test_static_init_bad_argument():
 
 def test_static_init_dynamicEPackage_from_static_epackage():
     dyn = DynamicEPackage(library)
-    assert library.Writer.eClass is dyn.Writer 
+    assert library.Writer.eClass is dyn.Writer
 
 
 def test_static_edatatype_epackage():

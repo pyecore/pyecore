@@ -24,7 +24,7 @@ packages = ['pyecore',
 
 setup(
     name='pyecore',
-    version='0.12.2',
+    version='0.13.0',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),

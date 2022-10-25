@@ -356,9 +356,9 @@ def test_eobject_eproxy_basicoperations():
 
     assert aProxy == aProxy
     assert aProxy == cProxy
+    assert hash(aProxy) == hash(A)
     assert aProxy != bProxy
     assert bProxy != cProxy
-    assert hash(aProxy) != hash(A)
 
     a = aProxy()
     assert isinstance(a, aProxy)
@@ -393,7 +393,7 @@ def test_container_ereference():
 
     ref1 = EReference("test", eType=B, containment=True)
     ref2 = EReference("oppo", eType=A, eOpposite=ref1)
-    
+
     assert ref1.containment is True
     assert ref1.container is False
     assert ref2.container is True

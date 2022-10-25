@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 """This module is the heart of PyEcore. It defines all the basic concepts that
 are common to EMF-Java and PyEcore (EObject/EClass...).
 It defines the basic classes and behavior for PyEcore implementation:
@@ -21,11 +20,12 @@ import keyword
 import inspect
 from decimal import Decimal
 from datetime import datetime
+from itertools import chain
 from ordered_set import OrderedSet
 from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
 from .notification import ENotifer, Kind
-from .innerutils import ignored, javaTransMap, parse_date
+from .innerutils import InternalSet, ignored, javaTransMap, parse_date
 
 
 name = 'ecore'
@@ -144,6 +144,21 @@ class Metasubinstance(type):
             other = other.python_class
         return type.__subclasscheck__(cls, other)
 
+    def _mro_alternative(cls):
+        try:
+            return super().mro()
+        except TypeError:
+            # try:
+            #     new_mro = (e.python_class for e in cls.eClass.eAllSuperTypes())
+            #     return tuple(chain([cls], new_mro, (EObject, ENotifer, object)))
+            # except Exception:
+            def _eAllBases_gen(self):
+                super_types = self.__bases__
+                yield from super_types
+                for x in super_types:
+                    yield from _eAllBases_gen(x)
+            return OrderedSet(chain((cls,), _eAllBases_gen(cls)))
+
 
 # Meta methods for static EClass
 class MetaEClass(Metasubinstance):
@@ -166,7 +181,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
         instance._internal_id = None
-        instance._isset = set()
+        instance._isset = InternalSet()
         instance._container = None
         instance._containment_feature = None
         instance._eresource = None
@@ -179,6 +194,9 @@ class EObject(ENotifer, metaclass=Metasubinstance):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def force_resolve(self):
+        return self
 
     @classmethod
     def allInstances(cls, resources=None):
@@ -459,10 +477,16 @@ class EGenericType(EObject):
         super().__init__(**kwargs)
         self.eTypeParameter = eTypeParameter
         self.eClassifier = eClassifier
+        self._eternal_listener.append(self)
 
     @property
     def eRawType(self):
         return self.eClassifier or self.eTypeParameter
+
+    def notifyChanged(self, notif):
+        if (self.eContainmentFeature() is EClass.eGenericSuperTypes and
+            notif.feature is EGenericType.eClassifier):
+            self.eContainer()._update_supertypes()
 
 
 # class SpecialEClassifier(Metasubinstance):
@@ -686,7 +710,10 @@ class EStructuralFeature(ETypedElement):
 
     def __repr__(self):
         eType = getattr(self, 'eType', None)
+        eGenericType = getattr(self, 'eGenericType', None)
         name = getattr(self, 'name', None)
+        if eGenericType:
+            return f'<{self.__class__.__name__} {name}: {eGenericType.eRawType.raw_types()}>'
         return f'<{self.__class__.__name__} {name}: {eType}>'
 
 
@@ -782,13 +809,17 @@ class EClass(EClassifier):
             try:
                 instance.python_class = type(name, super_types, attr_dict)
             except Exception:
-                super_types = sorted(super_types,
-                                     key=lambda x: len(x.eClass
-                                                        .eAllSuperTypes()),
-                                     reverse=True)
-                instance.python_class = type(name,
-                                             tuple(super_types),
-                                             attr_dict)
+                try:
+                    super_types = tuple(sorted(super_types,
+                                         key=lambda x: len(x.eClass
+                                                            .eAllSuperTypes())),
+                                         reverse=True)
+                    instance.python_class = type(name,
+                                                 super_types,
+                                                 attr_dict)
+                except TypeError:
+                    Metasubinstance.mro = Metasubinstance._mro_alternative
+                    instance.python_class = type(name, super_types, attr_dict)
 
         instance.__name__ = name
         return instance
@@ -821,28 +852,22 @@ class EClass(EClassifier):
         if getattr(self.python_class, '_staticEClass', False):
             return
         if notif.feature is EClass.eSuperTypes:
-            new_supers = self.__compute_supertypes()
-            try:
-                self.python_class.__bases__ = new_supers
-            except TypeError:
-                new_supers = sorted(new_supers,
-                                    key=lambda x: len(x.eClass
-                                                       .eAllSuperTypes()),
-                                    reverse=True)
-                self.python_class.__bases__ = tuple(new_supers)
+            self._update_supertypes()
+        elif notif.kind in (Kind.REMOVE, Kind.REMOVE_MANY):
+            if notif.kind is Kind.REMOVE:
+                delattr(self.python_class, notif.old.name)
+            elif notif.kind is Kind.REMOVE_MANY:
+                for feature in notif.old:
+                    delattr(self.python_class, feature.name)
         elif notif.feature is EClass.eOperations:
             if notif.kind is Kind.ADD:
                 self.__create_fun(notif.new)
-            elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.old.name)
         elif notif.feature is EClass.eStructuralFeatures:
             if notif.kind is Kind.ADD:
                 setattr(self.python_class, notif.new.name, notif.new)
             elif notif.kind is Kind.ADD_MANY:
                 for x in notif.new:
                     setattr(self.python_class, x.name, x)
-            elif notif.kind is Kind.REMOVE:
-                delattr(self.python_class, notif.old.name)
         elif notif.feature is EClass.name and notif.kind is Kind.SET:
             self.python_class.__name__ = notif.new
             self.__name__ = notif.new
@@ -856,11 +881,27 @@ class EClass(EClassifier):
         exec(code, safe_builtins, namespace)
         setattr(self.python_class, name, namespace[name])
 
+    def _update_supertypes(self):
+        new_supers = self.__compute_supertypes()
+        try:
+            self.python_class.__bases__ = new_supers
+        except TypeError:
+            try:
+                new_supers = tuple(sorted(new_supers,
+                                    key=lambda x: len(x.eClass
+                                                       .eAllSuperTypes()),
+                                    reverse=True))
+                self.python_class.__bases__ = new_supers
+            except TypeError:
+                Metasubinstance.mro = Metasubinstance._mro_alternative
+                self.python_class.__bases__ = new_supers
+
     def __compute_supertypes(self):
-        if not self.eSuperTypes:
+        if not self.eSuperTypes and not self.eGenericSuperTypes:
             return (EObject,)
         else:
             eSuperTypes = list(self.eSuperTypes)
+            eSuperTypes.extend(x.eClassifier for x in self.eGenericSuperTypes if x.eClassifier is not None)
             if len(eSuperTypes) > 1 and EObject.eClass in eSuperTypes:
                 eSuperTypes.remove(EObject.eClass)
             return tuple(x.python_class for x in eSuperTypes)
@@ -884,18 +925,32 @@ class EClass(EClassifier):
                     None)
 
     def _eAllSuperTypes_gen(self):
-        super_types = self.eSuperTypes
-        yield from self.eSuperTypes
-        for x in super_types:
+        yield from (x.force_resolve() for x in self.eSuperTypes)
+        for x in self.eSuperTypes:
             yield from x._eAllSuperTypes_gen()
 
     def eAllSuperTypes(self):
         return OrderedSet(self._eAllSuperTypes_gen())
 
+    def _eAllGenericSuperTypes_gen(self):
+        super_types = self.eGenericSuperTypes
+        yield from self.eGenericSuperTypes
+        for x in super_types:
+            yield from x.eClassifier._eAllGenericSuperTypes_gen()
+
+    def eAllGenericSuperTypes(self):
+        return OrderedSet(self._eAllGenericSuperTypes_gen())
+
+    def eAllGenericSuperTypesClassifiers(self):
+        return OrderedSet((x.eClassifier for x
+                                         in self._eAllGenericSuperTypes_gen()))
+
     def _eAllStructuralFeatures_gen(self):
         yield from self.eStructuralFeatures
         for parent in self.eSuperTypes:
             yield from parent._eAllStructuralFeatures_gen()
+        for parent in self.eGenericSuperTypes:
+            yield from parent.eClassifier._eAllStructuralFeatures_gen()
 
     def eAllStructuralFeatures(self):
         return OrderedSet(self._eAllStructuralFeatures_gen())
@@ -964,7 +1019,7 @@ class EProxy(EObject):
 
     def force_resolve(self):
         if self.resolved:
-            return
+            return self._wrapped
         resource = self._proxy_resource
         decoded = resource.resolve_object(self._proxy_path)
         if not hasattr(decoded, '_inverse_rels'):
@@ -974,6 +1029,7 @@ class EProxy(EObject):
         self._wrapped._inverse_rels.update(self._inverse_rels)
         self._inverse_rels = self._wrapped._inverse_rels
         self.resolved = True
+        return self._wrapped
 
     def delete(self, recursive=True):
         if recursive and self.resolved:
@@ -1049,6 +1105,8 @@ class EProxy(EObject):
         return self._wrapped(*args, **kwargs)
 
     def __hash__(self):
+        if self.resolved:
+            return hash(self._wrapped)
         return object.__hash__(self)
 
     def __eq__(self, other):
@@ -1075,8 +1133,8 @@ from .valuecontainer import ECollection, EValue, \
 # meta-meta level
 EString = EDataType('EString', str)
 ENamedElement.name = EAttribute('name', EString)
-ENamedElement.name._isset.add(ENamedElement.name)  # special case
-EString._isset.add(ENamedElement.name)  # special case
+ENamedElement.name._isset[ENamedElement.name] = None  # special case
+EString._isset[ENamedElement.name] = None  # special case
 
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
@@ -1134,7 +1192,7 @@ ETypedElement.required = EAttribute('required', EBoolean)
 ETypedElement.eGenericType = EReference('eGenericType', EGenericType,
                                         containment=True)
 ETypedElement.eType = EReference('eType', EClassifier)
-ENamedElement.name._isset.add(ETypedElement.eType)  # special case
+ENamedElement.name._isset[ETypedElement.eType] = None  # special case
 
 EStructuralFeature.changeable = EAttribute('changeable', EBoolean,
                                            default_value=True)

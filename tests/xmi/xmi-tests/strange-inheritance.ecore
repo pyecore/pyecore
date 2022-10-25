@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="testns" nsURI="http://www.example.com" nsPrefix="testns">
+  <eClassifiers xsi:type="ecore:EClass" name="Iface1" abstract="true" interface="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="FieldSet" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="FieldUnset" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Iface2" abstract="true" interface="true"
+      eSuperTypes="#//Iface1"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Sub" eSuperTypes="#//Iface2">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubSubs" upperBound="-1"
+        eType="#//SubSub" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubSub" eSuperTypes="#//Iface2">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubSubSubs" upperBound="-1"
+        eType="#//SubSubSub" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubSubSub" eSuperTypes="#//Iface3"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Root" eSuperTypes="#//Sub">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Subs" upperBound="-1" eType="#//Sub"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubSub2" eSuperTypes="#//SubSub"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Iface4" eSuperTypes="#//Iface1 #//Iface3"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Iface3" abstract="true" interface="true"
+      eSuperTypes="#//Iface2"/>
+</ecore:EPackage>

@@ -1,10 +1,13 @@
-# -*- coding: future_fstrings -*-
 """
 This module gives decorators, functions and variables that are shared among the
 different modules.
 """
 from contextlib import contextmanager
 from datetime import datetime
+
+
+class InternalSet(dict):
+    add = dict.setdefault
 
 
 @contextmanager

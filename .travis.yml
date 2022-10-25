@@ -1,21 +1,26 @@
 sudo: false
 language: python
+dist: focal
 python:
-- '3.5'
-- '3.6'
-- '3.7'
-- '3.8'
-- '3.9'
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - "3.10"
+  - "3.11-dev"
+  - "pypy3"
+  - "nightly"
 install:
-- pip install -U pip setuptools
-- pip install tox-travis coveralls
+  - pip install -U importlib-metadata
+  - pip install -U pip setuptools
+  - pip install tox-travis coveralls
 script: tox
 after_success: coveralls
 branches:
   only:
-  - develop
-  - master
-  - "/^\\d+.\\d+.\\d+$/"
+    - develop
+    - master
+    - "/^\\d+.\\d+.\\d+$/"
 deploy:
   provider: pypi
   user: __token__
@@ -24,4 +29,4 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     tags: true
-    python: 3.9
+    python: "3.10"

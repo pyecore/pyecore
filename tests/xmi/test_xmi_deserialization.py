@@ -452,3 +452,16 @@ def test_load_xmi_mixed_xmixsi():
     assert mm.eClassifiers[0].name == 'A'
     assert mm.eClassifiers[1].name == 'B'
     assert mm.eClassifiers[2].name == 'C'
+
+
+def test_strange_inheritance_new_mro_computation():
+    ecore_file = path.join('tests', 'xmi', 'xmi-tests', 'strange-inheritance.ecore')
+    rset = ResourceSet()
+    mmroot = rset.get_resource(ecore_file).contents[0]
+    rset.metamodel_registry[mmroot.nsURI] = mmroot
+
+    xmi_file = path.join('tests', 'xmi', 'xmi-tests', 'strange-inheritance.xmi')
+    root = rset.get_resource(xmi_file).contents[0]
+
+    node = root.Subs.items[0].SubSubs.items[1].SubSubSubs.items[0]
+    assert node.FieldUnset is None
