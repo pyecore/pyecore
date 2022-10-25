@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.0"
+  xmlns:xmi="http://www.omg.org/XMI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:testns="http://www.example.com">
+  <testns:Root xmi:id="uuid1">
+    <Subs xmi:id="uuid2">
+      <SubSubs xmi:id="uuid3"/>
+      <SubSubs xsi:type="testns:SubSub2" xmi:id="uuid4">
+        <SubSubSubs xmi:id="uuid5" FieldSet="Name of uuid5"/>
+      </SubSubs>
+    </Subs>
+  </testns:Root>
+</xmi:XMI>
