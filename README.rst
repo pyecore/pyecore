@@ -238,6 +238,9 @@ Thanks for making PyEcore better!
 * Eugene (`@4ekin <https://github.com/4ekin>`_)
 * Alexandre Acebedo (`@aacebedo <https://github.com/aacebedo>`_)
 * Jinhu (`@jinhu <https://github.com/jinhu>`_)
+* Pablo Campillo (`@pablo-campillo <https://github.com/pablo-campillo>`_)
+* Jose Antonio Moral (`@jamoralp <https://github.com/jamoralp>`_)
+* Marco Heinemann (`@ubmarco <https://github.com/ubmarco>`_)
 
 
 
