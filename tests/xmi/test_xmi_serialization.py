@@ -544,3 +544,66 @@ def test_xmi_save_none_and_empty_many_eattributes(tmpdir):
 
     assert root.names == ["a", "a", "", None]
     assert root.names2 == ["a", "", None]
+
+
+def test_deterministic_attribute_order(tmpdir):
+    A = Ecore.EClass('A')
+    A.eStructuralFeatures.append(Ecore.EAttribute('name', eType=Ecore.EString))
+    A.eStructuralFeatures.append(Ecore.EAttribute('location', eType=Ecore.EString))
+    A.eStructuralFeatures.append(Ecore.EAttribute('age', eType=Ecore.EInt))
+
+    Root = Ecore.EClass('Root')
+    Root.eStructuralFeatures.append(Ecore.EReference('own', eType=A, upper=-1, containment=True))
+    Root.eStructuralFeatures.append(Ecore.EReference('alternativeown', eType=A, upper=-1, containment=True))
+
+    Package = Ecore.EPackage('Pack', nsURI='http://pack/1.0', nsPrefix='pack')
+    Package.eClassifiers.extend([Root, A])
+
+    # small instance model
+    a1 = A(name='foo', location='bar', age=42)  # will appear in this order: name, location, age
+    a2 = A(age=24, name='faz', location='boz')  # will appear in this order: age, name, location
+    a3 = A(location='bazz', name="fooz")  # will appear in this order: location, name
+
+    a4 = A()  # will appear in this order: name, location
+    a4.name = 'fooAlt'
+    a4.location = 'barAlt'
+    a5 = A(age=24, name='faz', location='boz')  # will appear in this order: age, name, location, even after override of values
+    a5.age = 24
+    a5.location = 'bozAlt'
+    a5.name = 'fazAlt'
+
+    root = Root()
+    root.own.extend([a1, a2, a3])  # first "own" with "a1, a2, a3"
+    root.alternativeown.extend([a4, a5])  # then "alternativeown" with "a4, a5"
+
+    # serialize a first time
+    xmi_path = tmpdir.mkdir('pyecore-tmp').join('attributeorder.xmi')
+    rset = ResourceSet()
+    resource = rset.create_resource(URI(str(xmi_path)))
+    resource.append(root)
+    resource.save()
+
+    # read in another resource set and serialize again
+    rset = ResourceSet()
+    rset.metamodel_registry[Package.nsURI] = Package
+    root = rset.get_resource(URI(str(xmi_path))).contents[0]  # read the serialized file
+
+    assert [x.name for x in root.own[0]._isset] == ['name', 'location', 'age']
+    assert [x.name for x in root.own[1]._isset] == ['age', 'name', 'location']
+    assert [x.name for x in root.own[2]._isset] == ['location', 'name']
+    assert [x.name for x in root.alternativeown[0]._isset] == ['name', 'location']
+    assert [x.name for x in root.alternativeown[1]._isset] == ['age', 'name', 'location']
+
+    resource.contents[0].own[2].age = 99  # We add a new attribute that will be at the end, so: location, name, age
+    resource.save()  # Serialize again with the same order
+
+    # read in another resource set again
+    rset = ResourceSet()
+    rset.metamodel_registry[Package.nsURI] = Package
+    root = rset.get_resource(URI(str(xmi_path))).contents[0]  # read the serialized file
+
+    assert [x.name for x in root.own[0]._isset] == ['name', 'location', 'age']
+    assert [x.name for x in root.own[1]._isset] == ['age', 'name', 'location']
+    assert [x.name for x in root.own[2]._isset] == ['location', 'name', 'age']
+    assert [x.name for x in root.alternativeown[0]._isset] == ['name', 'location']
+    assert [x.name for x in root.alternativeown[1]._isset] == ['age', 'name', 'location']
