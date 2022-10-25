@@ -1,6 +1,31 @@
 Changelog
 ---------
 
+0.13.0
+++++++
+
+**Features**
+
+- Add support for ``EGeneric`` super types. The support is only for dynamic metamodels right now, right now, it misses a way of encoding/generating them in the static metamodel (if they are dynamically added to a static ``EClass``, it will work though).
+- Add alternative MRO computation in some cases. The inheritance tree in some ecore file cannot be mapped on a normal Python inheritance tree, even after reordering (or it requires a more complex reordering). This patch simply provides a new mro computation if such a case is found. The patch activates itself if needed, in almost all normal cases, it will be disabled.
+- Add attribute handling in ``DynamicEPackage``.
+- Add support for item deletion in ordered sets.
+- Add preservation of order for XMI/JSON serialization and deserialization. This means that successive serialization/deserialization of a resource without modification will always yield the same result. If a modification is performed in the resource, then saved, a simple textual diff between the old XMI/JSON and the new one will only higlight the modification. Thanks `@ubmarco <https://github.com/ubmarco>`_ for the suggestion.
+
+**Bugfixes**
+
+- Fix issue with (de)serialization of references in JSON.
+- Fix missing f-string in JSON resources. Thanks `@pablo-campillo https://github.com/pablo-campillo`_ for the pull request.
+- Fix ``URI.relative_from_me`` method for resources (de)serialization. Thanks `@jamoralp https://github.com/jamoralp`_ for the pull request.
+- Fix missing import of ``chain``. Thanks `@ubmarco <https://github.com/ubmarco>`_ for the pull request.
+
+
+**Miscellaneous**
+
+- Drop Python 3.5 support.
+- Some performance improvement.
+
+
 0.12.2
 ++++++
 
