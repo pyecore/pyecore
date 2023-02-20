@@ -128,6 +128,10 @@ class Core(object):
                                        nsURI=f'http://{pack_name}/')
         if not hasattr(epackage, 'dyn_inst'):
             epackage.dyn_inst = epackage.eClass
+            if epackage.__package__:
+                parent = sys.modules[epackage.__package__]
+                parent.dyn_inst = epackage.dyn_inst
+
         if not hasattr(epackage, 'eURIFragment'):
             epackage.eURIFragment = eURIFragment
         cname = rcls.name if isinstance(rcls, EClassifier) else rcls.__name__
