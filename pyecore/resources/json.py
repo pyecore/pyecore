@@ -78,8 +78,8 @@ class JsonResource(Resource):
         self.mappers[eclass] = mapper_class
 
     def object_uri(self, obj):
-        if obj.eResource == self:
-            resource_uri = ''
+        # if obj.eResource == self:
+        #     resource_uri = ''
         # else:
         #     resource_uri = self.eResource.uri if obj.eResource else ''
         return self._build_path_from(obj)[0]

@@ -126,6 +126,8 @@ class Core(object):
             epackage.eClass = EPackage(name=pack_name,
                                        nsPrefix=pack_name,
                                        nsURI=f'http://{pack_name}/')
+        if not hasattr(epackage, 'dyn_inst'):
+            epackage.dyn_inst = epackage.eClass
         if not hasattr(epackage, 'eURIFragment'):
             epackage.eURIFragment = eURIFragment
         cname = rcls.name if isinstance(rcls, EClassifier) else rcls.__name__
@@ -173,6 +175,10 @@ class MetaEClass(Metasubinstance):
                             f"abstract EClass {cls.eClass.name}")
         return super().__call__(*args, **kwargs)
 
+    @property
+    def eResource(cls):
+        return cls.eClass.eResource
+
 
 class EObject(ENotifer, metaclass=Metasubinstance):
     _staticEClass = True
@@ -189,6 +195,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
         instance._eternal_listener = []
         instance._inverse_rels = set()
         instance._staticEClass = False
+        instance.dyn_inst = instance
         cls._instances.add(instance)
         return instance
 
@@ -220,7 +227,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
     @property
     def eResource(self):
         try:
-            return self._container.eResource
+            return self._container.dyn_inst.eResource
         except AttributeError:
             return self._eresource
 
@@ -796,11 +803,13 @@ class EClass(EClassifier):
         if metainstance:
             instance.python_class = metainstance
             instance.__name__ = metainstance.__name__
+            metainstance.dyn_inst = instance
         else:
             def new_init(self, *args, **kwargs):
                 for name, value in kwargs.items():
                     setattr(self, name, value)
             attr_dict = {
+                'dyn_inst': instance,
                 'eClass': instance,
                 '_staticEClass': instance._staticEClass,
                 '__init__': new_init
