@@ -2,7 +2,7 @@ name: Test & Upload to TestPyPI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
   workflow_dispatch:
 
