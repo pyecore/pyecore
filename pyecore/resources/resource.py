@@ -594,8 +594,10 @@ class Resource(object):
             obj._internal_id = uuid
 
     def append(self, root):
-        if not isinstance(root, Ecore.EObject):
-            raise ValueError('The resource requires an EObject type, '
+        try:
+            root = root.dyn_inst
+        except AttributeError:
+            raise ValueError('The resource requires an EObject-like object, '
                              f'but received {type(root)} instead.')
         self.contents.append(root)
         root._eresource = self

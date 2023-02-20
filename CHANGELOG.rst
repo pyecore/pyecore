@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.13.1
+++++++
+
+**Bugfixes**
+
+- Fix issue with serialization of references in JSON for static metamodels.
+- Fix issue with the serialization of ``EEnum`` in JSON.
+- Fix issue with the computation of ``eResource`` for static metamodels.
+
+
 0.13.0
 ++++++
 
