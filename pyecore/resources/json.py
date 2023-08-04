@@ -226,7 +226,7 @@ class JsonResource(Resource):
                     elements = (x for x in elements if x is not None)
                 else:
                     elements = (feature._eType.from_string(x) for x in value)
-                inst.eGet(feature).extend(elements)
+                inst.eGet(feature).extend(list(elements))
             elif isinstance(value, str):
                 inst.eSet(feature, feature._eType.from_string(value))
             else:
