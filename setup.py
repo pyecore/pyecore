@@ -10,7 +10,7 @@ if version < (3, 3):
     sys.exit('Sorry, Python < 3.3 is not supported')
 
 requires = ['ordered-set>=4.0.1',
-            'restrictedpython>=4.0b6',
+            'restrictedpython>=5.3,>=6.1',
             'future-fstrings']
 
 if version == (3, 4):
