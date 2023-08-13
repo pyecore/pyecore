@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.13.2
+++++++
+
+**Bugfixes**
+
+- Fix Elements not loaded in to ``EList``
+- Update ResourcePython for CVE-2023-37271
+
 0.13.1
 ++++++
 
