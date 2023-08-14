@@ -241,6 +241,8 @@ Thanks for making PyEcore better!
 * Pablo Campillo (`@pablo-campillo <https://github.com/pablo-campillo>`_)
 * Jose Antonio Moral (`@jamoralp <https://github.com/jamoralp>`_)
 * Marco Heinemann (`@ubmarco <https://github.com/ubmarco>`_)
+* Christian Drabek (`@cdrabek <https://github.com/cdrabek>`_)
+* Dan Yeaw (`@danyeaw <https://github.com/danyeaw>`_)
 
 
 
