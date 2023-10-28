@@ -129,7 +129,7 @@ class ResourceSet(object):
 class URI(object):
     _uri_norm = {'http': lambda x: x,
                  'https': lambda x: x,
-                 'file': lambda x: path.abspath(x.replace('file://', ''))}
+                 'file': lambda x: path.abspath(x.replace('file://', '').replace('file:/', ''))}
 
     _uri_split = {'http': '/',
                   'https': '/',
