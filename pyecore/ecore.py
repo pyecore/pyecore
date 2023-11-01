@@ -1151,7 +1151,7 @@ EString._isset[ENamedElement.name] = None  # special case
 
 EBoolean = EDataType('EBoolean', bool, False,
                      to_string=lambda x: str(x).lower(),
-                     from_string=lambda x: x in ['True', 'true'])
+                     from_string=lambda x: x in ['True', 'true'] or x is True)
 EBooleanObject = EDataType('EBooleanObject', bool,
                            to_string=lambda x: str(x).lower(),
                            from_string=lambda x: x in ['True', 'true'])
