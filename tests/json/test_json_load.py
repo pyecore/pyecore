@@ -1,6 +1,6 @@
 import pytest
 import pyecore.ecore as Ecore
-from pyecore.resources import ResourceSet
+from pyecore.resources import ResourceSet, Resource
 from pyecore.resources.json import JsonResource
 from os import path
 
@@ -41,15 +41,18 @@ def mm():
 
 
 def test__jsonresource_factory_registration():
+    class FakeResource(Resource):
+        ...
+
     rset = ResourceSet()
-    rset.resource_factory['json'] = lambda uri: JsonResource(uri)
-    resource = rset.create_resource('non_existing.json')
-    assert isinstance(resource, JsonResource)
+    rset.resource_factory['fake'] = FakeResource
+    resource = rset.create_resource('non_existing.fake')
+    assert isinstance(resource, FakeResource)
 
     # ensure that resource factory are not shared between resources sets
     rset = ResourceSet()
-    resource = rset.create_resource('non_existing.json')
-    assert not isinstance(resource, JsonResource)
+    resource = rset.create_resource('non_existing.fake')
+    assert not isinstance(resource, FakeResource)
 
 
 def test__jsonresource_load_simple_ecore(rset):
