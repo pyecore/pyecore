@@ -920,6 +920,7 @@ PyEcore how to translate the URIs appropriately.
 Dealing with JSON Resources
 ---------------------------
 
+*Since version 14.0, the JSonResource is registered by default in the global registry, you don't need to register it manually, you can unregister it by removing the "json" extension from the global_registry*
 PyEcore is also able to load/save JSON models/metamodels. The JSON format it uses
 tries to be close to the one described in the `emfjson-jackson <https://github.com/emfjson/emfjson-jackson>`_ project.
 The way the JSON serialization/deserialization works, is similar to XMI resources,

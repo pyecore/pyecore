@@ -43,6 +43,7 @@ class ResourceSet(object):
 
     .. seealso:: Resource
     """
+    resource_factory = {}
 
     def __init__(self):
         self.resources = {}
@@ -51,24 +52,25 @@ class ResourceSet(object):
         self.uri_converter = []
         self.resource_factory = dict(ResourceSet.resource_factory)
 
-    def create_resource(self, uri):
+    def create_resource(self, uri, **kwargs):
         """Creates a new Resource.
 
         The created ressource type depends on the used URI.
 
         :param uri: the resource URI
         :type uri: URI
+        :param kwargs: keyword parameter passed to the Resource constructor
         :return: a new Resource
         :rtype: Resource
 
-        .. seealso:: URI, Resource, XMIResource
+        .. seealso:: URI, Resource, XMIResource, JsonResource
         """
         if isinstance(uri, str):
             uri = URIConverter.convert(URI(uri))
         try:
-            resource = self.resource_factory[uri.extension](uri)
+            resource = self.resource_factory[uri.extension](uri, **kwargs)
         except KeyError:
-            resource = self.resource_factory['*'](uri)
+            resource = self.resource_factory['*'](uri, **kwargs)
         self.resources[uri.normalize()] = resource
         resource.resource_set = self
         resource.decoders.insert(0, self)
@@ -81,14 +83,14 @@ class ResourceSet(object):
             if value is resource:
                 del self.resources[key]
 
-    def get_resource(self, uri, options=None):
+    def get_resource(self, uri, options=None, **kwargs):
         if isinstance(uri, str):
             uri = URIConverter.convert(URI(uri))
         # We check first if the resource already exists in the ResourceSet
         if uri.normalize() in self.resources:
             return self.resources[uri.normalize()]
         # If not, we create a new resource
-        resource = self.create_resource(uri)
+        resource = self.create_resource(uri, **kwargs)
         try:
             resource.load(options=options)
         except Exception:
@@ -129,7 +131,7 @@ class ResourceSet(object):
 class URI(object):
     _uri_norm = {'http': lambda x: x,
                  'https': lambda x: x,
-                 'file': lambda x: path.abspath(x.replace('file://', ''))}
+                 'file': lambda x: path.abspath(x.replace('file://', '').replace('file:/', ''))}
 
     _uri_split = {'http': '/',
                   'https': '/',

@@ -5,7 +5,7 @@ from enum import unique, Enum
 from functools import lru_cache
 import json
 from .resource import Resource
-from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral
+from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral, EStringToStringMapEntry
 
 
 @unique
@@ -84,7 +84,7 @@ class JsonResource(Resource):
         #     resource_uri = self.eResource.uri if obj.eResource else ''
         return self._build_path_from(obj)[0]
 
-    def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None):
+    def _to_ref_from_obj(self, obj, opts=None, use_uuid=None, resource=None, **kwargs):
         uri = self.serialize_eclass(obj.eClass)
         ref = {'eClass': uri}
         ref[self.ref_tag] = self.object_uri(obj)
@@ -128,9 +128,9 @@ class JsonResource(Resource):
     #         result.append(write_object)
     #     return result
 
-    def to_dict(self, obj, is_ref=False):
+    def to_dict(self, obj, is_noncont_ref=False, is_attr=False):
         if isinstance(obj, type) and issubclass(obj, EObject):
-            if is_ref:
+            if is_noncont_ref:
                 fun = self._to_ref_from_obj
                 return fun(obj.eClass, self.options, self.use_uuid, self)
             # else:
@@ -138,10 +138,10 @@ class JsonResource(Resource):
             #     mapper = next((self.mappers[k] for k in self.mappers
             #                    if issubclass(cls, k)), self.default_mapper)
             #     fun = mapper.to_dict_from_obj
-        elif isinstance(obj, EEnumLiteral):
+        elif isinstance(obj, EEnumLiteral) and is_attr:
             return obj.name
         elif isinstance(obj, EObject):
-            if is_ref:
+            if is_noncont_ref:
                 fun = self._to_ref_from_obj
             else:
                 cls = obj.eClass.python_class
@@ -151,10 +151,10 @@ class JsonResource(Resource):
             return fun(obj, self.options, self.use_uuid, self)
 
         elif isinstance(obj, ECollection):
-            fun = self._to_ref_from_obj if is_ref else self.to_dict
+            fun = self._to_ref_from_obj if is_noncont_ref else self.to_dict
             result = []
             for x in obj:
-                write_object = fun(x)
+                write_object = fun(x, is_noncont_ref, is_attr)
                 if write_object is NO_OBJECT:
                     continue
                 result.append(write_object)
@@ -211,12 +211,16 @@ class JsonResource(Resource):
                     ereferences.append((feature, value))
         self.process_inst(inst, eattributes)
         self.process_inst(inst, containments, owning_feature)
-        self._load_href[inst] = ereferences
+        if ereferences:
+            self._load_href[inst] = ereferences
         return inst
 
     def process_inst(self, inst, features, owning_feature=None):
         for feature, value in features:
-            if isinstance(value, dict):
+            if feature._eType is EStringToStringMapEntry and isinstance(value, dict):
+                key, val = next(iter(value.items()))
+                inst.eGet(feature)[key] = val
+            elif isinstance(value, dict):
                 element = self.to_obj(value, owning_feature=feature)
                 inst.eSet(feature, element)
             elif isinstance(value, list):
@@ -252,9 +256,9 @@ class DefaultObjectMapper(object):
             value = obj.eGet(attr)
             serialize_default_option = JsonOptions.SERIALIZE_DEFAULT_VALUES
             if (not options.get(serialize_default_option, False)
-                    and value == attr.get_default_value()):
+                and value == attr.get_default_value()):
                 continue
-            write_object = resource.to_dict(value, is_ref=is_ref)
+            write_object = resource.to_dict(value, is_noncont_ref=is_ref, is_attr=attr.is_attribute)
             if write_object is not NO_OBJECT:
                 d[attr._name] = write_object
             if use_uuid:

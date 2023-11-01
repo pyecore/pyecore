@@ -1,7 +1,7 @@
 .. _FSM:
 
-Executable Model Example: Fine State Machine
-============================================
+Executable Model Example: Finite State Machine
+==============================================
 
 As an example, this description re-implements the Finite State Machine (FSM) example as
 described in the `ALE tutorial page <http://gemoc.org/ale-lang/tutorial.html>`_.

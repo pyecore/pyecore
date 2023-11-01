@@ -2,11 +2,13 @@ from .resource import ResourceSet, Resource, URI, global_registry, \
                       global_uri_mapper, global_uri_converter, \
                       HttpURIConverter, AbstractURIConverter
 from . import xmi
+from . import json
 from .. import ecore as Ecore
 
 # Register basic resource factory
 ResourceSet.resource_factory = {'xmi': xmi.XMIResource,
                                 'ecore': xmi.XMIResource,
+                                'json': json.JsonResource,
                                 '*': xmi.XMIResource}
 
 global_registry[Ecore.nsURI] = Ecore

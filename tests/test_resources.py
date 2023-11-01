@@ -90,6 +90,17 @@ def test_uri_normalize_fileuri_abs():
     assert path.isabs(uri.normalize())
 
 
+def test_uri_normalize_fileuri_abs2():
+    uri = URI('file://test.xmi')
+    assert path.isabs(uri.normalize())
+
+
+def test_uri_normalize_fileuri_relative2():
+    xmi_path = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
+    uri = URI('file:/' + xmi_path)
+    assert path.exists(uri.normalize())
+
+
 def test_uri_normalize_fileuri_relative():
     xmi_path = path.join('tests', 'xmi', 'xmi-tests', 'testEMF.xmi')
     uri = URI('file://' + xmi_path)
