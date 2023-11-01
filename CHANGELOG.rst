@@ -1,13 +1,34 @@
 Changelog
 ---------
 
+0.14.0
+++++++
+
+**Features**
+
+- Add json resource in global registry. The json resource is now registered by default, it's not necessary anymore to explicitly register it
+- Add argument passing to ``Resource`` instances from a ``ResourceSet``. This feature allows the user to pass arguments to a resource when using ``get_resources`` or ``create_resources`` from a ``ResourceSet``.
+
+**Bugfixes**
+
+- Fix issue with file protocol starting with ``file:/`` (Thanks `@jameswpm <https://github.com/jameswpm>`_ for the ticket and the discussion).
+- Fix deserialization of boolean in json resources.
+- Fix enum literals serialization in json resources. Depending on the "level" where's defined the EnumerationLiteral, the serialization should be different: (1) if serialization happens at the metamodel level, all the internal information of the EnumerationLiteral should be written in the json file, (2) if serialization happens at the model level (a model uses a literal defined in the metamodel it conforms to), the EnumerationLiteral should be serialized only by its name.
+
+**Miscellaneous**
+
+- Pass from "beta" to "stable".
+- Add pypy 3.9 and 3.10 as target test Python VM.
+- Fix CHANGELOG.rst.
+
+
 0.13.2
 ++++++
 
 **Bugfixes**
 
-- Fix Elements not loaded in to ``EList``
-- Update ResourcePython for CVE-2023-37271
+- Fix Elements not loaded in to ``EList``.
+- Update ResourcePython for CVE-2023-37271.
 
 0.13.1
 ++++++
@@ -33,8 +54,8 @@ Changelog
 **Bugfixes**
 
 - Fix issue with (de)serialization of references in JSON.
-- Fix missing f-string in JSON resources. Thanks `@pablo-campillo https://github.com/pablo-campillo`_ for the pull request.
-- Fix ``URI.relative_from_me`` method for resources (de)serialization. Thanks `@jamoralp https://github.com/jamoralp`_ for the pull request.
+- Fix missing f-string in JSON resources. Thanks `@pablo-campillo <https://github.com/pablo-campillo>`_ for the pull request.
+- Fix ``URI.relative_from_me`` method for resources (de)serialization. Thanks `@jamoralp <https://github.com/jamoralp>`_ for the pull request.
 - Fix missing import of ``chain``. Thanks `@ubmarco <https://github.com/ubmarco>`_ for the pull request.
 
 
@@ -49,7 +70,7 @@ Changelog
 
 **Bugfixes**
 
-- Fix bad deserialization of float values in JSON for value like "42" (no dot). Thanks `@pablo-campillo https://github.com/pablo-campillo`_ for the issue.
+- Fix bad deserialization of float values in JSON for value like "42" (no dot). Thanks `@pablo-campillo <https://github.com/pablo-campillo>`_ for the issue.
 
 
 0.12.1
@@ -88,17 +109,17 @@ Changelog
 
 **Bugfixes**
 
-- Fix issue with ``xmi:type`` and ``xsi:type`` for mixed XMI. In some XMI files, the field related to type can be mixed and sometimes prefixed by ``xmi`` or ``xsi``. The flip-flop between the two mode was only performed once in the previous algorithm, now it is adaptive. Thanks `@aacebedo https://github.com/aacebedo`_ for the pull request.
+- Fix issue with ``xmi:type`` and ``xsi:type`` for mixed XMI. In some XMI files, the field related to type can be mixed and sometimes prefixed by ``xmi`` or ``xsi``. The flip-flop between the two mode was only performed once in the previous algorithm, now it is adaptive. Thanks `@aacebedo <https://github.com/aacebedo>`_ for the pull request.
 
-- Fix missing ``EShortObject``. Thanks `@aacebedo https://github.com/aacebedo`_ for the pull request.
+- Fix missing ``EShortObject``. Thanks `@aacebedo <https://github.com/aacebedo>`_ for the pull request.
 
 - Fix MRO problem when updating inheritance. The previous algorithm was not taking into account dynamic additions of inheritance relationship. Thanks `@mn3mos https://github.com/mn3mos`_ for the issue.
 
 - Fix issue on metamodel with ``@abstract`` decorator.
 
-- Fix issue with ``EEnumLiteral`` serialization for JSON resource. Thanks `@jinhu https://github.com/jinhu`_ and Marc Hamilton for the issues and the pull request.
+- Fix issue with ``EEnumLiteral`` serialization for JSON resource. Thanks `@jinhu <https://github.com/jinhu>`_ and Marc Hamilton for the issues and the pull request.
 
-- Fix issue with clearing non unique collections. A set operation was performed on the collection to safely iterate on it, implying that some elements were forget during a full clear. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the issue.
+- Fix issue with clearing non unique collections. A set operation was performed on the collection to safely iterate on it, implying that some elements were forget during a full clear. Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the issue.
 
 **Miscellaneous**
 
@@ -108,7 +129,7 @@ Changelog
 
 - Improve eType computation for speed.
 
-- Disabling resolve cache for resources when a resource had been properly load. Thanks `@ewoudwerkman https://github.com/ewoudwerkman`_ for the suggestion.
+- Disabling resolve cache for resources when a resource had been properly load. Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the suggestion.
 
 
 0.11.7
@@ -116,9 +137,9 @@ Changelog
 
 **Bugfixes**
 
-- Fix issue with MRO calculation. This happend when the Ecore inheritence tree is not compatible with Python C3 linearization algorithm. Thanks `@mn3mos https://github.com/mn3mos`_ for the issue.
+- Fix issue with MRO calculation. This happend when the Ecore inheritence tree is not compatible with Python C3 linearization algorithm. Thanks `@mn3mos <https://github.com/mn3mos>`_ for the issue.
 
-- Fix non-serializable ``EDataType`` ``instanceClassName``. The property was not serialized by the XMI resource. Thanks `@4ekin https://github.com/4ekin`_ for the pull requests.
+- Fix non-serializable ``EDataType`` ``instanceClassName``. The property was not serialized by the XMI resource. Thanks `@4ekin <https://github.com/4ekin>`_ for the pull requests.
 
 
 0.11.6
@@ -127,7 +148,7 @@ Changelog
 **Bugfixes**
 
 - Fix issue with new ``ordered_set`` version. This new version removed some
-parts functions about iterables. Thanks `@fgro93  <https://github.com/fgro93>`_ for the issue.
+parts functions about iterables. Thanks `@fgro93 <https://github.com/fgro93>`_ for the issue.
 
 
 0.11.5
@@ -138,7 +159,7 @@ parts functions about iterables. Thanks `@fgro93  <https://github.com/fgro93>`_ 
 - Fix issue with default value computation using ``defaultValueLiteral``. PyEcore
 was providing it's own "default value" mechanism that had an higher priority than
 the one usually used by EMF. This resulted in the default value not being computed
-correctly. Thanks `@annighoefer  <https://github.com/annighoefer>`_ for the PR
+correctly. Thanks `@annighoefer <https://github.com/annighoefer>`_ for the PR
 and pointing out the issue.
 
 
@@ -177,7 +198,7 @@ resolve.
 **Bugfixes**
 
 - Fix change of container of an objet when the reference is single.
-Thanks `@annighoefer  <https://github.com/annighoefer>`_ for the fix!
+Thanks `@annighoefer <https://github.com/annighoefer>`_ for the fix!
 The issue came when an object was moved from a single relationship container to another one from the same class, the contained object was contained by the two containers.
 
 - Fix Fix root element id not added to uuid_dict if its feature.ID is set.
@@ -211,7 +232,7 @@ Each new converter can be isolated by ``ResourceSet`` or globaly for every
 
 **Bugfixes**
 
-- Fix empty valued id attributes to be used as keys in reference links when saving a resource (Thanks `@annighoefer  <https://github.com/annighoefer>`_!).
+- Fix empty valued id attributes to be used as keys in reference links when saving a resource (Thanks `@annighoefer <https://github.com/annighoefer>`_!).
 
 **Miscellaneous**
 
@@ -229,7 +250,7 @@ This patch provides a solution to the issues with time zone information in dates
 It makes the parsing and serialization of dates compatible with how EMF currently
 handles dates and UTC offsets.
 
-- Fix xmi empty references refer to root (Thanks `@annighoefer  <https://github.com/annighoefer>`_!).
+- Fix xmi empty references refer to root (Thanks `@annighoefer <https://github.com/annighoefer>`_!).
 Deleted objects that were also referred by non-containment references elsewhere were serialized in xmi
 as `ref=""`, introducing a `BadValueError` when loading the file again as the root of the model was found as reference.
 The fix solves the loading issue by skiping empty references.
@@ -242,7 +263,7 @@ The fix solves the loading issue by skiping empty references.
 **Miscellaneous**
 
 - Add custom JSON serializer support
- (Thanks `@rodriguez-facundo   <https://github.com/rodriguez-facundo>`_ and `@filippometacell   <https://github.com/filippometacell>`_!)
+ (Thanks `@rodriguez-facundo <https://github.com/rodriguez-facundo>`_ and `@filippometacell <https://github.com/filippometacell>`_!)
  This support is not yet documented and will perhaps never be.
 
 
@@ -259,10 +280,10 @@ The fix solves the loading issue by skiping empty references.
 
 - Fix issue with XMI serialization for single element container. In those cases
   the path towards the object was not well serialized. It results in a false
-  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer  <https://github.com/annighoefer>`_!)
+  XMI path which made the produced XMI not usable with Eclipse EMF. (Thanks `@annighoefer <https://github.com/annighoefer>`_!)
 
 - Prevent ``id`` with spaces from being used. Spaces are used for separating
-  multiple references to other objects. (Thanks `@annighoefer  <https://github.com/annighoefer>`_!)
+  multiple references to other objects. (Thanks `@annighoefer <https://github.com/annighoefer>`_!)
 
 
 **Miscellaneous**
