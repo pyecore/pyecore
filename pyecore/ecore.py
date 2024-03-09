@@ -21,6 +21,7 @@ import inspect
 from decimal import Decimal
 from datetime import datetime
 from itertools import chain
+from typing import Iterable
 from ordered_set import OrderedSet
 from weakref import WeakSet
 from RestrictedPython import compile_restricted, safe_builtins
@@ -705,9 +706,13 @@ class EStructuralFeature(ETypedElement):
         if isinstance(previous_value, ECollection):
             if value is previous_value:
                 return
-            if value is not previous_value and isinstance(value, ECollection):
-                raise AttributeError('Cannot reafect an ECollection with '
-                                     'another one, even if compatible')
+            # if value is not previous_value and isinstance(value, ECollection):
+            #     raise AttributeError('Cannot reafect an ECollection with '
+            #                          'another one, even if compatible')
+            if isinstance(value, Iterable):
+                previous_value.clear()
+                previous_value.extend(value)
+                return
             raise BadValueError(got=value, expected=previous_value.__class__)
         instance_dict[name]._set(value)
 
