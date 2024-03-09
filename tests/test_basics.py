@@ -242,13 +242,18 @@ def test_collection_affectation():
     x, y = A(), A()
 
     a = A(name='tes')
-    with pytest.raises(BadValueError):
-        x.toa = [a]
+    # with pytest.raises(BadValueError):
+    col = x.toa
+    x.toa = [a]
+
+    assert x.toa is col
 
     x.toa.append(a)
 
-    with pytest.raises(AttributeError):
-        y.toa = x.toa
+    y.toa = x.toa
+
+    assert y.toa is not x.toa
+    assert x.toa[0] in y.toa
 
     b = A()
     y.toa += [b]

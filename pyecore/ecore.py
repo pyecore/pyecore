@@ -709,7 +709,7 @@ class EStructuralFeature(ETypedElement):
             # if value is not previous_value and isinstance(value, ECollection):
             #     raise AttributeError('Cannot reafect an ECollection with '
             #                          'another one, even if compatible')
-            if isinstance(value, Iterable):
+            if not isinstance(value, str) and isinstance(value, Iterable):
                 previous_value.clear()
                 previous_value.extend(value)
                 return
