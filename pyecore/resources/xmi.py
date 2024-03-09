@@ -138,7 +138,7 @@ class XMIResource(Resource):
         if is_many and not from_tag:
             values = value.split()
             from_string = eattribute._eType.from_string
-            results = (from_string(x) for x in values)
+            results = [from_string(x) for x in values]
             eobject.__getattribute__(eattribute._name).extend(results)
         elif is_many:
             value = eattribute._eType.from_string(value)
