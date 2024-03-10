@@ -128,7 +128,7 @@ class JsonResource(Resource):
     #         result.append(write_object)
     #     return result
 
-    def to_dict(self, obj, is_noncont_ref=False, is_attr=False):
+    def to_dict(self, obj, is_noncont_ref=False, is_attr=False, feature=None):
         if isinstance(obj, type) and issubclass(obj, EObject):
             if is_noncont_ref:
                 fun = self._to_ref_from_obj
@@ -159,8 +159,10 @@ class JsonResource(Resource):
                     continue
                 result.append(write_object)
             return result
-        else:
+        elif feature._eType.eType in (int, float):
             return obj
+        else:
+            return feature._eType.to_string(obj)
 
     @lru_cache()
     def resolve_eclass(self, uri_eclass):
@@ -258,7 +260,10 @@ class DefaultObjectMapper(object):
             if (not options.get(serialize_default_option, False)
                 and value == attr.get_default_value()):
                 continue
-            write_object = resource.to_dict(value, is_noncont_ref=is_ref, is_attr=attr.is_attribute)
+            write_object = resource.to_dict(value,
+                                            is_noncont_ref=is_ref,
+                                            is_attr=attr.is_attribute,
+                                            feature=attr)
             if write_object is not NO_OBJECT:
                 d[attr._name] = write_object
             if use_uuid:
