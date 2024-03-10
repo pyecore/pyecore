@@ -11,6 +11,8 @@ from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral, EStringT
 @unique
 class JsonOptions(Enum):
     SERIALIZE_DEFAULT_VALUES = 0
+    ENCODER = 1
+    DECODER = 2
 
 
 NO_OBJECT = object()
@@ -27,9 +29,13 @@ class JsonResource(Resource):
         self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
+        self.options = options or {}
         self.cache_enabled = True
         json_value = self.uri.create_instream()
-        d = json.loads(json_value.read().decode('utf-8'))
+
+        decoder = self.options.get(JsonOptions.DECODER)
+        d = json.loads(json_value.read().decode('utf-8'), cls=decoder)
+
         if isinstance(d, list):
             for x in d:
                 self.to_obj(x, first=True)
@@ -51,8 +57,10 @@ class JsonResource(Resource):
         if len(dict_list) <= 1:
             dict_list = dict_list[0]
 
-        stream.write(json.dumps(dict_list, indent=self.indent)
+        encoder = self.options.get(JsonOptions.ENCODER)
+        stream.write(json.dumps(dict_list, indent=self.indent, cls=encoder)
                      .encode('utf-8'))
+
         stream.flush()
         self.uri.close_stream()
         self.options = None

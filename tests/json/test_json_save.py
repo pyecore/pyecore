@@ -285,3 +285,33 @@ def test_json_custom_no_mapping(tmpdir):
     dct = json.load(open(str(f)))
     print(dct)
     assert dct['many_a'] == []
+
+
+# def test_json_custom_encoder(tmpdir):
+#     class DoubleEncoder(json.JSONEncoder):
+#         def default(self, o):
+#             import ipdb; ipdb.set_trace()  # fmt: skip
+
+#             if isinstance(o, float):
+#                 return f"#({o})"
+#             return super().default(o)
+
+#         def encode(self, o):
+#             import ipdb; ipdb.set_trace()  # fmt: skip
+
+
+#     f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+#     resource = JsonResource(URI(str(f)))
+
+#     p = Point()
+#     p.x = 0.0
+#     p.z = 0.0
+#     resource.append(p)
+#     resource.save(options={JsonOptions.ENCODER: DoubleEncoder, JsonOptions.SERIALIZE_DEFAULT_VALUES: True})
+
+#     dct = json.load(open(str(f)))
+#     import ipdb; ipdb.set_trace()  # fmt: skip
+
+#     assert dct['x'] == 0.0
+#     assert dct['z'] == 0.0
+#     assert 'y' not in dct
