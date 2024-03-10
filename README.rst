@@ -243,6 +243,7 @@ Thanks for making PyEcore better!
 * Marco Heinemann (`@ubmarco <https://github.com/ubmarco>`_)
 * Christian Drabek (`@cdrabek <https://github.com/cdrabek>`_)
 * Dan Yeaw (`@danyeaw <https://github.com/danyeaw>`_)
+* Arkadiusz Michał Ryś (`@arrys <https://github.com/arrys>`_)
 
 
 
