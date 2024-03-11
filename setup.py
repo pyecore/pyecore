@@ -11,12 +11,8 @@ if version < (3, 3):
 
 requires = ['ordered-set>=4.0.1',
             'restrictedpython>=5.3,>=6.1',
-            'future-fstrings']
-
-if version == (3, 4):
-    requires.append('lxml<4.4.0')
-else:
-    requires.append('lxml')
+            'future-fstrings',
+            'lxml']
 
 packages = ['pyecore',
             'pyecore.resources',
@@ -24,7 +20,7 @@ packages = ['pyecore',
 
 setup(
     name='pyecore',
-    version='0.14.0',
+    version='0.15.0',
     description=('A Python(ic) Implementation of the Eclipse Modeling '
                  'Framework (EMF/Ecore)'),
     long_description=open('README.rst').read(),
@@ -42,11 +38,11 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Topic :: Software Development',

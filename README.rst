@@ -38,7 +38,7 @@ on a structured data model. It supports out-of-the-box:
 * Notification system,
 * Reflexive API...
 
-Let see how to create on a very simple "dynamic" metamodel (in opposite to
+Let's see how we can create a very simple "dynamic" metamodel (as opposed to
 static ones, see the `documentation <https://pyecore.readthedocs.io/en/latest/>`_
 for more details):
 
@@ -61,10 +61,10 @@ for more details):
     >>> Node.eStructuralFeatures.append(EReference('owned_by', Graph, eOpposite=contains_nodes))
 
 With this code, we have defined two concepts: ``Graph`` and ``Node``. Both have
-a ``name``, and it exists a containment relationship between them. This relation
-is bi-directionnal, which means that each time a ``Node`` object is added to the
+a ``name``, and there exists a containment relationship between them. This relation
+is bi-directional, which means that each time a ``Node`` object is added to the
 ``nodes`` relationship of a ``Graph``, the ``owned_by`` relation of the ``Node``
-is updated also (it also work in the other way).
+is also updated (it also works the other way around).
 
 Let's create some instances of our freshly created metamodel:
 
@@ -136,7 +136,7 @@ These dependencies are directly installed if you choose to use ``pip``.
 Run the Tests
 =============
 
-Tests uses `py.test` and 'coverage'. Everything is driven by `Tox`, so in order
+The tests use `py.test` and 'coverage'. Everything is driven by `Tox`, so in order
 to run the tests simply run:
 
 .. code-block:: bash
@@ -148,7 +148,7 @@ Liberty Regarding the Java EMF Implementation
 =============================================
 
 * There is some meta-property that could be missing inside PyEcore. If you see one missing, please open a new ticket!
-* Proxies are not "removed" once resolved as in the the Java version, instead they acts as transparent proxies and redirect each calls to the 'proxied' object.
+* Proxies are not "removed" once resolved as in the the Java version, instead they act as transparent proxies and redirect all calls to the 'proxied' object.
 * PyEcore is able to automatically load some model/metamodel dependencies on its own.
 
 State
@@ -183,7 +183,7 @@ In the current state, the project implements:
 * introduce behavior @runtime,
 * resources auto-load for some cross-references,
 * derived collections,
-* multiple roots ressources,
+* multiple roots resources,
 * ``xsi:schemaLocation`` support for XMI resources,
 * URI mapper like,
 * ``EGeneric`` support (first simple version),
@@ -199,7 +199,7 @@ The things that are in the roadmap:
 Existing Projects
 =================
 
-There is not so much projects proposing to handle model and metamodel in Python.
+There aren't too many projects proposing to handle models and metamodels in Python.
 The only projects I found are:
 
 * PyEMOF (http://www.lifl.fr/~marvie/software/pyemof.html)
@@ -219,14 +219,14 @@ either.
 PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
 If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
 metamodels and seems to provide a reflexive layer. The project does not appear
-seems to have moved since a while.
+ to have moved since a while.
 
 Contributors
 ============
 
 Thanks for making PyEcore better!
 
-* Mike Pagel (`@moltob <https://github.com/moltob>`_), which is also the author
+* Mike Pagel (`@moltob <https://github.com/moltob>`_), who is also the author
   of `pyecoregen <https://github.com/pyecore/pyecoregen>`_ and `pymultigen <https://github.com/moltob/pymultigen>`_ (on which pyecoregen is based)
 * Terry Kingston (`@TerryKingston <https://github.com/TerryKingston>`_)
 * Afonso Pinto (`@afonsobspinto <https://github.com/afonsobspinto>`_)
@@ -243,6 +243,7 @@ Thanks for making PyEcore better!
 * Marco Heinemann (`@ubmarco <https://github.com/ubmarco>`_)
 * Christian Drabek (`@cdrabek <https://github.com/cdrabek>`_)
 * Dan Yeaw (`@danyeaw <https://github.com/danyeaw>`_)
+* Arkadiusz Michał Ryś (`@arrys <https://github.com/arrys>`_)
 
 
 
@@ -250,5 +251,5 @@ Additional Resources
 ====================
 
 * `This article <http://modeling-languages.com/pyecore-python-eclipse-modeling-framework>`_
-  on the blog of the Professor Jordi Cabot gives more information and
-  implementations details about PyEcore.
+  on the blog of Professor Jordi Cabot gives more information and
+  implementation details about PyEcore.

@@ -11,6 +11,8 @@ from ..ecore import EObject, EProxy, ECollection, EClass, EEnumLiteral, EStringT
 @unique
 class JsonOptions(Enum):
     SERIALIZE_DEFAULT_VALUES = 0
+    ENCODER = 1
+    DECODER = 2
 
 
 NO_OBJECT = object()
@@ -27,9 +29,13 @@ class JsonResource(Resource):
         self.default_mapper = DefaultObjectMapper()
 
     def load(self, options=None):
+        self.options = options or {}
         self.cache_enabled = True
         json_value = self.uri.create_instream()
-        d = json.loads(json_value.read().decode('utf-8'))
+
+        decoder = self.options.get(JsonOptions.DECODER)
+        d = json.loads(json_value.read().decode('utf-8'), cls=decoder)
+
         if isinstance(d, list):
             for x in d:
                 self.to_obj(x, first=True)
@@ -51,8 +57,10 @@ class JsonResource(Resource):
         if len(dict_list) <= 1:
             dict_list = dict_list[0]
 
-        stream.write(json.dumps(dict_list, indent=self.indent)
+        encoder = self.options.get(JsonOptions.ENCODER)
+        stream.write(json.dumps(dict_list, indent=self.indent, cls=encoder)
                      .encode('utf-8'))
+
         stream.flush()
         self.uri.close_stream()
         self.options = None
@@ -128,7 +136,7 @@ class JsonResource(Resource):
     #         result.append(write_object)
     #     return result
 
-    def to_dict(self, obj, is_noncont_ref=False, is_attr=False):
+    def to_dict(self, obj, is_noncont_ref=False, is_attr=False, feature=None):
         if isinstance(obj, type) and issubclass(obj, EObject):
             if is_noncont_ref:
                 fun = self._to_ref_from_obj
@@ -159,8 +167,10 @@ class JsonResource(Resource):
                     continue
                 result.append(write_object)
             return result
-        else:
+        elif feature._eType.eType in (int, float):
             return obj
+        else:
+            return feature._eType.to_string(obj)
 
     @lru_cache()
     def resolve_eclass(self, uri_eclass):
@@ -258,7 +268,10 @@ class DefaultObjectMapper(object):
             if (not options.get(serialize_default_option, False)
                 and value == attr.get_default_value()):
                 continue
-            write_object = resource.to_dict(value, is_noncont_ref=is_ref, is_attr=attr.is_attribute)
+            write_object = resource.to_dict(value,
+                                            is_noncont_ref=is_ref,
+                                            is_attr=attr.is_attribute,
+                                            feature=attr)
             if write_object is not NO_OBJECT:
                 d[attr._name] = write_object
             if use_uuid:
