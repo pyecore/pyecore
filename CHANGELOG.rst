@@ -615,12 +615,12 @@ The fix solves the loading issue by skiping empty references.
   cases, an option is now available: ``XMIOptions.OPTION_USE_XMI_TYPE``.
 
 **Bugfixes**
--  Add missing 'type' field for XMI href serialization. The 'xsi:type' field is
-   required when a crossreference is serialized. This field is used to check if
-   the resolved resource has the right type (not really, but it help). This
-   field is kinda optional at the moment for PyEcore, but required for Java-EMF,
-   otherwise the EMF will not be able to create the right proxy for the
-   crossreferenced resource.
+- Add missing 'type' field for XMI href serialization. The 'xsi:type' field is
+required when a crossreference is serialized. This field is used to check if
+the resolved resource has the right type (not really, but it help). This
+field is kinda optional at the moment for PyEcore, but required for Java-EMF,
+otherwise the EMF will not be able to create the right proxy for the
+crossreferenced resource.
 
 
 0.7.8/0.7.11
