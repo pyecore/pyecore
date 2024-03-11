@@ -162,7 +162,7 @@ class JsonResource(Resource):
             fun = self._to_ref_from_obj if is_noncont_ref else self.to_dict
             result = []
             for x in obj:
-                write_object = fun(x, is_noncont_ref, is_attr)
+                write_object = fun(x, is_noncont_ref, is_attr, feature=feature)
                 if write_object is NO_OBJECT:
                     continue
                 result.append(write_object)
