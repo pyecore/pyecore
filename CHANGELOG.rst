@@ -1,6 +1,27 @@
 Changelog
 ---------
 
+0.15.0
+++++++
+
+**Features**
+
+- Add new JSON options to register a special encoder/decoder for ``JsonResource`` (Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the suggestion).
+- Add possibility to "reaffect" ``EStructuralFeatures`` that are collections. This implies that considering a reference ``myref`` for an instance ``obj``, then ``obj.myref = [*instances]`` is not allowed. The collection is not replaced per-say, but the collection ``myref`` is emptied, and the elements of the collection on the right-side of the affectation are inserted in the ``myref`` collection.
+
+**Bugfixes**
+
+- Fix issue with JSON resources not using ``to_string(...)`` for ``EDataType`` instances (Thanks `@ewoudwerkman <https://github.com/ewoudwerkman>`_ for the issue).
+- Fix issue with multiple re-loading and writing of a resource in the same target file (Thanks `@arrys <https://github.com/arrys>`_ for the issue and the case study).
+
+**Miscellaneous**
+
+- Deprecate Python 3.7 (needs a special version of ``lxml``)
+- Fix/update english of the README.rst (Thanks `@arrys <https://github.com/arrys>`_ for the pull request)
+
+
+En memoria de Rosa Nallely Murillo Vazquez (03/12/2023) quien fue una investigadora muy creativa, una increíble química, y tuve suerte de ser su esposo.
+
 0.14.0
 ++++++
 
@@ -113,7 +134,7 @@ Changelog
 
 - Fix missing ``EShortObject``. Thanks `@aacebedo <https://github.com/aacebedo>`_ for the pull request.
 
-- Fix MRO problem when updating inheritance. The previous algorithm was not taking into account dynamic additions of inheritance relationship. Thanks `@mn3mos https://github.com/mn3mos`_ for the issue.
+- Fix MRO problem when updating inheritance. The previous algorithm was not taking into account dynamic additions of inheritance relationship. Thanks `@mn3mos <https://github.com/mn3mos>`_ for the issue.
 
 - Fix issue on metamodel with ``@abstract`` decorator.
 
