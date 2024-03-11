@@ -219,7 +219,7 @@ either.
 PyEMOFUC proposes, like PyEMOF, a pure Python implementation of the OMG's EMOF.
 If we stick to a kind of EMF terminology, PyEMOFUC only supports dynamic
 metamodels and seems to provide a reflexive layer. The project does not appear
- to have moved since a while.
+to have moved since a while.
 
 Contributors
 ============
