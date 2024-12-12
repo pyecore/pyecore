@@ -167,7 +167,7 @@ class JsonResource(Resource):
                     continue
                 result.append(write_object)
             return result
-        elif feature._eType.eType in (int, float):
+        elif feature._eType.eType in (int, float, bool, str):
             return obj
         else:
             return feature._eType.to_string(obj)
