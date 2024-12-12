@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.15.2
+++++++
+
+**Bugfixes**
+
+- Fix issue with the primitive type JSON serialization (Thanks `@filippomc <https://github.com/filippomc>`_ for raising the issue).
+
+
 0.15.1
 ++++++
 
@@ -20,7 +28,7 @@ Changelog
 - Fix/update english of the README.rst (Thanks `@arrys <https://github.com/arrys>`_ for the pull request)
 
 
-En memoria de Rosa Nallely Murillo Vazquez (03/12/2023) quien fue una investigadora muy creativa, una increíble química, y tuve suerte de ser su esposo.
+*En memoria de Rosa Nallely Murillo Vazquez (03/12/2023) quien fue una investigadora muy creativa, una increíble química, y tuve suerte de ser su esposo.*
 
 0.14.0
 ++++++
