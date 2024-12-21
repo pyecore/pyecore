@@ -828,10 +828,11 @@ class EClass(EClassifier):
                 instance.python_class = type(name, super_types, attr_dict)
             except Exception:
                 try:
-                    super_types = tuple(sorted(super_types,
-                                         key=lambda x: len(x.eClass
-                                                            .eAllSuperTypes())),
-                                         reverse=True)
+                    super_types = tuple(
+                        sorted(super_types,
+                               key=lambda x: len(x.eClass.eAllSuperTypes()),
+                               reverse=True)
+                    )
                     instance.python_class = type(name,
                                                  super_types,
                                                  attr_dict)
