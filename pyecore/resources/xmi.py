@@ -18,6 +18,7 @@ XMI_URL = 'http://www.omg.org/XMI'
 class XMIOptions(Enum):
     OPTION_USE_XMI_TYPE = 0
     SERIALIZE_DEFAULT_VALUES = 1
+    DISABLE_TYPE_CHECK = 2
 
 
 class XMIResource(Resource):
@@ -26,9 +27,11 @@ class XMIResource(Resource):
         self._later = []
         self.prefixes = {}
         self.reverse_nsmap = {}
+        self._no_typecheck = False
 
     def load(self, options=None):
         self.options = options or {}
+        self._no_typecheck = self.options.get(XMIOptions.DISABLE_TYPE_CHECK, self._no_typecheck)
         self.cache_enabled = True
         tree = parse(self.uri.create_instream())
         xmlroot = tree.getroot()
@@ -123,7 +126,7 @@ class XMIResource(Resource):
                 if not feature:
                     continue
                 if feature.is_attribute:
-                    self._decode_eattribute_value(modelroot, feature, value)
+                    self._decode_eattribute_value(modelroot, feature, value, no_typecheck=self._no_typecheck)
                     if feature.iD:
                         self.uuid_dict[value] = modelroot
                 else:
@@ -133,16 +136,20 @@ class XMIResource(Resource):
         return modelroot
 
     @staticmethod
-    def _decode_eattribute_value(eobject, eattribute, value, from_tag=False):
-        is_many = eattribute.many
+    def _decode_eattribute_value(eobject, eattribute, value, from_tag=False, no_typecheck=False):
+        is_many = eattribute._many_cache
         if is_many and not from_tag:
             values = value.split()
             from_string = eattribute._eType.from_string
             results = [from_string(x) for x in values]
-            eobject.__getattribute__(eattribute._name).extend(results)
+            attribute = eobject.__getattribute__(eattribute.name)
+            add_fun = attribute._low_level_extend if no_typecheck else attribute.extend
+            add_fun(results)
         elif is_many:
             value = eattribute._eType.from_string(value)
-            eobject.__getattribute__(eattribute._name).append(value)
+            attribute = eobject.__getattribute__(eattribute.name)
+            add_fun = attribute._low_level_append if no_typecheck else attribute.append
+            add_fun(value)
         else:
             val = eattribute._eType.from_string(value)
             eobject.__setattr__(eattribute._name, val)
@@ -153,7 +160,7 @@ class XMIResource(Resource):
 
         # deal with eattributes and ereferences
         for eattribute, value in eatts:
-            self._decode_eattribute_value(eobject, eattribute, value, from_tag)
+            self._decode_eattribute_value(eobject, eattribute, value, from_tag, no_typecheck=self._no_typecheck)
 
         if erefs:
             self._later.append((eobject, erefs))
@@ -162,8 +169,10 @@ class XMIResource(Resource):
             return
 
         # attach the new eobject to the parent one
-        if feat_container.many:
-            parent_eobj.__getattribute__(feat_container._name).append(eobject)
+        if feat_container._many_cache:
+            # parent_eobj.__getattribute__(feat_container._name).append(eobject)
+            fun = parent_eobj.__getattribute__(feat_container._name)._low_level_append if self._no_typecheck else parent_eobj.__getattribute__(feat_container._name).append
+            fun(eobject)
         else:
             parent_eobj.__setattr__(feat_container._name, eobject)
 
@@ -182,7 +191,7 @@ class XMIResource(Resource):
                              f'for {parent_eobj.eClass.name}, '
                              f'line {node.sourceline}')
         if self._is_none_node(node):
-            if feature_container.many:
+            if feature_container._many_cache:
                 parent_eobj.__getattribute__(feature_container._name) \
                            .append(None)
             else:
@@ -282,7 +291,7 @@ class XMIResource(Resource):
                 if name == 'eOpposite':
                     opposite.append((eobject, ref, value))
                     continue
-                if ref.many:
+                if ref._many_cache:
                     values = (self.normalize(x) for x in value.split())
                 else:
                     values = (value,)
@@ -294,7 +303,7 @@ class XMIResource(Resource):
                         raise ValueError(f'EObject for {value} is unknown')
                     if not hasattr(resolved_value, '_inverse_rels'):
                         resolved_value = resolved_value.eClass
-                    if ref.many:
+                    if ref._many_cache:
                         eobject.__getattribute__(name).append(resolved_value)
                     else:
                         eobject.__setattr__(name, resolved_value)
@@ -433,7 +442,7 @@ class XMIResource(Resource):
                     node.append(entry)
             elif feat.is_attribute:
                 etype = feat._eType
-                if feat.many and value:
+                if feat._many_cache and value:
                     to_str = etype.to_string
                     has_special_char = False
                     result_list = []
@@ -460,7 +469,7 @@ class XMIResource(Resource):
             elif feat.eOpposite and feat.eOpposite.containment:
                 continue
             elif not feat.containment:
-                if feat.many:
+                if feat._many_cache:
                     results = (self._build_path_from(x) for x in value)
                     embedded = []
                     crossref = []
@@ -487,7 +496,7 @@ class XMIResource(Resource):
                         node.attrib[feat_name] = frag
 
             else:
-                children = value if feat.many else [value]
+                children = value if feat._many_cache else [value]
                 for child in children:
                     node.append(self._go_across(child, serialize_default))
         return node

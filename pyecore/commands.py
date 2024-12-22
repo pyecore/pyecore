@@ -94,7 +94,7 @@ class Set(AbstractCommand):
     @property
     def can_execute(self):
         can = super().can_execute
-        return can and not self.feature.many
+        return can and not self.feature._many_cache
 
     def undo(self):
         self.owner.eSet(self.feature, self.previous_value)
@@ -227,7 +227,7 @@ class Delete(AbstractCommand):
         for element in elements:
             rels_tuple = []
             for obj, reference in element._inverse_rels:
-                if reference.many:
+                if reference._many_cache:
                     index = obj.eGet(reference).index(element)
                 else:
                     index = 0
@@ -238,13 +238,13 @@ class Delete(AbstractCommand):
     def undo(self):
         for element, v in self.references.items():
             for reference, content in v:
-                if reference.many:
+                if reference._many_cache:
                     element.eGet(reference).extend(content)
                 else:
                     element.eSet(reference, content)
         for element, v in self.inverse_references.items():
             for i, obj, reference in v:
-                if reference.many:
+                if reference._many_cache:
                     obj.eGet(reference).insert(i, element)
                 else:
                     obj.eSet(reference, element)

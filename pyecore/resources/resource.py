@@ -606,7 +606,7 @@ class Resource(object):
         if root._container is not None:
             container = root._container
             feature = root._containment_feature
-            if feature.many:
+            if feature._many_cache:
                 container.eGet(feature).remove(root)
             else:
                 container.eSet(feature, None)

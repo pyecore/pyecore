@@ -138,14 +138,14 @@ class EValue(PyEcoreValue):
         if value is None:
             if previous_value is None:
                 return
-            if eOpposite.many:
+            if eOpposite._many_cache:
                 object.__getattribute__(previous_value, opposite_name) \
                       .remove(owner, update_opposite=False)
             else:
                 object.__setattr__(previous_value, opposite_name, None)
         else:
             previous_value = value.__getattribute__(opposite_name)
-            if eOpposite.many:
+            if eOpposite._many_cache:
                 previous_value.append(owner, update_opposite=False)
             else:
                 # We disable the eOpposite update
@@ -187,9 +187,9 @@ class ECollection(PyEcoreValue):
             return
 
         opposite_name = eOpposite._name
-        if eOpposite.many and not remove:
+        if eOpposite._many_cache and not remove:
             owner.__getattribute__(opposite_name).append(new_value, False)
-        elif eOpposite.many and remove:
+        elif eOpposite._many_cache and remove:
             owner.__getattribute__(opposite_name).remove(new_value, False)
         else:
             new_value = None if remove else new_value
@@ -335,6 +335,12 @@ class EList(ECollection, list):
                                        kind=kind))
         self.owner._isset[self.feature] = None
 
+    def _low_level_append(self, object):
+        list.append(self, object)
+
+    def _low_level_extend(self, objects):
+        list.extend(self, objects)
+
 
 class EBag(EList):
     pass
@@ -343,7 +349,6 @@ class EBag(EList):
 class EAbstractSet(ECollection):
     def __init__(self, owner, efeature=None):
         super().__init__(owner, efeature)
-        self._orderedset_update = False
 
     def add(self, value, update_opposite=True):
         self.check(value)
@@ -390,6 +395,13 @@ class EOrderedSet(EAbstractSet, ordered_set.OrderedSet):
     @staticmethod
     def subcopy(sublist):
         return ordered_set.OrderedSet(sublist)
+
+    def _low_level_append(self, object):
+        ordered_set.OrderedSet.append(self, object)
+
+    def _low_level_extend(self, sequence):
+        for item in sequence:
+            ordered_set.OrderedSet.add(self, item)
 
 
 class ESet(EOrderedSet):

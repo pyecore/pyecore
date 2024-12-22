@@ -261,7 +261,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
         seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
-            if feature.many:
+            if feature._many_cache:
                 if self in fvalue:
                     fvalue.remove(self)
                     continue
@@ -288,7 +288,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
         for feature in self.eClass.eAllReferences():
             if not feature.containment or feature.derived:
                 continue
-            if feature.many:
+            if feature._many_cache:
                 values = self.__getattribute__(feature.name)
             else:
                 values = [self.__getattribute__(feature.name)]
@@ -310,7 +310,7 @@ class EObject(ENotifer, metaclass=Metasubinstance):
         feat = self.eContainmentFeature()
         parent = self.eContainer()
         name = feat.name
-        if feat.many:
+        if feat._many_cache:
             index = parent.__getattribute__(name).index(self)
             return f'{parent.eURIFragment()}/@{name}.{index}'
         else:
@@ -684,7 +684,7 @@ class EStructuralFeature(ETypedElement):
                 return value._get()
             except AttributeError:
                 return value
-        if self.many:
+        if self._many_cache:
             new_value = self.derived_class.create(instance, self)
         else:
             new_value = EValue(instance, self)
@@ -695,7 +695,7 @@ class EStructuralFeature(ETypedElement):
         name = self._name
         instance_dict = instance.__dict__
         if name not in instance_dict:
-            if self.many:
+            if self._many_cache:
                 new_value = self.derived_class.create(instance, self)
             else:
                 new_value = EValue(instance, self)
@@ -719,7 +719,7 @@ class EStructuralFeature(ETypedElement):
     def __delete__(self, instance):
         name = self._name
         value = getattr(instance, name)
-        if self.many:
+        if self._many_cache:
             value.clear()
         else:
             setattr(instance, name, self.get_default_value())
@@ -1061,7 +1061,7 @@ class EProxy(EObject):
             seek.update((self, ref) for ref in self.eClass.eAllReferences())
         for owner, feature in seek:
             fvalue = owner.eGet(feature)
-            if feature.many:
+            if feature._many_cache:
                 if self in fvalue:
                     fvalue.remove(self)
                     continue
