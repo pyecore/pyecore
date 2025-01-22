@@ -789,7 +789,7 @@ class EReference(EStructuralFeature):
 
     @property
     def container(self):
-        return self._eopposite and self._eopposite.containment
+        return None != self._eopposite and self._eopposite.containment
 
     @property
     def is_reference(self):
