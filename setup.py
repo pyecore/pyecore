@@ -11,7 +11,6 @@ if version < (3, 3):
 
 requires = ['ordered-set>=4.0.1',
             'restrictedpython>=5.3,>=6.1',
-            'future-fstrings',
             'lxml']
 
 packages = ['pyecore',
