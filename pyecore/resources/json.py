@@ -13,6 +13,7 @@ class JsonOptions(Enum):
     SERIALIZE_DEFAULT_VALUES = 0
     ENCODER = 1
     DECODER = 2
+    INDENT = 3
 
 
 NO_OBJECT = object()
@@ -58,7 +59,8 @@ class JsonResource(Resource):
             dict_list = dict_list[0]
 
         encoder = self.options.get(JsonOptions.ENCODER)
-        stream.write(json.dumps(dict_list, indent=self.indent, cls=encoder)
+        indent = self.options.get(JsonOptions.INDENT, self.indent)
+        stream.write(json.dumps(dict_list, indent=indent, cls=encoder)
                      .encode('utf-8'))
 
         stream.flush()

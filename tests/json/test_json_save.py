@@ -166,6 +166,34 @@ def test_json_option_serialize_default_values(tmpdir):
     assert 'y' not in dct
 
 
+def test_json_option_indent_uses_resource_default(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)), indent=2)
+
+    p = Point()
+    p.x = 1.0
+    resource.append(p)
+    resource.save()
+
+    text = f.read()
+    assert text.startswith('{\n  ')
+    assert '\n  "x": 1.0' in text
+
+
+def test_json_option_indent_overrides_resource_default(tmpdir):
+    f = tmpdir.mkdir('pyecore-tmp').join('test.json')
+    resource = JsonResource(URI(str(f)), indent=4)
+
+    p = Point()
+    p.x = 1.0
+    resource.append(p)
+    resource.save(options={JsonOptions.INDENT: 2})
+
+    text = f.read()
+    assert text.startswith('{\n  ')
+    assert '\n    "x": 1.0' not in text
+
+
 def test_json_save_multiple_roots(tmpdir):
     A = Ecore.EClass('A')
     A.eStructuralFeatures.append(Ecore.EAttribute('name', Ecore.EString))
