@@ -2,4 +2,3 @@ ordered-set
 lxml
 defusedxml
 restrictedpython >= 5.3, >= 6.1
-future_fstrings
